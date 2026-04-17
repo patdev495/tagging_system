@@ -156,10 +156,13 @@
         </div>
 
         <div class="form-group">
-          <label>Print Job Folder (Watch Folder)</label>
+          <label>Print Job Folder (Optional)</label>
           <div class="input-with-hint">
             <input v-model="settings.printFolder" placeholder="D:\print_jobs" class="modern-input" />
-            <small>Hint: The folder where Bartender is watching for files.</small>
+            <small class="hint-text">
+              <strong>Server Print:</strong> Enter folder path (e.g. D:\print_jobs) to save directly on Server.
+              <br/><strong>Local Print:</strong> Leave empty to enable <strong>Auto-Download</strong> to this PC.
+            </small>
           </div>
         </div>
 
@@ -321,21 +324,16 @@ const finalizeCarton = async () => {
     lastCarton.value = res.data;
     
     showNotification(`Carton ${res.data.carton_sn} created!`, 'success');
-
-    // Phase 3: Auto-download logic
-    if (res.data.btxml) {
-      if (settings.value.printFolder) {
-        // Mode A: Direct Write (Backend already did the work)
-        console.log('File written directly to folder by backend:', settings.value.printFolder);
-        showNotification(`Label file saved to ${settings.value.printFolder}`, 'success');
-      } else {
-        // Mode B: Browser Download (Fallback/USB Printer)
-        console.log('Triggering download via server...');
-        triggerDownload(res.data.btxml, res.data.carton_sn, res.data.id);
-      }
+    
+    // Flexible Printing Logic:
+    if (settings.value.printFolder) {
+      // Mode A: Server-Side Printing (Folder is specified)
+      console.log('Server is handling the print job via:', settings.value.printFolder);
+      showNotification('Print job sent to server folder.', 'success');
     } else {
-      console.warn('No BTXML content returned. Check Template Path in settings.');
-      showNotification('Note: No print command generated. Check Settings.', 'warning');
+      // Mode B: Client-Side Printing (Folder is empty -> Auto Download)
+      console.log('Triggering auto-download for local station printing...');
+      triggerDownload(res.data.btxml, res.data.carton_sn, res.data.id);
     }
     
     // Auto-reset scan list for next carton of SAME product
@@ -410,7 +408,7 @@ onMounted(() => {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 16px;
-  padding: 20px;
+  padding: 12px 18px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
@@ -429,15 +427,16 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
 .header h1 {
   color: #0f172a;
   font-weight: 700;
   margin: 0;
+  font-size: 1.35rem;
 }
 
 .status-badge {
@@ -840,19 +839,6 @@ onMounted(() => {
 .btn-icon {
   background: white;
   border: 1px solid #e2e8f0;
-  color: #1e293b;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.btn-icon:hover {
   background: #f8fafc;
   color: #2563eb;
   border-color: #3b82f6;
@@ -909,6 +895,21 @@ onMounted(() => {
   font-weight: 600;
   font-size: 0.85rem;
   color: #475569;
+}
+
+.input-with-hint small.hint-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.input-with-hint small.hint-text strong {
+  color: #2563eb;
 }
 
 .modern-input {
