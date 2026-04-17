@@ -5,9 +5,9 @@
 **Goal**: Build a functional packing station that can scan items, generate S/Ns, and record data to MSSQL 2008.
 
 ### Phase 1: Tech Stack & Database (1-3)
-- [ ] 1. Backend: Initialize FastAPI and setup MSSQL 2008 connection (`pyodbc` or `ceODBC`).
-- [ ] 2. Database: Create/Verify tables for Customers, Products, Carton_History, and Item_History.
-- [ ] 3. Frontend: Initialize Vue 3 project and setup basic layout.
+- [x] 1. Backend: Initialize FastAPI and setup MSSQL 2008 connection (`pyodbc` or `ceODBC`).
+- [x] 2. Database: Create/Verify tables for Customers, Products, Carton_History, and Item_History.
+- [x] 3. Frontend: Initialize Vue 3 project and setup basic layout.
 
 ### Phase 2: Packing Logic (4-6)
 - [ ] 4. Logic: Implement Carton S/N generator according to rules.
