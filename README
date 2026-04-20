@@ -5,3 +5,4 @@ cd backend
 uv run python clear_test_data.py
 
 uv run pyinstaller --onefile --icon=NONE d:\Workspace\NY_tagging_sys\client_agent\print_agent.pytaskkill /f /im print_agent.exe
+python client_agent/print_agent.py

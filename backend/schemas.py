@@ -57,7 +57,12 @@ class Carton(BaseModel):
     created_at: datetime.datetime
     packed_by: Optional[str] = None
     job_order: Optional[str] = None
+    status: str = "FAILED"
     btxml: Optional[str] = None # Stores BTXML data
-
+    items: List[CartonItem] = [] # Include nested items
+    
     class Config:
         from_attributes = True
+
+class CartonStatusUpdate(BaseModel):
+    status: str # SUCCESS or FAILED

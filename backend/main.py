@@ -22,6 +22,10 @@ app.add_middleware(
 def read_root():
     return {"message": "Welcome to NY Tagging System API"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "timestamp": datetime.datetime.utcnow()}
+
 @app.get("/customers", response_model=List[schemas.Customer])
 def get_customers(db: Session = Depends(database.get_db)):
     return db.query(models.Customer).all()
@@ -70,8 +74,11 @@ def get_next_carton_sn(db: Session, product: models.Product):
     
     # Check max sequence for this prefix in DB with a lock
     # with_for_update() ensures other transactions wait until this one is committed
+    # Check max sequence for this prefix in DB that was SUCCESSFUL
+    # This ensures that if all attempts for an SN failed, we reuse that SN.
     max_sn = db.query(func.max(models.Carton.carton_sn)).filter(
-        models.Carton.carton_sn.like(f"{prefix}%")
+        models.Carton.carton_sn.like(f"{prefix}%"),
+        models.Carton.status == "SUCCESS"
     ).with_for_update().scalar()
     
     if max_sn:
@@ -105,8 +112,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
         new_carton = models.Carton(
             product_id=product.id,
             carton_sn=new_sn,
-            packed_by=carton_in.printer_name or "System", # Using printer/station info
-            job_order=carton_in.job_order
+            packed_by=carton_in.printer_name or "System", 
+            job_order=carton_in.job_order,
+            status="FAILED" # Default until agent confirms success
         )
         db.add(new_carton)
         db.flush() # Get new_carton.id
@@ -117,10 +125,11 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
                 item_sn=item_sn
             )
             db.add(new_item)
-            
-        # Phase 3: Generate BTXML if template_path is provided
+        
+        # Phase 3: Generate BTXML but DO NOT save to DB
+        btxml_content = None
         if carton_in.template_path:
-            new_carton.btxml = generate_btxml(
+            btxml_content = generate_btxml(
                 new_carton, 
                 product, 
                 carton_in.items, 
@@ -139,51 +148,77 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
                     tmp_path = file_path + ".tmp"
                     
                     with open(tmp_path, "w", encoding="utf-8") as f:
-                        f.write(new_carton.btxml)
+                        f.write(btxml_content)
                     
-                    # Atomic rename so Bartender sees the file only after it is fully closed
+                    # Atomic rename
                     os.rename(tmp_path, file_path)
                     print(f"Directly wrote print job (XML) to: {file_path}")
-                    
-                    # New: Trigger Bartender directly via command line for reliability
-                    import subprocess
-                    # Command: bartend.exe /XMLScript="C:\...\print_job.xml" /PRN="PrinterName" /X
-                    # /X means exit after processing the script
-                    exe_path = r"C:\Program Files\Seagull\BarTender 2022\bartend.exe"
-                    if os.path.exists(exe_path):
-                        try:
-                            # Using /PRN flag to explicitly target the printer if provided
-                            args = [exe_path, f"/XMLScript={file_path}"]
-                            if carton_in.printer_name:
-                                args.append(f"/PRN={carton_in.printer_name}")
-                            args.append("/X")
-                            
-                            subprocess.Popen(args)
-                            print(f"Triggered direct print via command line: {file_name}")
-                        except Exception as pe:
-                            print(f"Error triggering direct print: {str(pe)}")
-                    else:
-                        print(f"Bartender executable not found at specified path. Relying on Watch Folder.")
-                except Exception as fe:
-                    print(f"Error writing print file: {str(fe)}")
+                except Exception as e:
+                    print(f"Error writing print job file: {str(e)}")
+                
+                # New: Trigger Bartender directly via command line for reliability
+                import subprocess
+                # Command: bartend.exe /XMLScript="C:\...\print_job.xml" /PRN="PrinterName" /X
+                # /X means exit after processing the script
+                exe_path = r"C:\Program Files\Seagull\BarTender 2022\bartend.exe"
+                if os.path.exists(exe_path):
+                    try:
+                        # Using /PRN flag to explicitly target the printer if provided
+                        args = [exe_path, f"/XMLScript={file_path}"]
+                        if carton_in.printer_name:
+                            args.append(f"/PRN={carton_in.printer_name}")
+                        args.append("/X")
+                        
+                        subprocess.Popen(args)
+                        print(f"Triggered direct print via command line: {file_name}")
+                    except Exception as pe:
+                        print(f"Error triggering direct print: {str(pe)}")
+                else:
+                    print(f"Bartender executable not found at specified path. Relying on Watch Folder.")
             
         db.commit()
         db.refresh(new_carton)
             
-        return new_carton
+        # Manually attach btxml for the response schema
+        response_data = schemas.Carton.from_orm(new_carton)
+        response_data.btxml = btxml_content
+        return response_data
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+@app.patch("/cartons/{carton_id}/status", response_model=schemas.Carton)
+def update_carton_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db: Session = Depends(database.get_db)):
+    carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
+    if not carton:
+        raise HTTPException(status_code=404, detail="Carton not found")
+    
+    carton.status = status_update.status
+    db.commit()
+    db.refresh(carton)
+    return carton
+
 @app.get("/cartons/{carton_id}/btxml")
 def download_carton_btxml(carton_id: int, db: Session = Depends(database.get_db)):
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
-    if not carton or not carton.btxml:
-        raise HTTPException(status_code=404, detail="BTXML not found for this carton")
+    if not carton:
+        raise HTTPException(status_code=404, detail="Carton not found")
+    
+    # Regenerate XML on the fly since it's not stored in DB
+    product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
+    item_sns = [item.item_sn for item in carton.items]
+    
+    # We use a default template path or get it from job context if available
+    # For now, we'll try to find a default from the product or just use a placeholder
+    # In a real scenario, you might want to store the template_path in the Carton table
+    # even if you don't store the full XML.
+    template_path = "D:\\Labels\\carton_ui.btw" # Placeholder or logic to find template
+    
+    btxml = generate_btxml(carton, product, item_sns, template_path)
     
     from fastapi.responses import Response
     return Response(
-        content=carton.btxml,
+        content=btxml,
         media_type="application/octet-stream",
         headers={
             "Content-Disposition": f"attachment; filename=print_job_{carton.carton_sn}.xml"

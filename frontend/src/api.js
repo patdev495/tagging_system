@@ -19,5 +19,8 @@ export default {
   },
   getLastCarton(productId) {
     return api.get(`/products/${productId}/last-carton`);
+  },
+  updateCartonStatus(cartonId, status) {
+    return api.patch(`/cartons/${cartonId}/status`, { status });
   }
 };

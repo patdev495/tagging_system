@@ -78,15 +78,19 @@
             </div>
 
             <div class="result-actions fade-in" v-if="lastCarton">
-              <div class="success-banner">
-                <i class="fas fa-check-circle"></i>
-                <span>Last Carton: <strong>{{ lastCarton.carton_sn }}</strong></span>
+              <div class="success-banner" :class="{ 'error-banner': lastCarton.status === 'FAILED' }">
+                <i class="fas" :class="lastCarton.status === 'SUCCESS' ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+                <span>
+                  {{ lastCarton.status === 'SUCCESS' ? 'Last Carton:' : 'Previous Attempt Failed:' }} 
+                  <strong :class="{ 'text-strike': lastCarton.status === 'FAILED' }">{{ lastCarton.carton_sn }}</strong>
+                  <span v-if="lastCarton.status === 'FAILED' && agentErrorMessage" class="error-detail"> - {{ agentErrorMessage }}</span>
+                </span>
                 <div class="banner-actions">
-                  <a :href="`http://${host}:8000/cartons/${lastCarton.id}/btxml`" class="btn-reprint" download>
+                  <a v-if="lastCarton.status === 'SUCCESS'" :href="`http://${host}:8000/cartons/${lastCarton.id}/btxml`" class="btn-reprint" download>
                     <i class="fas fa-file-download"></i> Manual Download
                   </a>
-                  <button @click="handleClientPrint(lastCarton.btxml, lastCarton.carton_sn, lastCarton.id)" class="btn-reprint secondary" v-if="lastCarton.btxml">
-                    <i class="fas fa-print"></i> Re-Print
+                  <button @click="finalizeCarton(true)" class="btn-reprint" :class="lastCarton.status === 'SUCCESS' ? 'secondary' : 'primary-err'">
+                    <i class="fas fa-redo"></i> {{ lastCarton.status === 'SUCCESS' ? 'Re-Print' : 'Try Again' }}
                   </button>
                 </div>
               </div>
@@ -194,7 +198,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import api from '../api';
 
 const customers = ref([]);
@@ -213,6 +217,9 @@ const showSettings = ref(false);
 const lastCarton = ref(null);
 const jobOrder = ref(''); // New Job Order state
 const isAgentConnected = ref(false);
+const agentErrorMessage = ref(''); // Store the specific BarTender error
+const backupScannedItems = ref([]); // Store items in case of failure
+let statusTimer = null;
 
 const settings = ref({
   stationId: '',
@@ -293,6 +300,13 @@ const selectProduct = async (p) => {
     const res = await api.getLastCarton(p.id);
     if (res.data) {
       lastCarton.value = res.data;
+      if (res.data.status === 'FAILED' && res.data.items) {
+        // Pre-load items so that "Try Again" can work without rescanning all over again
+        backupScannedItems.value = res.data.items.map(i => i.item_sn);
+        if (!jobOrder.value) {
+            jobOrder.value = res.data.job_order || '';
+        }
+      }
     }
   } catch (err) {
     console.warn('Error fetching last carton:', err);
@@ -332,45 +346,54 @@ const handleScan = () => {
   }
 };
 
-const finalizeCarton = async () => {
+const finalizeCarton = async (isRetry = false) => {
   isProcessing.value = true;
-  lastCarton.value = null;
+  agentErrorMessage.value = '';
   
-  console.log('Finalizing carton with settings:', settings.value);
+  // If it's not a retry, we use the current scanned list
+  // If it is a retry from a failed state, we use the backup list (so user doesn't have to re-scan)
+  const itemsToPack = isRetry ? backupScannedItems.value : [...scannedItems.value];
+  
+  if (itemsToPack.length === 0) {
+    showNotification('No items to pack!', 'error');
+    isProcessing.value = false;
+    return;
+  }
 
   try {
     const res = await api.createCarton({
       product_id: currentProduct.value.id,
-      items: scannedItems.value,
+      items: itemsToPack,
       template_path: settings.value.templatePath || null,
       printer_name: settings.value.printerName || null,
       print_folder: settings.value.printFolder || null,
-      job_order: jobOrder.value // Pass job order to API
+      job_order: jobOrder.value
     });
     
-    console.log('API Response:', res.data);
     lastCarton.value = res.data;
+    backupScannedItems.value = itemsToPack; // Save for potential retry
+
+    // Client-Side Printing Logic
+    console.log('Attempting print via Local Agent...');
+    const printStatus = await handleClientPrint(res.data.btxml, res.data.carton_sn, res.data.id);
     
-    showNotification(`Carton ${res.data.carton_sn} created!`, 'success');
-    
-    // Flexible Printing Logic:
-    if (settings.value.serverPrint && settings.value.printFolder) {
-      // Mode A: Server-Side Printing (Folder is specified and Server Toggle is ON)
-      console.log('Server is handling the print job via:', settings.value.printFolder);
-      showNotification('Print job sent to server folder.', 'success');
+    if (printStatus === 'Success') {
+      await api.updateCartonStatus(res.data.id, 'SUCCESS');
+      lastCarton.value.status = 'SUCCESS';
+      showNotification(`Carton ${res.data.carton_sn} Printed Successfully!`, 'success');
+      // Only clear scan list if print succeeded
+      if (!isRetry) scannedItems.value = [];
     } else {
-      // Mode B: Client-Side Printing 
-      // First, try Local Agent (sending the path), fallback to Auto-Download
-      console.log('Attempting print via Local Agent...');
-      handleClientPrint(res.data.btxml, res.data.carton_sn, res.data.id);
+      // In this case, handleClientPrint already returned an error string
+      await api.updateCartonStatus(res.data.id, 'FAILED');
+      lastCarton.value.status = 'FAILED';
+      agentErrorMessage.value = printStatus;
+      showNotification('PRINT FAILED: ' + printStatus, 'error', 0); // 0 means persistent
+      // We DO NOT clear scannedItems if it failed (so user can fix printer and click Try Again)
     }
-    
-    // Auto-reset scan list for next carton of SAME product
-    scannedItems.value = [];
   } catch (err) {
     const errorMsg = err.response?.data?.detail || err.message;
-    console.error('Finalize Error:', err);
-    showNotification('Error finalizing carton: ' + errorMsg, 'error');
+    showNotification('Error finalizing: ' + errorMsg, 'error');
   } finally {
     isProcessing.value = false;
   }
@@ -378,32 +401,23 @@ const finalizeCarton = async () => {
 
 const handleClientPrint = async (content, cartonSn, cartonId) => {
   try {
-    // Try to send to Local Agent (127.0.0.1:1234)
     const agentRes = await fetch('http://127.0.0.1:1234/print', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         xml: content,
         filename: `print_job_${cartonSn}.xml`,
-        path: settings.value.printFolder || null // Send the custom folder path
+        path: settings.value.printFolder || null
       })
     });
 
-    if (agentRes.ok) {
-      console.log('Printed successfully via Local Agent');
-      showNotification('Lệnh in đã gửi qua Agent!', 'success');
-      isAgentConnected.value = true;
-    } else {
-      throw new Error('Agent refused');
-    }
+    isAgentConnected.value = true;
+    const resultText = await agentRes.text();
+    return resultText; // This will return "Success" or "Print Failed: ..."
   } catch (err) {
-    console.warn('Local Agent not found or error, falling back to download...', err);
+    console.warn('Local Agent connection failed', err);
     isAgentConnected.value = false;
-    
-    // Only fallback to download if it was an automatic trigger (meaning we don't have a UI session yet)
-    // Or if the user really needs the file.
-    showNotification('Agent chưa bật, đang tự động tải file...', 'warning');
-    triggerDownload(content, cartonSn, cartonId);
+    return 'Error: Could not connect to local Print Agent. Please ensure it is running.';
   }
 };
 
@@ -424,11 +438,22 @@ const triggerDownload = (content, cartonSn, cartonId) => {
 
 const checkAgent = async () => {
   try {
-    const res = await fetch('http://127.0.0.1:1234/', { method: 'GET' });
+    const res = await fetch('http://127.0.0.1:1234/', { 
+      method: 'GET',
+      signal: AbortController.timeout ? AbortController.timeout(1000) : null // Short timeout
+    });
     isAgentConnected.value = res.ok;
-    if (res.ok) console.log('Print Agent is Online');
   } catch (e) {
     isAgentConnected.value = false;
+  }
+};
+
+const checkSystem = async () => {
+  try {
+    const res = await api.checkHealth();
+    isOnline.value = res.data && res.data.status === 'ok';
+  } catch (e) {
+    isOnline.value = false;
   }
 };
 
@@ -438,11 +463,13 @@ const resetSession = () => {
   scanBuffer.value = '';
 };
 
-const showNotification = (text, type = 'info') => {
+const showNotification = (text, type = 'info', duration = 3000) => {
   notification.value = { text, type };
-  setTimeout(() => {
-    notification.value = null;
-  }, 3000);
+  if (duration > 0) {
+    setTimeout(() => {
+      notification.value = null;
+    }, duration);
+  }
 };
 
 const formatTime = () => {
@@ -452,7 +479,17 @@ const formatTime = () => {
 onMounted(() => {
   loadCustomers();
   loadSettings();
-  checkAgent(); // Check on load
+  
+  // Initial checks
+  checkAgent();
+  checkSystem();
+  
+  // Setup polling every 5 seconds
+  statusTimer = setInterval(() => {
+    checkAgent();
+    checkSystem();
+  }, 5000);
+
   // Keep focus on scan input, but don't steal from other inputs
   window.addEventListener('click', (e) => {
     // Don't steal focus if clicking on settings or other inputs
@@ -461,6 +498,10 @@ onMounted(() => {
     
     if (scanInput.value) scanInput.value.focus();
   });
+});
+
+onUnmounted(() => {
+  if (statusTimer) clearInterval(statusTimer);
 });
 </script>
 
@@ -894,6 +935,12 @@ onMounted(() => {
   gap: 16px;
   animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
+.success-banner.error-banner {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.text-strike { text-decoration: line-through; opacity: 0.7; }
+.error-detail { font-size: 0.85rem; font-weight: normal; margin-left: 5px; }
 
 .btn-reprint {
   margin-left: auto;
@@ -910,9 +957,11 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.btn-reprint:hover {
-  background: #15803d;
-  transform: scale(1.05);
+.btn-reprint.primary-err {
+  background: #ef4444;
+}
+.btn-reprint.primary-err:hover {
+  background: #dc2626;
 }
 
 .btn-reprint.secondary {

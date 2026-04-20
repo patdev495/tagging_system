@@ -31,11 +31,11 @@ class Carton(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"))
-    carton_sn = Column(String(100), unique=True, index=True)
+    carton_sn = Column(String(100), index=True) # Removed unique=True to allow print attempt logs
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     packed_by = Column(String(100), nullable=True)
     job_order = Column(String(100), nullable=True)
-    btxml = Column(UnicodeText, nullable=True)
+    status = Column(String(20), default="FAILED", index=True) # SUCCESS or FAILED
     
     product = relationship("Product", back_populates="cartons")
     items = relationship("CartonItem", back_populates="carton")
