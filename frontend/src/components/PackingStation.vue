@@ -4,6 +4,9 @@
       <header class="header">
         <h1><i class="fas fa-box-open"></i> NY Packing Station</h1>
         <div class="header-actions">
+          <div class="status-badge agent" :class="{ connected: isAgentConnected }" @click="checkAgent" title="Click to refresh Agent status">
+            <i class="fas fa-print"></i> {{ isAgentConnected ? 'Agent Online' : 'Agent Offline' }}
+          </div>
           <div class="status-badge" :class="{ online: isOnline }">
             {{ isOnline ? 'System Online' : 'Connecting...' }}
           </div>
@@ -82,8 +85,8 @@
                   <a :href="`http://${host}:8000/cartons/${lastCarton.id}/btxml`" class="btn-reprint" download>
                     <i class="fas fa-file-download"></i> Manual Download
                   </a>
-                  <button @click="triggerDownload(null, null, lastCarton.id)" class="btn-reprint secondary" v-if="lastCarton.btxml">
-                    <i class="fas fa-print"></i> Retry Print
+                  <button @click="handleClientPrint(lastCarton.btxml, lastCarton.carton_sn, lastCarton.id)" class="btn-reprint secondary" v-if="lastCarton.btxml">
+                    <i class="fas fa-print"></i> Re-Print
                   </button>
                 </div>
               </div>
@@ -156,14 +159,21 @@
         </div>
 
         <div class="form-group">
-          <label>Print Job Folder (Optional)</label>
+          <label>Print Job Folder</label>
           <div class="input-with-hint">
-            <input v-model="settings.printFolder" placeholder="D:\print_jobs" class="modern-input" />
+            <input v-model="settings.printFolder" placeholder="C:\print_jobs" class="modern-input" />
             <small class="hint-text">
-              <strong>Server Print:</strong> Enter folder path (e.g. D:\print_jobs) to save directly on Server.
-              <br/><strong>Local Print:</strong> Leave empty to enable <strong>Auto-Download</strong> to this PC.
+              Folder where XML files will be saved for BarTender to watch.
             </small>
           </div>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="modern-checkbox">
+            <input type="checkbox" v-model="settings.serverPrint" />
+            <span>Process Print on Server</span>
+          </label>
+          <small class="hint-text">If OFF, the local Agent or Browser Download will be used.</small>
         </div>
 
         <div class="form-group">
@@ -202,12 +212,14 @@ const jobOrderInput = ref(null); // Ref for Job Order input
 const showSettings = ref(false);
 const lastCarton = ref(null);
 const jobOrder = ref(''); // New Job Order state
+const isAgentConnected = ref(false);
 
 const settings = ref({
   stationId: '',
   templatePath: '',
   printerName: '',
-  printFolder: ''
+  printFolder: '',
+  serverPrint: false
 });
 
 const loadSettings = () => {
@@ -219,10 +231,26 @@ const loadSettings = () => {
   }
 };
 
-const saveSettings = () => {
+const saveSettings = async () => {
   localStorage.setItem('ny_packing_settings', JSON.stringify(settings.value));
   showSettings.value = false;
   showNotification('Settings saved locally', 'success');
+
+  // Notify agent if connected
+  if (isAgentConnected.value) {
+    try {
+      await fetch('http://127.0.0.1:1234/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'config',
+          path: settings.value.printFolder
+        })
+      });
+    } catch (e) {
+      console.warn('Failed to notify agent of config change');
+    }
+  }
 };
 
 const progressPercent = computed(() => {
@@ -326,14 +354,15 @@ const finalizeCarton = async () => {
     showNotification(`Carton ${res.data.carton_sn} created!`, 'success');
     
     // Flexible Printing Logic:
-    if (settings.value.printFolder) {
-      // Mode A: Server-Side Printing (Folder is specified)
+    if (settings.value.serverPrint && settings.value.printFolder) {
+      // Mode A: Server-Side Printing (Folder is specified and Server Toggle is ON)
       console.log('Server is handling the print job via:', settings.value.printFolder);
       showNotification('Print job sent to server folder.', 'success');
     } else {
-      // Mode B: Client-Side Printing (Folder is empty -> Auto Download)
-      console.log('Triggering auto-download for local station printing...');
-      triggerDownload(res.data.btxml, res.data.carton_sn, res.data.id);
+      // Mode B: Client-Side Printing 
+      // First, try Local Agent (sending the path), fallback to Auto-Download
+      console.log('Attempting print via Local Agent...');
+      handleClientPrint(res.data.btxml, res.data.carton_sn, res.data.id);
     }
     
     // Auto-reset scan list for next carton of SAME product
@@ -344,6 +373,37 @@ const finalizeCarton = async () => {
     showNotification('Error finalizing carton: ' + errorMsg, 'error');
   } finally {
     isProcessing.value = false;
+  }
+};
+
+const handleClientPrint = async (content, cartonSn, cartonId) => {
+  try {
+    // Try to send to Local Agent (127.0.0.1:1234)
+    const agentRes = await fetch('http://127.0.0.1:1234/print', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        xml: content,
+        filename: `print_job_${cartonSn}.xml`,
+        path: settings.value.printFolder || null // Send the custom folder path
+      })
+    });
+
+    if (agentRes.ok) {
+      console.log('Printed successfully via Local Agent');
+      showNotification('Lệnh in đã gửi qua Agent!', 'success');
+      isAgentConnected.value = true;
+    } else {
+      throw new Error('Agent refused');
+    }
+  } catch (err) {
+    console.warn('Local Agent not found or error, falling back to download...', err);
+    isAgentConnected.value = false;
+    
+    // Only fallback to download if it was an automatic trigger (meaning we don't have a UI session yet)
+    // Or if the user really needs the file.
+    showNotification('Agent chưa bật, đang tự động tải file...', 'warning');
+    triggerDownload(content, cartonSn, cartonId);
   }
 };
 
@@ -360,6 +420,16 @@ const triggerDownload = (content, cartonSn, cartonId) => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+const checkAgent = async () => {
+  try {
+    const res = await fetch('http://127.0.0.1:1234/', { method: 'GET' });
+    isAgentConnected.value = res.ok;
+    if (res.ok) console.log('Print Agent is Online');
+  } catch (e) {
+    isAgentConnected.value = false;
+  }
 };
 
 const resetSession = () => {
@@ -382,6 +452,7 @@ const formatTime = () => {
 onMounted(() => {
   loadCustomers();
   loadSettings();
+  checkAgent(); // Check on load
   // Keep focus on scan input, but don't steal from other inputs
   window.addEventListener('click', (e) => {
     // Don't steal focus if clicking on settings or other inputs
@@ -446,6 +517,17 @@ onMounted(() => {
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.status-badge.agent {
+  background: #f1f5f9;
+  color: #64748b;
+  margin-right: 8px;
+}
+
+.status-badge.agent.connected {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .status-badge.online {
@@ -624,6 +706,28 @@ onMounted(() => {
 }
 
 /* Responsive Layout */
+.checkbox-group {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.modern-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.modern-checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
 @media (max-width: 1100px) {
   .packing-workspace {
     flex-direction: column;

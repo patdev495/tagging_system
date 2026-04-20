@@ -2,4 +2,6 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 Integration Builder
 Create New Integration
 cd backend
-python clear_test_data.py
+uv run python clear_test_data.py
+
+uv run pyinstaller --onefile --icon=NONE d:\Workspace\NY_tagging_sys\client_agent\print_agent.pytaskkill /f /im print_agent.exe
