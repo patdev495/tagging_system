@@ -38,6 +38,52 @@ class BarTenderEngine:
         self._lock = threading.Lock()
         self.is_initialized = False
 
+    def _create_bt_app(self):
+        """Create a new BarTender COM instance, trying multiple strategies."""
+        pythoncom.CoInitialize()
+        
+        # Strategy 1: Standard Dispatch (most reliable for re-attach)
+        strategies = [
+            ("Standard Dispatch", lambda: win32com.client.Dispatch("BarTender.Application")),
+            ("Dynamic Dispatch", lambda: win32com.client.dynamic.Dispatch("BarTender.Application")),
+        ]
+        
+        for name, creator in strategies:
+            try:
+                app = creator()
+                # Verify the object is alive
+                _ = app.Formats
+                app.Visible = False
+                logger.info(f"BarTender connected via {name}")
+                return app
+            except Exception as e:
+                logger.warning(f"{name} failed: {e}")
+                continue
+        
+        # Strategy 3: Kill BarTender and restart fresh
+        logger.warning("All Dispatch strategies failed — restarting BarTender process...")
+        try:
+            import subprocess
+            subprocess.run(["taskkill", "/F", "/IM", "bartend.exe"], 
+                          capture_output=True, timeout=5)
+            time.sleep(2)
+        except Exception:
+            pass
+        
+        # Try again after restart
+        for name, creator in strategies:
+            try:
+                app = creator()
+                _ = app.Formats
+                app.Visible = False
+                logger.info(f"BarTender connected via {name} (after restart)")
+                return app
+            except Exception as e:
+                logger.warning(f"{name} after restart failed: {e}")
+                continue
+        
+        raise RuntimeError("Could not connect to BarTender after all attempts")
+
     def start(self):
         if not HAS_PYWIN32:
             logger.error("pywin32 not installed. BarTender Automation unavailable.")
@@ -45,23 +91,7 @@ class BarTenderEngine:
             
         try:
             logger.info("Initializing BarTender Engine (Direct COM)...")
-            pythoncom.CoInitialize()
-            
-            try:
-                import win32com.client.dynamic
-                self.bt_app = win32com.client.dynamic.Dispatch("BarTender.Application")
-            except Exception as inner_e:
-                logger.error(f"Dynamic Dispatch failed: {inner_e}")
-                self.bt_app = win32com.client.Dispatch("BarTender.Application")
-                
-            try:
-                # Rigorous check: accessing Version and Formats collection
-                _ = self.bt_app.Version
-                _ = self.bt_app.Formats
-                self.bt_app.Visible = False
-            except Exception as prop_e:
-                logger.warning(f"Initial property set warning: {prop_e}")
-                
+            self.bt_app = self._create_bt_app()
             self.is_initialized = True
             logger.info("BarTender Engine: READY (Background Mode)")
             return True
@@ -73,22 +103,132 @@ class BarTenderEngine:
     def _ensure_connected(self):
         """Ensure COM connection is alive and healthy."""
         try:
-            # Check most basic properties
-            _ = self.bt_app.Version
+            # Quick health check
             _ = self.bt_app.Formats
         except Exception:
-            logger.warning("BarTender COM instance lost or unresponsive. Re-attaching...")
-            pythoncom.CoInitialize()
+            logger.warning("BarTender COM instance lost. Reconnecting...")
+            self.bt_app = self._create_bt_app()
+
+    def _check_printer_status(self, printer_name):
+        """Check Windows printer status via win32print API.
+        Returns error string if printer has issues, None if OK."""
+        try:
+            import win32print
+            
+            # Open printer handle
+            hPrinter = win32print.OpenPrinter(printer_name)
             try:
-                import win32com.client.dynamic
-                self.bt_app = win32com.client.dynamic.Dispatch("BarTender.Application")
+                # GetPrinter level 2 returns detailed info including status
+                info = win32print.GetPrinter(hPrinter, 2)
+                status = info.get('Status', 0)
+                
+                # Windows Printer Status Flags
+                # https://learn.microsoft.com/en-us/windows/win32/printdocs/printer-info-2
+                STATUS_FLAGS = {
+                    0x00000001: "Paused",
+                    0x00000002: "Error",
+                    0x00000004: "Pending Deletion",
+                    0x00000008: "Paper Jam",
+                    0x00000010: "Paper Out",
+                    0x00000020: "Manual Feed Required",
+                    0x00000040: "Paper Problem",
+                    0x00000080: "Offline",
+                    0x00000200: "Not Available",
+                    0x00000400: "No Toner",
+                    0x00040000: "Out of Memory",
+                    0x00080000: "Door Open",
+                    0x00100000: "Server Unknown",
+                    0x00200000: "Power Save",
+                }
+                
+                if status != 0:
+                    issues = []
+                    for flag, desc in STATUS_FLAGS.items():
+                        if status & flag:
+                            issues.append(desc)
+                    
+                    if issues:
+                        error_msg = f"Printer '{printer_name}': {', '.join(issues)}"
+                        logger.error(f"Printer status check FAILED: {error_msg} (raw: 0x{status:08X})")
+                        return f"Printer Error: {', '.join(issues)}"
+                    
+                return None  # Printer is OK
+            finally:
+                win32print.ClosePrinter(hPrinter)
+                
+        except ImportError:
+            logger.warning("win32print not available, skipping printer status check")
+            return None
+        except Exception as e:
+            logger.warning(f"Could not check printer '{printer_name}': {e}")
+            return None  # Don't block printing if status check fails
+
+    def _wait_for_print_complete(self, printer_name, timeout=15):
+        """Wait for print spooler to finish and check for errors.
+        Returns error string if issues found, None if OK."""
+        try:
+            import win32print
+            
+            # Poll printer status for up to `timeout` seconds
+            for i in range(timeout * 2):  # Check every 0.5s
+                time.sleep(0.5)
+                
                 try:
-                    self.bt_app.Visible = False
-                except Exception:
-                    pass
-            except Exception as e:
-                logger.error(f"Critical: Failed to re-attach BarTender: {e}")
-                raise
+                    hPrinter = win32print.OpenPrinter(printer_name)
+                    try:
+                        info = win32print.GetPrinter(hPrinter, 2)
+                        status = info.get('Status', 0)
+                        
+                        # Check for error flags
+                        ERROR_FLAGS = {
+                            0x00000002: "Error",
+                            0x00000008: "Paper Jam",
+                            0x00000010: "Paper Out",
+                            0x00000040: "Paper Problem",
+                            0x00000080: "Offline",
+                            0x00000400: "No Toner",
+                            0x00080000: "Door Open",
+                        }
+                        
+                        issues = []
+                        for flag, desc in ERROR_FLAGS.items():
+                            if status & flag:
+                                issues.append(desc)
+                        
+                        if issues:
+                            return f"Printer Error: {', '.join(issues)}"
+                        
+                        # Check if there are still jobs in queue
+                        jobs = win32print.EnumJobs(hPrinter, 0, 10, 1)
+                        if not jobs:
+                            # No more jobs, printer is idle — success
+                            return None
+                            
+                        # Check if any job has error status
+                        for job in jobs:
+                            job_status = job.get('Status', 0)
+                            # JOB_STATUS_ERROR = 0x02, JOB_STATUS_OFFLINE = 0x20
+                            # JOB_STATUS_PAPEROUT = 0x40, JOB_STATUS_BLOCKED_DEVQ = 0x200
+                            if job_status & 0x02:
+                                return f"Print Job Error (Status: 0x{job_status:04X})"
+                            if job_status & 0x40:
+                                return "Printer Error: Paper Out"
+                            if job_status & 0x20:
+                                return "Printer Error: Offline"
+                                
+                    finally:
+                        win32print.ClosePrinter(hPrinter)
+                except Exception as e:
+                    logger.warning(f"Spooler check #{i}: {e}")
+            
+            # Timeout reached without error — assume OK
+            return None
+            
+        except ImportError:
+            return None
+        except Exception as e:
+            logger.warning(f"Print completion check failed: {e}")
+            return None
 
     def print_xml(self, xml_content):
         if not self.is_initialized:
@@ -129,6 +269,18 @@ class BarTenderEngine:
                 except Exception as conn_err:
                     return f"Error connecting to BarTender: {conn_err}"
 
+                # Force background/silent mode before every print
+                try:
+                    self.bt_app.Visible = False
+                except Exception:
+                    pass
+                try:
+                    # Suppress any interactive dialogs
+                    self.bt_app.SuppressErrorDialog = True
+                    self.bt_app.SuppressSaveDialog = True
+                except Exception:
+                    pass
+
                 # Open Format with Retry (Formats.Open is the standard BarTender COM API)
                 bt_format = None
                 last_err = ""
@@ -162,14 +314,41 @@ class BarTenderEngine:
                         bt_format.SetNamedSubStringValue(key, str(val))
                     except Exception as nse:
                         logger.warning(f"Could not set named substring '{key}': {nse}")
+                
+                # ------- Pre-print: Check printer hardware status -------
+                actual_printer = printer_name
+                if not actual_printer:
+                    try:
+                        actual_printer = bt_format.PrintSetup.Printer
+                    except Exception:
+                        pass
+                
+                if actual_printer:
+                    hw_err = self._check_printer_status(actual_printer)
+                    if hw_err:
+                        try:
+                            bt_format.Close(0)
+                        except Exception:
+                            pass
+                        return hw_err
                     
-                # Print with verification
+                # ------- Silent Print -------
                 status_msg = "Success"
                 try:
+                    # PrintOut(ShowPrintDialog, ShowProgressDialog)
+                    # Both False = fully silent, no UI
                     bt_format.PrintOut(False, False)
-                except Exception as e:
-                    logger.error(f"PrintOut failed: {e}")
-                    status_msg = f"PrintOut Failed: {e}"
+                except Exception as po_err:
+                    logger.error(f"PrintOut failed: {po_err}")
+                    status_msg = f"Print Failed: {po_err}"
+                
+                # Post-print: Wait briefly then check printer for errors
+                if status_msg == "Success" and actual_printer:
+                    # Monitor spooler for job completion & errors
+                    post_status = self._wait_for_print_complete(actual_printer, timeout=15)
+                    if post_status:
+                        logger.error(f"Post-print error: {post_status}")
+                        status_msg = post_status
                 
                 try:
                     bt_format.Close(0) # btDoNotSaveChanges

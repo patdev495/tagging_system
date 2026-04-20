@@ -170,47 +170,72 @@
     <!-- Emergency Reprint Modal -->
     <div v-if="showEmergencyModal" class="modal-overlay" @click.self="showEmergencyModal = false">
       <div class="modal-card emergency-modal">
-        <div class="modal-header">
-          <h2><i class="fas fa-exclamation-triangle"></i> Emergency Reprint</h2>
-          <button @click="showEmergencyModal = false" class="btn-close">&times;</button>
+        <div class="modal-header-modern">
+          <div class="header-title">
+            <i class="fas fa-search"></i>
+            <h2>Find & Reprint</h2>
+          </div>
+          <button @click="showEmergencyModal = false" class="btn-close-modern"><i class="fas fa-times"></i></button>
         </div>
-        <div class="modal-body">
-          <p class="emergency-hint">Search for a successfully printed carton to reprint it exactly as it was.</p>
+        
+        <div class="modal-body-modern">
+          <p class="emergency-hint">Enter an exact Carton S/N to retrieve and reprint its label.</p>
           
-          <div class="search-box">
-            <input 
-              v-model="emergencySearchSN" 
-              placeholder="Enter full S/N (e.g. CN26040000001)..." 
-              @keyup.enter="handleEmergencySearch"
-              class="modern-input"
-            />
-            <button @click="handleEmergencySearch" :disabled="emergencySearchLoading" class="btn-primary">
-              <i class="fas fa-search" v-if="!emergencySearchLoading"></i>
-              <i class="fas fa-spinner fa-spin" v-else></i>
-              Search
+          <div class="search-box-modern">
+            <div class="search-input-wrapper">
+              <i class="fas fa-barcode search-icon"></i>
+              <input 
+                v-model="emergencySearchSN" 
+                placeholder="e.g. CN26040000001" 
+                @keyup.enter="handleEmergencySearch"
+                class="modern-search-input"
+              />
+            </div>
+            <button @click="handleEmergencySearch" :disabled="emergencySearchLoading" class="btn-search-modern">
+              <i class="fas fa-spinner fa-spin" v-if="emergencySearchLoading"></i>
+              <span v-else>Search</span>
             </button>
           </div>
 
           <div v-if="emergencyResult" class="emergency-result-card fade-in">
-            <div class="result-info">
-              <h3>{{ emergencyResult.product.item_name }}</h3>
-              <div class="meta-row">
-                <span><strong>S/N:</strong> {{ emergencyResult.carton_sn }}</span>
-                <span><strong>Date:</strong> {{ new Date(emergencyResult.created_at).toLocaleString() }}</span>
+            <div class="result-header">
+              <div class="status-indicator success"></div>
+              <h3>{{ emergencyResult.carton_sn }}</h3>
+            </div>
+            
+            <div class="result-details">
+              <div class="detail-group">
+                <span class="label">Product</span>
+                <span class="value">{{ emergencyResult.product.item_name }}</span>
               </div>
-              <div class="meta-row">
-                <span><strong>Job Order:</strong> {{ emergencyResult.job_order || 'N/A' }}</span>
-                <span><strong>Items:</strong> {{ emergencyResult.items ? emergencyResult.items.length : '?' }}</span>
+              <div class="detail-row">
+                <div class="detail-group">
+                  <span class="label">Job Order</span>
+                  <span class="value">{{ emergencyResult.job_order || 'N/A' }}</span>
+                </div>
+                <div class="detail-group">
+                  <span class="label">Items</span>
+                  <span class="value">{{ emergencyResult.items ? emergencyResult.items.length : '?' }} pcs</span>
+                </div>
+                <div class="detail-group">
+                  <span class="label">Date</span>
+                  <span class="value">{{ new Date(emergencyResult.created_at).toLocaleDateString() }}</span>
+                </div>
               </div>
             </div>
-            <button @click="handleEmergencyReprint" :disabled="emergencySearchLoading" class="btn-print-emergency">
-              <i class="fas fa-print" v-if="!emergencySearchLoading"></i>
-              <i class="fas fa-spinner fa-spin" v-else></i>
-              REPRINT THIS LABEL
-            </button>
+            
+            <div class="result-actions">
+              <button @click="handleEmergencyReprint" :disabled="emergencySearchLoading" class="btn-print-action">
+                <i class="fas fa-spinner fa-spin" v-if="emergencySearchLoading"></i>
+                <i class="fas fa-print" v-else></i>
+                <span>Print Label</span>
+              </button>
+            </div>
           </div>
-          <div v-else-if="emergencySearchSN && !emergencySearchLoading && !emergencyResult" class="no-result">
-             No successful carton found with this S/N.
+          
+          <div v-else-if="emergencySearchSN && !emergencySearchLoading && !emergencyResult" class="no-result-card">
+            <div class="no-result-icon"><i class="fas fa-box-open"></i></div>
+            <p>No successful carton found with this S/N.</p>
           </div>
         </div>
       </div>
@@ -1192,75 +1217,247 @@ onUnmounted(() => {
 
 .modal-card.emergency-modal {
   width: 95%;
-  max-width: 550px;
+  max-width: 600px;
   background: white;
-  border-radius: 20px;
+  border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 16px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1e293b;
+}
+
+.header-title i {
+  font-size: 1.5rem;
+  color: #2563eb;
+}
+
+.header-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.btn-close-modern {
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-close-modern:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  transform: rotate(90deg);
+}
+
+.modal-body-modern {
+  padding: 0 32px 32px;
 }
 
 .emergency-hint {
   color: #64748b;
-  font-size: 0.9rem;
-  margin-bottom: 20px;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
 }
 
-.search-box {
+.search-box-modern {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 6px;
   display: flex;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: 8px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 32px;
+}
+
+.search-box-modern:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.search-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+}
+
+.search-icon {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.modern-search-input {
+  width: 100%;
+  border: none;
+  padding: 12px 14px;
+  font-size: 1rem;
+  color: #1e293b;
+  outline: none;
+  background: transparent;
+}
+
+.btn-search-modern {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-search-modern:hover {
+  background: #1d4ed8;
+}
+
+.btn-search-modern:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
 }
 
 .emergency-result-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.result-header {
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
-.result-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.1rem;
-  color: #1e293b;
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
-.meta-row {
+.status-indicator.success {
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.result-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #0f172a;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.result-details {
+  padding: 20px;
+}
+
+.detail-row {
   display: flex;
-  gap: 15px;
-  font-size: 0.85rem;
-  color: #64748b;
-  margin-bottom: 4px;
+  gap: 24px;
+  margin-top: 16px;
 }
 
-.btn-print-emergency {
+.detail-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-group .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.detail-group .value {
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.result-actions {
+  padding: 16px 20px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-print-action {
   background: #1e293b;
   color: white;
   border: none;
-  padding: 12px 20px;
+  padding: 12px 24px;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   transition: all 0.3s;
 }
 
-.btn-print-emergency:hover {
+.btn-print-action:hover:not(:disabled) {
   background: #0f172a;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 15px -3px rgba(15, 23, 42, 0.2);
 }
 
-.no-result {
+.btn-print-action:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.no-result-card {
   text-align: center;
-  padding: 30px;
-  color: #94a3b8;
-  font-style: italic;
+  padding: 40px 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px dashed #cbd5e1;
+}
+
+.no-result-icon {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.no-result-card p {
+  color: #64748b;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
 .modal-content {
