@@ -22,5 +22,16 @@ export default {
   },
   updateCartonStatus(cartonId, status) {
     return api.patch(`/cartons/${cartonId}/status`, { status });
+  },
+  getNextSN(productId) {
+    return api.get(`/products/${productId}/next-sn`);
+  },
+  searchCarton(sn) {
+    return api.get('/cartons/search', { params: { carton_sn: sn } });
+  },
+  reprintCarton(cartonId, templatePath, printerName) {
+    return api.post(`/cartons/${cartonId}/reprint`, null, { 
+      params: { template_path: templatePath, printer_name: printerName }
+    });
   }
 };

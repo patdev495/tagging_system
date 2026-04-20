@@ -1,27 +1,9 @@
-2026-04-20 08:36:02,971 [INFO] Initializing BarTender Engine (Direct COM)...
-2026-04-20 08:36:03,000 [INFO] BarTender Engine: READY (Background Mode)
-2026-04-20 08:36:03,021 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
-2026-04-20 08:37:15,634 [INFO] Stopping agent...
-2026-04-20 08:37:28,201 [INFO] Initializing BarTender Engine (Direct COM)...
-2026-04-20 08:37:28,223 [INFO] BarTender Engine: READY (Background Mode)
-2026-04-20 08:37:28,241 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
-2026-04-20 08:39:46,293 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
-2026-04-20 08:42:53,806 [INFO] START Print Job: print_job_CN26042900001.xml
-2026-04-20 08:42:54,296 [ERROR] PRINT FAILED: print_job_CN26042900001.xml - Internal Error: (-2147221005, 'Invalid class string', None, None)
-2026-04-20 08:42:54,298 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900001.xml
-2026-04-20 08:43:56,953 [INFO] Stopping agent...
-2026-04-20 08:44:00,995 [INFO] Initializing BarTender Engine (Direct COM)...
-2026-04-20 08:44:01,011 [INFO] BarTender Engine: READY (Background Mode)
-2026-04-20 08:44:01,028 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
-2026-04-20 08:45:32,591 [INFO] START Print Job: print_job_CN26043000001.xml
-2026-04-20 08:45:32,651 [WARNING] BarTender.Messages COM class not found. Printing without message capture.
-2026-04-20 08:45:32,660 [ERROR] PRINT FAILED: print_job_CN26043000001.xml - Internal Error: (-2147352561, 'Parameter not optional.', None, None)
-2026-04-20 08:45:32,662 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000001.xml
-2026-04-20 08:52:22,104 [INFO] Stopping agent...
-2026-04-20 08:52:26,072 [INFO] Initializing BarTender Engine (Direct COM)...
-2026-04-20 08:52:26,105 [INFO] BarTender Engine: READY (Background Mode)
-2026-04-20 08:52:26,131 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
-2026-04-20 08:55:15,403 [INFO] START Print Job: print_job_CN26043000001.xml
-2026-04-20 08:55:15,806 [WARNING] BarTender.Messages COM class not found. Printing without message capture.
-2026-04-20 08:55:16,345 [INFO] PRINT SUCCESS: print_job_CN26043000001.xml
-2026-04-20 08:55:16,347 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000001.xml
+2026-04-20 10:37:03,494 [INFO] START Print Job: print_job_CN26042900001.xml
+2026-04-20 10:37:03,536 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-20 10:37:05,016 [INFO] PRINT SUCCESS: print_job_CN26042900001.xml
+2026-04-20 10:37:05,019 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900001.xml
+2026-04-20 10:39:34,060 [INFO] START Print Job: print_job_CN26042900002.xml
+2026-04-20 10:39:34,062 [WARNING] BarTender COM instance lost or unresponsive. Re-attaching...
+2026-04-20 10:39:34,093 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-20 10:39:35,173 [INFO] PRINT SUCCESS: print_job_CN26042900002.xml
+2026-04-20 10:39:35,174 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900002.xml

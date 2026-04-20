@@ -10,6 +10,9 @@
           <div class="status-badge" :class="{ online: isOnline }">
             {{ isOnline ? 'System Online' : 'Connecting...' }}
           </div>
+          <button @click="showEmergencyModal = true" class="btn-icon warning" title="Emergency Reprint">
+            <i class="fas fa-exclamation-triangle"></i>
+          </button>
           <button @click="showSettings = true" class="btn-icon" title="Settings">
             <i class="fas fa-cog"></i>
           </button>
@@ -47,23 +50,43 @@
           <!-- Main Area: Controls & Info -->
           <div class="main-workspace">
             <div class="session-info">
-              <button @click="resetSession" class="btn-text">&larr; Change Product</button>
-              <div class="active-product">
-                <h2>{{ currentProduct.item_name }}</h2>
-                <div class="meta">
-                  <span>UPC: {{ currentProduct.upc }}</span>
-                  <span>Target: {{ currentProduct.packed_qty }}</span>
+              <div class="session-header-row">
+                <button @click="resetSession" class="btn-back-icon" title="Change Product">
+                  <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="active-product">
+                  <h2>{{ currentProduct.item_name }}</h2>
+                  <div class="meta">
+                    <span class="badge-outline">UPC: {{ currentProduct.upc }}</span>
+                    <span class="badge-outline">Target: {{ currentProduct.packed_qty }}</span>
+                  </div>
                 </div>
-              </div>
-              <div class="job-order-input">
-                <label>Job Order</label>
-                <input 
-                  v-model="jobOrder" 
-                  placeholder="Enter job order number..." 
-                  class="modern-input-small"
-                  ref="jobOrderInput"
-                  @keyup.enter="scanInput.focus()"
-                />
+                <div class="header-inputs">
+                  <div class="job-order-input">
+                    <label>Job Order</label>
+                    <input 
+                      v-model="jobOrder" 
+                      placeholder="Enter Job Order..." 
+                      class="modern-input-small"
+                      ref="jobOrderInput"
+                      @keyup.enter="scanInput.focus()"
+                    />
+                  </div>
+                  <div class="job-order-input">
+                    <label>Start S/N</label>
+                    <input 
+                      v-model="customSN" 
+                      type="number"
+                      placeholder="Auto" 
+                      class="modern-input-small"
+                      :class="{ 'input-err': customSN && parseInt(customSN) < suggestedSNValue }"
+                      @keyup.enter="scanInput.focus()"
+                    />
+                    <span v-if="customSN && parseInt(customSN) < suggestedSNValue" class="input-error-hint">
+                       Must be ≥ {{ suggestedSNValue }}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -139,9 +162,59 @@
     <!-- Notification Overlay -->
     <Transition name="slide-up">
       <div v-if="notification" class="notification" :class="notification.type">
+        <i class="fas" :class="notification.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
         {{ notification.text }}
       </div>
     </Transition>
+
+    <!-- Emergency Reprint Modal -->
+    <div v-if="showEmergencyModal" class="modal-overlay" @click.self="showEmergencyModal = false">
+      <div class="modal-card emergency-modal">
+        <div class="modal-header">
+          <h2><i class="fas fa-exclamation-triangle"></i> Emergency Reprint</h2>
+          <button @click="showEmergencyModal = false" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="emergency-hint">Search for a successfully printed carton to reprint it exactly as it was.</p>
+          
+          <div class="search-box">
+            <input 
+              v-model="emergencySearchSN" 
+              placeholder="Enter full S/N (e.g. CN26040000001)..." 
+              @keyup.enter="handleEmergencySearch"
+              class="modern-input"
+            />
+            <button @click="handleEmergencySearch" :disabled="emergencySearchLoading" class="btn-primary">
+              <i class="fas fa-search" v-if="!emergencySearchLoading"></i>
+              <i class="fas fa-spinner fa-spin" v-else></i>
+              Search
+            </button>
+          </div>
+
+          <div v-if="emergencyResult" class="emergency-result-card fade-in">
+            <div class="result-info">
+              <h3>{{ emergencyResult.product.item_name }}</h3>
+              <div class="meta-row">
+                <span><strong>S/N:</strong> {{ emergencyResult.carton_sn }}</span>
+                <span><strong>Date:</strong> {{ new Date(emergencyResult.created_at).toLocaleString() }}</span>
+              </div>
+              <div class="meta-row">
+                <span><strong>Job Order:</strong> {{ emergencyResult.job_order || 'N/A' }}</span>
+                <span><strong>Items:</strong> {{ emergencyResult.items ? emergencyResult.items.length : '?' }}</span>
+              </div>
+            </div>
+            <button @click="handleEmergencyReprint" :disabled="emergencySearchLoading" class="btn-print-emergency">
+              <i class="fas fa-print" v-if="!emergencySearchLoading"></i>
+              <i class="fas fa-spinner fa-spin" v-else></i>
+              REPRINT THIS LABEL
+            </button>
+          </div>
+          <div v-else-if="emergencySearchSN && !emergencySearchLoading && !emergencyResult" class="no-result">
+             No successful carton found with this S/N.
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Settings Modal -->
     <div v-if="showSettings" class="modal-overlay" @click.self="showSettings = false">
@@ -216,7 +289,13 @@ const jobOrderInput = ref(null); // Ref for Job Order input
 const showSettings = ref(false);
 const lastCarton = ref(null);
 const jobOrder = ref(''); // New Job Order state
+const customSN = ref(''); // Custom starting SN
+const suggestedSNValue = ref(0); // Store DB suggested next sequence
 const isAgentConnected = ref(false);
+const showEmergencyModal = ref(false);
+const emergencySearchSN = ref('');
+const emergencyResult = ref(null);
+const emergencySearchLoading = ref(false);
 const agentErrorMessage = ref(''); // Store the specific BarTender error
 const backupScannedItems = ref([]); // Store items in case of failure
 let statusTimer = null;
@@ -293,7 +372,20 @@ const selectProduct = async (p) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   currentProduct.value = p;
   scannedItems.value = [];
-  lastCarton.value = null; // Clear previous state
+  lastCarton.value = null;
+  agentErrorMessage.value = '';
+  customSN.value = ''; // Reset first
+  
+  // Fetch next SN info to use as default value
+  try {
+    const snRes = await api.getNextSN(p.id);
+    if (snRes.data && snRes.data.next_seq) {
+      customSN.value = snRes.data.next_seq.toString();
+      suggestedSNValue.value = snRes.data.next_seq;
+    }
+  } catch (err) {
+    console.warn('Error fetching next SN preview:', err);
+  }
   
   // Fetch the last carton for this product immediately
   try {
@@ -350,6 +442,17 @@ const finalizeCarton = async (isRetry = false) => {
   isProcessing.value = true;
   agentErrorMessage.value = '';
   
+  if (customSN.value && !isNaN(parseInt(customSN.value))) {
+    const inputVal = parseInt(customSN.value);
+    if (inputVal < suggestedSNValue.value) {
+      showNotification(`ERROR: Start S/N cannot be lower than ${suggestedSNValue.value}`, 'error');
+      // Scroll to top to see notification
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      isProcessing.value = false;
+      return;
+    }
+  }
+  
   // If it's not a retry, we use the current scanned list
   // If it is a retry from a failed state, we use the backup list (so user doesn't have to re-scan)
   const itemsToPack = isRetry ? backupScannedItems.value : [...scannedItems.value];
@@ -367,7 +470,8 @@ const finalizeCarton = async (isRetry = false) => {
       template_path: settings.value.templatePath || null,
       printer_name: settings.value.printerName || null,
       print_folder: settings.value.printFolder || null,
-      job_order: jobOrder.value
+      job_order: jobOrder.value,
+      custom_sn: customSN.value ? parseInt(customSN.value) : null
     });
     
     lastCarton.value = res.data;
@@ -381,6 +485,12 @@ const finalizeCarton = async (isRetry = false) => {
       await api.updateCartonStatus(res.data.id, 'SUCCESS');
       lastCarton.value.status = 'SUCCESS';
       showNotification(`Carton ${res.data.carton_sn} Printed Successfully!`, 'success');
+      
+      // Auto-increment custom S/N for next workflow if provided
+      if (customSN.value && !isNaN(parseInt(customSN.value))) {
+        customSN.value = (parseInt(customSN.value) + 1).toString();
+      }
+
       // Only clear scan list if print succeeded
       if (!isRetry) scannedItems.value = [];
     } else {
@@ -474,6 +584,63 @@ const showNotification = (text, type = 'info', duration = 3000) => {
 
 const formatTime = () => {
   return new Date().toLocaleTimeString();
+};
+
+const handleEmergencySearch = async () => {
+  if (!emergencySearchSN.value) return;
+  emergencySearchLoading.value = true;
+  emergencyResult.value = null;
+  try {
+    const res = await api.searchCarton(emergencySearchSN.value.trim());
+    if (res.data) {
+      emergencyResult.value = res.data;
+    } else {
+      showNotification('Carton not found or not successfully printed.', 'warning');
+    }
+  } catch (err) {
+    showNotification('Search failed: ' + (err.response?.data?.detail || err.message), 'error');
+  } finally {
+    emergencySearchLoading.value = false;
+  }
+};
+
+const handleEmergencyReprint = async () => {
+  if (!emergencyResult.value) return;
+  
+  emergencySearchLoading.value = true;
+  try {
+    // Call the reprint/logging endpoint (this creates a new Carton record and returns new BTXML)
+    const res = await api.reprintCarton(
+      emergencyResult.value.id, 
+      settings.value.templatePath,
+      settings.value.printerName
+    );
+    
+    // The response is the new Carton object (with the generated btxml attached)
+    const newCarton = res.data;
+    
+    if (!newCarton || !newCarton.btxml) {
+      showNotification('Could not generate reprint data.', 'error');
+      return;
+    }
+
+    const result = await handleClientPrint(
+      newCarton.btxml, 
+      newCarton.carton_sn, 
+      newCarton.id
+    );
+    
+    if (result === 'Success') {
+      showNotification(`Reprint successful: ${emergencyResult.value.carton_sn}`, 'success');
+      showEmergencyModal.value = false;
+    } else {
+      showNotification('Reprint failed: ' + result, 'error');
+    }
+  } catch (err) {
+    showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error');
+  } finally {
+    emergencySearchLoading.value = false;
+  }
 };
 
 onMounted(() => {
@@ -1013,6 +1180,89 @@ onUnmounted(() => {
   z-index: 2000;
 }
 
+.btn-icon.warning {
+  color: #d946ef;
+  border-color: #d946ef;
+}
+
+.btn-icon.warning:hover {
+  background: #fdf4ff;
+  transform: scale(1.1) rotate(5deg);
+}
+
+.modal-card.emergency-modal {
+  width: 95%;
+  max-width: 550px;
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.emergency-hint {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.emergency-result-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.result-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+}
+
+.meta-row {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.btn-print-emergency {
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.btn-print-emergency:hover {
+  background: #0f172a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.no-result {
+  text-align: center;
+  padding: 30px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
 .modal-content {
   background: white;
   padding: 24px;
@@ -1123,18 +1373,73 @@ onUnmounted(() => {
 
 .btn-text:hover { color: #1e293b; }
 
+.session-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+}
+
+.btn-back-icon {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.btn-back-icon:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  transform: translateX(-2px);
+}
+
+.active-product {
+  flex: 1;
+}
+
+.active-product h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #1e3a8a;
+  line-height: 1.2;
+}
+
+.badge-outline {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-right: 8px;
+  background: white;
+}
+
+.header-inputs {
+  display: flex;
+  gap: 12px;
+}
+
 .job-order-input {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 200px;
 }
 
 .job-order-input label {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-weight: 600;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .modern-input-small {
@@ -1148,6 +1453,20 @@ onUnmounted(() => {
   outline: none;
   transition: all 0.2s;
   box-sizing: border-box;
+}
+
+.modern-input-small.input-err {
+  border-color: #ef4444 !important;
+  background: #fff1f2 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-error-hint {
+  color: #e11d48;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-top: 2px;
+  display: block;
 }
 
 .modern-input-small:focus {

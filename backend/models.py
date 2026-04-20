@@ -36,6 +36,8 @@ class Carton(Base):
     packed_by = Column(String(100), nullable=True)
     job_order = Column(String(100), nullable=True)
     status = Column(String(20), default="FAILED", index=True) # SUCCESS or FAILED
+    btxml = Column(UnicodeText, nullable=True) # Stores original print data
+    is_reprint = Column(Integer, default=0) # 0 for Original, 1 for Reprint
     
     product = relationship("Product", back_populates="cartons")
     items = relationship("CartonItem", back_populates="carton")

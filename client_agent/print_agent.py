@@ -4,6 +4,7 @@ import socket
 import threading
 import time
 import logging
+import traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # Only import pywin32 on Windows
@@ -47,11 +48,20 @@ class BarTenderEngine:
             pythoncom.CoInitialize()
             
             try:
-                self.bt_app = win32com.client.gencache.EnsureDispatch("BarTender.Application")
-            except Exception:
+                import win32com.client.dynamic
+                self.bt_app = win32com.client.dynamic.Dispatch("BarTender.Application")
+            except Exception as inner_e:
+                logger.error(f"Dynamic Dispatch failed: {inner_e}")
                 self.bt_app = win32com.client.Dispatch("BarTender.Application")
                 
-            self.bt_app.Visible = False
+            try:
+                # Rigorous check: accessing Version and Formats collection
+                _ = self.bt_app.Version
+                _ = self.bt_app.Formats
+                self.bt_app.Visible = False
+            except Exception as prop_e:
+                logger.warning(f"Initial property set warning: {prop_e}")
+                
             self.is_initialized = True
             logger.info("BarTender Engine: READY (Background Mode)")
             return True
@@ -59,6 +69,26 @@ class BarTenderEngine:
             logger.critical(f"Failed to start BarTender: {e}")
             self.is_initialized = False
             return False
+
+    def _ensure_connected(self):
+        """Ensure COM connection is alive and healthy."""
+        try:
+            # Check most basic properties
+            _ = self.bt_app.Version
+            _ = self.bt_app.Formats
+        except Exception:
+            logger.warning("BarTender COM instance lost or unresponsive. Re-attaching...")
+            pythoncom.CoInitialize()
+            try:
+                import win32com.client.dynamic
+                self.bt_app = win32com.client.dynamic.Dispatch("BarTender.Application")
+                try:
+                    self.bt_app.Visible = False
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.error(f"Critical: Failed to re-attach BarTender: {e}")
+                raise
 
     def print_xml(self, xml_content):
         if not self.is_initialized:
@@ -94,39 +124,57 @@ class BarTenderEngine:
 
                 pythoncom.CoInitialize()
                 
-                # Open Format
-                bt_fmt = self.bt_app.Formats.Open(format_path, False, "")
-                if printer_name:
-                    bt_fmt.Printer = printer_name
-                for key, val in substrings.items():
-                    bt_fmt.SetNamedSubStringValue(key, str(val))
-                    
-                # Enhanced Print with Verification
-                # Some BarTender installations don't register 'BarTender.Messages' as a standalone class
-                messages = None
                 try:
-                    messages = win32com.client.Dispatch("BarTender.Messages")
-                except Exception:
-                    logger.warning("BarTender.Messages COM class not found. Printing without message capture.")
-                
-                # Format.Print(JobName, WaitForJobToComplete, TimeoutMs, Messages)
-                # If Messages is missing or not supported, Fallback to PrintOut
-                status_msg = "Success"
-                if messages:
+                    self._ensure_connected()
+                except Exception as conn_err:
+                    return f"Error connecting to BarTender: {conn_err}"
+
+                # Open Format with Retry (Formats.Open is the standard BarTender COM API)
+                bt_format = None
+                last_err = ""
+                for attempt in range(3):
                     try:
-                        result = bt_fmt.Print(f"AgentJob_{int(time.time())}", True, 10000, messages)
-                        if result != 0:
-                            error_details = " | ".join([f"{m.Message} (Severity: {m.Severity})" for m in messages])
-                            status_msg = f"Print Failed (Code {result}) {error_details}".strip()
-                    except Exception as e:
-                        logger.warning(f"bt_fmt.Print with Messages failed: {e}. Falling back to PrintOut.")
-                        bt_fmt.PrintOut(False, False)
-                else:
-                    # Classic PrintOut without verification 
-                    # ShowPrintDialog = False, ShowFormatDialog = False
-                    bt_fmt.PrintOut(False, False)
+                        logger.info(f"Opening template (Attempt {attempt+1}): {format_path}")
+                        bt_format = self.bt_app.Formats.Open(format_path, False, "")
+                        if bt_format: break
+                    except Exception:
+                        exc_data = traceback.format_exc()
+                        last_err = f"{exc_data}"
+                        logger.warning(f"Formats.Open attempt {attempt+1} failed. Trace:\n{exc_data}")
+                        try:
+                            self._ensure_connected()
+                            time.sleep(1) # Wait a bit for BarTender to settle
+                        except:
+                            pass
                 
-                bt_fmt.Close(0) # btDoNotSaveChanges
+                if not bt_format:
+                    return f"Error: Formats.Open failed after 3 attempts. Details: {last_err.splitlines()[-1]}"
+
+                if printer_name:
+                    try:
+                        bt_format.PrintSetup.Printer = printer_name
+                    except Exception as pe:
+                        logger.warning(f"Could not set printer '{printer_name}': {pe}")
+                
+                # Use SetNamedSubString on the Format object
+                for key, val in substrings.items():
+                    try:
+                        bt_format.SetNamedSubStringValue(key, str(val))
+                    except Exception as nse:
+                        logger.warning(f"Could not set named substring '{key}': {nse}")
+                    
+                # Print with verification
+                status_msg = "Success"
+                try:
+                    bt_format.PrintOut(False, False)
+                except Exception as e:
+                    logger.error(f"PrintOut failed: {e}")
+                    status_msg = f"PrintOut Failed: {e}"
+                
+                try:
+                    bt_format.Close(0) # btDoNotSaveChanges
+                except Exception:
+                    pass
                 return status_msg
                 
             except Exception as e:

@@ -67,11 +67,14 @@ def generate_btxml(carton: models.Carton, product: models.Product, items: List[s
 </XMLScript>"""
     return xml.strip()
 
-def get_next_carton_sn(db: Session, product: models.Product):
+def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int = None):
     now = datetime.datetime.now()
     yymm = now.strftime("%y%m")
     prefix = f"{product.start_part}{yymm}{product.middle_part}"
     
+    if custom_sn is not None:
+        return f"{prefix}{str(custom_sn).zfill(5)}"
+        
     # Check max sequence for this prefix in DB with a lock
     # with_for_update() ensures other transactions wait until this one is committed
     # Check max sequence for this prefix in DB that was SUCCESSFUL
@@ -93,6 +96,41 @@ def get_next_carton_sn(db: Session, product: models.Product):
         
     return f"{prefix}{str(next_seq).zfill(5)}"
 
+@app.get("/products/{product_id}/next-sn")
+def get_next_sn_preview(product_id: int, db: Session = Depends(database.get_db)):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # We don't want to use with_for_update() for a pure preview to avoid locking,
+    # but for simplicity and consistency, let's just reuse the logic without custom_sn
+    # Actually, let's extract the numeric part
+    now = datetime.datetime.now()
+    yymm = now.strftime("%y%m")
+    prefix = f"{product.start_part}{yymm}{product.middle_part}"
+    
+    max_sn = db.query(func.max(models.Carton.carton_sn)).filter(
+        models.Carton.carton_sn.like(f"{prefix}%"),
+        models.Carton.status == "SUCCESS"
+    ).scalar()
+    
+    next_seq = 1
+    if max_sn:
+        try:
+            next_seq = int(max_sn[-5:]) + 1
+        except ValueError:
+            next_seq = 1
+            
+    return {"next_seq": next_seq, "full_sn": f"{prefix}{str(next_seq).zfill(5)}"}
+
+@app.get("/cartons/search", response_model=Optional[schemas.Carton])
+def search_carton(carton_sn: str, db: Session = Depends(database.get_db)):
+    # Search for a successful carton by exact S/N
+    return db.query(models.Carton).filter(
+        models.Carton.carton_sn == carton_sn,
+        models.Carton.status == "SUCCESS"
+    ).order_by(models.Carton.created_at.desc()).first()
+
 @app.post("/cartons", response_model=schemas.Carton)
 def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(database.get_db)):
     # 1. Get product
@@ -105,8 +143,17 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
     
     # 3. Generate new S/N
-    new_sn = get_next_carton_sn(db, product)
+    new_sn = get_next_carton_sn(db, product, carton_in.custom_sn)
     
+    # Check if a successful print already exists for this exact custom sequence
+    if carton_in.custom_sn is not None:
+        existing = db.query(models.Carton).filter(
+            models.Carton.carton_sn == new_sn,
+            models.Carton.status == "SUCCESS"
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail=f"S/N (Seq: {carton_in.custom_sn}) is already successfully printed.")
+
     # 4. Save to DB within a transaction
     try:
         new_carton = models.Carton(
@@ -114,7 +161,8 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
             carton_sn=new_sn,
             packed_by=carton_in.printer_name or "System", 
             job_order=carton_in.job_order,
-            status="FAILED" # Default until agent confirms success
+            status="FAILED", # Default until agent confirms success
+            btxml=None # Will be updated
         )
         db.add(new_carton)
         db.flush() # Get new_carton.id
@@ -136,6 +184,7 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
                 carton_in.template_path,
                 carton_in.printer_name
             )
+            new_carton.btxml = btxml_content
             
             # Phase 3: Direct write to folder if provided (Bypass browser downloads)
             if carton_in.print_folder:
@@ -199,31 +248,74 @@ def update_carton_status(carton_id: int, status_update: schemas.CartonStatusUpda
     return carton
 
 @app.get("/cartons/{carton_id}/btxml")
-def download_carton_btxml(carton_id: int, db: Session = Depends(database.get_db)):
+def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, db: Session = Depends(database.get_db)):
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     
-    # Regenerate XML on the fly since it's not stored in DB
-    product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
-    item_sns = [item.item_sn for item in carton.items]
+    btxml_content = carton.btxml
     
-    # We use a default template path or get it from job context if available
-    # For now, we'll try to find a default from the product or just use a placeholder
-    # In a real scenario, you might want to store the template_path in the Carton table
-    # even if you don't store the full XML.
-    template_path = "D:\\Labels\\carton_ui.btw" # Placeholder or logic to find template
-    
-    btxml = generate_btxml(carton, product, item_sns, template_path)
+    # If btxml is missing (old records), regenerate it on the fly
+    if not btxml_content:
+        product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
+        item_sns = [item.item_sn for item in carton.items]
+        
+        # Use provided template path or fallback to a default
+        path_to_use = template_path or "D:\\Labels\\carton_ui.btw"
+        
+        btxml_content = generate_btxml(carton, product, item_sns, path_to_use)
     
     from fastapi.responses import Response
     return Response(
-        content=btxml,
-        media_type="application/octet-stream",
+        content=btxml_content,
+        media_type="application/xml",
         headers={
             "Content-Disposition": f"attachment; filename=print_job_{carton.carton_sn}.xml"
         }
     )
+
+@app.post("/cartons/{carton_id}/reprint", response_model=schemas.Carton)
+def reprint_carton(carton_id: int, template_path: Optional[str] = None, printer_name: Optional[str] = None, db: Session = Depends(database.get_db)):
+    # 1. Fetch original record
+    original = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
+    if not original:
+        raise HTTPException(status_code=404, detail="Original carton not found")
+    
+    # 2. Duplicate the record
+    new_carton = models.Carton(
+        product_id=original.product_id,
+        carton_sn=original.carton_sn,
+        job_order=original.job_order,
+        packed_by=printer_name or original.packed_by,
+        status="SUCCESS", # Reprints are considered successful attempts by default
+        is_reprint=1
+    )
+    db.add(new_carton)
+    db.flush()
+    
+    # 3. Duplicate items
+    for item in original.items:
+        new_item = models.CartonItem(
+            carton_id=new_carton.id,
+            item_sn=item.item_sn
+        )
+        db.add(new_item)
+    
+    # 4. Generate BTXML
+    product = db.query(models.Product).filter(models.Product.id == original.product_id).first()
+    item_sns = [item.item_sn for item in original.items]
+    path_to_use = template_path or "D:\\Labels\\carton_ui.btw"
+    
+    btxml_content = generate_btxml(new_carton, product, item_sns, path_to_use, printer_name)
+    new_carton.btxml = btxml_content
+    
+    db.commit()
+    db.refresh(new_carton)
+    
+    # Manually attach btxml for the response schema
+    response_data = schemas.Carton.from_orm(new_carton)
+    response_data.btxml = btxml_content
+    return response_data
 
 # Health check for DB
 @app.get("/health")
