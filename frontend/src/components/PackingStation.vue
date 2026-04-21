@@ -73,6 +73,17 @@
                     />
                   </div>
                   <div class="job-order-input">
+                    <label>Origin</label>
+                    <select 
+                      v-model="cartonOrigin" 
+                      class="modern-input-small origin-select"
+                      @change="scanInput.focus()"
+                    >
+                      <option value="VN">VN</option>
+                      <option value="CN">CN</option>
+                    </select>
+                  </div>
+                  <div class="job-order-input">
                     <label>Start S/N</label>
                     <input 
                       v-model="customSN" 
@@ -101,14 +112,25 @@
             </div>
 
             <div class="result-actions fade-in" v-if="lastCarton">
-              <div class="success-banner" :class="{ 'error-banner': lastCarton.status === 'FAILED' }">
-                <i class="fas" :class="lastCarton.status === 'SUCCESS' ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+              <div class="success-banner" :class="{ 'error-banner': lastCarton.status === 'FAILED', 'printing-banner': lastCarton.status === 'PRINTING' }">
+                <i class="fas" :class="{
+                  'fa-check-circle': lastCarton.status === 'SUCCESS', 
+                  'fa-exclamation-triangle': lastCarton.status === 'FAILED',
+                  'fa-spinner fa-spin': lastCarton.status === 'PRINTING'
+                }"></i>
                 <span>
-                  {{ lastCarton.status === 'SUCCESS' ? 'Last Carton:' : 'Previous Attempt Failed:' }} 
-                  <strong :class="{ 'text-strike': lastCarton.status === 'FAILED' }">{{ lastCarton.carton_sn }}</strong>
-                  <span v-if="lastCarton.status === 'FAILED' && agentErrorMessage" class="error-detail"> - {{ agentErrorMessage }}</span>
+                  <template v-if="lastCarton.status === 'PRINTING'">
+                    Printing Carton: <strong>{{ lastCarton.carton_sn }}</strong>...
+                  </template>
+                  <template v-else-if="lastCarton.status === 'SUCCESS'">
+                    Last Carton: <strong>{{ lastCarton.carton_sn }}</strong>
+                  </template>
+                  <template v-else>
+                    Previous Attempt Failed: <strong class="text-strike">{{ lastCarton.carton_sn }}</strong>
+                    <span v-if="agentErrorMessage" class="error-detail"> - {{ agentErrorMessage }}</span>
+                  </template>
                 </span>
-                <div class="banner-actions">
+                <div class="banner-actions" v-if="lastCarton.status !== 'PRINTING'">
                   <a v-if="lastCarton.status === 'SUCCESS'" :href="`http://${host}:8000/cartons/${lastCarton.id}/btxml`" class="btn-reprint" download>
                     <i class="fas fa-file-download"></i> Manual Download
                   </a>
@@ -243,52 +265,61 @@
 
     <!-- Settings Modal -->
     <div v-if="showSettings" class="modal-overlay" @click.self="showSettings = false">
-      <div class="glass-card modal-content">
-        <h2><i class="fas fa-print"></i> Printer Settings</h2>
-        <p class="subtitle">Configure local printer and template paths for this station.</p>
+      <div class="glass-card modal-content settings-modal">
+        <div class="modal-header-modern">
+          <div class="header-title">
+            <i class="fas fa-cog"></i>
+            <h2>Station Settings</h2>
+          </div>
+          <button @click="showSettings = false" class="btn-close-modern"><i class="fas fa-times"></i></button>
+        </div>
         
-        <div class="form-group">
-          <label>Station ID</label>
-          <input v-model="settings.stationId" placeholder="e.g., PACK-01" class="modern-input" />
-        </div>
+        <div class="modal-body-scrollable">
+          <p class="subtitle">Configure local printer and template paths for this station.</p>
+          
+          <div class="form-group">
+            <label>Station ID</label>
+            <input v-model="settings.stationId" placeholder="e.g., PACK-01" class="modern-input" />
+          </div>
 
-        <div class="form-group">
-          <label>Template Path (.btw)</label>
-          <div class="input-with-hint">
-            <input v-model="settings.templatePath" placeholder="D:\Labels\carton_ui.btw" class="modern-input" />
-            <small>Hint: Shift + Right Click on file -> "Copy as path" then paste here.</small>
+          <div class="form-group">
+            <label>Template Path (.btw)</label>
+            <div class="input-with-hint">
+              <input v-model="settings.templatePath" placeholder="D:\Labels\carton_ui.btw" class="modern-input" />
+              <small>Hint: Shift + Right Click on file -> "Copy as path" then paste here.</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Print Job Folder</label>
+            <div class="input-with-hint">
+              <input v-model="settings.printFolder" placeholder="D:\print_test" class="modern-input" />
+              <small class="hint-text">
+                Folder where XML files will be saved for BarTender to watch.
+              </small>
+            </div>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="modern-checkbox">
+              <input type="checkbox" v-model="settings.serverPrint" />
+              <span>Process Print on Server</span>
+            </label>
+            <small class="hint-text">If OFF, the local Agent or Browser Download will be used.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Printer Name (Windows)</label>
+            <div class="input-with-hint">
+              <input v-model="settings.printerName" placeholder="Leave blank for BarTender Default" class="modern-input" />
+              <small>Hint: If blank, BarTender will use the printer saved in the .btw file.</small>
+            </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Print Job Folder</label>
-          <div class="input-with-hint">
-            <input v-model="settings.printFolder" placeholder="C:\print_jobs" class="modern-input" />
-            <small class="hint-text">
-              Folder where XML files will be saved for BarTender to watch.
-            </small>
-          </div>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label class="modern-checkbox">
-            <input type="checkbox" v-model="settings.serverPrint" />
-            <span>Process Print on Server</span>
-          </label>
-          <small class="hint-text">If OFF, the local Agent or Browser Download will be used.</small>
-        </div>
-
-        <div class="form-group">
-          <label>Printer Name (Windows)</label>
-          <div class="input-with-hint">
-            <input v-model="settings.printerName" placeholder="Leave blank for BarTender Default" class="modern-input" />
-            <small>Hint: If blank, BarTender will use the printer saved in the .btw file.</small>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button @click="saveSettings" class="btn-primary">Save Settings</button>
+        <div class="modal-actions-sticky">
           <button @click="showSettings = false" class="btn-text">Cancel</button>
+          <button @click="saveSettings" class="btn-primary">Save Settings</button>
         </div>
       </div>
     </div>
@@ -296,7 +327,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import api from '../api';
 
 const customers = ref([]);
@@ -314,6 +345,7 @@ const jobOrderInput = ref(null); // Ref for Job Order input
 const showSettings = ref(false);
 const lastCarton = ref(null);
 const jobOrder = ref(''); // New Job Order state
+const cartonOrigin = ref('VN'); // New Origin state
 const customSN = ref(''); // Custom starting SN
 const suggestedSNValue = ref(0); // Store DB suggested next sequence
 const isAgentConnected = ref(false);
@@ -467,68 +499,83 @@ const finalizeCarton = async (isRetry = false) => {
   isProcessing.value = true;
   agentErrorMessage.value = '';
   
-  if (customSN.value && !isNaN(parseInt(customSN.value))) {
-    const inputVal = parseInt(customSN.value);
-    if (inputVal < suggestedSNValue.value) {
-      showNotification(`ERROR: Start S/N cannot be lower than ${suggestedSNValue.value}`, 'error');
-      // Scroll to top to see notification
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      isProcessing.value = false;
-      return;
-    }
-  }
-  
-  // If it's not a retry, we use the current scanned list
-  // If it is a retry from a failed state, we use the backup list (so user doesn't have to re-scan)
-  const itemsToPack = isRetry ? backupScannedItems.value : [...scannedItems.value];
-  
-  if (itemsToPack.length === 0) {
-    showNotification('No items to pack!', 'error');
-    isProcessing.value = false;
-    return;
-  }
-
   try {
-    const res = await api.createCarton({
-      product_id: currentProduct.value.id,
-      items: itemsToPack,
-      template_path: settings.value.templatePath || null,
-      printer_name: settings.value.printerName || null,
-      print_folder: settings.value.printFolder || null,
-      job_order: jobOrder.value,
-      custom_sn: customSN.value ? parseInt(customSN.value) : null
-    });
-    
-    lastCarton.value = res.data;
-    backupScannedItems.value = itemsToPack; // Save for potential retry
+    let cartonId, cartonSn, btxmlContent;
+
+    if (isRetry && lastCarton.value) {
+      // Re-print or Try-again flow: exactly reprint previous carton, do not create new snippet
+      cartonId = lastCarton.value.id;
+      cartonSn = lastCarton.value.carton_sn;
+      btxmlContent = lastCarton.value.btxml; // Ensure this is available from previous response
+      lastCarton.value.status = 'PRINTING';
+    } else {
+      // New carton flow
+      if (customSN.value && !isNaN(parseInt(customSN.value))) {
+        const inputVal = parseInt(customSN.value);
+        if (inputVal < suggestedSNValue.value) {
+          showNotification(`ERROR: Start S/N cannot be lower than ${suggestedSNValue.value}`, 'error');
+          // Scroll to top to see notification
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          isProcessing.value = false;
+          return;
+        }
+      }
+      
+      const itemsToPack = [...scannedItems.value];
+      if (itemsToPack.length === 0) {
+        showNotification('No items to pack!', 'error');
+        isProcessing.value = false;
+        return;
+      }
+
+      const res = await api.createCarton({
+        product_id: currentProduct.value.id,
+        items: itemsToPack,
+        template_path: settings.value.templatePath || null,
+        printer_name: settings.value.printerName || null,
+        print_folder: settings.value.printFolder || null,
+        job_order: jobOrder.value,
+        custom_sn: customSN.value ? parseInt(customSN.value) : null,
+        carton_origin: cartonOrigin.value
+      });
+      
+      cartonId = res.data.id;
+      cartonSn = res.data.carton_sn;
+      btxmlContent = res.data.btxml;
+      
+      // Set status to PRINTING initially to avoid UI flash of red FAILED
+      const cartonData = { ...res.data, status: 'PRINTING' };
+      lastCarton.value = cartonData;
+      backupScannedItems.value = itemsToPack; // Save for potential future use
+    }
 
     // Client-Side Printing Logic
     console.log('Attempting print via Local Agent...');
-    const printStatus = await handleClientPrint(res.data.btxml, res.data.carton_sn, res.data.id);
+    const printStatus = await handleClientPrint(btxmlContent, cartonSn, cartonId);
     
     if (printStatus === 'Success') {
-      await api.updateCartonStatus(res.data.id, 'SUCCESS');
+      await api.updateCartonStatus(cartonId, 'SUCCESS');
       lastCarton.value.status = 'SUCCESS';
-      showNotification(`Carton ${res.data.carton_sn} Printed Successfully!`, 'success');
+      showNotification(`Carton ${cartonSn} Printed Successfully!`, 'success');
       
-      // Auto-increment custom S/N for next workflow if provided
-      if (customSN.value && !isNaN(parseInt(customSN.value))) {
-        customSN.value = (parseInt(customSN.value) + 1).toString();
+      // Auto-increment custom S/N for next workflow ONLY if this is a new carton
+      if (!isRetry) {
+        if (customSN.value && !isNaN(parseInt(customSN.value))) {
+          customSN.value = (parseInt(customSN.value) + 1).toString();
+        }
+        // Only clear scan list if a NEW print succeeded
+        scannedItems.value = [];
       }
-
-      // Only clear scan list if print succeeded
-      if (!isRetry) scannedItems.value = [];
     } else {
-      // In this case, handleClientPrint already returned an error string
-      await api.updateCartonStatus(res.data.id, 'FAILED');
+      // Print failed: notify and leave items in buffer for retry
       lastCarton.value.status = 'FAILED';
-      agentErrorMessage.value = printStatus;
-      showNotification('PRINT FAILED: ' + printStatus, 'error', 0); // 0 means persistent
-      // We DO NOT clear scannedItems if it failed (so user can fix printer and click Try Again)
+      agentErrorMessage.value = printStatus; // Show reason
+      showNotification(`Print failed: ${printStatus}`, 'error');
     }
   } catch (err) {
-    const errorMsg = err.response?.data?.detail || err.message;
-    showNotification('Error finalizing: ' + errorMsg, 'error');
+    console.error('Error finalizing carton:', err);
+    if (lastCarton.value && !isRetry) lastCarton.value.status = 'FAILED';
+    showNotification('Failed to generate carton on server.', 'error');
   } finally {
     isProcessing.value = false;
   }
@@ -668,7 +715,39 @@ const handleEmergencyReprint = async () => {
   }
 };
 
+// Auto-save state
+watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, suggestedSNValue, backupScannedItems, lastCarton], () => {
+  sessionStorage.setItem('packingState', JSON.stringify({
+    jobOrder: jobOrder.value,
+    cartonOrigin: cartonOrigin.value,
+    currentProduct: currentProduct.value,
+    scannedItems: scannedItems.value,
+    customSN: customSN.value,
+    suggestedSNValue: suggestedSNValue.value,
+    backupScannedItems: backupScannedItems.value,
+    lastCarton: lastCarton.value
+  }));
+}, { deep: true });
+
 onMounted(() => {
+  // Restore state
+  const savedState = sessionStorage.getItem('packingState');
+  if (savedState) {
+    try {
+      const state = JSON.parse(savedState);
+      if (state.jobOrder) jobOrder.value = state.jobOrder;
+      if (state.cartonOrigin) cartonOrigin.value = state.cartonOrigin;
+      if (state.currentProduct) currentProduct.value = state.currentProduct;
+      if (state.scannedItems) scannedItems.value = state.scannedItems;
+      if (state.customSN) customSN.value = state.customSN;
+      if (state.suggestedSNValue !== undefined) suggestedSNValue.value = state.suggestedSNValue;
+      if (state.backupScannedItems) backupScannedItems.value = state.backupScannedItems;
+      if (state.lastCarton) lastCarton.value = state.lastCarton;
+    } catch (e) {
+      console.error('Failed to restore packing state', e);
+    }
+  }
+
   loadCustomers();
   loadSettings();
   
@@ -1364,6 +1443,19 @@ onUnmounted(() => {
   border-radius: 50%;
 }
 
+.input-err {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.input-error-hint {
+  display: block;
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
 .status-indicator.success {
   background: #10b981;
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
@@ -1462,21 +1554,67 @@ onUnmounted(() => {
 
 .modal-content {
   background: white;
-  padding: 24px;
+  padding: 0; /* Reset padding for new layout */
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   color: #1e293b;
+  overflow: hidden; /* Important for sticky header/footer */
 }
 
-.modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 8px;
+/* Modals that need scrolling */
+.settings-modal {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body-scrollable {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-header-modern {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+}
+
+.modal-header-modern .header-title {
   display: flex;
   align-items: center;
   gap: 12px;
   color: #0f172a;
+}
+
+.modal-header-modern h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.btn-close-modern {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.btn-close-modern:hover { color: #ef4444; }
+
+.modal-actions-sticky {
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: auto;
 }
 
 .subtitle {

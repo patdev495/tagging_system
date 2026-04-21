@@ -50,6 +50,7 @@ class CartonCreate(BaseModel):
     print_folder: Optional[str] = None
     job_order: Optional[str] = None
     custom_sn: Optional[int] = None
+    carton_origin: str = "VN"
 
 class Carton(BaseModel):
     id: int
@@ -61,6 +62,7 @@ class Carton(BaseModel):
     status: str = "FAILED"
     btxml: Optional[str] = None # Stores BTXML data
     is_reprint: Optional[int] = 0
+    carton_origin: Optional[str] = None
     items: List[CartonItem] = [] # Include nested items
     product: Optional[Product] = None
     

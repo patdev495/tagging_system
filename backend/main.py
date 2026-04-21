@@ -41,8 +41,10 @@ def get_last_carton(product_id: int, db: Session = Depends(database.get_db)):
 
 # Logic for Carton S/N Generation & Printing
 def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: str = None):
-    # Origin logic
-    origin = "MADE IN CHINA" if product.start_part == "CN" else "MADE IN VIETNAM"
+    # Origin logic directly from carton
+    raw_origin = carton.carton_origin if carton.carton_origin else "VN"
+    origin_text = "MADE IN CHINA" if raw_origin == "CN" else "MADE IN VIETNAM"
+    
     # QR Content: Item S/Ns separated by newline (XML entity for newline)
     qr_content = "&#xA;".join(items)
     # Target printer
@@ -61,7 +63,7 @@ def generate_btxml(carton: models.Carton, product: models.Product, items: List[s
             <NamedSubString Name="CartonSN"><Value>{carton.carton_sn}</Value></NamedSubString>
             <NamedSubString Name="UPC"><Value>{product.upc}</Value></NamedSubString>
             <NamedSubString Name="QR_Content"><Value>{qr_content}</Value></NamedSubString>
-            <NamedSubString Name="Origin"><Value>{origin}</Value></NamedSubString>
+            <NamedSubString Name="Origin"><Value>{origin_text}</Value></NamedSubString>
         </Print>
     </Command>
 </XMLScript>"""
@@ -162,7 +164,8 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(databas
             packed_by=carton_in.printer_name or "System", 
             job_order=carton_in.job_order,
             status="FAILED", # Default until agent confirms success
-            btxml=None # Will be updated
+            btxml=None, # Will be updated
+            carton_origin=carton_in.carton_origin
         )
         db.add(new_carton)
         db.flush() # Get new_carton.id

@@ -3,6 +3,9 @@ Integration Builder
 Create New Integration
 cd backend
 uv run python clear_test_data.py
+npm run dev -- --host
 
-uv run pyinstaller --onefile --icon=NONE d:\Workspace\NY_tagging_sys\client_agent\print_agent.pytaskkill /f /im print_agent.exe
-python client_agent/print_agent.py
+cd d:\Workspace\NY_tagging_sys\client_agent
+uv run pyinstaller --onefile --icon=NONE print_agent.py
+taskkill /f /im print_agent.exe
+uv run client_agent/print_agent.py
