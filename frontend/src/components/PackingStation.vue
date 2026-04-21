@@ -10,6 +10,9 @@
           <div class="status-badge" :class="{ online: isOnline }">
             {{ isOnline ? 'System Online' : 'Connecting...' }}
           </div>
+          <button @click="toggleAudio" class="btn-icon status-audio" :class="{ active: isAudioActive }" :title="isAudioActive ? 'Audio Alert: Active (Click to Test)' : 'Audio Alert: Click to Activate/Test'">
+            <i class="fas" :class="isAudioActive ? 'fa-volume-up' : 'fa-volume-mute'"></i>
+          </button>
           <button @click="showEmergencyModal = true" class="btn-icon warning" title="Emergency Reprint">
             <i class="fas fa-exclamation-triangle"></i>
           </button>
@@ -368,6 +371,20 @@
               <small>Hint: If blank, BarTender will use the printer saved in the .btw file.</small>
             </div>
           </div>
+
+          <div class="form-group">
+            <label>Alert Speaker (Audio Output)</label>
+            <div class="input-with-hint">
+              <select v-model="settings.audioDeviceId" class="modern-input">
+                <option value="">Default System Output</option>
+                <option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option>
+              </select>
+              <button @click="requestAudioPermission" class="btn-text-small" style="margin-top: 8px;" v-if="audioDevices.length > 0 && audioDevices[0].label.startsWith('Speaker (')">
+                <i class="fas fa-lock"></i> Click to see Speaker Names (Requires Permission)
+              </button>
+              <small class="hint-text">Choose which speaker should play the "Invalid Scan" alert sound.</small>
+            </div>
+          </div>
         </div>
 
         <div class="modal-actions-sticky">
@@ -414,6 +431,8 @@ const emergencySearchLoading = ref(false);
 const productSearch = ref(''); // New Product Search state
 const agentErrorMessage = ref(''); // Store the specific BarTender error
 const backupScannedItems = ref([]); // Store items in case of failure
+const isAudioActive = ref(false); // Audio status indicator
+const audioDevices = ref([]); // List of available speakers
 let statusTimer = null;
 
 const settings = ref({
@@ -421,6 +440,7 @@ const settings = ref({
   templatePath: '',
   printerName: '',
   printFolder: '',
+  audioDeviceId: '', // Selected speaker ID
   serverPrint: false
 });
 
@@ -571,6 +591,7 @@ const handleScan = () => {
       type: 'excess'
     });
     showNotification('BOX FULL! This scan will NOT be added to current box.', 'warning');
+    playScanAlert(); // Trigger audio alert
     scanBuffer.value = '';
     return;
   }
@@ -584,6 +605,7 @@ const handleScan = () => {
       type: 'pattern'
     });
     showNotification(`Invalid Pattern! SN must start with "${snPattern.value}"`, 'error');
+    playScanAlert(); // Trigger audio alert
     scanBuffer.value = '';
     return;
   }
@@ -596,6 +618,7 @@ const handleScan = () => {
       type: 'duplicate'
     });
     showNotification(`Duplicate S/N: ${sn}`, 'warning');
+    playScanAlert(); // Trigger audio alert
     scanBuffer.value = '';
     return;
   }
@@ -769,6 +792,24 @@ const startNextCarton = () => {
   });
 };
 
+onMounted(() => {
+  loadAudioDevices();
+  // Listen for device changes
+  if (navigator.mediaDevices) {
+    navigator.mediaDevices.addEventListener('devicechange', loadAudioDevices);
+  }
+});
+
+onUnmounted(() => {
+    if (navigator.mediaDevices) {
+        navigator.mediaDevices.removeEventListener('devicechange', loadAudioDevices);
+    }
+});
+
+watch(showSettings, (val) => {
+  if (val) loadAudioDevices();
+});
+
 const resetSession = () => {
   currentProduct.value = null;
   scannedItems.value = [];
@@ -787,6 +828,90 @@ const showNotification = (text, type = 'info', duration = 3000) => {
     setTimeout(() => {
       notification.value = null;
     }, duration);
+  }
+};
+
+const playScanAlert = async () => {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Set output device if selected
+    if (settings.value.audioDeviceId && audioCtx.setSinkId) {
+      try {
+        await audioCtx.setSinkId(settings.value.audioDeviceId);
+      } catch (sinkErr) {
+        console.warn('Could not set custom speaker, using default:', sinkErr);
+      }
+    }
+
+    const playBeep = (freq, startTime, duration) => {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.type = 'square'; 
+      oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+      
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime + startTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + startTime + 0.05);
+      gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + startTime + duration);
+
+      oscillator.start(audioCtx.currentTime + startTime);
+      oscillator.stop(audioCtx.currentTime + startTime + duration);
+    };
+
+    // Play a sequence of 3 long, low-frequency beeps (approx 1.5s total)
+    playBeep(150, 0, 0.4);
+    playBeep(150, 0.5, 0.4);
+    playBeep(150, 1.0, 0.4);
+
+  } catch (e) {
+    console.warn('Audio alert failed:', e);
+  }
+};
+
+const toggleAudio = () => {
+  isAudioActive.value = true;
+  playScanAlert();
+  showNotification('Audio Alert: ACTIVE (Test Successful)', 'success');
+};
+
+const loadAudioDevices = async () => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+    console.warn('Audio device enumeration not supported');
+    return;
+  }
+  
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    audioDevices.value = devices
+      .filter(d => d.kind === 'audiooutput')
+      .map(d => ({
+        id: d.deviceId,
+        label: d.label || `Speaker (${d.deviceId.slice(0, 5)}...)`
+      }));
+    
+    // If we have devices but labels are empty, it means we need permission
+    if (audioDevices.value.length > 0 && !audioDevices.value[0].label.includes('Speaker')) {
+       // Labels are available
+    }
+  } catch (e) {
+    console.warn('Error loading audio devices:', e);
+  }
+};
+
+const requestAudioPermission = async () => {
+  try {
+    // Requesting micro permission is the standard way to unlock all device labels
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Stop the stream immediately
+    stream.getTracks().forEach(track => track.stop());
+    // Re-load devices to get labels
+    await loadAudioDevices();
+    showNotification('Audio devices refreshed', 'success');
+  } catch (err) {
+    showNotification('Could not access audio labels. Check browser permissions.', 'error');
   }
 };
 
@@ -1430,6 +1555,25 @@ onUnmounted(() => {
   transform: scale(1.05);
 }
 
+.btn-icon.status-audio {
+  color: #94a3b8;
+  border-color: #e2e8f0;
+  background: white;
+  transform: none;
+}
+
+.btn-icon.status-audio.active {
+  color: #2563eb;
+  border-color: #3b82f6;
+  background: #eff6ff;
+  transform: scale(1.05);
+}
+
+.btn-icon.status-audio:hover {
+  background: #f1f5f9;
+  transform: scale(1.1);
+}
+
 .btn-icon i {
   font-size: 1.2rem;
 }
@@ -1841,6 +1985,26 @@ onUnmounted(() => {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 32px;
+}
+
+.btn-text-small {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-text-small:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+  border-color: #3b82f6;
 }
 
 .btn-primary {

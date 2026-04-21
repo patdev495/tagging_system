@@ -118,3 +118,90 @@
 2026-04-21 08:46:38,261 [INFO] PRINT SUCCESS: print_job_CN26042900002.xml
 2026-04-21 08:46:38,262 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900002.xml
 2026-04-21 08:50:20,664 [INFO] Stopping agent...
+2026-04-21 11:29:50,932 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-21 11:29:50,950 [INFO] BarTender connected via Standard Dispatch
+2026-04-21 11:29:50,951 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-21 11:29:51,006 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-21 11:30:10,215 [INFO] START Print Job: print_job_CN26043000006.xml
+2026-04-21 11:30:10,419 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:30:11,052 [ERROR] PRINT FAILED: print_job_CN26043000006.xml - Error: Printer 'xxx' not found on this system. Please check Windows Printers list.
+2026-04-21 11:30:11,054 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-21 11:31:58,704 [INFO] START Print Job: print_job_CN26043000006.xml
+2026-04-21 11:31:58,707 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:31:58,737 [INFO] BarTender connected via Standard Dispatch
+2026-04-21 11:31:58,743 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:31:58,767 [ERROR] PRINT FAILED: print_job_CN26043000006.xml - Error: Printer 'xxx' not found on this system. Please check Windows Printers list.
+2026-04-21 11:31:58,770 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-21 11:32:19,260 [INFO] START Print Job: print_job_CN26043000006.xml
+2026-04-21 11:32:19,262 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:32:19,264 [WARNING] Standard Dispatch failed: BarTender.Application.Formats
+2026-04-21 11:32:19,268 [WARNING] Dynamic Dispatch failed: BarTender.Application.Formats
+2026-04-21 11:32:19,269 [WARNING] All Dispatch strategies failed — restarting BarTender process...
+2026-04-21 11:32:26,646 [INFO] BarTender connected via Standard Dispatch (after restart)
+2026-04-21 11:32:26,649 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:32:27,829 [ERROR] PRINT FAILED: print_job_CN26043000006.xml - Error: Printer 'xxx' not found on this system. Please check Windows Printers list.
+2026-04-21 11:32:27,830 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-21 11:32:35,547 [INFO] START Print Job: print_job_CN26043000006.xml
+2026-04-21 11:32:35,549 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:32:35,580 [INFO] BarTender connected via Standard Dispatch
+2026-04-21 11:32:35,585 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:32:35,620 [ERROR] PRINT FAILED: print_job_CN26043000006.xml - Error: Printer 'xxx' not found on this system. Please check Windows Printers list.
+2026-04-21 11:32:35,623 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-21 11:32:47,512 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-21 11:33:16,397 [INFO] START Print Job: print_job_CN26043000006.xml
+2026-04-21 11:33:16,421 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:33:16,482 [WARNING] Formats.Open attempt 1 failed. Trace:
+Traceback (most recent call last):
+  File "D:\Workspace\NY_tagging_sys\client_agent\print_agent.py", line 290, in print_xml
+    bt_format = self.bt_app.Formats.Open(format_path, False, "")
+                ^^^^^^^^^^^^^^^^^^^
+  File "D:\Workspace\NY_tagging_sys\client_agent\.venv\Lib\site-packages\win32com\client\dynamic.py", line 631, in __getattr__
+    raise AttributeError(f"{self._username_}.{attr}")
+AttributeError: BarTender.Application.Formats
+
+2026-04-21 11:33:16,488 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:33:16,495 [WARNING] Standard Dispatch failed: BarTender.Application.Formats
+2026-04-21 11:33:16,499 [WARNING] Dynamic Dispatch failed: BarTender.Application.Formats
+2026-04-21 11:33:16,500 [WARNING] All Dispatch strategies failed — restarting BarTender process...
+2026-04-21 11:33:23,758 [INFO] BarTender connected via Standard Dispatch (after restart)
+2026-04-21 11:33:24,761 [INFO] Opening template (Attempt 2): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:33:27,741 [INFO] PRINT SUCCESS: print_job_CN26043000006.xml
+2026-04-21 11:33:27,743 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-21 11:33:55,257 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-21 11:34:01,827 [INFO] START Print Job: print_job_CN26043000007.xml
+2026-04-21 11:34:01,828 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:34:01,863 [INFO] BarTender connected via Standard Dispatch
+2026-04-21 11:34:01,880 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:34:02,484 [ERROR] PRINT FAILED: print_job_CN26043000007.xml - Error: Printer 'zzz' not found on this system. Please check Windows Printers list.
+2026-04-21 11:34:02,486 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000007.xml
+2026-04-21 11:34:43,528 [INFO] START Print Job: print_job_CN26043000007.xml
+2026-04-21 11:34:43,546 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:34:43,547 [WARNING] Formats.Open attempt 1 failed. Trace:
+Traceback (most recent call last):
+  File "D:\Workspace\NY_tagging_sys\client_agent\print_agent.py", line 290, in print_xml
+    bt_format = self.bt_app.Formats.Open(format_path, False, "")
+                ^^^^^^^^^^^^^^^^^^^
+  File "D:\Workspace\NY_tagging_sys\client_agent\.venv\Lib\site-packages\win32com\client\dynamic.py", line 631, in __getattr__
+    raise AttributeError(f"{self._username_}.{attr}")
+AttributeError: BarTender.Application.Formats
+
+2026-04-21 11:34:43,548 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:34:43,552 [WARNING] Standard Dispatch failed: BarTender.Application.Formats
+2026-04-21 11:34:43,554 [WARNING] Dynamic Dispatch failed: BarTender.Application.Formats
+2026-04-21 11:34:43,555 [WARNING] All Dispatch strategies failed — restarting BarTender process...
+2026-04-21 11:34:46,120 [INFO] BarTender connected via Standard Dispatch (after restart)
+2026-04-21 11:34:47,123 [INFO] Opening template (Attempt 2): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:34:48,213 [ERROR] PRINT FAILED: print_job_CN26043000007.xml - Error: Printer 'zzz' not found on this system. Please check Windows Printers list.
+2026-04-21 11:34:48,214 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000007.xml
+2026-04-21 11:44:11,381 [INFO] START Print Job: print_job_CN26042900001.xml
+2026-04-21 11:44:11,389 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-21 11:44:11,427 [INFO] BarTender connected via Standard Dispatch
+2026-04-21 11:44:11,437 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-21 11:44:11,478 [ERROR] PRINT FAILED: print_job_CN26042900001.xml - Error: Printer 'zzz' not found on this system. Please check Windows Printers list.
+2026-04-21 11:44:11,480 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900001.xml
+2026-04-21 11:46:10,993 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-21 11:55:55,867 [INFO] Stopping agent...
+2026-04-21 14:11:11,117 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-21 14:11:11,142 [INFO] BarTender connected via Standard Dispatch
+2026-04-21 14:11:11,144 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-21 14:11:11,156 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
