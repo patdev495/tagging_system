@@ -22,6 +22,18 @@
         </div>
       </header>
 
+      <!-- Agent Offline Critical Alert Banner -->
+      <div v-if="!isAgentConnected" class="agent-offline-alert-banner fade-in">
+        <div class="alert-content">
+          <i class="fas fa-exclamation-triangle pulse-icon"></i>
+          <span><strong>PRINT AGENT OFFLINE:</strong> Local printing is disabled. Please start <code>print_agent.exe</code> on this computer.</span>
+        </div>
+        <button @click="checkAgent" class="btn-retry-agent">
+          <i class="fas fa-sync-alt"></i> Re-check
+        </button>
+      </div>
+
+
       <section class="selection-panel" v-if="!currentProduct">
         <div class="selection-header-row">
           <div class="control-group customer-select">
@@ -582,6 +594,28 @@ const handleScan = () => {
   const sn = scanBuffer.value.trim();
   if (!sn) return;
 
+  // AGENT CONNECTION CHECK: Block all scans if Agent is offline
+  if (!isAgentConnected.value) {
+    showNotification('CRITICAL: Print Agent is OFFLINE! Cannot scan.', 'error', 0);
+    playScanAlert();
+    scanBuffer.value = '';
+    return;
+  }
+
+  // LOCKDOWN LOGIC: If there are ANY invalid scans, block all subsequent scans
+  if (invalidScans.value.length > 0) {
+    invalidScans.value.push({
+      sn: sn,
+      time: new Date().toLocaleTimeString(),
+      reason: 'invalid', // Explicit generic reason as requested
+      type: 'lockdown'
+    });
+    showNotification('STATION LOCKED! Clear invalid scans first.', 'error');
+    playScanAlert();
+    scanBuffer.value = '';
+    return;
+  }
+
   // Handle scans when box is already full
   if (awaitingNext.value) {
     invalidScans.value.push({
@@ -767,9 +801,23 @@ const checkAgent = async () => {
       method: 'GET',
       signal: AbortController.timeout ? AbortController.timeout(1000) : null // Short timeout
     });
+    const wasConnected = isAgentConnected.value;
     isAgentConnected.value = res.ok;
+
+    if (isAgentConnected.value && !wasConnected) {
+      // Clear offline notification if it exists
+      if (notification.value && notification.value.text.includes('Agent is OFFLINE')) {
+        notification.value = null;
+      }
+      showNotification('Print Agent Connected!', 'success');
+    }
   } catch (e) {
     isAgentConnected.value = false;
+  }
+
+  if (!isAgentConnected.value) {
+    // Continuously show error as requested by user
+    showNotification('CRITICAL: Print Agent is OFFLINE! Please run the agent.', 'error', 0);
   }
 };
 
@@ -1589,14 +1637,64 @@ onUnmounted(() => {
   z-index: 2000;
 }
 
-.btn-icon.warning {
-  color: #d946ef;
-  border-color: #d946ef;
-}
-
 .btn-icon.warning:hover {
   background: #fdf4ff;
   transform: scale(1.1) rotate(5deg);
+}
+
+.agent-offline-alert-banner {
+  background: #ef4444;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  animation: slideDown 0.3s ease-out;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 1rem;
+}
+
+.pulse-icon {
+  font-size: 1.5rem;
+  animation: pulse 1.5s infinite;
+}
+
+.btn-retry-agent {
+  background: white;
+  color: #ef4444;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-retry-agent:hover {
+  background: #fee2e2;
+  transform: scale(1.05);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-card.emergency-modal {
