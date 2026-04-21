@@ -302,11 +302,21 @@ class BarTenderEngine:
                 if not bt_format:
                     return f"Error: Formats.Open failed after 3 attempts. Details: {last_err.splitlines()[-1]}"
 
-                if printer_name:
+                if (printer_name and printer_name.strip()):
                     try:
+                        # Pre-validate with win32print for better error reporting
+                        try:
+                            import win32print
+                            h_printer = win32print.OpenPrinter(printer_name)
+                            win32print.ClosePrinter(h_printer)
+                        except Exception:
+                             return f"Error: Printer '{printer_name}' not found on this system. Please check Windows Printers list."
+
+                        # Attempt to set in BarTender
                         bt_format.PrintSetup.Printer = printer_name
                     except Exception as pe:
-                        logger.warning(f"Could not set printer '{printer_name}': {pe}")
+                        logger.error(f"Could not set printer '{printer_name}': {pe}")
+                        return f"Error: Cannot use printer '{printer_name}'. Check if it's connected and online."
                 
                 # Use SetNamedSubString on the Format object
                 for key, val in substrings.items():

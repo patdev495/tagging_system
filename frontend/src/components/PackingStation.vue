@@ -20,19 +20,33 @@
       </header>
 
       <section class="selection-panel" v-if="!currentProduct">
-        <div class="control-group">
-          <label>Select Customer</label>
-          <select v-model="selectedCustomerId" @change="loadProducts" class="modern-select">
-            <option value="" disabled>Choose a customer...</option>
-            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
-          </select>
+        <div class="selection-header-row">
+          <div class="control-group customer-select">
+            <label>Customer</label>
+            <select v-model="selectedCustomerId" @change="loadProducts" class="modern-select">
+              <option value="" disabled>Choose a customer...</option>
+              <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
+            </select>
+          </div>
+
+          <div class="control-group product-search" v-if="selectedCustomerId">
+            <label>Search Product</label>
+            <div class="search-input-wrapper">
+              <i class="fas fa-search search-icon"></i>
+              <input 
+                v-model="productSearch" 
+                placeholder="Filter items..." 
+                class="modern-input-small"
+                ref="productSearchInput"
+              />
+            </div>
+          </div>
         </div>
 
         <div class="control-group" v-if="selectedCustomerId">
-          <label>Select Product</label>
           <div class="product-grid">
             <div 
-              v-for="p in products" 
+              v-for="p in filteredProducts" 
               :key="p.id" 
               class="product-card"
               @click="selectProduct(p)"
@@ -40,6 +54,9 @@
               <h3>{{ p.item_name }}</h3>
               <p>UPC: {{ p.upc }}</p>
               <div class="qty-tag">Target: {{ p.packed_qty }}</div>
+            </div>
+            <div v-if="filteredProducts.length === 0" class="no-results-hint">
+               No products match your search.
             </div>
           </div>
         </div>
@@ -97,6 +114,15 @@
                        Must be ≥ {{ suggestedSNValue }}
                     </span>
                   </div>
+                  <div class="job-order-input">
+                    <label>SN Pattern</label>
+                    <input 
+                      v-model="snPattern" 
+                      placeholder="e.g. AS" 
+                      class="modern-input-small sn-pattern-input"
+                      @keyup.enter="scanInput.focus()"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -141,20 +167,47 @@
               </div>
             </div>
 
-            <div class="input-area">
-              <input 
-                type="text" 
-                v-model="scanBuffer" 
-                @keyup.enter="handleScan"
-                :placeholder="!jobOrder ? '⚠️ PLEASE ENTER JOB ORDER FIRST...' : 'Scan Item S/N...'"
-                ref="scanInput"
-                class="scan-input"
-                :class="{ 'input-locked': !jobOrder }"
-                :disabled="isProcessing"
-              />
-              <p class="hint" v-if="jobOrder">Waiting for scanner input (Enter to submit)</p>
-              <p class="hint warning" v-else>Please fill in the Job Order field at the top first</p>
-            </div>
+              <div class="input-area">
+                <div class="input-row">
+                  <input 
+                    type="text" 
+                    v-model="scanBuffer" 
+                    @keyup.enter="handleScan"
+                    :placeholder="!jobOrder ? '⚠️ PLEASE ENTER JOB ORDER FIRST...' : (awaitingNext ? '⚠️ BOX FULL! CLICK NEXT CARTON...' : 'Scan Item S/N...')"
+                    ref="scanInput"
+                    class="scan-input"
+                    :class="{ 'input-locked': !jobOrder || awaitingNext }"
+                  />
+                  <button 
+                    v-if="awaitingNext" 
+                    @click="startNextCarton" 
+                    class="btn-next-carton pulse-animation"
+                    title="Start New Carton"
+                  >
+                    <i class="fas fa-plus-circle"></i> Next Carton
+                  </button>
+                </div>
+                <p class="hint" v-if="jobOrder && !awaitingNext">Waiting for scanner input (Enter to submit)</p>
+                <p class="hint success" v-else-if="awaitingNext">Box Complete! Please move to next box and click button above</p>
+                <p class="hint warning" v-else>Please fill in the Job Order field at the top first</p>
+
+                <!-- Invalid Scans Area -->
+                <div v-if="invalidScans.length > 0" class="invalid-scans-area fade-in">
+                  <div class="invalid-header">
+                    <span><i class="fas fa-exclamation-circle"></i> Invalid Scans</span>
+                    <button @click="invalidScans = []" class="btn-clear-small">Clear</button>
+                  </div>
+                  <div class="invalid-list">
+                    <div v-for="(err, idx) in [...invalidScans].reverse()" :key="idx" class="invalid-item" :class="`type-${err.type || 'generic'}`">
+                      <div class="bad-info">
+                        <span class="bad-sn">{{ err.sn }}</span>
+                        <span class="bad-reason">{{ err.reason }}</span>
+                      </div>
+                      <span class="bad-time">{{ err.time }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
           </div>
 
           <!-- Sidebar: Scanned Items -->
@@ -163,16 +216,16 @@
               <h3>Scanned ({{ scannedItems.length }})</h3>
               <button @click="scannedItems = []" class="btn-clear" v-if="scannedItems.length > 0">Clear</button>
             </div>
-            <div class="scanned-list-container">
+            <div class="scanned-list-container" ref="scannedListContainer">
               <div v-if="scannedItems.length === 0" class="empty-list-hint">
                 No items scanned
               </div>
               <ul class="scanned-list" v-else>
-                <li v-for="(item, idx) in sortedScannedItems" :key="idx" class="fade-in item-card">
+                <li v-for="(item, idx) in scannedItems" :key="idx" class="fade-in item-card">
                   <div class="item-info">
                     <span class="sn">{{ item }}</span>
                   </div>
-                  <div class="index">#{{ scannedItems.length - idx }}</div>
+                  <div class="index">#{{ idx + 1 }}</div>
                 </li>
               </ul>
             </div>
@@ -342,17 +395,23 @@ const host = window.location.hostname;
 const notification = ref(null);
 const scanInput = ref(null);
 const jobOrderInput = ref(null); // Ref for Job Order input
+const scannedListContainer = ref(null); // Ref for sidebar scroll
+const productSearchInput = ref(null); // Ref for product search filter
 const showSettings = ref(false);
 const lastCarton = ref(null);
 const jobOrder = ref(''); // New Job Order state
 const cartonOrigin = ref('VN'); // New Origin state
 const customSN = ref(''); // Custom starting SN
+const snPattern = ref(''); // SN Pattern prefix validation
+const invalidScans = ref([]); // Store scans that failed pattern check
+const awaitingNext = ref(false); // New state: waiting for manual "Next" click
 const suggestedSNValue = ref(0); // Store DB suggested next sequence
 const isAgentConnected = ref(false);
 const showEmergencyModal = ref(false);
 const emergencySearchSN = ref('');
 const emergencyResult = ref(null);
 const emergencySearchLoading = ref(false);
+const productSearch = ref(''); // New Product Search state
 const agentErrorMessage = ref(''); // Store the specific BarTender error
 const backupScannedItems = ref([]); // Store items in case of failure
 let statusTimer = null;
@@ -401,15 +460,31 @@ const progressPercent = computed(() => {
   return Math.round((scannedItems.value.length / currentProduct.value.packed_qty) * 100);
 });
 
-const sortedScannedItems = computed(() => {
-  return [...scannedItems.value].reverse();
+const filteredProducts = computed(() => {
+  if (!productSearch.value) return products.value;
+  const q = productSearch.value.toLowerCase();
+  return products.value.filter(p => 
+    p.item_name.toLowerCase().includes(q) || 
+    p.upc.toLowerCase().includes(q)
+  );
 });
+
 
 const loadCustomers = async () => {
   try {
     const res = await api.getCustomers();
     customers.value = res.data;
     isOnline.value = true;
+
+    // Auto-select first customer if none selected
+    if (customers.value.length > 0 && !selectedCustomerId.value) {
+      selectedCustomerId.value = customers.value[0].id;
+      loadProducts();
+      // Focus search after customer is selected and input renders
+      nextTick(() => {
+        if (productSearchInput.value) productSearchInput.value.focus();
+      });
+    }
   } catch (err) {
     showNotification('Cannot connect to API', 'error');
   }
@@ -420,6 +495,12 @@ const loadProducts = async () => {
   try {
     const res = await api.getCustomerProducts(selectedCustomerId.value);
     products.value = res.data;
+    // Clearing previous search for fresh start
+    productSearch.value = '';
+    // Focus the search input for new customer's products
+    nextTick(() => {
+      if (productSearchInput.value) productSearchInput.value.focus();
+    });
   } catch (err) {
     showNotification('Error loading products', 'error');
   }
@@ -481,7 +562,39 @@ const handleScan = () => {
   const sn = scanBuffer.value.trim();
   if (!sn) return;
 
+  // Handle scans when box is already full
+  if (awaitingNext.value) {
+    invalidScans.value.push({
+      sn: sn,
+      time: new Date().toLocaleTimeString(),
+      reason: 'Excess Scan (Box Full)',
+      type: 'excess'
+    });
+    showNotification('BOX FULL! This scan will NOT be added to current box.', 'warning');
+    scanBuffer.value = '';
+    return;
+  }
+
+  // Pattern Validation
+  if (snPattern.value && !sn.startsWith(snPattern.value)) {
+    invalidScans.value.push({
+      sn: sn,
+      time: new Date().toLocaleTimeString(),
+      reason: 'Prefix mismatch',
+      type: 'pattern'
+    });
+    showNotification(`Invalid Pattern! SN must start with "${snPattern.value}"`, 'error');
+    scanBuffer.value = '';
+    return;
+  }
+
   if (scannedItems.value.includes(sn)) {
+    invalidScans.value.push({
+      sn: sn,
+      time: new Date().toLocaleTimeString(),
+      reason: 'Duplicate S/N',
+      type: 'duplicate'
+    });
     showNotification(`Duplicate S/N: ${sn}`, 'warning');
     scanBuffer.value = '';
     return;
@@ -491,6 +604,9 @@ const handleScan = () => {
   scanBuffer.value = '';
 
   if (scannedItems.value.length >= currentProduct.value.packed_qty) {
+    // Set status to full IMMEDIATELY so scanner can catch excess items 
+    // while the server/printer is still thinking
+    awaitingNext.value = true;
     finalizeCarton();
   }
 };
@@ -553,20 +669,24 @@ const finalizeCarton = async (isRetry = false) => {
     console.log('Attempting print via Local Agent...');
     const printStatus = await handleClientPrint(btxmlContent, cartonSn, cartonId);
     
-    if (printStatus === 'Success') {
-      await api.updateCartonStatus(cartonId, 'SUCCESS');
-      lastCarton.value.status = 'SUCCESS';
-      showNotification(`Carton ${cartonSn} Printed Successfully!`, 'success');
-      
-      // Auto-increment custom S/N for next workflow ONLY if this is a new carton
-      if (!isRetry) {
-        if (customSN.value && !isNaN(parseInt(customSN.value))) {
-          customSN.value = (parseInt(customSN.value) + 1).toString();
+      if (printStatus === 'Success') {
+        await api.updateCartonStatus(cartonId, 'SUCCESS');
+        lastCarton.value.status = 'SUCCESS';
+        showNotification(`Carton ${cartonSn} Printed Successfully!`, 'success');
+        
+        // Auto-increment custom S/N immediately
+        if (!isRetry) {
+          if (customSN.value && !isNaN(parseInt(customSN.value))) {
+            customSN.value = (parseInt(customSN.value) + 1).toString();
+          }
+          // Set state to awaiting manual reset
+          awaitingNext.value = true;
+          // Re-focus immediately so they can keep scanning excess items
+          nextTick(() => {
+            if (scanInput.value) scanInput.value.focus();
+          });
         }
-        // Only clear scan list if a NEW print succeeded
-        scannedItems.value = [];
-      }
-    } else {
+      } else {
       // Print failed: notify and leave items in buffer for retry
       lastCarton.value.status = 'FAILED';
       agentErrorMessage.value = printStatus; // Show reason
@@ -639,10 +759,26 @@ const checkSystem = async () => {
   }
 };
 
+const startNextCarton = () => {
+  scannedItems.value = [];
+  invalidScans.value = [];
+  awaitingNext.value = false;
+  // lastCarton stays visible so user knows what they just finished
+  nextTick(() => {
+    if (scanInput.value) scanInput.value.focus();
+  });
+};
+
 const resetSession = () => {
   currentProduct.value = null;
   scannedItems.value = [];
+  invalidScans.value = [];
+  awaitingNext.value = false;
   scanBuffer.value = '';
+  // Focus search input after returning to selection screen
+  nextTick(() => {
+    if (productSearchInput.value) productSearchInput.value.focus();
+  });
 };
 
 const showNotification = (text, type = 'info', duration = 3000) => {
@@ -716,17 +852,32 @@ const handleEmergencyReprint = async () => {
 };
 
 // Auto-save state
-watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, suggestedSNValue, backupScannedItems, lastCarton], () => {
+watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans], () => {
   sessionStorage.setItem('packingState', JSON.stringify({
     jobOrder: jobOrder.value,
     cartonOrigin: cartonOrigin.value,
     currentProduct: currentProduct.value,
     scannedItems: scannedItems.value,
     customSN: customSN.value,
+    snPattern: snPattern.value,
+    awaitingNext: awaitingNext.value,
     suggestedSNValue: suggestedSNValue.value,
     backupScannedItems: backupScannedItems.value,
-    lastCarton: lastCarton.value
+    lastCarton: lastCarton.value,
+    invalidScans: invalidScans.value
   }));
+}, { deep: true });
+
+// Auto-scroll Scanned Items to bottom
+watch(scannedItems, () => {
+  nextTick(() => {
+    if (scannedListContainer.value) {
+      scannedListContainer.value.scrollTo({
+        top: scannedListContainer.value.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  });
 }, { deep: true });
 
 onMounted(() => {
@@ -740,9 +891,12 @@ onMounted(() => {
       if (state.currentProduct) currentProduct.value = state.currentProduct;
       if (state.scannedItems) scannedItems.value = state.scannedItems;
       if (state.customSN) customSN.value = state.customSN;
+      if (state.snPattern) snPattern.value = state.snPattern;
+      if (state.awaitingNext !== undefined) awaitingNext.value = state.awaitingNext;
       if (state.suggestedSNValue !== undefined) suggestedSNValue.value = state.suggestedSNValue;
       if (state.backupScannedItems) backupScannedItems.value = state.backupScannedItems;
       if (state.lastCarton) lastCarton.value = state.lastCarton;
+      if (state.invalidScans) invalidScans.value = state.invalidScans;
     } catch (e) {
       console.error('Failed to restore packing state', e);
     }
@@ -754,6 +908,13 @@ onMounted(() => {
   // Initial checks
   checkAgent();
   checkSystem();
+
+  // Focus search if on selection page
+  nextTick(() => {
+    if (!currentProduct.value && productSearchInput.value) {
+      productSearchInput.value.focus();
+    }
+  });
   
   // Setup polling every 5 seconds
   statusTimer = setInterval(() => {
@@ -972,7 +1133,7 @@ onUnmounted(() => {
 }
 
 .scan-input {
-  width: 100%;
+  /* width: 100%; removed to support flex layout with Next button */
   box-sizing: border-box;
   padding: 16px;
   background: #f8fafc;
@@ -1813,4 +1974,243 @@ onUnmounted(() => {
 .slide-up-enter-active, .slide-up-leave-active { transition: all 0.3s ease; }
 .slide-up-enter-from { transform: translateY(20px); opacity: 0; }
 .slide-up-leave-to { transform: translateY(20px); opacity: 0; }
+
+/* Invalid Scans Stying */
+.invalid-scans-area {
+  margin-top: 20px;
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.invalid-header {
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid #feb2b2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #c53030;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.invalid-header i {
+  margin-right: 6px;
+}
+
+.btn-clear-small {
+  background: transparent;
+  border: 1px solid #feb2b2;
+  color: #c53030;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clear-small:hover {
+  background: #fff5f5;
+  border-color: #c53030;
+}
+
+.invalid-list {
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.invalid-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  border: 1px solid #fed7d7;
+}
+
+.bad-sn {
+  font-family: monospace;
+  font-weight: 600;
+  color: #e53e3e;
+}
+
+.bad-reason {
+  font-size: 0.7rem;
+  background: #fecaca;
+  color: #b91c1c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Specific Error Colors */
+.type-pattern .bad-reason {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.type-duplicate .bad-reason {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.type-pattern { border-left: 4px solid #f97316; }
+.type-duplicate { border-left: 4px solid #a855f7; }
+.type-excess { border-left: 4px solid #ef4444; }
+.type-generic { border-left: 4px solid #ef4444; }
+
+.bad-info {
+  display: flex;
+  align-items: center;
+}
+
+.bad-time {
+  font-size: 0.75rem;
+  color: #a0aec0;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.btn-next-carton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0 24px;
+  height: 58px; /* Match scan input height roughly */
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-next-carton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.pulse-animation {
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.hint.success {
+  color: #059669;
+  font-weight: 700;
+}
+
+.scan-input.input-locked {
+  /* Keep it looking active but distinct */
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+  flex: 1; /* Ensure it takes available space but doesn't push others out */
+  min-width: 0;
+}
+
+.scan-input {
+  flex: 1; /* Added to support the Next button in the same row */
+  min-width: 0;
+}
+
+.sn-pattern-input {
+  width: 100px;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.sn-pattern-input:focus {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.selection-header-row {
+  display: flex;
+  gap: 16px;
+  align-items: center; /* Better alignment */
+  margin-bottom: 24px;
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.customer-select {
+  width: 250px;
+  margin-bottom: 0; /* Override default */
+}
+
+.product-search {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.customer-select label, .product-search label {
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrapper .search-icon {
+  position: absolute;
+  left: 18px;
+  color: #3b82f6;
+  font-size: 0.95rem;
+}
+
+.search-input-wrapper input.modern-input-small {
+  padding-left: 48px;
+  width: 100%;
+  height: 42px; /* Fixed height for alignment */
+}
+
+/* Ensure select matches input height */
+.customer-select .modern-select {
+  height: 42px;
+  padding: 0 12px;
+  font-size: 0.95rem;
+}
+
+.no-results-hint {
+  grid-column: 1 / -1;
+  padding: 40px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #e2e8f0;
+}
 </style>
