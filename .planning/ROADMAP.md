@@ -15,9 +15,16 @@
 - [ ] 6. State: Implement real-time item counting and threshold detection (QTY reached).
 
 ### Phase 3: Printing & QR Integration (7-9)
-- [ ] 7. Printing: Research and implement Bartender Integration (e.g., via XML file generation).
-- [ ] 8. QR Code: Implement logic to encode/decode carton contents.
-- [ ] 9. UAT: End-to-end test from scan to printed label.
+- [x] 7. Printing: Research and implement Bartender Integration (e.g., via XML file generation).
+- [x] 8. QR Code: Implement logic to encode/decode carton contents.
+- [x] 9. UAT: End-to-end test from scan to printed label.
+
+---
+## Milestone 2: Refactoring & Standardization
+**Goal**: Modularize the codebase to support future features and multi-station scaling.
+
+### Phase 10: Feature-Based Refactor (10)
+- [ ] 10. Refactor: Split backend and frontend into feature-based modules.
 
 ---
 ## Milestone 999: Backlog
