@@ -8,4 +8,5 @@ npm run dev -- --host
 cd d:\Workspace\NY_tagging_sys\client_agent
 uv run pyinstaller --onefile --icon=NONE print_agent.py
 taskkill /f /im print_agent.exe
-uv run client_agent/print_agent.py
+uv run print_agent.py
+uv run uvicorn main:app --host 0.0.0.0 --port 8000
