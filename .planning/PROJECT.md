@@ -12,15 +12,17 @@ Hệ thống quản lý đóng gói và in tem hàng hóa (NY Tagging System). H
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] **Data Management**: Kết nối và quản lý dữ liệu trên MSSQL 2008.
+- [x] **Packing Workflow**: Giao diện chọn Khách hàng -> Chọn Mặt hàng -> Quét từng sản phẩm.
+- [x] **S/N Generation**: Tự động sinh Carton S/N theo định dạng `[CN/VN][YYMM][MiddlePart][Sequence]`.
+- [x] **Automated Printing**: Tự động kích hoạt in tem `carton.btw` khi quét đủ số lượng QTY.
+- [x] **QR Code Content**: QR Code trên tem chứa danh sách toàn bộ S/N của sản phẩm bên trong thùng.
 
 ### Active
 
-- [ ] **Data Management**: Kết nối và quản lý dữ liệu trên MSSQL 2008 (Thông tin khách hàng, sản phẩm, UPC, Middle Part).
-- [ ] **Packing Workflow**: Giao diện chọn Khách hàng -> Chọn Mặt hàng -> Quét từng sản phẩm.
-- [ ] **S/N Generation**: Tự động sinh Carton S/N theo định dạng `[CN/VN][YYMM][MiddlePart][Sequence]`.
-- [ ] **Automated Printing**: Tự động kích hoạt in tem `carton.btw` khi quét đủ số lượng QTY.
-- [ ] **QR Code Content**: QR Code trên tem chứa danh sách toàn bộ S/N của sản phẩm bên trong thùng.
+- [ ] **Feature-Based Backend**: Tách main.py thành cấu trúc router/service/repository theo từng tính năng (customer, product, scan, box, print, history, agent, settings).
+- [ ] **Feature-Based Frontend**: Tách PackingStation.vue monolithic thành các component chuyên biệt theo tính năng tương ứng.
+- [ ] **Data Integrity**: Đảm bảo lịch sử quét và in là immutable, in lại phải dùng đúng snapshot XML đã lưu.
 
 ### Out of Scope
 
@@ -45,6 +47,20 @@ Hệ thống quản lý đóng gói và in tem hàng hóa (NY Tagging System). H
 | FastAPI + Vue 3 | Modern stack for rapid development and high performance. | — Pending |
 | Scanned-to-Print | Trigger label print automatically on reaching Packed Qty to ensure flow. | — Pending |
 
+## Current Milestone: v2.0 Feature-Based Architecture Refactoring
+
+**Goal:** Refactor the existing NY Tagging System into a modular, scalable, and maintainable feature-based architecture without breaking existing business logic.
+
+**Target features:**
+- Customer
+- Product
+- Scan
+- Box
+- Print
+- History
+- Agent
+- Settings
+
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
@@ -63,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after initialization*
+*Last updated: 2026-04-22 after milestone v2.0 initialized*

@@ -1,20 +1,22 @@
 # STATE.md
 
+## Current Position
+
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-22 — Milestone v2.0 started
+
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-16)
+See: .planning/PROJECT.md (updated 2026-04-22)
 
 **Core value:** Đảm bảo mã S/N duy nhất và tự động hóa in tem khi đủ QTY.
-**Current focus:** Phase 2: Packing Logic
+**Current focus:** Milestone v2.0: Feature-Based Architecture Refactoring
 
 ## Recent Decisions
 
-- Use FastAPI + Vue 3 for the application.
-- Use MSSQL 2008 for data persistence.
-- Implement client-side Bartender integration.
-
-## Next Steps
-
-1. [x] Phase 1: Infrastructure and Database setup completed.
-2. [ ] Phase 2: Implement Packing Logic and QR S/N generation.
-3. [ ] Research Bartender Integration Builder (XML) for client-side printing.
+- Use feature-based structure for backend and frontend.
+- Backend: router/service pattern. No HTTP calls between features.
+- Frontend: decouple PackingStation.vue into feature components.
+- Maintain immutable scan & print logs.
