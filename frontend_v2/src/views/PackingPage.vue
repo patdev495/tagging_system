@@ -26,6 +26,7 @@
               v-model:customSN="customSN"
               v-model:snPattern="snPattern"
               :suggestedSNValue="suggestedSNValue"
+              :snPreview="snPreview"
               @back="resetSession"
               @focus-scan="focusScan"
             />
@@ -111,6 +112,16 @@ const showSettings = ref(false);
 const showEmergencyModal = ref(false);
 let statusTimer = null;
 
+const snPreview = computed(() => {
+  if (!currentProduct.value) return '';
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(-2);
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const seq = customSN.value || suggestedSNValue.value || '1';
+  const prefix = `${currentProduct.value.start_part || ''}${yy}${mm}${currentProduct.value.middle_part || ''}`;
+  return `${prefix}${String(seq).padStart(5, '0')}`;
+});
+
 const catalogRef = ref(null);
 const sessionRef = ref(null);
 const scanRef = ref(null);
@@ -168,6 +179,14 @@ const selectProduct = async (p) => {
 
 const handleScan = () => {
   if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
+  
+  // Strict check for Start S/N
+  if (customSN.value && !isNaN(parseInt(customSN.value)) && parseInt(customSN.value) < suggestedSNValue.value) {
+    system.showNotification(`INVALID START S/N: Must be at least ${suggestedSNValue.value}`, 'error');
+    playScanAlert();
+    return;
+  }
+
   const sn = scanBuffer.value.trim();
   if (!sn) return;
   if (!isAgentConnected.value) { system.showNotification('CRITICAL: Agent OFFLINE!', 'error', 0); playScanAlert(); scanBuffer.value = ''; return; }

@@ -386,13 +386,18 @@ class PrintHandler(BaseHTTPRequestHandler):
         self._set_headers()
 
     def do_GET(self):
-        self._set_headers(200, 'application/json')
-        response = {
-            "status": "online",
-            "bt_initialized": bt_engine.is_initialized,
-            "version": "1.2.0"
-        }
-        self.wfile.write(json.dumps(response).encode('utf-8'))
+        try:
+            self._set_headers(200, 'application/json')
+            response = {
+                "status": "online",
+                "bt_initialized": bt_engine.is_initialized,
+                "version": "1.2.0"
+            }
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        except (ConnectionAbortedError, ConnectionResetError):
+            pass # Client closed connection, ignore
+        except Exception as e:
+            logger.error(f"GET Error: {e}")
 
     def do_POST(self):
         try:

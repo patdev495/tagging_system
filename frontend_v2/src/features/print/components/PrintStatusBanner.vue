@@ -28,8 +28,7 @@ const props = defineProps({
   agentErrorMessage: { type: String, default: '' }
 });
 defineEmits(['retry']);
-const host = window.location.hostname;
-const downloadUrl = computed(() => props.lastCarton ? `http://${host}:8000/cartons/${props.lastCarton.id}/btxml` : '');
+const downloadUrl = computed(() => props.lastCarton ? `/api/v1/cartons/${props.lastCarton.id}/btxml` : '');
 </script>
 
 <style scoped>

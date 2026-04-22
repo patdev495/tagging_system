@@ -40,13 +40,16 @@
             :value="customSN"
             @input="$emit('update:customSN', $event.target.value)"
             type="number"
-            placeholder="Auto" 
+            :placeholder="suggestedSNValue || '00001'" 
             class="modern-input-small"
             :class="{ 'input-err': customSN && parseInt(customSN) < suggestedSNValue }"
             @keyup.enter="$emit('focus-scan')"
           />
+          <div class="sn-preview" v-if="snPreview">
+             Preview: <strong>{{ snPreview }}</strong>
+          </div>
           <span v-if="customSN && parseInt(customSN) < suggestedSNValue" class="input-error-hint">
-             Must be ≥ {{ suggestedSNValue }}
+             Min: {{ suggestedSNValue }} (Next Carton)
           </span>
         </div>
         <div class="job-order-input">
@@ -73,7 +76,8 @@ defineProps({
   cartonOrigin: { type: String, default: 'VN' },
   customSN: { type: String, default: '' },
   snPattern: { type: String, default: '' },
-  suggestedSNValue: { type: Number, default: 0 }
+  suggestedSNValue: { type: Number, default: 0 },
+  snPreview: { type: String, default: '' }
 });
 
 defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:snPattern']);
@@ -180,6 +184,19 @@ defineExpose({ focusJobOrder });
   font-weight: 600;
   margin-top: 2px;
   display: block;
+}
+.sn-preview {
+  font-size: 0.7rem;
+  color: #10b981;
+  margin-top: 4px;
+  background: #f0fdf4;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #dcfce7;
+}
+.sn-preview strong {
+  font-family: monospace;
+  font-size: 0.8rem;
 }
 .sn-pattern-input {
   width: 100px;

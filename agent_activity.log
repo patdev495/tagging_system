@@ -1,9 +1,0 @@
-2026-04-20 11:07:46,613 [ERROR] pywin32 not installed. BarTender Automation unavailable.
-2026-04-20 11:07:46,636 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
-2026-04-20 11:08:00,720 [INFO] START Print Job: print_job_CN26043000001.xml
-2026-04-20 11:08:00,721 [ERROR] PRINT FAILED: print_job_CN26043000001.xml - Error: BarTender engine not initialized.
-2026-04-20 11:08:00,727 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000001.xml
-2026-04-20 11:08:34,532 [INFO] START Print Job: print_job_CN26043000001.xml
-2026-04-20 11:08:34,533 [ERROR] PRINT FAILED: print_job_CN26043000001.xml - Error: BarTender engine not initialized.
-2026-04-20 11:08:34,537 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000001.xml
-2026-04-20 11:09:15,075 [INFO] Stopping agent...
