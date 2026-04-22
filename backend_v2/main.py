@@ -8,6 +8,8 @@ from src.core.exceptions import custom_http_exception_handler
 from src.features.customer.router import router as customer_router
 from src.features.product.router import router as product_router
 from src.features.history.router import router as history_router
+from src.features.box.router import router as box_router
+from src.features.print.router import router as print_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title="NY Tagging System V2", version="2.0.0")
@@ -28,6 +30,8 @@ def create_app() -> FastAPI:
     app.include_router(customer_router, prefix="/api/v1")
     app.include_router(product_router, prefix="/api/v1")
     app.include_router(history_router, prefix="/api/v1")
+    app.include_router(box_router, prefix="/api/v1")
+    app.include_router(print_router, prefix="/api/v1")
 
     @app.get("/api/v1/health", tags=["Health"])
     def health_check():
