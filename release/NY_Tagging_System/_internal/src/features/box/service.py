@@ -17,7 +17,6 @@ def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int = No
     # Lock for update to prevent duplicate carton generation concurrently
     max_sn = db.query(func.max(models.Carton.carton_sn)).filter(
         models.Carton.carton_sn.like(f"{prefix}%"),
-        models.Carton.status == "SUCCESS",
         models.Carton.is_reprint == 0
     ).with_for_update().scalar()
     
@@ -31,7 +30,8 @@ def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int = No
     return f"{prefix}{str(next_seq).zfill(5)}"
 
 def create_carton(carton_in: schemas.CartonCreate, db: Session):
-    product = db.query(models.Product).filter(models.Product.id == carton_in.product_id).first()
+    # Lock the product row to serialize carton creation for this product
+    product = db.query(models.Product).filter(models.Product.id == carton_in.product_id).with_for_update().first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
@@ -41,9 +41,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     new_sn = get_next_carton_sn(db, product, carton_in.custom_sn)
     
     if carton_in.custom_sn is not None:
-        existing = db.query(models.Carton).filter(models.Carton.carton_sn == new_sn, models.Carton.status == "SUCCESS").first()
+        existing = db.query(models.Carton).filter(models.Carton.carton_sn == new_sn).first()
         if existing:
-            raise HTTPException(status_code=400, detail=f"S/N (Seq: {carton_in.custom_sn}) is already successfully printed.")
+            raise HTTPException(status_code=400, detail=f"S/N (Seq: {carton_in.custom_sn}) is already in use (Status: {existing.status}).")
 
     try:
         new_carton = models.Carton(

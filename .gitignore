@@ -12,6 +12,7 @@ ENV/
 node_modules/
 dist/
 build/
+print_test/
 dist-ssr/
 *.local
 npm-debug.log*

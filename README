@@ -10,3 +10,11 @@ uv run pyinstaller --onefile --icon=NONE print_agent.py
 taskkill /f /im print_agent.exe
 uv run print_agent.py
 uv run uvicorn main:app --host 0.0.0.0 --port 8000
+
+-- 1. Xóa các item thuộc về các thùng có job order là '1'
+DELETE FROM carton_items 
+WHERE carton_id IN (SELECT id FROM cartons WHERE job_order = '1');
+
+-- 2. Xóa các thùng có job order là '1'
+DELETE FROM cartons 
+WHERE job_order = '1';

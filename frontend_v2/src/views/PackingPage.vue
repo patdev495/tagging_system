@@ -24,6 +24,7 @@
               v-model:jobOrder="jobOrder"
               v-model:cartonOrigin="cartonOrigin"
               v-model:customSN="customSN"
+              v-model:isSNManual="isSNManual"
               v-model:snPattern="snPattern"
               :suggestedSNValue="suggestedSNValue"
               :snPreview="snPreview"
@@ -127,6 +128,7 @@ const showSettings = ref(false);
 const showEmergencyModal = ref(false);
 const isRescanMode = ref(false);
 const rescanCartonSN = ref('');
+const isSNManual = ref(false);
 let statusTimer = null;
 let audioCtx = null;
 let isAudioInitialized = false;
@@ -187,10 +189,9 @@ const selectProduct = async (p) => {
   lastCarton.value = null;
   agentErrorMessage.value = '';
   customSN.value = '';
-  try {
-    const snRes = await packingApi.getNextSN(p.id);
-    if (snRes.data?.next_seq) { customSN.value = snRes.data.next_seq.toString(); suggestedSNValue.value = snRes.data.next_seq; }
-  } catch (err) { console.warn('Error fetching next SN:', err); }
+  isSNManual.value = false;
+  suggestedSNValue.value = 0; // Reset to 0 to ensure the next fetch is accepted
+  await refreshNextSN();
   try {
     const res = await packingApi.getLastCarton(p.id);
     if (res.data) {
@@ -207,9 +208,32 @@ const selectProduct = async (p) => {
   });
 };
 
+const refreshNextSN = async () => {
+  if (!currentProduct.value || isProcessing.value) return;
+  try {
+    const snRes = await packingApi.getNextSN(currentProduct.value.id);
+    if (snRes.data?.next_seq) {
+      const newSeq = snRes.data.next_seq;
+      // Only update if the server has a newer (higher) number
+      if (newSeq > suggestedSNValue.value) {
+        // If user is following the suggestion, update their current S/N too
+        if (!customSN.value || customSN.value === suggestedSNValue.value.toString()) {
+          customSN.value = newSeq.toString();
+        }
+        suggestedSNValue.value = newSeq;
+      }
+    }
+  } catch (err) { console.warn('Sync SN failed:', err); }
+};
+
 const handleScan = () => {
   if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
   
+  if (scannedItems.value.length >= currentProduct.value.packed_qty) {
+    finalizeCarton();
+    return;
+  }
+
   // Strict check for Start S/N
   if (customSN.value && !isNaN(parseInt(customSN.value)) && parseInt(customSN.value) < suggestedSNValue.value) {
     system.showNotification(`INVALID START S/N: Must be at least ${suggestedSNValue.value}`, 'error');
@@ -226,7 +250,7 @@ const handleScan = () => {
   if (scannedItems.value.includes(sn)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); system.showNotification(`Duplicate: ${sn}`, 'warning'); scanBuffer.value = ''; return; }
   scannedItems.value.push(sn);
   scanBuffer.value = '';
-  if (scannedItems.value.length >= currentProduct.value.packed_qty) { awaitingNext.value = true; finalizeCarton(); }
+  if (scannedItems.value.length >= currentProduct.value.packed_qty) { finalizeCarton(); }
 };
 
 const finalizeCarton = async (isRetry = false) => {
@@ -255,7 +279,14 @@ const finalizeCarton = async (isRetry = false) => {
       }
       const items = [...scannedItems.value];
       if (items.length === 0) { system.showNotification('No items!', 'error'); isProcessing.value = false; return; }
-      const res = await packingApi.createCarton({ product_id: currentProduct.value.id, items, template_path: settings.templatePath || null, printer_name: settings.printerName || null, print_folder: settings.printFolder || null, job_order: jobOrder.value, custom_sn: customSN.value ? parseInt(customSN.value) : null, carton_origin: cartonOrigin.value });
+      
+      // Clear previous banner/status to avoid confusion with old SNs
+      lastCarton.value = { status: 'PRINTING', carton_sn: snPreview.value };
+
+      // Use null for custom_sn if in Auto mode to let backend assign atomically
+      const finalCustomSN = isSNManual.value ? (customSN.value ? parseInt(customSN.value) : null) : null;
+
+      const res = await packingApi.createCarton({ product_id: currentProduct.value.id, items, template_path: settings.templatePath || null, printer_name: settings.printerName || null, print_folder: settings.printFolder || null, job_order: jobOrder.value, custom_sn: finalCustomSN, carton_origin: cartonOrigin.value });
       cartonId = res.data.id; cartonSn = res.data.carton_sn; btxmlContent = res.data.btxml;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
       backupScannedItems.value = items;
@@ -265,16 +296,43 @@ const finalizeCarton = async (isRetry = false) => {
       await printApi.updateCartonStatus(cartonId, 'SUCCESS');
       lastCarton.value.status = 'SUCCESS';
       system.showNotification(`Carton ${cartonSn} Printed!`, 'success');
+      
+      // Update the suggestion base immediately from what was just assigned
+      if (cartonSn) {
+        const lastSeq = parseInt(cartonSn.slice(-5));
+        if (!isNaN(lastSeq)) suggestedSNValue.value = lastSeq + 1;
+      }
+
       if (!isRetry) { 
-        if (!isRescanMode.value && customSN.value && !isNaN(parseInt(customSN.value))) {
-          customSN.value = (parseInt(customSN.value) + 1).toString(); 
+        if (!isRescanMode.value) {
+          if (isSNManual.value && customSN.value && !isNaN(parseInt(customSN.value))) {
+            customSN.value = (parseInt(customSN.value) + 1).toString(); 
+          } else if (!isSNManual.value) {
+            customSN.value = ''; // Keep empty to stay in AUTO mode
+          }
         }
         awaitingNext.value = true; 
         focusScan(); 
       }
     } else { lastCarton.value.status = 'FAILED'; agentErrorMessage.value = printResult; system.showNotification(`Print failed: ${printResult}`, 'error'); }
-  } catch (err) { console.error(err); if (lastCarton.value && !isRetry) lastCarton.value.status = 'FAILED'; system.showNotification('Server error.', 'error'); }
-  finally { isProcessing.value = false; }
+  } catch (err) {
+    console.error(err);
+    if (lastCarton.value && !isRetry) lastCarton.value.status = 'FAILED';
+    const msg = err.response?.data?.detail || 'Server error.';
+    system.showNotification(msg, 'error');
+    
+    // If SN is already in use, refresh the suggestion
+    if (err.response?.status === 400 && msg.includes('already in use')) {
+      try {
+        const snRes = await packingApi.getNextSN(currentProduct.value.id);
+        if (snRes.data?.next_seq) {
+          suggestedSNValue.value = snRes.data.next_seq;
+          customSN.value = snRes.data.next_seq.toString();
+          system.showNotification(`Suggested S/N updated to ${snRes.data.next_seq}`, 'warning');
+        }
+      } catch (e) {}
+    }
+  } finally { isProcessing.value = false; }
 };
 
 const handleClientPrint = async (content, cartonSn, cartonId) => {
@@ -354,9 +412,16 @@ const playScanAlert = () => {
 };
 const toggleAudio = () => { isAudioActive.value = true; initAudio().then(playScanAlert); system.showNotification('Audio Alert: ACTIVE', 'success'); };
 
+// Detect manual SN entry
+watch(customSN, (val) => {
+  if (val && val !== suggestedSNValue.value.toString()) {
+    isSNManual.value = true;
+  }
+});
+
 // Session persistence
-watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans], () => {
-  sessionStorage.setItem('packingState', JSON.stringify({ jobOrder: jobOrder.value, cartonOrigin: cartonOrigin.value, currentProduct: currentProduct.value, scannedItems: scannedItems.value, customSN: customSN.value, snPattern: snPattern.value, awaitingNext: awaitingNext.value, suggestedSNValue: suggestedSNValue.value, backupScannedItems: backupScannedItems.value, lastCarton: lastCarton.value, invalidScans: invalidScans.value }));
+watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual], () => {
+  sessionStorage.setItem('packingState', JSON.stringify({ jobOrder: jobOrder.value, cartonOrigin: cartonOrigin.value, currentProduct: currentProduct.value, scannedItems: scannedItems.value, customSN: customSN.value, snPattern: snPattern.value, awaitingNext: awaitingNext.value, suggestedSNValue: suggestedSNValue.value, backupScannedItems: backupScannedItems.value, lastCarton: lastCarton.value, invalidScans: invalidScans.value, isSNManual: isSNManual.value }));
 }, { deep: true });
 
 onMounted(() => {
@@ -365,7 +430,7 @@ onMounted(() => {
   settings.loadSettings();
   checkAgent(); checkSystem();
   nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
-  statusTimer = setInterval(() => { checkAgent(); checkSystem(); }, 5000);
+  statusTimer = setInterval(() => { checkAgent(); checkSystem(); refreshNextSN(); }, 3000);
   window.addEventListener('click', (e) => { if (showSettings.value || showEmergencyModal.value) return; if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; focusScan(); });
 });
 onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });

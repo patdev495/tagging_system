@@ -12,7 +12,6 @@ def get_next_sn(product_id: int, db: Session):
     # Find last SUCCESS carton for this product to get sequence
     last_carton = db.query(models.Carton).filter(
         models.Carton.product_id == product_id,
-        models.Carton.status == "SUCCESS",
         models.Carton.is_reprint == 0
     ).order_by(models.Carton.id.desc()).first()
     

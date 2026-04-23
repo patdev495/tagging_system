@@ -35,16 +35,27 @@
           </select>
         </div>
         <div class="job-order-input">
-          <label>Start S/N</label>
-          <input 
-            :value="customSN"
-            @input="$emit('update:customSN', $event.target.value)"
-            type="number"
-            :placeholder="suggestedSNValue || '00001'" 
-            class="modern-input-small"
-            :class="{ 'input-err': customSN && parseInt(customSN) < suggestedSNValue }"
-            @keyup.enter="$emit('focus-scan')"
-          />
+          <div class="input-with-toggle">
+            <input 
+              :value="customSN"
+              @input="$emit('update:customSN', $event.target.value)"
+              type="number"
+              :placeholder="suggestedSNValue || '00001'" 
+              class="modern-input-small sn-input"
+              :class="{ 'input-err': customSN && parseInt(customSN) < suggestedSNValue, 'is-auto': !isSNManual }"
+              :readonly="!isSNManual"
+              @keyup.enter="$emit('focus-scan')"
+              ref="snInput"
+            />
+            <button 
+              class="btn-auto-toggle" 
+              :class="{ 'active': !isSNManual }"
+              @click="toggleMode"
+              :title="!isSNManual ? 'Switch to Manual Entry' : 'Switch to Auto Assignment'"
+            >
+              {{ !isSNManual ? 'AUTO' : 'MANUAL' }}
+            </button>
+          </div>
           <div class="sn-preview" v-if="snPreview">
              Preview: <strong>{{ snPreview }}</strong>
           </div>
@@ -68,24 +79,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 
-defineProps({
+const props = defineProps({
   product: { type: Object, required: true },
   jobOrder: { type: String, default: '' },
   cartonOrigin: { type: String, default: 'VN' },
   customSN: { type: String, default: '' },
+  isSNManual: { type: Boolean, default: false },
   snPattern: { type: String, default: '' },
   suggestedSNValue: { type: Number, default: 0 },
   snPreview: { type: String, default: '' }
 });
 
-defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:snPattern']);
+const emit = defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:isSNManual', 'update:snPattern']);
 
 const jobOrderInput = ref(null);
+const snInput = ref(null);
 
 const focusJobOrder = () => {
   if (jobOrderInput.value) jobOrderInput.value.focus({ preventScroll: true });
+};
+
+const toggleMode = () => {
+  if (!props.isSNManual) {
+    // Switch to manual
+    emit('update:isSNManual', true);
+    emit('update:customSN', props.suggestedSNValue.toString());
+    nextTick(() => { if (snInput.value) snInput.value.focus(); });
+  } else {
+    // Switch to auto
+    emit('update:isSNManual', false);
+    emit('update:customSN', '');
+  }
 };
 
 defineExpose({ focusJobOrder });
@@ -206,6 +232,42 @@ defineExpose({ focusJobOrder });
 .sn-pattern-input:focus {
   border-color: #2563eb;
   background: #eff6ff;
+}
+.input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.sn-input {
+  padding-right: 70px !important;
+}
+.sn-input.is-auto {
+  background: #f0fdf4;
+  border-color: #10b981;
+  color: #059669;
+  cursor: default;
+}
+.btn-auto-toggle {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  border: none;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-auto-toggle.active {
+  background: #10b981;
+  color: white;
+}
+.btn-auto-toggle:hover {
+  transform: scale(1.05);
 }
 
 @media (max-width: 600px) {
