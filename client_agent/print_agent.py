@@ -5,7 +5,7 @@ import threading
 import time
 import logging
 import traceback
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 # Only import pywin32 on Windows
 try:
@@ -230,7 +230,7 @@ class BarTenderEngine:
             logger.warning(f"Print completion check failed: {e}")
             return None
 
-    def print_xml(self, xml_content):
+    def print_xml(self, xml_content, printer_name_override=None):
         if not self.is_initialized:
             return "Error: BarTender engine not initialized."
         
@@ -250,10 +250,13 @@ class BarTenderEngine:
                 if not os.path.exists(format_path):
                     return f"Error: Template file not found: {format_path}"
 
-                printer_name = None
-                printer_element = print_element.find('.//PrintSetup/Printer')
-                if printer_element is not None and printer_element.text:
-                    printer_name = printer_element.text
+                # Priority 1: printer_name_override from JSON request
+                # Priority 2: Extract from XML
+                printer_name = printer_name_override
+                if not printer_name:
+                    printer_element = print_element.find('.//Printer')
+                    if printer_element is not None and printer_element.text:
+                        printer_name = printer_element.text
 
                 substrings = {}
                 for ns in print_element.findall('NamedSubString'):
@@ -423,8 +426,8 @@ class PrintHandler(BaseHTTPRequestHandler):
                 return
 
             # 1. Direct Print
-            logger.info(f"START Print Job: {filename}")
-            bt_status = bt_engine.print_xml(xml_content)
+            logger.info(f"START Print Job: {filename} (Printer: {data.get('printer_name') or 'Default'})")
+            bt_status = bt_engine.print_xml(xml_content, printer_name_override=data.get('printer_name'))
             
             if "Success" in bt_status:
                 logger.info(f"PRINT SUCCESS: {filename}")
@@ -464,7 +467,7 @@ def get_ip():
 def run():
     bt_engine.start()
     server_address = ('', PORT)
-    httpd = HTTPServer(server_address, PrintHandler)
+    httpd = ThreadingHTTPServer(server_address, PrintHandler)
     
     logger.info(f"NY PRINT AGENT v1.2.0 starting on {get_ip()}:{PORT}")
     try:

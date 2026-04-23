@@ -292,3 +292,74 @@ AttributeError: BarTender.Application.Formats
 2026-04-22 13:25:23,507 [INFO] BarTender connected via Standard Dispatch
 2026-04-22 13:25:23,508 [INFO] BarTender Engine: READY (Background Mode)
 2026-04-22 13:25:23,548 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-22 16:05:25,507 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-22 16:05:25,583 [INFO] BarTender connected via Standard Dispatch
+2026-04-22 16:05:25,586 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-22 16:05:25,628 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-22 16:06:21,951 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-22 16:06:21,970 [INFO] BarTender connected via Standard Dispatch
+2026-04-22 16:06:21,971 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-22 16:06:21,986 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-22 16:07:39,428 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-22 16:07:39,446 [INFO] BarTender connected via Standard Dispatch
+2026-04-22 16:07:39,447 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-22 16:07:39,460 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-22 16:08:59,486 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-22 16:08:59,501 [INFO] BarTender connected via Standard Dispatch
+2026-04-22 16:08:59,502 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-22 16:08:59,520 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-22 16:58:38,986 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-22 16:58:39,007 [INFO] BarTender connected via Standard Dispatch
+2026-04-22 16:58:39,008 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-22 16:58:39,023 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-22 17:00:38,727 [INFO] Stopping agent...
+2026-04-23 08:04:12,252 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-23 08:04:18,087 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:04:18,088 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-23 08:04:18,115 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-23 08:11:12,977 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-23 08:11:12,994 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:11:12,994 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-23 08:11:13,008 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-23 08:13:44,858 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-23 08:13:44,879 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:13:44,880 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-23 08:13:44,893 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-23 08:24:40,385 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-23 08:24:55,065 [INFO] START Print Job: print_job_CN26042900002.xml
+2026-04-23 08:24:55,254 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-23 08:25:06,913 [INFO] PRINT SUCCESS: print_job_CN26042900002.xml
+2026-04-23 08:25:06,918 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900002.xml
+2026-04-23 08:25:51,415 [INFO] START Print Job: print_job_CN26042900003.xml
+2026-04-23 08:25:51,423 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-23 08:25:51,457 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:25:51,463 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-23 08:25:53,531 [INFO] PRINT SUCCESS: print_job_CN26042900003.xml
+2026-04-23 08:25:53,534 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900003.xml
+2026-04-23 08:26:18,992 [INFO] START Print Job: print_job_CN26042900003.xml
+2026-04-23 08:26:18,995 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-23 08:26:19,003 [WARNING] Standard Dispatch failed: BarTender.Application.Formats
+2026-04-23 08:26:19,011 [WARNING] Dynamic Dispatch failed: BarTender.Application.Formats
+2026-04-23 08:26:19,013 [WARNING] All Dispatch strategies failed — restarting BarTender process...
+2026-04-23 08:26:28,375 [INFO] BarTender connected via Standard Dispatch (after restart)
+2026-04-23 08:26:28,383 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-23 08:26:33,088 [INFO] PRINT SUCCESS: print_job_CN26042900003.xml
+2026-04-23 08:26:33,091 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900003.xml
+2026-04-23 08:27:56,467 [INFO] Stopping agent...
+2026-04-23 08:28:02,244 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-23 08:28:02,259 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:28:02,259 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-23 08:28:02,270 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-23 08:28:11,134 [INFO] START Print Job: print_job_CN26042900003.xml
+2026-04-23 08:28:11,157 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-23 08:28:11,173 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:28:11,179 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-23 08:28:13,369 [INFO] PRINT SUCCESS: print_job_CN26042900003.xml
+2026-04-23 08:28:13,371 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900003.xml
+2026-04-23 08:28:19,672 [INFO] START Print Job: print_job_CN26042900003.xml
+2026-04-23 08:28:19,674 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-23 08:28:19,700 [INFO] BarTender connected via Standard Dispatch
+2026-04-23 08:28:19,705 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-23 08:28:22,216 [INFO] PRINT SUCCESS: print_job_CN26042900003.xml
+2026-04-23 08:28:22,219 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900003.xml
+2026-04-23 08:29:47,845 [INFO] Stopping agent...

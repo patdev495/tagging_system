@@ -1,3 +1,5 @@
+import os
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException
@@ -33,6 +35,25 @@ def create_app() -> FastAPI:
     app.include_router(box_router, prefix="/api/v1")
     app.include_router(print_router, prefix="/api/v1")
 
+    # --- Serve Frontend Production Build ---
+    # Determine frontend dist path
+    base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    frontend_dist = os.path.join(base_path, "frontend_v2", "dist")
+    
+    # If running as PyInstaller EXE, check relative to the EXE location
+    if getattr(sys, 'frozen', False):
+        exe_base = os.path.dirname(sys.executable)
+        prod_frontend_dist = os.path.abspath(os.path.join(exe_base, "..", "frontend_v2", "dist"))
+        if os.path.exists(prod_frontend_dist):
+            frontend_dist = prod_frontend_dist
+
+    if os.path.exists(frontend_dist):
+        from fastapi.staticfiles import StaticFiles
+        # Mount at "/" with html=True:
+        # - Starlette checks routes BEFORE mounts, so API routes always win
+        # - html=True serves index.html for directory requests (SPA support)
+        app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    
     @app.get("/api/v1/health", tags=["Health"])
     def health_check():
         return {"status": "ok", "version": "v2.0"}
@@ -42,4 +63,25 @@ def create_app() -> FastAPI:
 app = create_app()
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.API_PORT, reload=True)
+    import uvicorn
+    from src.core.config import settings
+    
+    # Check if running as EXE
+    is_prod = getattr(sys, 'frozen', False)
+    
+    if is_prod:
+        # In production EXE, pass the app object directly
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=settings.API_PORT, 
+            reload=False
+        )
+    else:
+        # In development, use string to support reload
+        uvicorn.run(
+            "main:app", 
+            host="0.0.0.0", 
+            port=settings.API_PORT, 
+            reload=True
+        )

@@ -111,6 +111,19 @@ const isAudioActive = ref(false);
 const showSettings = ref(false);
 const showEmergencyModal = ref(false);
 let statusTimer = null;
+let audioCtx = null;
+let isAudioInitialized = false;
+
+const initAudio = async () => {
+  if (isAudioInitialized) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (settings.audioDeviceId && audioCtx.setSinkId) {
+      try { await audioCtx.setSinkId(settings.audioDeviceId); } catch {}
+    }
+    isAudioInitialized = true;
+  } catch(e) {}
+};
 
 const snPreview = computed(() => {
   if (!currentProduct.value) return '';
@@ -131,7 +144,7 @@ const progressPercent = computed(() => {
   return Math.round((scannedItems.value.length / currentProduct.value.packed_qty) * 100);
 });
 
-const focusScan = () => { nextTick(() => { if (scanRef.value) scanRef.value.focusScan(); }); };
+const focusScan = () => { nextTick(() => { if (scanRef.value) scanRef.value.focusScan(); }); initAudio(); };
 
 const checkAgent = async () => {
   await checkAgentHealth();
@@ -189,11 +202,11 @@ const handleScan = () => {
 
   const sn = scanBuffer.value.trim();
   if (!sn) return;
-  if (!isAgentConnected.value) { system.showNotification('CRITICAL: Agent OFFLINE!', 'error', 0); playScanAlert(); scanBuffer.value = ''; return; }
-  if (invalidScans.value.length > 0) { invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'invalid', type: 'lockdown' }); system.showNotification('STATION LOCKED!', 'error'); playScanAlert(); scanBuffer.value = ''; return; }
-  if (awaitingNext.value) { invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Excess Scan (Box Full)', type: 'excess' }); system.showNotification('BOX FULL!', 'warning'); playScanAlert(); scanBuffer.value = ''; return; }
-  if (snPattern.value && !sn.startsWith(snPattern.value)) { invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Prefix mismatch', type: 'pattern' }); system.showNotification(`Invalid Pattern! Must start with "${snPattern.value}"`, 'error'); playScanAlert(); scanBuffer.value = ''; return; }
-  if (scannedItems.value.includes(sn)) { invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); system.showNotification(`Duplicate: ${sn}`, 'warning'); playScanAlert(); scanBuffer.value = ''; return; }
+  if (!isAgentConnected.value) { playScanAlert(); system.showNotification('CRITICAL: Agent OFFLINE!', 'error', 0); scanBuffer.value = ''; return; }
+  if (invalidScans.value.length > 0) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'invalid', type: 'lockdown' }); system.showNotification('STATION LOCKED!', 'error'); scanBuffer.value = ''; return; }
+  if (awaitingNext.value) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Excess Scan (Box Full)', type: 'excess' }); system.showNotification('BOX FULL!', 'warning'); scanBuffer.value = ''; return; }
+  if (snPattern.value && !sn.startsWith(snPattern.value)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Prefix mismatch', type: 'pattern' }); system.showNotification(`Invalid Pattern! Must start with "${snPattern.value}"`, 'error'); scanBuffer.value = ''; return; }
+  if (scannedItems.value.includes(sn)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); system.showNotification(`Duplicate: ${sn}`, 'warning'); scanBuffer.value = ''; return; }
   scannedItems.value.push(sn);
   scanBuffer.value = '';
   if (scannedItems.value.length >= currentProduct.value.packed_qty) { awaitingNext.value = true; finalizeCarton(); }
@@ -231,7 +244,16 @@ const finalizeCarton = async (isRetry = false) => {
 
 const handleClientPrint = async (content, cartonSn, cartonId) => {
   try {
-    const agentRes = await fetch('http://127.0.0.1:1234/print', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ xml: content, filename: `print_job_${cartonSn}.xml`, path: settings.printFolder || null }) });
+    const agentRes = await fetch('http://127.0.0.1:1234/print', { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ 
+        xml: content, 
+        filename: `print_job_${cartonSn}.xml`, 
+        path: settings.printFolder || null,
+        printer_name: settings.printerName || null
+      }) 
+    });
     isAgentConnected.value = true; system.isAgentConnected = true;
     return await agentRes.text();
   } catch (err) { isAgentConnected.value = false; system.isAgentConnected = false; return 'Error: Could not connect to Print Agent.'; }
@@ -251,15 +273,31 @@ const handleEmergencyReprint = async (result) => {
 const startNextCarton = () => { scannedItems.value = []; invalidScans.value = []; awaitingNext.value = false; focusScan(); };
 const resetSession = () => { currentProduct.value = null; scannedItems.value = []; invalidScans.value = []; awaitingNext.value = false; scanBuffer.value = ''; nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); };
 
-const playScanAlert = async () => {
+const playScanAlert = () => {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (settings.audioDeviceId && ctx.setSinkId) { try { await ctx.setSinkId(settings.audioDeviceId); } catch {} }
-    const beep = (freq, start, dur) => { const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'square'; o.frequency.setValueAtTime(freq, ctx.currentTime + start); g.gain.setValueAtTime(0, ctx.currentTime + start); g.gain.linearRampToValueAtTime(0.1, ctx.currentTime + start + 0.05); g.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur); o.start(ctx.currentTime + start); o.stop(ctx.currentTime + start + dur); };
-    beep(150, 0, 0.4); beep(150, 0.5, 0.4); beep(150, 1.0, 0.4);
+    if (!audioCtx) return; // Silent fallback if not initialized
+    if (audioCtx.state === 'suspended') audioCtx.resume(); // Don't await, let it play as soon as it resumes
+    
+    const beep = (freq, start, dur) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.type = 'square';
+      o.frequency.setValueAtTime(freq, audioCtx.currentTime + start);
+      
+      // Sharp attack (0.005s) for instant sound, instead of slow 0.05s fade-in
+      g.gain.setValueAtTime(0, audioCtx.currentTime + start);
+      g.gain.linearRampToValueAtTime(1.0, audioCtx.currentTime + start + 0.005);
+      g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + start + dur);
+      
+      o.start(audioCtx.currentTime + start);
+      o.stop(audioCtx.currentTime + start + dur);
+    };
+    beep(800, 0, 0.4); beep(800, 0.5, 0.4); beep(800, 1.0, 0.4);
   } catch (e) { console.warn('Audio alert failed:', e); }
 };
-const toggleAudio = () => { isAudioActive.value = true; playScanAlert(); system.showNotification('Audio Alert: ACTIVE', 'success'); };
+const toggleAudio = () => { isAudioActive.value = true; initAudio().then(playScanAlert); system.showNotification('Audio Alert: ACTIVE', 'success'); };
 
 // Session persistence
 watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans], () => {
