@@ -10,3 +10,9 @@ class CartonCreate(BaseModel):
     job_order: Optional[str] = None
     custom_sn: Optional[int] = None
     carton_origin: str = "VN"
+
+class CartonRescan(BaseModel):
+    carton_sn: str
+    items: List[str]
+    template_path: Optional[str] = None
+    printer_name: Optional[str] = None

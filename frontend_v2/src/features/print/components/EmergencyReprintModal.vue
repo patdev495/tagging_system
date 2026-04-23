@@ -26,6 +26,9 @@
             </div>
           </div>
           <div class="result-actions">
+            <button @click="$emit('rescan', result)" class="btn-rescan-action">
+              <i class="fas fa-redo"></i><span>Rescan Items</span>
+            </button>
             <button @click="$emit('reprint', result)" :disabled="loading" class="btn-print-action">
               <i class="fas fa-spinner fa-spin" v-if="loading"></i><i class="fas fa-print" v-else></i><span>Print Label</span>
             </button>
@@ -45,7 +48,7 @@ import printApi from '../api';
 import { useSystemStore } from '../../../core/stores/system';
 
 defineProps({ show: Boolean });
-defineEmits(['close', 'reprint']);
+defineEmits(['close', 'reprint', 'rescan']);
 
 const system = useSystemStore();
 const searchSN = ref('');
@@ -98,6 +101,9 @@ const handleSearch = async () => {
 .btn-print-action { background: #1e293b; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
 .btn-print-action:hover:not(:disabled) { background: #0f172a; transform: translateY(-2px); }
 .btn-print-action:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.btn-rescan-action { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.btn-rescan-action:hover { background: #e2e8f0; color: #1e293b; }
 .no-result-card { text-align: center; padding: 40px 20px; background: #f8fafc; border-radius: 16px; border: 1px dashed #cbd5e1; }
 .no-result-icon { font-size: 3rem; color: #cbd5e1; margin-bottom: 16px; }
 .no-result-card p { color: #64748b; margin: 0; }

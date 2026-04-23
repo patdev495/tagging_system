@@ -9,5 +9,8 @@ export default {
   },
   getNextSN(productId) {
     return api.get(`/products/${productId}/next-sn`);
+  },
+  rescanCarton(data) {
+    return api.put('/cartons/rescan', data);
   }
 };

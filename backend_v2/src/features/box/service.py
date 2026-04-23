@@ -81,3 +81,43 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         db.rollback()
         # You could use logger here
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
+    carton = db.query(models.Carton).filter(models.Carton.carton_sn == rescan_in.carton_sn).order_by(models.Carton.id.desc()).first()
+    if not carton:
+        raise HTTPException(status_code=404, detail="Carton not found")
+        
+    product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
+    
+    if len(rescan_in.items) != len(set(rescan_in.items)):
+        raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
+        
+    try:
+        # Delete old items
+        db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton.id).delete()
+        
+        # Insert new items
+        for item_sn in rescan_in.items:
+            db.add(models.CartonItem(carton_id=carton.id, item_sn=item_sn))
+            
+        carton.status = "FAILED" # Default to FAILED until proven SUCCESS by printer agent later
+        carton.btxml = None
+        
+        btxml_content = None
+        if rescan_in.template_path:
+            btxml_content = generate_btxml(
+                carton, 
+                product, 
+                rescan_in.items, 
+                rescan_in.template_path, 
+                rescan_in.printer_name
+            )
+            carton.btxml = btxml_content
+            
+        db.commit()
+        db.refresh(carton)
+        return carton, btxml_content
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")

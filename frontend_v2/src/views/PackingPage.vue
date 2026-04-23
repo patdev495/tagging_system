@@ -31,6 +31,16 @@
               @focus-scan="focusScan"
             />
 
+            <div v-if="isRescanMode" class="rescan-banner fade-in">
+              <div class="rescan-info">
+                <i class="fas fa-redo-alt fa-spin"></i>
+                <span><strong>RESCAN MODE:</strong> Updating Carton <strong>{{ rescanCartonSN }}</strong></span>
+              </div>
+              <button @click="isRescanMode = false; rescanCartonSN = '';" class="btn-cancel-rescan">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </div>
+
             <div class="progress-container">
               <div class="progress-header">
                 <span class="count">{{ scannedItems.length }} / {{ currentProduct.packed_qty }}</span>
@@ -67,7 +77,12 @@
 
     <Notification />
     <SettingsModal :show="showSettings" @close="showSettings = false" />
-    <EmergencyReprintModal :show="showEmergencyModal" @close="showEmergencyModal = false" @reprint="handleEmergencyReprint" />
+    <EmergencyReprintModal 
+      :show="showEmergencyModal" 
+      @close="showEmergencyModal = false" 
+      @reprint="handleEmergencyReprint" 
+      @rescan="handleRescan"
+    />
   </div>
 </template>
 
@@ -110,6 +125,8 @@ const isProcessing = ref(false);
 const isAudioActive = ref(false);
 const showSettings = ref(false);
 const showEmergencyModal = ref(false);
+const isRescanMode = ref(false);
+const rescanCartonSN = ref('');
 let statusTimer = null;
 let audioCtx = null;
 let isAudioInitialized = false;
@@ -220,6 +237,18 @@ const finalizeCarton = async (isRetry = false) => {
     if (isRetry && lastCarton.value) {
       cartonId = lastCarton.value.id; cartonSn = lastCarton.value.carton_sn; btxmlContent = lastCarton.value.btxml;
       lastCarton.value.status = 'PRINTING';
+    } else if (isRescanMode.value) {
+      const items = [...scannedItems.value];
+      const res = await packingApi.rescanCarton({
+        carton_sn: rescanCartonSN.value,
+        items,
+        template_path: settings.templatePath || null,
+        printer_name: settings.printerName || null
+      });
+      cartonId = res.data.id;
+      cartonSn = res.data.carton_sn;
+      btxmlContent = res.data.btxml;
+      lastCarton.value = { ...res.data, status: 'PRINTING' };
     } else {
       if (customSN.value && !isNaN(parseInt(customSN.value)) && parseInt(customSN.value) < suggestedSNValue.value) {
         system.showNotification(`ERROR: Start S/N cannot be lower than ${suggestedSNValue.value}`, 'error'); isProcessing.value = false; return;
@@ -236,7 +265,13 @@ const finalizeCarton = async (isRetry = false) => {
       await printApi.updateCartonStatus(cartonId, 'SUCCESS');
       lastCarton.value.status = 'SUCCESS';
       system.showNotification(`Carton ${cartonSn} Printed!`, 'success');
-      if (!isRetry) { if (customSN.value && !isNaN(parseInt(customSN.value))) customSN.value = (parseInt(customSN.value) + 1).toString(); awaitingNext.value = true; focusScan(); }
+      if (!isRetry) { 
+        if (!isRescanMode.value && customSN.value && !isNaN(parseInt(customSN.value))) {
+          customSN.value = (parseInt(customSN.value) + 1).toString(); 
+        }
+        awaitingNext.value = true; 
+        focusScan(); 
+      }
     } else { lastCarton.value.status = 'FAILED'; agentErrorMessage.value = printResult; system.showNotification(`Print failed: ${printResult}`, 'error'); }
   } catch (err) { console.error(err); if (lastCarton.value && !isRetry) lastCarton.value.status = 'FAILED'; system.showNotification('Server error.', 'error'); }
   finally { isProcessing.value = false; }
@@ -270,7 +305,27 @@ const handleEmergencyReprint = async (result) => {
   } catch (err) { system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error'); }
 };
 
-const startNextCarton = () => { scannedItems.value = []; invalidScans.value = []; awaitingNext.value = false; focusScan(); };
+const handleRescan = (carton) => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  currentProduct.value = carton.product;
+  scannedItems.value = [];
+  jobOrder.value = carton.job_order || '';
+  cartonOrigin.value = carton.carton_origin || 'VN';
+  isRescanMode.value = true;
+  rescanCartonSN.value = carton.carton_sn;
+  showEmergencyModal.value = false;
+  system.showNotification(`RESCAN MODE ACTIVE for ${carton.carton_sn}`, 'warning');
+  focusScan();
+};
+
+const startNextCarton = () => { 
+  scannedItems.value = []; 
+  invalidScans.value = []; 
+  awaitingNext.value = false; 
+  isRescanMode.value = false;
+  rescanCartonSN.value = '';
+  focusScan(); 
+};
 const resetSession = () => { currentProduct.value = null; scannedItems.value = []; invalidScans.value = []; awaitingNext.value = false; scanBuffer.value = ''; nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); };
 
 const playScanAlert = () => {
@@ -329,4 +384,32 @@ onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });
 .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
 @media (max-width: 1100px) { .packing-workspace { flex-direction: column; align-items: stretch; } }
 @media (max-width: 600px) { .packing-container { padding: 10px; } .main-card { padding: 12px; } }
+
+.rescan-banner {
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #9a3412;
+}
+.rescan-info { display: flex; align-items: center; gap: 12px; }
+.rescan-info i { color: #f97316; }
+.btn-cancel-rescan {
+  background: #ffedd5;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #9a3412;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.btn-cancel-rescan:hover { background: #fed7aa; }
 </style>

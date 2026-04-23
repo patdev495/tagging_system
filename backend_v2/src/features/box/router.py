@@ -19,3 +19,11 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(get_db)
     response_data = Carton.from_orm(new_carton)
     response_data.btxml = btxml_content
     return response_data
+
+@router.put("/rescan", response_model=Carton)
+def rescan_carton(rescan_in: schemas.CartonRescan, db: Session = Depends(get_db)):
+    """Xảo lại mã con hàng cho một thùng đã tồn tại và sinh lại XML"""
+    updated_carton, btxml_content = service.rescan_carton(rescan_in, db)
+    response_data = Carton.from_orm(updated_carton)
+    response_data.btxml = btxml_content
+    return response_data
