@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class ProductBase(BaseModel):
     item_name: str
@@ -10,6 +11,8 @@ class ProductBase(BaseModel):
 class Product(ProductBase):
     id: int
     customer_id: int
+    template_type: Optional[str] = "standard"
+    allow_partial: Optional[int] = 0
 
     class Config:
         from_attributes = True

@@ -22,6 +22,8 @@ class Product(Base):
     packed_qty = Column(Integer)
     start_part = Column(String(10)) # CN or VN
     middle_part = Column(String(20)) # e.g. 11, 16, A, B
+    template_type = Column(String(50), default="standard") # "standard" | "detailed"
+    allow_partial = Column(Integer, default=0) # 0 = must be full | 1 = can be partial
     
     customer = relationship("Customer", back_populates="products")
     cartons = relationship("Carton", back_populates="product")

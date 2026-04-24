@@ -19,6 +19,14 @@
       >
         <i class="fas fa-plus-circle"></i> Next Carton
       </button>
+      <button 
+        v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
+        @click="$emit('pack-now')" 
+        class="btn-pack-now"
+        title="Pack carton immediately (partial)"
+      >
+        <i class="fas fa-box-open"></i> Pack Now
+      </button>
     </div>
     <p class="hint" v-if="jobOrder && !awaitingNext">Waiting for scanner input (Enter to submit)</p>
     <p class="hint overflow-hint" v-else-if="awaitingNext">📦 Box Complete! Overflow scans are captured below. Click <strong>Next Carton</strong> when ready.</p>
@@ -68,10 +76,12 @@ defineProps({
   jobOrder: { type: String, default: '' },
   awaitingNext: { type: Boolean, default: false },
   invalidScans: { type: Array, default: () => [] },
-  overflowScans: { type: Array, default: () => [] }
+  overflowScans: { type: Array, default: () => [] },
+  allowPartial: { type: Boolean, default: false },
+  scannedCount: { type: Number, default: 0 }
 });
 
-defineEmits(['update:scanBuffer', 'scan', 'next-carton', 'clear-invalid', 'clear-overflow']);
+defineEmits(['update:scanBuffer', 'scan', 'next-carton', 'pack-now', 'clear-invalid', 'clear-overflow']);
 
 const scanInput = ref(null);
 
@@ -149,6 +159,27 @@ defineExpose({ focusScan });
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+.btn-pack-now {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  padding: 0 24px;
+  height: 58px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+}
+.btn-pack-now:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 .pulse-animation { animation: pulse-green 2s infinite; }
 @keyframes pulse-green {

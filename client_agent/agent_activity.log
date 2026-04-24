@@ -568,3 +568,432 @@
 2026-04-24 08:32:59,649 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
 2026-04-24 08:33:07,577 [INFO] PRINT SUCCESS: print_job_CN26042800002.xml
 2026-04-24 08:33:07,579 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042800002.xml
+2026-04-24 09:08:19,510 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-24 09:08:19,528 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 09:08:19,530 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-24 09:08:19,544 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-24 09:08:46,793 [INFO] START Print Job: print_job_CN26043000016.xml (Printer: Microsoft Print to PDF)
+2026-04-24 09:08:46,827 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 09:08:46,846 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 09:08:46,856 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-24 09:08:57,236 [INFO] PRINT SUCCESS: print_job_CN26043000016.xml
+2026-04-24 09:08:57,237 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000016.xml
+2026-04-24 09:09:39,337 [INFO] START Print Job: print_job_CN26044800001.xml (Printer: Microsoft Print to PDF)
+2026-04-24 09:09:39,341 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 09:09:39,361 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 09:09:39,372 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-24 09:09:40,903 [WARNING] Could not set named substring 'ItemName2': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source ItemName2 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,906 [WARNING] Could not set named substring 'ItemName3': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source ItemName3 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,924 [WARNING] Could not set named substring 'SN_1': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_1 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,933 [WARNING] Could not set named substring 'SN_2': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_2 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,941 [WARNING] Could not set named substring 'SN_3': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_3 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,942 [WARNING] Could not set named substring 'SN_4': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_4 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,944 [WARNING] Could not set named substring 'SN_5': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_5 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,947 [WARNING] Could not set named substring 'SN_6': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_6 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,949 [WARNING] Could not set named substring 'SN_7': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_7 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,950 [WARNING] Could not set named substring 'SN_8': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_8 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,954 [WARNING] Could not set named substring 'SN_9': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_9 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,960 [WARNING] Could not set named substring 'SN_10': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_10 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,962 [WARNING] Could not set named substring 'SN_11': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_11 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,964 [WARNING] Could not set named substring 'SN_12': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_12 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,965 [WARNING] Could not set named substring 'SN_13': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_13 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,967 [WARNING] Could not set named substring 'SN_14': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_14 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,979 [WARNING] Could not set named substring 'SN_15': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_15 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:40,984 [WARNING] Could not set named substring 'SN_16': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_16 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,000 [WARNING] Could not set named substring 'SN_17': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_17 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,007 [WARNING] Could not set named substring 'SN_18': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_18 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,016 [WARNING] Could not set named substring 'SN_19': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_19 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,026 [WARNING] Could not set named substring 'SN_20': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_20 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,031 [WARNING] Could not set named substring 'SN_21': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_21 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,040 [WARNING] Could not set named substring 'SN_22': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_22 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,042 [WARNING] Could not set named substring 'SN_23': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_23 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,045 [WARNING] Could not set named substring 'SN_24': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_24 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,053 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,060 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,068 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,074 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,076 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:41,077 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 09:09:46,446 [INFO] PRINT SUCCESS: print_job_CN26044800001.xml
+2026-04-24 09:09:46,447 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800001.xml
+2026-04-24 10:28:29,388 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 10:28:54,158 [INFO] START Print Job: print_job_CN26044800002.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:28:54,168 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:28:54,198 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:28:54,227 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:28:55,682 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:28:55,739 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:28:55,746 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:28:55,753 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:28:55,758 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:28:55,759 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:28:55,763 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:29:05,218 [INFO] PRINT SUCCESS: print_job_CN26044800002.xml
+2026-04-24 10:29:05,223 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800002.xml
+2026-04-24 10:34:38,539 [INFO] START Print Job: print_job_CN26044700001.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:34:38,541 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:34:38,573 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:34:38,585 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:34:40,984 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:34:41,056 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:34:41,061 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:34:41,068 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:34:41,072 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:34:41,077 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:34:41,080 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:35:02,459 [INFO] PRINT SUCCESS: print_job_CN26044700001.xml
+2026-04-24 10:35:02,460 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700001.xml
+2026-04-24 10:36:42,491 [INFO] START Print Job: print_job_CN26042900003.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:36:42,493 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:36:42,569 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:36:42,592 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:36:45,241 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:36:56,184 [INFO] PRINT SUCCESS: print_job_CN26042900003.xml
+2026-04-24 10:36:56,186 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900003.xml
+2026-04-24 10:37:51,108 [INFO] START Print Job: print_job_CN26044800003.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:37:51,111 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:37:51,158 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:37:51,180 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:37:53,826 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:37:53,907 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:37:53,913 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:37:53,917 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:37:53,921 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:37:53,924 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:37:53,929 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:02,424 [INFO] PRINT SUCCESS: print_job_CN26044800003.xml
+2026-04-24 10:38:02,426 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800003.xml
+2026-04-24 10:38:35,539 [INFO] START Print Job: print_job_CN26044800003.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:38:35,543 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:38:35,701 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:38:35,734 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:38:40,568 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:40,714 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:40,725 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:40,732 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:40,743 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:40,752 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:40,764 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:38:56,858 [INFO] PRINT SUCCESS: print_job_CN26044800003.xml
+2026-04-24 10:38:56,863 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800003.xml
+2026-04-24 10:40:40,724 [INFO] START Print Job: print_job_CN26044800004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:40:40,726 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:40:40,754 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:40:40,764 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:40:43,638 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:43,744 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:43,747 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:43,751 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:43,754 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:43,758 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:43,762 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:40:53,441 [INFO] PRINT SUCCESS: print_job_CN26044800004.xml
+2026-04-24 10:40:53,447 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800004.xml
+2026-04-24 10:42:15,037 [INFO] START Print Job: print_job_CN26044800004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:42:15,042 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:42:15,138 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:42:15,168 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:42:19,706 [WARNING] Could not set named substring 'CartonSN': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source CartonSN is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:19,856 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:19,861 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:19,867 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:19,874 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:19,882 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:19,892 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:42:33,157 [INFO] PRINT SUCCESS: print_job_CN26044800004.xml
+2026-04-24 10:42:33,158 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800004.xml
+2026-04-24 10:43:34,906 [INFO] START Print Job: print_job_CN26044800004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:43:34,908 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:43:34,993 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:43:35,011 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:43:40,387 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:40,399 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:40,417 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:40,428 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:40,437 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:40,451 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:46,910 [INFO] PRINT SUCCESS: print_job_CN26044800004.xml
+2026-04-24 10:43:46,910 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800004.xml
+2026-04-24 10:43:56,538 [INFO] START Print Job: print_job_CN26044800004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:43:56,541 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:43:56,578 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:43:56,585 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:43:58,489 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:58,497 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:58,503 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:58,508 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:58,515 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:43:58,520 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:44:14,474 [INFO] PRINT SUCCESS: print_job_CN26044800004.xml
+2026-04-24 10:44:14,475 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800004.xml
+2026-04-24 10:45:32,889 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 10:45:43,856 [INFO] START Print Job: print_job_CN26044700002.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:45:43,856 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:45:43,904 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:45:43,915 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:45:46,279 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:45:46,285 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:45:46,288 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:45:46,292 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:45:46,295 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:45:46,299 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:45:54,745 [INFO] PRINT SUCCESS: print_job_CN26044700002.xml
+2026-04-24 10:45:54,747 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700002.xml
+2026-04-24 10:57:31,309 [INFO] START Print Job: print_job_CN26044700002.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:57:31,311 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:57:31,356 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:57:31,362 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:57:35,612 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:57:35,624 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:57:35,636 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:57:35,645 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:57:35,661 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:57:35,675 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:57:49,064 [INFO] PRINT SUCCESS: print_job_CN26044700002.xml
+2026-04-24 10:57:49,067 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700002.xml
+2026-04-24 10:59:01,038 [INFO] START Print Job: print_job_CN26044600001.xml (Printer: Microsoft Print to PDF)
+2026-04-24 10:59:01,041 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 10:59:01,082 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 10:59:01,101 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 10:59:03,722 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:59:03,729 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:59:03,734 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:59:03,738 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:59:03,742 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:59:03,749 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 10:59:12,045 [INFO] PRINT SUCCESS: print_job_CN26044600001.xml
+2026-04-24 10:59:12,051 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600001.xml
+2026-04-24 11:03:09,551 [INFO] START Print Job: print_job_CN26044600002.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:03:09,553 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:03:09,581 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:03:09,589 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:03:10,857 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:10,861 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:10,868 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:10,870 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:10,876 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:10,880 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:16,992 [INFO] PRINT SUCCESS: print_job_CN26044600002.xml
+2026-04-24 11:03:16,993 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600002.xml
+2026-04-24 11:03:54,050 [INFO] START Print Job: print_job_CN26044600003.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:03:54,052 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:03:54,108 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:03:54,121 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:03:55,325 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:55,329 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:55,334 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:55,337 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:55,342 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:03:55,347 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:04:02,354 [INFO] PRINT SUCCESS: print_job_CN26044600003.xml
+2026-04-24 11:04:02,356 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600003.xml
+2026-04-24 11:10:41,875 [INFO] START Print Job: print_job_CN26044600004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:10:41,876 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:10:41,931 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:10:41,942 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:10:43,979 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:10:43,989 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:10:43,994 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:10:44,002 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:10:44,012 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:10:44,021 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:10:52,720 [INFO] PRINT SUCCESS: print_job_CN26044600004.xml
+2026-04-24 11:10:52,722 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600004.xml
+2026-04-24 11:13:33,466 [INFO] START Print Job: print_job_CN26044700003.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:13:33,469 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:13:33,534 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:13:33,551 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:13:35,978 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:13:35,984 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:13:35,993 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:13:35,999 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:13:36,003 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:13:36,008 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:13:48,928 [INFO] PRINT SUCCESS: print_job_CN26044700003.xml
+2026-04-24 11:13:48,931 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700003.xml
+2026-04-24 11:17:02,181 [INFO] START Print Job: print_job_CN26044700004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:17:02,187 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:17:02,235 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:17:02,257 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:17:04,264 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:17:04,268 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:17:04,278 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:17:04,284 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:17:04,292 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:17:04,295 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:17:14,291 [INFO] PRINT SUCCESS: print_job_CN26044700004.xml
+2026-04-24 11:17:14,296 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700004.xml
+2026-04-24 11:18:20,868 [INFO] START Print Job: print_job_CN26044700004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:18:20,871 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:18:20,974 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:18:20,997 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:18:25,615 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:18:25,631 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:18:25,648 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:18:25,664 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:18:25,677 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:18:25,696 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:18:39,601 [INFO] PRINT SUCCESS: print_job_CN26044700004.xml
+2026-04-24 11:18:39,603 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700004.xml
+2026-04-24 11:22:37,734 [INFO] START Print Job: print_job_CN26044700005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:22:37,735 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:22:37,797 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:22:37,810 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:22:40,183 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:22:40,190 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:22:40,194 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:22:40,202 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:22:40,211 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:22:40,220 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:22:50,677 [INFO] PRINT SUCCESS: print_job_CN26044700005.xml
+2026-04-24 11:22:50,680 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700005.xml
+2026-04-24 11:27:27,121 [INFO] START Print Job: print_job_CN26044600005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:27:27,123 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:27:27,170 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:27:27,180 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:27:28,872 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:27:28,874 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:27:28,877 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:27:28,878 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:27:28,878 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:27:28,881 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:27:37,538 [INFO] PRINT SUCCESS: print_job_CN26044600005.xml
+2026-04-24 11:27:37,540 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600005.xml
+2026-04-24 11:30:31,504 [INFO] START Print Job: print_job_CN26042900004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:30:31,506 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:30:31,557 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:30:31,570 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:30:44,537 [INFO] PRINT SUCCESS: print_job_CN26042900004.xml
+2026-04-24 11:30:44,540 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900004.xml
+2026-04-24 11:31:08,541 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:31:19,742 [INFO] START Print Job: print_job_CN26042900005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:31:19,743 [ERROR] PRINT FAILED: print_job_CN26042900005.xml - Error: Template file not found: D:\Workspace\NY_tagging_sys\carton.btw
+2026-04-24 11:31:19,748 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900005.xml
+2026-04-24 11:31:44,080 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:31:45,116 [INFO] START Print Job: print_job_CN26042900005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:31:45,117 [ERROR] PRINT FAILED: print_job_CN26042900005.xml - Error: Template file not found: D:\Workspace\NY_tagging_sys\carton.btw
+2026-04-24 11:31:45,121 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900005.xml
+2026-04-24 11:31:49,702 [INFO] START Print Job: print_job_CN26042900005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:31:49,704 [ERROR] PRINT FAILED: print_job_CN26042900005.xml - Error: Template file not found: D:\Workspace\NY_tagging_sys\carton.btw
+2026-04-24 11:31:49,707 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900005.xml
+2026-04-24 11:31:54,974 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:32:07,817 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:32:22,142 [INFO] START Print Job: print_job_CN26042900006.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:32:22,143 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:32:22,182 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:32:22,189 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-24 11:32:31,618 [INFO] PRINT SUCCESS: print_job_CN26042900006.xml
+2026-04-24 11:32:31,620 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042900006.xml
+2026-04-24 11:35:21,311 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:35:31,500 [INFO] START Print Job: print_job_CN26044800005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:35:31,502 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:35:31,535 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:35:31,543 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:35:34,101 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:35:34,107 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:35:34,112 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:35:34,116 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:35:34,121 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:35:34,124 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:35:44,610 [INFO] PRINT SUCCESS: print_job_CN26044800005.xml
+2026-04-24 11:35:44,612 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800005.xml
+2026-04-24 11:36:34,211 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:36:46,496 [INFO] START Print Job: print_job_CN26044800006.xml (Printer: Default)
+2026-04-24 11:36:46,498 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:36:46,524 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:36:46,528 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:36:48,937 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:36:48,940 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:36:48,943 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:36:48,944 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:36:48,945 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:36:48,949 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:36:56,634 [INFO] PRINT SUCCESS: print_job_CN26044800006.xml
+2026-04-24 11:36:56,637 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044800006.xml
+2026-04-24 11:37:02,475 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:37:19,572 [INFO] START Print Job: print_job_CN26044700006.xml (Printer: Default)
+2026-04-24 11:37:19,575 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:37:19,638 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:37:19,670 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:37:22,139 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:37:22,144 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:37:22,156 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:37:22,169 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:37:22,174 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:37:22,177 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:37:29,974 [INFO] PRINT SUCCESS: print_job_CN26044700006.xml
+2026-04-24 11:37:29,976 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700006.xml
+2026-04-24 11:37:40,190 [INFO] START Print Job: print_job_CN26042800003.xml (Printer: Default)
+2026-04-24 11:37:40,191 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:37:40,239 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:37:40,252 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:37:49,928 [INFO] PRINT SUCCESS: print_job_CN26042800003.xml
+2026-04-24 11:37:49,930 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042800003.xml
+2026-04-24 11:39:28,312 [INFO] START Print Job: print_job_CN26044600006.xml (Printer: Default)
+2026-04-24 11:39:28,315 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:39:28,372 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:39:28,399 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:39:30,512 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:39:30,516 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:39:30,521 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:39:30,525 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:39:30,537 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:39:30,545 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:39:33,458 [INFO] PRINT SUCCESS: print_job_CN26044600006.xml
+2026-04-24 11:39:33,460 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600006.xml
+2026-04-24 11:43:06,043 [INFO] START Print Job: print_job_CN26044600006.xml (Printer: Default)
+2026-04-24 11:43:06,047 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:43:06,127 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:43:06,149 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:43:09,768 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:43:09,785 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:43:09,793 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:43:09,801 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:43:09,812 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:43:09,815 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:43:13,225 [INFO] PRINT SUCCESS: print_job_CN26044600006.xml
+2026-04-24 11:43:13,229 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600006.xml
+2026-04-24 11:44:59,213 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:45:08,988 [INFO] START Print Job: print_job_CN26044700007.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:45:08,993 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:45:09,085 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:45:09,105 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:45:12,791 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:45:12,796 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:45:12,804 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:45:12,806 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:45:12,812 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:45:12,817 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:45:20,254 [INFO] PRINT SUCCESS: print_job_CN26044700007.xml
+2026-04-24 11:45:20,257 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700007.xml
+2026-04-24 11:47:06,316 [INFO] START Print Job: print_job_CN26044600007.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:47:06,318 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:47:06,362 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:47:06,389 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:47:09,644 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:47:09,654 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:47:09,661 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:47:09,663 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:47:09,667 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:47:09,670 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:47:17,856 [INFO] PRINT SUCCESS: print_job_CN26044600007.xml
+2026-04-24 11:47:17,861 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600007.xml
+2026-04-24 11:49:07,590 [INFO] START Print Job: print_job_CN26044600008.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:49:07,593 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:49:07,651 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:49:07,662 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:49:10,763 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:49:10,766 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:49:10,771 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:49:10,773 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:49:10,775 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:49:10,778 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:49:19,084 [INFO] PRINT SUCCESS: print_job_CN26044600008.xml
+2026-04-24 11:49:19,086 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044600008.xml
+2026-04-24 11:52:11,738 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:52:21,481 [INFO] START Print Job: print_job_CN26042800004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:52:21,482 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:52:21,514 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:52:21,531 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-24 11:52:29,300 [INFO] PRINT SUCCESS: print_job_CN26042800004.xml
+2026-04-24 11:52:29,304 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042800004.xml

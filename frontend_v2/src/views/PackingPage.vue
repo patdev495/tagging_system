@@ -63,8 +63,11 @@
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
               :overflowScans="overflowScans"
+              :allowPartial="currentProduct && currentProduct.allow_partial === 1"
+              :scannedCount="scannedItems.length"
               @scan="handleScan"
               @next-carton="startNextCarton"
+              @pack-now="finalizeCarton()"
               @clear-invalid="invalidScans = []"
               @clear-overflow="overflowScans = []"
             />

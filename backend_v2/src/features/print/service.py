@@ -5,29 +5,54 @@ from fastapi import HTTPException
 from src.core import models
 from src.features.print import schemas
 
+MAX_SN_GRID = 30  # Maximum SN slots on the detailed label
+
 def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: str = None) -> str:
     raw_origin = carton.carton_origin if carton.carton_origin else "VN"
     origin_text = "MADE IN CHINA" if raw_origin == "CN" else "MADE IN VIETNAM"
     qr_content = "&#xA;".join(items)
     printer_tag = f"<Printer>{printer_name}</Printer>" if printer_name else ""
     
-    # Path to the base template file
+    # Select template based on product.template_type
+    template_type = getattr(product, 'template_type', 'standard') or 'standard'
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    template_file = os.path.join(base_dir, "templates", "base.xml")
+    template_file = os.path.join(base_dir, "templates", f"{template_type}.xml")
+    
+    # Fallback to base.xml if template doesn't exist
+    if not os.path.exists(template_file):
+        template_file = os.path.join(base_dir, "templates", "base.xml")
+        template_type = "standard"
     
     with open(template_file, "r", encoding="utf-8") as f:
         xml_template = f.read()
+    
+    # For partial packing, QTY = actual scanned count, not packed_qty
+    allow_partial = getattr(product, 'allow_partial', 0) or 0
+    actual_qty = len(items)
+    if allow_partial:
+        qty_text = f"{actual_qty}PCS"
+    else:
+        qty_text = f"{product.packed_qty}PCS"
         
     data_dict = {
         "template_path": template_path,
         "printer_tag": printer_tag,
         "item_name": product.item_name,
-        "qty": f"{product.packed_qty}PCS",
+        "qty": qty_text,
         "carton_sn": carton.carton_sn,
         "upc": product.upc,
         "qr_content": qr_content,
-        "origin_text": origin_text
+        "origin_text": origin_text,
+        "mac_id": f"MAC ID ({actual_qty})"
     }
+    
+    # Detailed template: generate SN grid tags dynamically
+    if template_type == "detailed":
+        sn_tags = []
+        for i in range(MAX_SN_GRID):
+            sn_value = items[i] if i < len(items) else " "
+            sn_tags.append(f'            <NamedSubString Name="SN_{i+1}"><Value>{sn_value}</Value></NamedSubString>')
+        data_dict["sn_grid_tags"] = "\n".join(sn_tags)
     
     # Simple string formatting for the template
     btxml_content = xml_template.format(**data_dict)
