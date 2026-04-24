@@ -62,9 +62,11 @@
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
+              :overflowScans="overflowScans"
               @scan="handleScan"
               @next-carton="startNextCarton"
               @clear-invalid="invalidScans = []"
+              @clear-overflow="overflowScans = []"
             />
           </div>
 
@@ -123,6 +125,7 @@ const awaitingNext = ref(false);
 const suggestedSNValue = ref(0);
 const backupScannedItems = ref([]);
 const isProcessing = ref(false);
+const overflowScans = ref([]);
 const isAudioActive = ref(false);
 const showSettings = ref(false);
 const showEmergencyModal = ref(false);
@@ -227,9 +230,25 @@ const refreshNextSN = async () => {
 };
 
 const handleScan = () => {
+  const sn = scanBuffer.value.trim();
+  if (!sn) return;
+
+  // When box is already full (processing or awaiting next), capture overflow — DON'T block
+  if (isProcessing.value || awaitingNext.value) {
+    if (scannedItems.value.length >= currentProduct.value.packed_qty) {
+      playScanAlert();
+      overflowScans.value.push({ sn, time: new Date().toLocaleTimeString() });
+      system.showNotification(`⚠️ BOX FULL — S/N captured: ${sn}`, 'warning');
+      scanBuffer.value = '';
+      return;
+    }
+    // Still processing but box not full yet (shouldn't happen, but guard)
+    if (isProcessing.value) return;
+  }
+
   if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
   
-  if (scannedItems.value.length >= currentProduct.value.packed_qty) {
+  if (scannedItems.value.length >= currentProduct.value.packed_qty && !awaitingNext.value) {
     finalizeCarton();
     return;
   }
@@ -241,11 +260,12 @@ const handleScan = () => {
     return;
   }
 
-  const sn = scanBuffer.value.trim();
-  if (!sn) return;
   if (!isAgentConnected.value) { playScanAlert(); system.showNotification('CRITICAL: Agent OFFLINE!', 'error', 0); scanBuffer.value = ''; return; }
-  if (invalidScans.value.length > 0) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'invalid', type: 'lockdown' }); system.showNotification('STATION LOCKED!', 'error'); scanBuffer.value = ''; return; }
-  if (awaitingNext.value) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Excess Scan (Box Full)', type: 'excess' }); system.showNotification('BOX FULL!', 'warning'); scanBuffer.value = ''; return; }
+
+  // Lockdown only for real invalid scans (pattern, duplicate, lockdown) — NOT overflow/excess
+  const hasRealInvalid = invalidScans.value.some(s => ['pattern', 'duplicate', 'lockdown'].includes(s.type));
+  if (hasRealInvalid) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Station locked — clear errors first', type: 'lockdown' }); system.showNotification('STATION LOCKED! Clear errors first.', 'error'); scanBuffer.value = ''; return; }
+
   if (snPattern.value && !sn.startsWith(snPattern.value)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Prefix mismatch', type: 'pattern' }); system.showNotification(`Invalid Pattern! Must start with "${snPattern.value}"`, 'error'); scanBuffer.value = ''; return; }
   if (scannedItems.value.includes(sn)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); system.showNotification(`Duplicate: ${sn}`, 'warning'); scanBuffer.value = ''; return; }
   scannedItems.value.push(sn);
@@ -254,6 +274,8 @@ const handleScan = () => {
 };
 
 const finalizeCarton = async (isRetry = false) => {
+  // Guard: prevent concurrent finalization (double-click / rapid Enter)
+  if (isProcessing.value && !isRetry) return;
   isProcessing.value = true;
   agentErrorMessage.value = '';
   try {
@@ -379,12 +401,13 @@ const handleRescan = (carton) => {
 const startNextCarton = () => { 
   scannedItems.value = []; 
   invalidScans.value = []; 
+  overflowScans.value = [];
   awaitingNext.value = false; 
   isRescanMode.value = false;
   rescanCartonSN.value = '';
   focusScan(); 
 };
-const resetSession = () => { currentProduct.value = null; scannedItems.value = []; invalidScans.value = []; awaitingNext.value = false; scanBuffer.value = ''; nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); };
+const resetSession = () => { currentProduct.value = null; scannedItems.value = []; invalidScans.value = []; overflowScans.value = []; awaitingNext.value = false; scanBuffer.value = ''; nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); };
 
 const playScanAlert = () => {
   try {
@@ -420,13 +443,13 @@ watch(customSN, (val) => {
 });
 
 // Session persistence
-watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual], () => {
-  sessionStorage.setItem('packingState', JSON.stringify({ jobOrder: jobOrder.value, cartonOrigin: cartonOrigin.value, currentProduct: currentProduct.value, scannedItems: scannedItems.value, customSN: customSN.value, snPattern: snPattern.value, awaitingNext: awaitingNext.value, suggestedSNValue: suggestedSNValue.value, backupScannedItems: backupScannedItems.value, lastCarton: lastCarton.value, invalidScans: invalidScans.value, isSNManual: isSNManual.value }));
+watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans], () => {
+  sessionStorage.setItem('packingState', JSON.stringify({ jobOrder: jobOrder.value, cartonOrigin: cartonOrigin.value, currentProduct: currentProduct.value, scannedItems: scannedItems.value, customSN: customSN.value, snPattern: snPattern.value, awaitingNext: awaitingNext.value, suggestedSNValue: suggestedSNValue.value, backupScannedItems: backupScannedItems.value, lastCarton: lastCarton.value, invalidScans: invalidScans.value, isSNManual: isSNManual.value, overflowScans: overflowScans.value }));
 }, { deep: true });
 
 onMounted(() => {
   const saved = sessionStorage.getItem('packingState');
-  if (saved) { try { const s = JSON.parse(saved); if (s.jobOrder) jobOrder.value = s.jobOrder; if (s.cartonOrigin) cartonOrigin.value = s.cartonOrigin; if (s.currentProduct) currentProduct.value = s.currentProduct; if (s.scannedItems) scannedItems.value = s.scannedItems; if (s.customSN) customSN.value = s.customSN; if (s.snPattern) snPattern.value = s.snPattern; if (s.awaitingNext !== undefined) awaitingNext.value = s.awaitingNext; if (s.suggestedSNValue !== undefined) suggestedSNValue.value = s.suggestedSNValue; if (s.backupScannedItems) backupScannedItems.value = s.backupScannedItems; if (s.lastCarton) lastCarton.value = s.lastCarton; if (s.invalidScans) invalidScans.value = s.invalidScans; } catch (e) { console.error('Restore failed', e); } }
+  if (saved) { try { const s = JSON.parse(saved); if (s.jobOrder) jobOrder.value = s.jobOrder; if (s.cartonOrigin) cartonOrigin.value = s.cartonOrigin; if (s.currentProduct) currentProduct.value = s.currentProduct; if (s.scannedItems) scannedItems.value = s.scannedItems; if (s.customSN) customSN.value = s.customSN; if (s.snPattern) snPattern.value = s.snPattern; if (s.awaitingNext !== undefined) awaitingNext.value = s.awaitingNext; if (s.suggestedSNValue !== undefined) suggestedSNValue.value = s.suggestedSNValue; if (s.backupScannedItems) backupScannedItems.value = s.backupScannedItems; if (s.lastCarton) lastCarton.value = s.lastCarton; if (s.invalidScans) invalidScans.value = s.invalidScans; if (s.overflowScans) overflowScans.value = s.overflowScans; } catch (e) { console.error('Restore failed', e); } }
   settings.loadSettings();
   checkAgent(); checkSystem();
   nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
