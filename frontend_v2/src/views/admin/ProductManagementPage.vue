@@ -61,8 +61,8 @@
                 </div>
               </td>
               <td class="p-4">
-                <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', product.template_type === 'detailed' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700']">
-                  {{ product.template_type }}
+                <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', (product.template_type || 'standard') === 'detailed' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700']">
+                  {{ product.template_type || 'standard' }}
                 </span>
               </td>
               <td class="p-4 text-right">
