@@ -28,6 +28,7 @@
               v-model:snPattern="snPattern"
               :suggestedSNValue="suggestedSNValue"
               :snPreview="snPreview"
+              :snExists="snExists"
               @back="resetSession"
               @focus-scan="focusScan"
             />
@@ -133,6 +134,8 @@ const showEmergencyModal = ref(false);
 const isRescanMode = ref(false);
 const rescanCartonSN = ref('');
 const isSNManual = ref(false);
+const snExists = ref(false);
+let snCheckTimer = null;
 let statusTimer = null;
 let audioCtx = null;
 let isAudioInitialized = false;
@@ -250,18 +253,6 @@ const handleScan = () => {
   }
 
   if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
-  
-  if (scannedItems.value.length >= currentProduct.value.packed_qty && !awaitingNext.value) {
-    finalizeCarton();
-    return;
-  }
-
-  // Strict check for Start S/N
-  if (customSN.value && !isNaN(parseInt(customSN.value)) && parseInt(customSN.value) < suggestedSNValue.value) {
-    system.showNotification(`INVALID START S/N: Must be at least ${suggestedSNValue.value}`, 'error');
-    playScanAlert();
-    return;
-  }
 
   if (!isAgentConnected.value) { playScanAlert(); system.showNotification('CRITICAL: Agent OFFLINE!', 'error', 0); scanBuffer.value = ''; return; }
 
@@ -307,8 +298,10 @@ const finalizeCarton = async (isRetry = false) => {
       btxmlContent = res.data.btxml;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
     } else {
-      if (customSN.value && !isNaN(parseInt(customSN.value)) && parseInt(customSN.value) < suggestedSNValue.value) {
-        system.showNotification(`ERROR: Start S/N cannot be lower than ${suggestedSNValue.value}`, 'error'); isProcessing.value = false; return;
+      if (snExists.value) {
+        system.showNotification('S/N already exists! Please use a different number.', 'error');
+        isProcessing.value = false;
+        return;
       }
       const items = [...scannedItems.value];
       if (items.length === 0) { system.showNotification('No items!', 'error'); isProcessing.value = false; return; }
@@ -469,6 +462,23 @@ watch(customSN, (val) => {
   if (val && val !== suggestedSNValue.value.toString()) {
     isSNManual.value = true;
   }
+});
+
+watch(snPreview, (newVal) => {
+  if (!newVal || !isSNManual.value || isRescanMode.value) {
+    snExists.value = false;
+    return;
+  }
+  if (snCheckTimer) clearTimeout(snCheckTimer);
+  snCheckTimer = setTimeout(async () => {
+    try {
+      // Use existing searchCarton API to check if this SN is already taken
+      const res = await printApi.searchCarton(newVal);
+      snExists.value = !!res.data;
+    } catch (e) {
+      snExists.value = false;
+    }
+  }, 500);
 });
 
 // Session persistence

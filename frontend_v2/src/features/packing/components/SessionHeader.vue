@@ -42,7 +42,7 @@
               type="number"
               :placeholder="suggestedSNValue || '00001'" 
               class="modern-input-small sn-input"
-              :class="{ 'input-err': customSN && parseInt(customSN) < suggestedSNValue, 'is-auto': !isSNManual }"
+              :class="{ 'is-auto': !isSNManual }"
               :readonly="!isSNManual"
               @keyup.enter="$emit('focus-scan')"
               ref="snInput"
@@ -57,11 +57,8 @@
             </button>
           </div>
           <div class="sn-preview" v-if="snPreview">
-             Preview: <strong>{{ snPreview }}</strong>
+             Preview: <strong :class="{ 'text-danger': snExists }">{{ snExists ? '⚠️ S/N ALREADY EXISTS!' : snPreview }}</strong>
           </div>
-          <span v-if="customSN && parseInt(customSN) < suggestedSNValue" class="input-error-hint">
-             Min: {{ suggestedSNValue }} (Next Carton)
-          </span>
         </div>
         <div class="job-order-input">
           <label>SN Pattern</label>
@@ -89,7 +86,8 @@ const props = defineProps({
   isSNManual: { type: Boolean, default: false },
   snPattern: { type: String, default: '' },
   suggestedSNValue: { type: Number, default: 0 },
-  snPreview: { type: String, default: '' }
+  snPreview: { type: String, default: '' },
+  snExists: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:isSNManual', 'update:snPattern']);
@@ -228,6 +226,9 @@ defineExpose({ focusJobOrder });
   width: 100px;
   border-color: #93c5fd;
   color: #1e40af;
+}
+.text-danger {
+  color: #ef4444 !important;
 }
 .sn-pattern-input:focus {
   border-color: #2563eb;

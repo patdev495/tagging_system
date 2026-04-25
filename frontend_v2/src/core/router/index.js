@@ -39,11 +39,41 @@ const routes = [
       },
     ]
   },
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('../../views/admin/LoginPage.vue'),
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  // Check for admin routes
+  if (to.path.startsWith('/admin')) {
+    // Allow access to login page
+    if (to.name === 'AdminLogin') {
+      next();
+      return;
+    }
+
+    const isAuthenticated = sessionStorage.getItem('admin_session') === 'true';
+    if (isAuthenticated) {
+      next();
+    } else {
+      // Redirect to login with the original target path
+      next({ name: 'AdminLogin', query: { redirect: to.fullPath } });
+    }
+  } else {
+    // If navigating back to packing (root), clear admin session
+    if (to.path === '/') {
+      sessionStorage.removeItem('admin_session');
+    }
+    next();
+  }
 });
 
 export default router;
