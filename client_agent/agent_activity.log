@@ -997,3 +997,45 @@
 2026-04-24 11:52:21,531 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
 2026-04-24 11:52:29,300 [INFO] PRINT SUCCESS: print_job_CN26042800004.xml
 2026-04-24 11:52:29,304 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042800004.xml
+2026-04-24 11:54:06,659 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-24 11:54:06,676 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:54:06,676 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-24 11:54:06,692 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-24 11:54:28,688 [INFO] START Print Job: print_job_CN26042800004.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:54:28,743 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:54:28,765 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:54:28,774 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-24 11:54:40,999 [INFO] PRINT SUCCESS: print_job_CN26042800004.xml
+2026-04-24 11:54:41,000 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26042800004.xml
+2026-04-24 11:55:00,427 [INFO] START Print Job: print_job_CN26044700007.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:55:00,428 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:55:00,467 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:55:00,483 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton_2.btw
+2026-04-24 11:55:02,875 [WARNING] Could not set named substring 'SN_25': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_25 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:55:02,876 [WARNING] Could not set named substring 'SN_26': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_26 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:55:02,876 [WARNING] Could not set named substring 'SN_27': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_27 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:55:02,878 [WARNING] Could not set named substring 'SN_28': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_28 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:55:02,879 [WARNING] Could not set named substring 'SN_29': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_29 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:55:02,880 [WARNING] Could not set named substring 'SN_30': (-2147352567, 'Exception occurred.', (0, 'BarTend', 'The named data source SN_30 is not found in the named data source list.', None, 0, -2147418113), None)
+2026-04-24 11:55:07,724 [INFO] PRINT SUCCESS: print_job_CN26044700007.xml
+2026-04-24 11:55:07,726 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26044700007.xml
+2026-04-24 11:58:21,624 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 11:58:55,660 [INFO] START Print Job: print_job_CN26043000017.xml (Printer: Microsoft Print to PDF)
+2026-04-24 11:58:55,660 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-24 11:58:55,682 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 11:58:55,688 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-24 11:58:56,730 [INFO] START Print Job: print_job_CN26043000018.xml (Printer: Microsoft Print to PDF)
+2026-04-24 12:00:11,435 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-24 12:00:21,752 [INFO] START Print Job: print_job_CN26043000017.xml (Printer: Microsoft Print to PDF)
+2026-04-24 12:01:04,449 [INFO] START Print Job: print_job_CN26042800005.xml (Printer: Microsoft Print to PDF)
+2026-04-24 12:24:06,042 [INFO] START Print Job: print_job_CN26041200023.xml (Printer: Microsoft Print to PDF)
+2026-04-24 12:24:16,979 [INFO] START Print Job: print_job_CN26041200023.xml (Printer: Microsoft Print to PDF)
+2026-04-24 12:27:35,269 [INFO] START Print Job: print_job_CN26041200023.xml (Printer: Default)
+2026-04-24 12:35:47,853 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-24 12:35:47,947 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 12:35:47,951 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-24 12:35:48,297 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-24 17:08:39,572 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-24 17:08:39,602 [INFO] BarTender connected via Standard Dispatch
+2026-04-24 17:08:39,602 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-24 17:08:39,707 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234

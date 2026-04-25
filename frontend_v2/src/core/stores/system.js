@@ -4,6 +4,7 @@ import { ref } from 'vue';
 export const useSystemStore = defineStore('system', () => {
   const isOnline = ref(false);
   const isAgentConnected = ref(false);
+  const isSidebarCollapsed = ref(false);
   const notification = ref(null);
   let notificationTimer = null;
 
@@ -25,6 +26,7 @@ export const useSystemStore = defineStore('system', () => {
   return {
     isOnline,
     isAgentConnected,
+    isSidebarCollapsed,
     notification,
     showNotification,
     clearNotification

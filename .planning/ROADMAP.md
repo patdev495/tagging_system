@@ -1,60 +1,51 @@
 # ROADMAP.md
 
 ## Milestone 1: Foundation & Packing Station MVP
-
 **Goal**: Build a functional packing station that can scan items, generate S/Ns, and record data to MSSQL 2008.
+- [x] Phase 1-3: Completed
 
-### Phase 1: Tech Stack & Database (1-3)
-- [x] 1. Backend: Initialize FastAPI and setup MSSQL 2008 connection (`pyodbc` or `ceODBC`).
-- [x] 2. Database: Create/Verify tables for Customers, Products, Carton_History, and Item_History.
-- [x] 3. Frontend: Initialize Vue 3 project and setup basic layout.
-
-### Phase 2: Packing Logic (4-6)
-- [ ] 4. Logic: Implement Carton S/N generator according to rules.
-- [ ] 5. UI: Develop the Customer/Product selection and Scanning interface.
-- [ ] 6. State: Implement real-time item counting and threshold detection (QTY reached).
-
-### Phase 3: Printing & QR Integration (7-9)
-- [x] 7. Printing: Research and implement Bartender Integration (e.g., via XML file generation).
-- [x] 8. QR Code: Implement logic to encode/decode carton contents.
-- [x] 9. UAT: End-to-end test from scan to printed label.
+## Milestone 2: Feature-Based Architecture Refactoring (v2.0)
+**Goal**: Modularize the codebase into feature-based modules.
+- [x] Phase 11-14: Completed
 
 ---
-## Milestone 2: Feature-Based Architecture Refactoring (v2.0)
-**Goal**: Modularize the codebase into feature-based modules to support scalability and maintainability.
+## Milestone 3: Admin Dashboard & Statistics (v3.0)
+**Goal**: Xây dựng hệ thống quản lý và thống kê dữ liệu toàn diện.
 
-### Phase 11: Backend Scaffold & Read-Only Features
-**Goal**: Thiết lập cấu trúc lõi backend và tách các tính năng đọc dữ liệu.
-**Requirements**: BACK-01, BACK-02, BACK-05
+### Phase 21: Admin UI Shell & Navigation
+**Goal**: Thiết lập khung giao diện Admin và hệ thống điều hướng.
+**Requirements**: ADMIN-01, ADMIN-02
 **Success Criteria**:
-1. Thư mục `src/features/` và `src/core/` được tạo.
-2. Các endpoint `/customers`, `/products`, `/cartons/search` hoạt động thông qua router mới.
-3. Chạy được UI cũ mà không bị lỗi đối với các endpoint này.
+1. Có Sidebar cho phép chuyển đổi giữa "Packing Station" và "Admin Dashboard".
+2. Hệ thống routing (Vue Router) hoạt động ổn định.
+3. Giao diện khung (Layout) đồng nhất và hiện đại.
 
-### Phase 12: Backend Core Workflow
-**Goal**: Tách hoàn toàn logic tạo Box và Print XML.
-**Requirements**: BACK-03, BACK-04, BACK-06
+### Phase 22: Customer & Product Management
+**Goal**: Triển khai các tính năng CRUD cho Khách hàng và Sản phẩm.
+**Requirements**: DATA-01, DATA-02, DATA-04
 **Success Criteria**:
-1. Logic `get_next_carton_sn` và `create_carton` chuyển sang thư mục `box`.
-2. Logic `generate_btxml` và `reprint_carton` chuyển sang thư mục `print`.
-3. Giao dịch lưu dữ liệu và khóa `with_for_update` hoạt động an toàn.
+1. Backend hỗ trợ các phương thức POST, PUT, DELETE cho Customer/Product.
+2. Frontend có các form thêm/sửa và bảng danh sách.
+3. Dữ liệu được cập nhật trực tiếp vào MSSQL 2008.
 
-### Phase 13: Frontend Logic Extraction
-**Goal**: Tách layer API và logic (composables) trên frontend.
-**Requirements**: FRONT-01, FRONT-04, FRONT-06
+### Phase 23: Carton Explorer & Advanced Search
+**Goal**: Quản lý lịch sử đóng gói và tra cứu chi tiết.
+**Requirements**: DATA-03, DATA-04, STATS-03
 **Success Criteria**:
-1. `api.js` được chia nhỏ thành các file trong `features/*/api.js`.
-2. Logic buffer quét và validate được tách thành `useScanLogic`.
-3. Logic gọi Agent được tách thành `usePrintAgent`.
+1. Trang tra cứu Carton cho phép xem chi tiết nội dung (Item S/Ns) bên trong.
+2. Công cụ tìm kiếm S/N sản phẩm hoạt động chính xác (tìm ra Carton chứa S/N đó).
+3. Hiệu suất truy vấn SQL được tối ưu hóa cho dữ liệu lớn.
 
-### Phase 14: Frontend UI Extraction
-**Goal**: Tách PackingStation.vue thành các UI components nhỏ gọn và ghép nối bằng Orchestrator.
-**Requirements**: FRONT-02, FRONT-03, FRONT-05, FRONT-07, FRONT-08, FRONT-09
+### Phase 24: Statistics Dashboard & Reports
+**Goal**: Hiển thị báo cáo và đồ thị thống kê.
+**Requirements**: ADMIN-03, STATS-01, STATS-02, STATS-04
 **Success Criteria**:
-1. Không còn tồn tại `PackingStation.vue` nguyên khối, thay vào đó là `PackingStationPage.vue` đóng vai trò nhạc trưởng.
-2. Tất cả tính năng hiện tại (chọn khách, quét, hiển thị lỗi, in lại khẩn cấp, cài đặt) đều hoạt động trơn tru trên cấu trúc mới.
+1. Dashboard hiển thị các biểu đồ (Bar/Pie chart) về lượng carton theo sản phẩm.
+2. Thống kê năng suất theo ngày/tháng được hiển thị trực quan.
+3. Chức năng Export CSV/Excel hoạt động cho các báo cáo.
 
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.
 - [ ] Support for multiple locations (VN vs CN selection).
+- [ ] Phân quyền người dùng chi tiết (RBAC).

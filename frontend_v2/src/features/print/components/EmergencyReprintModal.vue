@@ -21,7 +21,7 @@
             <div class="detail-group"><span class="label">Product</span><span class="value">{{ result.product.item_name }}</span></div>
             <div class="detail-row">
               <div class="detail-group"><span class="label">Job Order</span><span class="value">{{ result.job_order || 'N/A' }}</span></div>
-              <div class="detail-group"><span class="label">Items</span><span class="value">{{ result.items ? result.items.length : '?' }} pcs</span></div>
+              <div class="detail-group"><span class="label">Items</span><span class="value">{{ result.items_count !== undefined ? result.items_count : (result.items ? result.items.length : '?') }} pcs</span></div>
               <div class="detail-group"><span class="label">Date</span><span class="value">{{ new Date(result.created_at).toLocaleDateString() }}</span></div>
             </div>
           </div>

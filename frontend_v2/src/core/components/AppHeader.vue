@@ -17,6 +17,9 @@
       <button @click="$emit('show-settings')" class="btn-icon" title="Settings">
         <i class="fas fa-cog"></i>
       </button>
+      <router-link to="/admin" class="btn-icon admin-btn" title="Admin Dashboard">
+        <i class="fas fa-user-shield"></i>
+      </router-link>
     </div>
   </header>
 
@@ -121,6 +124,15 @@ const system = useSystemStore();
 .btn-icon.warning:hover {
   background: #fdf4ff;
   transform: scale(1.1) rotate(5deg);
+}
+.btn-icon.admin-btn {
+  background: #1e293b;
+  color: white;
+  border-color: #0f172a;
+}
+.btn-icon.admin-btn:hover {
+  background: #334155;
+  transform: scale(1.1);
 }
 .agent-offline-alert-banner {
   background: #ef4444;

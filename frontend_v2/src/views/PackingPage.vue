@@ -81,7 +81,6 @@
       </section>
     </div>
 
-    <Notification />
     <SettingsModal :show="showSettings" @close="showSettings = false" />
     <EmergencyReprintModal 
       :show="showEmergencyModal" 
@@ -102,7 +101,6 @@ import printApi from '../features/print/api';
 import catalogApi from '../features/catalog/api';
 
 import AppHeader from '../core/components/AppHeader.vue';
-import Notification from '../core/components/Notification.vue';
 import CatalogSelection from '../features/catalog/components/CatalogSelection.vue';
 import SessionHeader from '../features/packing/components/SessionHeader.vue';
 import ScanBuffer from '../features/packing/components/ScanBuffer.vue';
@@ -197,6 +195,8 @@ const selectProduct = async (p) => {
   customSN.value = '';
   isSNManual.value = false;
   suggestedSNValue.value = 0; // Reset to 0 to ensure the next fetch is accepted
+  isRescanMode.value = false;
+  rescanCartonSN.value = '';
   await refreshNextSN();
   try {
     const res = await packingApi.getLastCarton(p.id);
@@ -284,8 +284,16 @@ const finalizeCarton = async (isRetry = false) => {
   try {
     let cartonId, cartonSn, btxmlContent;
     if (isRetry && lastCarton.value) {
-      cartonId = lastCarton.value.id; cartonSn = lastCarton.value.carton_sn; btxmlContent = lastCarton.value.btxml;
-      lastCarton.value.status = 'PRINTING';
+      // Always call reprint API to get FRESH btxml with CURRENT settings (template path, printer, etc.)
+      const res = await printApi.reprintCarton(
+        lastCarton.value.id, 
+        settings.templatePath, 
+        settings.printerName
+      );
+      cartonId = res.data.id;
+      cartonSn = res.data.carton_sn;
+      btxmlContent = res.data.btxml;
+      lastCarton.value = { ...res.data, status: 'PRINTING' };
     } else if (isRescanMode.value) {
       const items = [...scannedItems.value];
       const res = await packingApi.rescanCarton({
@@ -392,6 +400,14 @@ const handleRescan = (carton) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   currentProduct.value = carton.product;
   scannedItems.value = [];
+  invalidScans.value = [];
+  overflowScans.value = [];
+  awaitingNext.value = false;
+  lastCarton.value = null;
+  agentErrorMessage.value = '';
+  customSN.value = '';
+  snPattern.value = ''; // Reset pattern as it's product-specific
+  
   jobOrder.value = carton.job_order || '';
   cartonOrigin.value = carton.carton_origin || 'VN';
   isRescanMode.value = true;
@@ -410,7 +426,17 @@ const startNextCarton = () => {
   rescanCartonSN.value = '';
   focusScan(); 
 };
-const resetSession = () => { currentProduct.value = null; scannedItems.value = []; invalidScans.value = []; overflowScans.value = []; awaitingNext.value = false; scanBuffer.value = ''; nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); };
+const resetSession = () => { 
+  currentProduct.value = null; 
+  scannedItems.value = []; 
+  invalidScans.value = []; 
+  overflowScans.value = []; 
+  awaitingNext.value = false; 
+  isRescanMode.value = false;
+  rescanCartonSN.value = '';
+  scanBuffer.value = ''; 
+  nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); 
+};
 
 const playScanAlert = () => {
   try {
@@ -446,13 +472,47 @@ watch(customSN, (val) => {
 });
 
 // Session persistence
-watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans], () => {
-  sessionStorage.setItem('packingState', JSON.stringify({ jobOrder: jobOrder.value, cartonOrigin: cartonOrigin.value, currentProduct: currentProduct.value, scannedItems: scannedItems.value, customSN: customSN.value, snPattern: snPattern.value, awaitingNext: awaitingNext.value, suggestedSNValue: suggestedSNValue.value, backupScannedItems: backupScannedItems.value, lastCarton: lastCarton.value, invalidScans: invalidScans.value, isSNManual: isSNManual.value, overflowScans: overflowScans.value }));
+watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN], () => {
+  sessionStorage.setItem('packingState', JSON.stringify({ 
+    jobOrder: jobOrder.value, 
+    cartonOrigin: cartonOrigin.value, 
+    currentProduct: currentProduct.value, 
+    scannedItems: scannedItems.value, 
+    customSN: customSN.value, 
+    snPattern: snPattern.value, 
+    awaitingNext: awaitingNext.value, 
+    suggestedSNValue: suggestedSNValue.value, 
+    backupScannedItems: backupScannedItems.value, 
+    lastCarton: lastCarton.value, 
+    invalidScans: invalidScans.value, 
+    isSNManual: isSNManual.value, 
+    overflowScans: overflowScans.value,
+    isRescanMode: isRescanMode.value,
+    rescanCartonSN: rescanCartonSN.value
+  }));
 }, { deep: true });
 
 onMounted(() => {
   const saved = sessionStorage.getItem('packingState');
-  if (saved) { try { const s = JSON.parse(saved); if (s.jobOrder) jobOrder.value = s.jobOrder; if (s.cartonOrigin) cartonOrigin.value = s.cartonOrigin; if (s.currentProduct) currentProduct.value = s.currentProduct; if (s.scannedItems) scannedItems.value = s.scannedItems; if (s.customSN) customSN.value = s.customSN; if (s.snPattern) snPattern.value = s.snPattern; if (s.awaitingNext !== undefined) awaitingNext.value = s.awaitingNext; if (s.suggestedSNValue !== undefined) suggestedSNValue.value = s.suggestedSNValue; if (s.backupScannedItems) backupScannedItems.value = s.backupScannedItems; if (s.lastCarton) lastCarton.value = s.lastCarton; if (s.invalidScans) invalidScans.value = s.invalidScans; if (s.overflowScans) overflowScans.value = s.overflowScans; } catch (e) { console.error('Restore failed', e); } }
+  if (saved) { 
+    try { 
+      const s = JSON.parse(saved); 
+      if (s.jobOrder) jobOrder.value = s.jobOrder; 
+      if (s.cartonOrigin) cartonOrigin.value = s.cartonOrigin; 
+      if (s.currentProduct) currentProduct.value = s.currentProduct; 
+      if (s.scannedItems) scannedItems.value = s.scannedItems; 
+      if (s.customSN) customSN.value = s.customSN; 
+      if (s.snPattern) snPattern.value = s.snPattern; 
+      if (s.awaitingNext !== undefined) awaitingNext.value = s.awaitingNext; 
+      if (s.suggestedSNValue !== undefined) suggestedSNValue.value = s.suggestedSNValue; 
+      if (s.backupScannedItems) backupScannedItems.value = s.backupScannedItems; 
+      if (s.lastCarton) lastCarton.value = s.lastCarton; 
+      if (s.invalidScans) invalidScans.value = s.invalidScans; 
+      if (s.overflowScans) overflowScans.value = s.overflowScans; 
+      if (s.isRescanMode !== undefined) isRescanMode.value = s.isRescanMode;
+      if (s.rescanCartonSN) rescanCartonSN.value = s.rescanCartonSN;
+    } catch (e) { console.error('Restore failed', e); } 
+  }
   settings.loadSettings();
   checkAgent(); checkSystem();
   nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
@@ -463,9 +523,9 @@ onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });
 </script>
 
 <style scoped>
-.packing-container { min-height: 100vh; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); padding: 40px 20px; color: #1e293b; display: flex; justify-content: center; }
+.packing-container { min-height: calc(100vh - 40px); padding: 20px; color: #1e293b; display: flex; justify-content: center; }
 .glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.5); border-radius: 16px; padding: 12px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.main-card { width: 95%; max-width: 1000px; background: white; transition: max-width 0.4s cubic-bezier(0.4,0,0.2,1); }
+.main-card { width: 100%; max-width: 1000px; background: white; transition: max-width 0.4s cubic-bezier(0.4,0,0.2,1); }
 .main-card.wide-layout { max-width: 1500px; }
 .packing-workspace { display: flex; gap: 32px; align-items: flex-start; }
 .main-workspace { flex: 1; min-width: 0; }

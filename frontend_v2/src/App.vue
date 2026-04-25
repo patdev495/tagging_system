@@ -1,7 +1,8 @@
 <template>
-  <PackingPage />
+  <router-view />
+  <Notification />
 </template>
 
 <script setup>
-import PackingPage from './views/PackingPage.vue';
+import Notification from './core/components/Notification.vue';
 </script>

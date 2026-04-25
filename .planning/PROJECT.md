@@ -47,19 +47,16 @@ Hệ thống quản lý đóng gói và in tem hàng hóa (NY Tagging System). H
 | FastAPI + Vue 3 | Modern stack for rapid development and high performance. | — Pending |
 | Scanned-to-Print | Trigger label print automatically on reaching Packed Qty to ensure flow. | — Pending |
 
-## Current Milestone: v2.0 Feature-Based Architecture Refactoring
+## Current Milestone: v3.0 Admin Dashboard & Statistics
 
-**Goal:** Refactor the existing NY Tagging System into a modular, scalable, and maintainable feature-based architecture without breaking existing business logic.
+**Goal:** Xây dựng hệ thống quản lý và thống kê dữ liệu toàn diện để tương tác với cơ sở dữ liệu MSSQL 2008.
 
 **Target features:**
-- Customer
-- Product
-- Scan
-- Box
-- Print
-- History
-- Agent
-- Settings
+- Admin Dashboard UI (Layout, Navigation)
+- Customer & Product Management (CRUD)
+- Carton & History Explorer
+- Statistics & Visualization (Charts, Reports)
+- Advanced Search (S/N lookup)
 
 ## Evolution
 
@@ -79,4 +76,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 after milestone v2.0 initialized*
+*Last updated: 2026-04-24 after milestone v3.0 initialized*

@@ -1,16 +1,43 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from src.core.database import get_db
 from . import schemas, service
 
-# Note: Prefix is /customers to match the standard nested REST endpoint /customers/{customer_id}/products
 router = APIRouter(tags=["Products"])
 
 @router.get("/customers/{customer_id}/products", response_model=List[schemas.Product])
 def get_products_by_customer(customer_id: int, db: Session = Depends(get_db)):
     """Lấy danh sách sản phẩm theo khách hàng"""
     return service.get_products_by_customer(customer_id, db)
+
+from src.core.models import Product
+
+@router.get("/products", response_model=List[schemas.Product])
+def get_all_products(db: Session = Depends(get_db)):
+    """Lấy tất cả sản phẩm (cho trang Admin)"""
+    return db.query(Product).all()
+
+@router.post("/products", response_model=schemas.Product)
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    """Tạo sản phẩm mới"""
+    return service.create_product(db, product)
+
+@router.put("/products/{product_id}", response_model=schemas.Product)
+def update_product(product_id: int, product: schemas.ProductUpdate, db: Session = Depends(get_db)):
+    """Cập nhật thông tin sản phẩm"""
+    db_product = service.update_product(db, product_id, product)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return db_product
+
+@router.delete("/products/{product_id}")
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    """Xóa sản phẩm"""
+    success = service.delete_product(db, product_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"message": "Product deleted successfully"}
 
 @router.get("/products/{product_id}/next-sn")
 def get_next_sn(product_id: int, db: Session = Depends(get_db)):
