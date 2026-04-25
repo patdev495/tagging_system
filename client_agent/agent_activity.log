@@ -32,3 +32,7 @@
 2026-04-25 11:37:57,281 [INFO] BarTender connected via Standard Dispatch
 2026-04-25 11:37:57,281 [INFO] BarTender Engine: READY (Background Mode)
 2026-04-25 11:37:57,298 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-25 11:39:47,479 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-25 11:39:47,496 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 11:39:47,496 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-25 11:39:47,508 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234

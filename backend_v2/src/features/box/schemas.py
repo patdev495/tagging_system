@@ -10,6 +10,7 @@ class CartonCreate(BaseModel):
     job_order: Optional[str] = None
     custom_sn: Optional[int] = None
     carton_origin: str = "VN"
+    station_id: Optional[str] = None
 
 class CartonRescan(BaseModel):
     carton_sn: str

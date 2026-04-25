@@ -5,6 +5,7 @@ export const useSystemStore = defineStore('system', () => {
   const isOnline = ref(false);
   const isAgentConnected = ref(false);
   const isSidebarCollapsed = ref(false);
+  const stationId = ref('');
   const notification = ref(null);
   let notificationTimer = null;
 
@@ -27,6 +28,7 @@ export const useSystemStore = defineStore('system', () => {
     isOnline,
     isAgentConnected,
     isSidebarCollapsed,
+    stationId,
     notification,
     showNotification,
     clearNotification

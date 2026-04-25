@@ -41,6 +41,7 @@ class Carton(Base):
     btxml = Column(UnicodeText, nullable=True) # Stores original print data
     is_reprint = Column(Integer, default=0) # 0 for Original, 1 for Reprint
     carton_origin = Column(String(50), default="VN") # E.g., CN or VN
+    station_id = Column(String(50), nullable=True) # Station ID derived from MAC address
     
     product = relationship("Product", back_populates="cartons")
     items = relationship("CartonItem", back_populates="carton")

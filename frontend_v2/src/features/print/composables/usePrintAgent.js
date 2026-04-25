@@ -14,9 +14,12 @@ export function usePrintAgent() {
       clearTimeout(id);
       
       if (response.ok) {
+        const data = await response.json();
         isAgentConnected.value = true;
+        return data.station_id || '';
       } else {
         isAgentConnected.value = false;
+        return '';
       }
     } catch (err) {
       isAgentConnected.value = false;

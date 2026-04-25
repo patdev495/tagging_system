@@ -50,6 +50,7 @@
             <th class="p-4 font-bold">Sản phẩm</th>
             <th class="p-4 font-bold">Job Order</th>
             <th class="p-4 font-bold">Trạng thái</th>
+            <th class="p-4 font-bold">Station ID</th>
             <th class="p-4 font-bold text-right">Chi tiết</th>
           </tr>
         </thead>
@@ -69,6 +70,7 @@
                 {{ carton.status }}
               </span>
             </td>
+            <td class="p-4 text-[10px] font-mono text-slate-400">{{ carton.station_id || '-' }}</td>
             <td class="p-4 text-right">
               <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                 <ExternalLink class="w-5 h-5" />
@@ -133,8 +135,8 @@
               <p class="font-bold text-indigo-600 text-sm">{{ selectedCarton.job_order || 'Không có' }}</p>
             </div>
             <div class="space-y-1 text-right">
-              <p class="text-[10px] font-bold text-slate-400 uppercase">Packed By</p>
-              <p class="font-bold text-slate-900 text-sm">{{ selectedCarton.packed_by || '-' }}</p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Station ID (MAC)</p>
+              <p class="font-mono text-indigo-900 text-[10px]">{{ selectedCarton.station_id || '-' }}</p>
             </div>
           </div>
 

@@ -52,7 +52,8 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
             packed_by=carton_in.printer_name or "System", 
             job_order=carton_in.job_order,
             status="FAILED",
-            carton_origin=carton_in.carton_origin
+            carton_origin=carton_in.carton_origin,
+            station_id=carton_in.station_id
         )
         db.add(new_carton)
         db.flush()

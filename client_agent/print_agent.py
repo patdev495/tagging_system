@@ -376,6 +376,18 @@ class BarTenderEngine:
 
 bt_engine = BarTenderEngine()
 
+import uuid
+
+def get_mac_address():
+    """Get the MAC address of the current machine as a formatted string."""
+    try:
+        # Get MAC address and format it as XX:XX:XX:XX:XX:XX
+        mac = ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff)
+                        for ele in range(0, 8*6, 8)][::-1])
+        return mac.upper()
+    except Exception:
+        return "UNKNOWN"
+
 class PrintHandler(BaseHTTPRequestHandler):
     def _set_headers(self, status=200, content_type='text/plain'):
         self.send_response(status)
@@ -394,7 +406,8 @@ class PrintHandler(BaseHTTPRequestHandler):
             response = {
                 "status": "online",
                 "bt_initialized": bt_engine.is_initialized,
-                "version": "1.2.0"
+                "version": "1.3.0",
+                "station_id": get_mac_address()
             }
             self.wfile.write(json.dumps(response).encode('utf-8'))
         except (ConnectionAbortedError, ConnectionResetError):

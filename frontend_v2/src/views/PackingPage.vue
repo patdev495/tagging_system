@@ -173,9 +173,10 @@ const progressPercent = computed(() => {
 const focusScan = () => { nextTick(() => { if (scanRef.value) scanRef.value.focusScan(); }); initAudio(); };
 
 const checkAgent = async () => {
-  await checkAgentHealth();
+  const agentStationId = await checkAgentHealth();
   system.isAgentConnected = isAgentConnected.value;
   if (isAgentConnected.value) {
+    if (agentStationId) system.stationId = agentStationId;
     if (system.notification?.text?.includes('OFFLINE')) system.clearNotification();
   } else {
     system.showNotification('CRITICAL: Print Agent is OFFLINE!', 'error', 0);
@@ -312,7 +313,17 @@ const finalizeCarton = async (isRetry = false) => {
       // Use null for custom_sn if in Auto mode to let backend assign atomically
       const finalCustomSN = isSNManual.value ? (customSN.value ? parseInt(customSN.value) : null) : null;
 
-      const res = await packingApi.createCarton({ product_id: currentProduct.value.id, items, template_path: settings.templatePath || null, printer_name: settings.printerName || null, print_folder: settings.printFolder || null, job_order: jobOrder.value, custom_sn: finalCustomSN, carton_origin: cartonOrigin.value });
+      const res = await packingApi.createCarton({ 
+        product_id: currentProduct.value.id, 
+        items, 
+        template_path: settings.templatePath || null, 
+        printer_name: settings.printerName || null, 
+        print_folder: settings.printFolder || null, 
+        job_order: jobOrder.value, 
+        custom_sn: finalCustomSN, 
+        carton_origin: cartonOrigin.value,
+        station_id: system.stationId 
+      });
       cartonId = res.data.id; cartonSn = res.data.carton_sn; btxmlContent = res.data.btxml;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
       backupScannedItems.value = items;
