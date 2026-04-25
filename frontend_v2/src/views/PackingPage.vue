@@ -224,13 +224,14 @@ const refreshNextSN = async () => {
     const snRes = await packingApi.getNextSN(currentProduct.value.id);
     if (snRes.data?.next_seq) {
       const newSeq = snRes.data.next_seq;
-      // Only update if the server has a newer (higher) number
+      // Update the reference suggested value regardless of mode
       if (newSeq > suggestedSNValue.value) {
-        // If user is following the suggestion, update their current S/N too
-        if (!customSN.value || customSN.value === suggestedSNValue.value.toString()) {
+        suggestedSNValue.value = newSeq;
+        
+        // ONLY auto-update the input field if we are in AUTO mode
+        if (!isSNManual.value) {
           customSN.value = newSeq.toString();
         }
-        suggestedSNValue.value = newSeq;
       }
     }
   } catch (err) { console.warn('Sync SN failed:', err); }
