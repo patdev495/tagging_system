@@ -148,7 +148,9 @@
             
             <div class="rounded-xl border border-slate-200 bg-white shadow-inner overflow-hidden">
               <div v-for="(item, idx) in cartonItems" :key="item.id" class="px-6 py-3 border-b border-slate-50 last:border-0 flex items-center hover:bg-indigo-50/30 transition-colors group">
-                <span class="text-[10px] font-bold text-slate-300 w-10">{{ String(idx + 1).padStart(2, '0') }}</span>
+                <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0 mr-4 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                  {{ idx + 1 }}
+                </div>
                 <span class="flex-1 font-mono text-sm font-medium text-slate-700">{{ item.item_sn }}</span>
                 <CheckCircle2 class="w-4 h-4 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>

@@ -28,3 +28,7 @@
 2026-04-25 11:14:59,333 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
 2026-04-25 11:15:05,396 [INFO] PRINT SUCCESS: print_job_CN26043000009.xml
 2026-04-25 11:15:05,398 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000009.xml
+2026-04-25 11:37:57,262 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-25 11:37:57,281 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 11:37:57,281 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-25 11:37:57,298 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
