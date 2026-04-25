@@ -7,7 +7,15 @@
       </div>
       <div class="modal-body-scrollable">
         <p class="subtitle">Configure local printer and template paths for this station.</p>
-        <div class="form-group"><label>Station ID</label><input v-model="store.stationId" placeholder="e.g., PACK-01" class="modern-input" /></div>
+        <div class="form-group">
+          <label>Hardware Station ID (MAC)</label>
+          <div class="mac-display">
+            <i class="fas fa-fingerprint"></i>
+            <input :value="system.stationId || 'Detecting...'" readonly class="modern-input readonly-input" />
+            <span class="badge-auto">AUTO</span>
+          </div>
+          <small class="hint-text">This unique ID is fixed to this computer's network hardware for full traceability.</small>
+        </div>
         <div class="form-group"><label>Template Path (.btw)</label><div class="input-with-hint"><input v-model="store.templatePath" placeholder="D:\Labels\carton_ui.btw" class="modern-input" /><small>Hint: Shift + Right Click on file -> "Copy as path" then paste here.</small></div></div>
         <div class="form-group"><label>Print Job Folder</label><div class="input-with-hint"><input v-model="store.printFolder" placeholder="D:\print_test" class="modern-input" /><small class="hint-text">Folder where XML files will be saved for BarTender to watch.</small></div></div>
         <div class="form-group checkbox-group"><label class="modern-checkbox"><input type="checkbox" v-model="store.serverPrint" /><span>Process Print on Server</span></label><small class="hint-text">If OFF, the local Agent or Browser Download will be used.</small></div>
@@ -73,6 +81,11 @@ onMounted(() => { loadAudioDevices(); });
 .modern-input { width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: #f8fafc; color: #1e293b; outline: none; }
 .modern-input:focus { border-color: #3b82f6; background: white; }
 .input-with-hint small { display: block; margin-top: 4px; font-size: 0.75rem; color: #2563eb; }
+.mac-display { position: relative; display: flex; align-items: center; }
+.mac-display i { position: absolute; left: 12px; color: #3b82f6; font-size: 0.9rem; }
+.mac-display .modern-input { padding-left: 36px; padding-right: 60px; }
+.readonly-input { background: #f1f5f9 !important; color: #64748b; cursor: not-allowed; border-style: dashed; }
+.badge-auto { position: absolute; right: 10px; background: #dcfce7; color: #16a34a; font-size: 0.65rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0; }
 .input-with-hint small.hint-text { color: #64748b; background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 6px; line-height: 1.4; }
 .checkbox-group { margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; }
 .modern-checkbox { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: #1e293b; }

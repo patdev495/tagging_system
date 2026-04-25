@@ -28,6 +28,7 @@ class CartonBase(BaseModel):
     status: str
     created_at: datetime
     carton_origin: Optional[str] = "VN"
+    station_id: Optional[str] = None
     items_count: Optional[int] = 0
     is_reprint: Optional[int] = 0
 
