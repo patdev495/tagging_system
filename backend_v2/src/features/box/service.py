@@ -61,17 +61,18 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         for item_sn in carton_in.items:
             db.add(models.CartonItem(carton_id=new_carton.id, item_sn=item_sn))
         
-        btxml_content = None
-        if carton_in.template_path:
-            # Cross-feature call to print service
-            btxml_content = generate_btxml(
-                new_carton, 
-                product, 
-                carton_in.items, 
-                carton_in.template_path, 
-                carton_in.printer_name
-            )
-            new_carton.btxml = btxml_content
+        # Priority: product.template_path -> template_path from client -> Default
+        path_to_use = getattr(product, 'template_path', None) or carton_in.template_path or r"D:\PAT\Templates\carton.ui.btw"
+        
+        # Always generate XML if we have a path
+        btxml_content = generate_btxml(
+            new_carton, 
+            product, 
+            carton_in.items, 
+            path_to_use, 
+            carton_in.printer_name
+        )
+        new_carton.btxml = btxml_content
             
         db.commit()
         db.refresh(new_carton)
@@ -104,16 +105,17 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         carton.status = "FAILED" # Default to FAILED until proven SUCCESS by printer agent later
         carton.btxml = None
         
-        btxml_content = None
-        if rescan_in.template_path:
-            btxml_content = generate_btxml(
-                carton, 
-                product, 
-                rescan_in.items, 
-                rescan_in.template_path, 
-                rescan_in.printer_name
-            )
-            carton.btxml = btxml_content
+        # Priority: product.template_path -> template_path from client -> Default
+        path_to_use = getattr(product, 'template_path', None) or rescan_in.template_path or r"D:\PAT\Templates\carton.ui.btw"
+        
+        btxml_content = generate_btxml(
+            carton, 
+            product, 
+            rescan_in.items, 
+            path_to_use, 
+            rescan_in.printer_name
+        )
+        carton.btxml = btxml_content
             
         db.commit()
         db.refresh(carton)

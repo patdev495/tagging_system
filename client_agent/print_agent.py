@@ -230,7 +230,7 @@ class BarTenderEngine:
             logger.warning(f"Print completion check failed: {e}")
             return None
 
-    def print_xml(self, xml_content, printer_name_override=None):
+    def print_xml(self, xml_content, printer_name_override=None, fallback_path=None):
         if not self.is_initialized:
             return "Error: BarTender engine not initialized."
         
@@ -247,8 +247,13 @@ class BarTenderEngine:
                     return "Error: No <Format> path found in XML"
                 format_path = format_element.text
                 
-                if not os.path.exists(format_path):
-                    return f"Error: Template file not found: {format_path}"
+                # Check if primary path exists, if not, try fallback
+                if not format_path or not os.path.exists(format_path):
+                    if fallback_path and os.path.exists(fallback_path):
+                        logger.info(f"Primary template not found ({format_path}). Falling back to: {fallback_path}")
+                        format_path = fallback_path
+                    else:
+                        return f"Error: Template file not found: {format_path}"
 
                 # Priority 1: printer_name_override from JSON request
                 # Priority 2: Extract from XML
@@ -440,7 +445,11 @@ class PrintHandler(BaseHTTPRequestHandler):
 
             # 1. Direct Print
             logger.info(f"START Print Job: {filename} (Printer: {data.get('printer_name') or 'Default'})")
-            bt_status = bt_engine.print_xml(xml_content, printer_name_override=data.get('printer_name'))
+            bt_status = bt_engine.print_xml(
+                xml_content, 
+                printer_name_override=data.get('printer_name'),
+                fallback_path=data.get('fallback_template_path')
+            )
             
             if "Success" in bt_status:
                 logger.info(f"PRINT SUCCESS: {filename}")

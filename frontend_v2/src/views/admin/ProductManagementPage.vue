@@ -43,6 +43,7 @@
               <th class="p-4 font-semibold text-slate-700">Định mức QTY</th>
               <th class="p-4 font-semibold text-slate-700">Prefix (SN)</th>
               <th class="p-4 font-semibold text-slate-700">Tem</th>
+              <th class="p-4 font-semibold text-slate-700">Đường dẫn Template (Máy Client)</th>
               <th class="p-4 font-semibold text-slate-700 text-right">Thao tác</th>
             </tr>
           </thead>
@@ -65,6 +66,11 @@
                   {{ product.template_type || 'standard' }}
                 </span>
               </td>
+              <td class="p-4">
+                <p class="text-[10px] text-slate-400 font-mono truncate max-w-[150px]" :title="product.template_path">
+                  {{ product.template_path || 'Mặc định' }}
+                </p>
+              </td>
               <td class="p-4 text-right">
                 <div class="flex justify-end gap-1">
                   <button @click="openEditModal(product)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
@@ -77,7 +83,7 @@
               </td>
             </tr>
             <tr v-if="filteredProducts.length === 0">
-              <td colspan="7" class="p-12 text-center text-slate-400 italic">Không tìm thấy sản phẩm nào.</td>
+              <td colspan="8" class="p-12 text-center text-slate-400 italic">Không tìm thấy sản phẩm nào.</td>
             </tr>
           </tbody>
         </table>
@@ -142,6 +148,12 @@
                 </select>
               </div>
 
+              <div class="space-y-1">
+                <label class="text-sm font-semibold text-slate-700">Đường dẫn File Template (.btw)</label>
+                <input v-model="form.template_path" type="text" placeholder="D:\PAT\Templates\carton.ui.btw" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-mono">
+                <p class="text-[10px] text-slate-400 italic">* Để trống nếu muốn dùng đường dẫn mặc định của hệ thống.</p>
+              </div>
+
               <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <label class="flex items-center gap-3 cursor-pointer">
                   <input v-model="form.allow_partial" type="checkbox" :true-value="1" :false-value="0" class="w-5 h-5 rounded text-indigo-600">
@@ -189,6 +201,7 @@ const form = ref({
   start_part: 'VN',
   middle_part: '',
   template_type: 'standard',
+  template_path: '',
   allow_partial: 0,
   customer_id: null
 });
@@ -236,6 +249,7 @@ const openCreateModal = () => {
     start_part: 'VN',
     middle_part: '',
     template_type: 'standard',
+    template_path: '',
     allow_partial: 0,
     customer_id: customers.value.length > 0 ? customers.value[0].id : null
   };

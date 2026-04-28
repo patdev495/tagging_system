@@ -35,10 +35,11 @@ export function usePrintAgent() {
         },
         body: JSON.stringify({
           type: 'print',
-          content: btxmlContent,
+          xml: btxmlContent,
           filename: `print_job_${cartonSn}.xml`,
           path: folderPath || undefined,
-          printer_name: printerName || undefined
+          printer_name: printerName || undefined,
+          fallback_template_path: (window.localStorage.getItem('settings') ? JSON.parse(window.localStorage.getItem('settings')).templatePath : undefined)
         })
       });
       

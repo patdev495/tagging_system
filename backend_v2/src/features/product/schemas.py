@@ -8,6 +8,7 @@ class ProductBase(BaseModel):
     start_part: Optional[str] = "VN"
     middle_part: Optional[str] = ""
     template_type: Optional[str] = "standard"
+    template_path: Optional[str] = None
     allow_partial: Optional[int] = 0
     customer_id: int
 
@@ -21,6 +22,7 @@ class ProductUpdate(BaseModel):
     start_part: Optional[str] = None
     middle_part: Optional[str] = None
     template_type: Optional[str] = None
+    template_path: Optional[str] = None
     allow_partial: Optional[int] = None
     customer_id: Optional[int] = None
 

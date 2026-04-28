@@ -89,3 +89,80 @@
 2026-04-25 16:02:13,534 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
 2026-04-25 16:02:21,323 [INFO] PRINT SUCCESS: print_job_CN26043000009.xml
 2026-04-25 16:02:21,330 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000009.xml
+2026-04-28 11:10:01,681 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-28 11:10:01,715 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:10:01,716 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-28 11:10:01,799 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-28 11:44:27,954 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-28 11:44:27,976 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:44:27,976 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-28 11:44:27,991 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-28 11:44:46,468 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-28 11:44:46,488 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:44:46,488 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-28 11:44:46,504 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-28 11:45:43,852 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-28 11:45:54,070 [INFO] START Print Job: print_job_CN26043000004.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:45:54,537 [ERROR] PRINT FAILED: print_job_CN26043000004.xml - Internal Error: name 'data' is not defined
+2026-04-28 11:45:54,545 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000004.xml
+2026-04-28 11:46:33,386 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-28 11:46:33,436 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:46:33,438 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-28 11:46:33,474 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-28 11:46:45,046 [INFO] START Print Job: print_job_CN26043000004.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:46:45,085 [INFO] Primary template not found (D:\PAT\Templates\carton_base.btw). Falling back to: D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:46:45,098 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:46:45,139 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:46:45,147 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:46:56,956 [INFO] PRINT SUCCESS: print_job_CN26043000004.xml
+2026-04-28 11:46:56,959 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000004.xml
+2026-04-28 11:47:29,486 [INFO] START Print Job: print_job_CN26043000005.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:47:29,487 [INFO] Primary template not found (D:\PAT\Templates\carton_base.btw). Falling back to: D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:47:29,489 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:47:29,513 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:47:29,528 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:47:40,422 [INFO] PRINT SUCCESS: print_job_CN26043000005.xml
+2026-04-28 11:47:40,425 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000005.xml
+2026-04-28 11:48:19,966 [INFO] START Print Job: print_job_CN26043000006.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:48:19,973 [INFO] Primary template not found (D:\PAT\Templates\carton_base.btw). Falling back to: D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:48:19,981 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:48:20,053 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:48:20,072 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:48:32,381 [INFO] PRINT SUCCESS: print_job_CN26043000006.xml
+2026-04-28 11:48:32,382 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-28 11:48:45,573 [INFO] START Print Job: print_job_CN26043000006.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:48:45,574 [INFO] Primary template not found (D:\PAT\Templates\carton_base.btw). Falling back to: D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:48:45,578 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:48:45,672 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:48:45,703 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-28 11:49:02,701 [INFO] PRINT SUCCESS: print_job_CN26043000006.xml
+2026-04-28 11:49:02,704 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-28 11:49:55,455 [INFO] Config Update: Folder set to D:\Workspace\NY_tagging_sys\print_test
+2026-04-28 11:49:57,591 [INFO] START Print Job: print_job_CN26043000006.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:49:57,593 [ERROR] PRINT FAILED: print_job_CN26043000006.xml - Error: Template file not found: D:\PAT\Templates\carton_base.btw
+2026-04-28 11:49:57,599 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-28 11:50:03,991 [INFO] START Print Job: print_job_CN26043000006.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:50:03,993 [ERROR] PRINT FAILED: print_job_CN26043000006.xml - Error: Template file not found: D:\PAT\Templates\carton_base.btw
+2026-04-28 11:50:04,002 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-28 11:50:23,970 [INFO] START Print Job: print_job_CN26043000006.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:50:23,974 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:50:24,113 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:50:24,144 [INFO] Opening template (Attempt 1): D:\PAT\Templates\carton_base.btw
+2026-04-28 11:51:10,760 [INFO] PRINT SUCCESS: print_job_CN26043000006.xml
+2026-04-28 11:51:10,766 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000006.xml
+2026-04-28 11:51:10,777 [ERROR] System Error: [WinError 10053] An established connection was aborted by the software in your host machine
+2026-04-28 11:54:35,017 [INFO] Config Update: Folder set to C:\print_jobs
+2026-04-28 11:54:47,441 [INFO] START Print Job: print_job_CN26043000007.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:54:47,443 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:54:47,489 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:54:47,499 [INFO] Opening template (Attempt 1): D:\PAT\Templates\carton_base.btw
+2026-04-28 11:54:59,451 [INFO] PRINT SUCCESS: print_job_CN26043000007.xml
+2026-04-28 11:54:59,453 [INFO] XML LOGGED: C:\print_jobs\print_job_CN26043000007.xml
+2026-04-28 11:56:24,359 [INFO] Config Update: Folder set to C:\print_jobs
+2026-04-28 11:56:27,095 [INFO] START Print Job: print_job_CN26043000007.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:56:27,097 [ERROR] PRINT FAILED: print_job_CN26043000007.xml - Error: Template file not found: D:\PAT\Templates\carton_base.btw
+2026-04-28 11:56:27,104 [INFO] XML LOGGED: C:\print_jobs\print_job_CN26043000007.xml
+2026-04-28 11:56:33,389 [INFO] START Print Job: print_job_CN26043000007.xml (Printer: Microsoft Print to PDF)
+2026-04-28 11:56:33,392 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-28 11:56:33,495 [INFO] BarTender connected via Standard Dispatch
+2026-04-28 11:56:33,531 [INFO] Opening template (Attempt 1): D:\PAT\Templates\carton_base.btw

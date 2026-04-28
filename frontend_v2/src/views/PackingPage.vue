@@ -382,7 +382,8 @@ const handleClientPrint = async (content, cartonSn, cartonId) => {
         xml: content, 
         filename: `print_job_${cartonSn}.xml`, 
         path: settings.printFolder || null,
-        printer_name: settings.printerName || null
+        printer_name: settings.printerName || null,
+        fallback_template_path: settings.templatePath || null
       }) 
     });
     isAgentConnected.value = true; system.isAgentConnected = true;

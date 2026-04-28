@@ -76,7 +76,8 @@ def download_carton_btxml(carton_id: int, template_path: str = None, db: Session
     if not btxml_content:
         product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
         item_sns = [item.item_sn for item in carton.items]
-        path_to_use = template_path or "D:\\Labels\\carton_ui.btw"
+        # Priority: product.template_path -> template_path from client -> Default
+        path_to_use = getattr(product, 'template_path', None) or template_path or r"D:\PAT\Templates\carton.ui.btw"
         btxml_content = generate_btxml(carton, product, item_sns, path_to_use)
         
     return carton.carton_sn, btxml_content
@@ -103,7 +104,8 @@ def reprint_carton(carton_id: int, printer_name: str = None, template_path: str 
     
     product = db.query(models.Product).filter(models.Product.id == original.product_id).first()
     item_sns = [item.item_sn for item in original.items]
-    path_to_use = template_path or "D:\\Labels\\carton_ui.btw"
+    # Priority: product.template_path -> template_path from client -> Default
+    path_to_use = getattr(product, 'template_path', None) or template_path or r"D:\PAT\Templates\carton.ui.btw"
     btxml_content = generate_btxml(new_carton, product, item_sns, path_to_use, printer_name)
     new_carton.btxml = btxml_content
     
