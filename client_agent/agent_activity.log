@@ -55,3 +55,37 @@
 2026-04-25 12:30:51,391 [INFO] BarTender Engine: READY (Background Mode)
 2026-04-25 12:30:51,408 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
 2026-04-25 12:30:58,819 [INFO] Stopping agent...
+2026-04-25 15:58:39,115 [INFO] Initializing BarTender Engine (Direct COM)...
+2026-04-25 15:58:39,137 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 15:58:39,137 [INFO] BarTender Engine: READY (Background Mode)
+2026-04-25 15:58:39,212 [INFO] NY PRINT AGENT v1.2.0 starting on 192.168.209.169:1234
+2026-04-25 15:59:54,525 [INFO] START Print Job: print_job_CN26043000007.xml (Printer: Microsoft Print to PDF)
+2026-04-25 15:59:54,718 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-25 15:59:54,743 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 15:59:54,747 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-25 16:00:01,276 [INFO] PRINT SUCCESS: print_job_CN26043000007.xml
+2026-04-25 16:00:01,277 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000007.xml
+2026-04-25 16:00:35,471 [INFO] START Print Job: print_job_CN26043000003.xml (Printer: Microsoft Print to PDF)
+2026-04-25 16:00:35,472 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-25 16:00:35,501 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 16:00:35,506 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-25 16:00:42,245 [INFO] PRINT SUCCESS: print_job_CN26043000003.xml
+2026-04-25 16:00:42,247 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000003.xml
+2026-04-25 16:01:09,647 [INFO] START Print Job: print_job_CN26043000002.xml (Printer: Microsoft Print to PDF)
+2026-04-25 16:01:09,650 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-25 16:01:09,676 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 16:01:09,692 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-25 16:01:14,901 [INFO] PRINT SUCCESS: print_job_CN26043000002.xml
+2026-04-25 16:01:14,902 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000002.xml
+2026-04-25 16:02:07,139 [INFO] START Print Job: print_job_CN26043000008.xml (Printer: Microsoft Print to PDF)
+2026-04-25 16:02:07,140 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-25 16:02:07,159 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 16:02:07,169 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-25 16:02:07,960 [INFO] START Print Job: print_job_CN26043000009.xml (Printer: Microsoft Print to PDF)
+2026-04-25 16:02:13,470 [WARNING] BarTender COM instance lost. Reconnecting...
+2026-04-25 16:02:13,470 [INFO] PRINT SUCCESS: print_job_CN26043000008.xml
+2026-04-25 16:02:13,474 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000008.xml
+2026-04-25 16:02:13,517 [INFO] BarTender connected via Standard Dispatch
+2026-04-25 16:02:13,534 [INFO] Opening template (Attempt 1): D:\Workspace\NY_tagging_sys\carton.ui.btw
+2026-04-25 16:02:21,323 [INFO] PRINT SUCCESS: print_job_CN26043000009.xml
+2026-04-25 16:02:21,330 [INFO] XML LOGGED: D:\Workspace\NY_tagging_sys\print_test\print_job_CN26043000009.xml

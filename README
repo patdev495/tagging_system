@@ -18,3 +18,10 @@ WHERE carton_id IN (SELECT id FROM cartons WHERE job_order = '1');
 -- 2. Xóa các thùng có job order là '1'
 DELETE FROM cartons 
 WHERE job_order = '1';
+
+
+docker compose up -d --build
+docker compose logs -f
+docker compose down
+docker compose ps
+docker compose up -d

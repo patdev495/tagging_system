@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend_v2
+      dockerfile: Dockerfile
+    container_name: ny_tagging_backend
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./backend_v2/.env
+    environment:
+      # Override the .env value which is "../print_jobs"
+      - BARTENDER_WATCH_FOLDER=/app/print_jobs
+      - TZ=Asia/Ho_Chi_Minh # Optional: match host timezone
+    volumes:
+      - ./print_jobs:/app/print_jobs
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend_v2
+      dockerfile: Dockerfile
+    container_name: ny_tagging_frontend
+    ports:
+      - "8002:80"
+    depends_on:
+      - backend
+    restart: always
