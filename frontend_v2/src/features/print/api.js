@@ -28,5 +28,9 @@ export default {
   /** Lấy danh sách máy in khả dụng từ Agent */
   getAvailablePrinters() {
     return api.get('/print/printers');
+  },
+  /** Lấy IP của Client từ server */
+  whoami() {
+    return api.get('/print/whoami');
   }
 };

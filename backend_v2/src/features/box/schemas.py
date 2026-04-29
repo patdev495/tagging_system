@@ -17,3 +17,4 @@ class CartonRescan(BaseModel):
     items: List[str]
     template_path: Optional[str] = None
     printer_name: Optional[str] = None
+    station_id: Optional[str] = None

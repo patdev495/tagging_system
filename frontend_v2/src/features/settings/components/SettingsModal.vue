@@ -6,29 +6,29 @@
         <button @click="$emit('close')" class="btn-close-modern"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body-scrollable">
-        <p class="subtitle">Cấu hình máy in và âm thanh cho trạm quét này.</p>
+        <p class="subtitle">Configure the printer and sound settings for this scanning station.</p>
         
         <div class="central-print-banner">
           <i class="fas fa-server"></i>
           <div>
-            <strong>In Tập Trung</strong>
-            <small>Lệnh in được gửi qua Server đến máy in bạn chọn bên dưới.</small>
+            <strong>Centralized Printing</strong>
+            <small>The print command is sent via the server to the printer you select below.</small>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Hardware Station ID (MAC)</label>
+          <label> Station IP </label>
           <div class="mac-display">
             <i class="fas fa-fingerprint"></i>
             <input :value="system.stationId || 'Detecting...'" readonly class="modern-input readonly-input" />
             <span class="badge-auto">AUTO</span>
           </div>
-          <small class="hint-text">ID cố định theo phần cứng máy tính, dùng để truy vết.</small>
+          <small class="hint-text"></small>
         </div>
 
         <!-- Printer Selection -->
         <div class="form-group">
-          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>Chọn Máy In</label>
+          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>Select printer</label>
           <div class="input-with-hint">
             <div class="printer-select-wrapper">
               <select v-model="store.printerName" class="modern-input">
@@ -44,13 +44,22 @@
             <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="hint-text">
               Không tìm thấy máy in nào. Nhấn nút 🔄 để thử lại.
             </small>
-            <small v-else>Chọn máy in bạn muốn sử dụng. Để trống = dùng máy in mặc định.</small>
+            <small v-else>Select the printer you want to use. Leave blank to use the default printer.</small>
+          </div>
+        </div>
+
+        <!-- Template Path (Client Fallback) -->
+        <div class="form-group">
+          <label><i class="fas fa-file-alt" style="margin-right:6px; color:#f59e0b"></i>Fallback Template Path (Client)</label>
+          <div class="input-with-hint">
+            <input v-model="store.templatePath" type="text" placeholder="D:\PAT\Templates\carton.ui.btw" class="modern-input font-mono text-xs" />
+            <small class="hint-text">This path is used if the product has not been configured with a template in the system.</small>
           </div>
         </div>
 
         <div class="form-group"><label>Alert Speaker (Audio Output)</label><div class="input-with-hint">
           <select v-model="store.audioDeviceId" class="modern-input"><option value="">Default System Output</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
-          <small class="hint-text">Loa phát âm thanh cảnh báo khi quét sai.</small>
+          <small class="hint-text">Speaker that plays an alert sound when an incorrect scan occurs.</small>
         </div></div>
       </div>
       <div class="modal-actions-sticky">

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -17,6 +17,12 @@ def get_print_config():
     return {
         "bartender_ready": bt_engine.is_initialized,
     }
+
+@router.get("/whoami")
+def get_client_ip(request: Request):
+    """Trả về IP của Client gửi yêu cầu."""
+    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    return {"ip": client_ip}
 
 @router.get("/printers")
 def get_available_printers():
@@ -42,17 +48,22 @@ def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, d
     )
 
 @router.post("/carton/{carton_id}/reprint", response_model=Carton)
-def reprint_carton(carton_id: int, template_path: Optional[str] = None, printer_name: Optional[str] = None, db: Session = Depends(get_db)):
+def reprint_carton(carton_id: int, request: Request, template_path: Optional[str] = None, printer_name: Optional[str] = None, db: Session = Depends(get_db)):
     """In lại thùng đã đóng gói (Tạo bản ghi mới với is_reprint=1)"""
-    return service.reprint_carton(carton_id, printer_name, template_path, db)
+    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    return service.reprint_carton(carton_id, printer_name, template_path, client_ip, db)
 
 @router.post("/carton/{carton_id}/server-print")
-def server_print_carton(carton_id: int, printer_name: Optional[str] = None, fallback_template_path: Optional[str] = None, db: Session = Depends(get_db)):
+def server_print_carton(carton_id: int, request: Request, printer_name: Optional[str] = None, fallback_template_path: Optional[str] = None, db: Session = Depends(get_db)):
     """In tem trực tiếp qua BarTender Engine (không cần Agent riêng)."""
+    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
 
     carton = db.query(service.models.Carton).filter(service.models.Carton.id == carton_id).first()
     if not carton:
         return {"success": False, "message": "Carton not found"}
+    
+    # Cập nhật trạm thực hiện in nếu chưa có hoặc in từ máy khác
+    carton.station_id = client_ip
 
     if not carton.btxml:
         return {"success": False, "message": "No BTXML data available for this carton"}

@@ -141,14 +141,23 @@ class BarTenderEngine:
                 if format_element is None or not format_element.text:
                     return {"success": False, "message": "No <Format> path found in XML"}
                 format_path = format_element.text
-
-                # Fallback template
-                if not format_path or not os.path.exists(format_path):
-                    if fallback_path and os.path.exists(fallback_path):
-                        logger.info(f"Primary template not found ({format_path}). Using fallback: {fallback_path}")
+                
+                # [FIX] Nếu đường dẫn không tồn tại hoặc là đường dẫn tương đối, thử tìm trong thư mục resources
+                if not format_path or not os.path.isabs(format_path) or not os.path.exists(format_path):
+                    from src.core.utils import get_backend_root
+                    from src.core.config import settings
+                    
+                    filename = os.path.basename(format_path) if format_path else "carton.ui.btw"
+                    alt_path = os.path.join(get_backend_root(), settings.LABEL_TEMPLATES_DIR, filename)
+                    
+                    if os.path.exists(alt_path):
+                        logger.info(f"Resolved relative path '{format_path}' to '{alt_path}'")
+                        format_path = alt_path
+                    elif fallback_path and os.path.exists(fallback_path):
+                        logger.info(f"Template not found, using fallback: {fallback_path}")
                         format_path = fallback_path
                     else:
-                        return {"success": False, "message": f"Template file not found: {format_path}"}
+                        return {"success": False, "message": f"Template file not found: {format_path} (Checked also {alt_path})"}
 
                 # Printer name
                 printer_name = printer_name_override

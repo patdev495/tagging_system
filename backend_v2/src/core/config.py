@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     DB_USER: str = ""
     DB_PASS: str = ""
     PDF_EXPORT_DIR: str = ""  # Đường dẫn lưu file PDF tạm, nếu rỗng dùng %TEMP%\ny_labels
+    LABEL_TEMPLATES_DIR: str = "resources/label_templates" # Thư mục chứa template .btw tương đối với backend root
     
     class Config:
         # Determine .env location

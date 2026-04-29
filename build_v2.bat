@@ -41,6 +41,7 @@ echo [3/3] Finalizing build...
 if not exist "release" mkdir release
 xcopy /E /I /Y "backend_v2\dist\NY_Tagging_System" "release\NY_Tagging_System"
 xcopy /E /I /Y "frontend_v2\dist" "release\frontend_v2\dist"
+xcopy /E /I /Y "backend_v2\resources" "release\NY_Tagging_System\resources"
 copy "backend_v2\.env" "release\NY_Tagging_System\.env"
 
 echo.

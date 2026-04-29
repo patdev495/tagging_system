@@ -2,7 +2,7 @@ import os
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from src.core import models
+from src.core import models, utils
 from src.features.print import schemas
 
 MAX_SN_GRID = 30  # Maximum SN slots on the detailed label
@@ -76,13 +76,14 @@ def download_carton_btxml(carton_id: int, template_path: str = None, db: Session
     if not btxml_content:
         product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
         item_sns = [item.item_sn for item in carton.items]
-        # Priority: product.template_path -> template_path from client -> Default
-        path_to_use = getattr(product, 'template_path', None) or template_path or r"D:\PAT\Templates\carton.ui.btw"
+        # Priority logic inside resolve_template_path: DB -> Client -> Default
+        db_path = getattr(product, 'template_path', None)
+        path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=template_path)
         btxml_content = generate_btxml(carton, product, item_sns, path_to_use)
         
     return carton.carton_sn, btxml_content
 
-def reprint_carton(carton_id: int, printer_name: str = None, template_path: str = None, db: Session = None):
+def reprint_carton(carton_id: int, printer_name: str = None, template_path: str = None, station_id: str = None, db: Session = None):
     original = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not original:
         raise HTTPException(status_code=404, detail="Original carton not found")
@@ -94,7 +95,8 @@ def reprint_carton(carton_id: int, printer_name: str = None, template_path: str 
         packed_by=printer_name or original.packed_by,
         status="SUCCESS",
         is_reprint=1,
-        carton_origin=original.carton_origin
+        carton_origin=original.carton_origin,
+        station_id=station_id or original.station_id
     )
     db.add(new_carton)
     db.flush()
@@ -104,8 +106,9 @@ def reprint_carton(carton_id: int, printer_name: str = None, template_path: str 
     
     product = db.query(models.Product).filter(models.Product.id == original.product_id).first()
     item_sns = [item.item_sn for item in original.items]
-    # Priority: product.template_path -> template_path from client -> Default
-    path_to_use = getattr(product, 'template_path', None) or template_path or r"D:\PAT\Templates\carton.ui.btw"
+    # Priority logic inside resolve_template_path: DB -> Client -> Default
+    db_path = getattr(product, 'template_path', None)
+    path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=template_path)
     btxml_content = generate_btxml(new_carton, product, item_sns, path_to_use, printer_name)
     new_carton.btxml = btxml_content
     

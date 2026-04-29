@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.features.history.schemas import Carton  # Tái sử dụng Carton schema từ History cho Output
@@ -7,22 +7,25 @@ from . import schemas, service
 router = APIRouter(prefix="/cartons", tags=["Box"])
 
 @router.post("", response_model=Carton)
-def create_carton(carton_in: schemas.CartonCreate, db: Session = Depends(get_db)):
+def create_carton(carton_in: schemas.CartonCreate, request: Request, db: Session = Depends(get_db)):
     """Đóng gói và sinh XML"""
-    new_carton, btxml_content = service.create_carton(carton_in, db)
+    # Ghi đè station_id bằng IP thật của Client
+    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    carton_in.station_id = client_ip
     
-    # We use response_model which will validate it, but we need to inject the btxml
-    # if we want the client to receive it directly. Pydantic from_attributes handles it,
-    # but we can also manually attach it if it wasn't attached.
-    # Fortunately `new_carton.btxml` is already populated.
+    new_carton, btxml_content = service.create_carton(carton_in, db)
     
     response_data = Carton.from_orm(new_carton)
     response_data.btxml = btxml_content
     return response_data
 
 @router.put("/rescan", response_model=Carton)
-def rescan_carton(rescan_in: schemas.CartonRescan, db: Session = Depends(get_db)):
-    """Xảo lại mã con hàng cho một thùng đã tồn tại và sinh lại XML"""
+def rescan_carton(rescan_in: schemas.CartonRescan, request: Request, db: Session = Depends(get_db)):
+    """Xảo lại mã con hàng cho một thùng đã tồn tại và sinh lại XML đóng gói mới"""
+    # Ghi đè station_id bằng IP thật của Client
+    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    rescan_in.station_id = client_ip
+    
     updated_carton, btxml_content = service.rescan_carton(rescan_in, db)
     response_data = Carton.from_orm(updated_carton)
     response_data.btxml = btxml_content

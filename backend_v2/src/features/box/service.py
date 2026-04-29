@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException
-from src.core import models
+from src.core import models, utils
 from src.features.box import schemas
 from src.features.print.service import generate_btxml
 
@@ -61,8 +61,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         for item_sn in carton_in.items:
             db.add(models.CartonItem(carton_id=new_carton.id, item_sn=item_sn))
         
-        # Priority: product.template_path -> template_path from client -> Default
-        path_to_use = getattr(product, 'template_path', None) or carton_in.template_path or r"D:\PAT\Templates\carton.ui.btw"
+        # Priority logic inside resolve_template_path: DB -> Client -> Default
+        db_path = getattr(product, 'template_path', None)
+        path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=carton_in.template_path)
         
         # Always generate XML if we have a path
         btxml_content = generate_btxml(
@@ -104,9 +105,11 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
             
         carton.status = "FAILED" # Default to FAILED until proven SUCCESS by printer agent later
         carton.btxml = None
+        carton.station_id = getattr(rescan_in, 'station_id', carton.station_id)
         
-        # Priority: product.template_path -> template_path from client -> Default
-        path_to_use = getattr(product, 'template_path', None) or rescan_in.template_path or r"D:\PAT\Templates\carton.ui.btw"
+        # Priority logic inside resolve_template_path: DB -> Client -> Default
+        db_path = getattr(product, 'template_path', None)
+        path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=rescan_in.template_path)
         
         btxml_content = generate_btxml(
             carton, 

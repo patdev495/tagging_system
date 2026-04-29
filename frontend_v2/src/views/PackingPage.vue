@@ -269,7 +269,7 @@ const finalizeCarton = async (isRetry = false) => {
     if (isRetry && lastCarton.value) {
       const res = await printApi.reprintCarton(
         lastCarton.value.id, 
-        null, 
+        settings.templatePath || null, 
         settings.printerName
       );
       cartonId = res.data.id;
@@ -281,7 +281,7 @@ const finalizeCarton = async (isRetry = false) => {
       const res = await packingApi.rescanCarton({
         carton_sn: rescanCartonSN.value,
         items,
-        template_path: null,
+        template_path: settings.templatePath || null,
         printer_name: settings.printerName || null
       });
       cartonId = res.data.id;
@@ -306,7 +306,7 @@ const finalizeCarton = async (isRetry = false) => {
       const res = await packingApi.createCarton({ 
         product_id: currentProduct.value.id, 
         items, 
-        template_path: null, 
+        template_path: settings.templatePath || null, 
         printer_name: settings.printerName || null, 
         print_folder: settings.printFolder || null, 
         job_order: jobOrder.value, 
@@ -368,7 +368,7 @@ const handleServerPrint = async (cartonId, cartonSn) => {
     const res = await printApi.serverPrint(
       cartonId,
       settings.printerName || null,
-      null
+      settings.templatePath || null
     );
     if (res.data?.success) {
       if (res.data.type === 'pdf' && res.data.data) {
@@ -400,7 +400,7 @@ const handleServerPrint = async (cartonId, cartonSn) => {
 
 const handleEmergencyReprint = async (result) => {
   try {
-    const res = await printApi.reprintCarton(result.id, null, settings.printerName);
+    const res = await printApi.reprintCarton(result.id, settings.templatePath || null, settings.printerName);
     const newCarton = res.data;
     if (!newCarton?.btxml) { system.showNotification('Could not generate reprint data.', 'error'); return; }
     
