@@ -3,7 +3,7 @@
     <div class="glass-card main-card" :class="{ 'wide-layout': currentProduct }">
       <AppHeader
         :isAudioActive="isAudioActive"
-        @check-agent="checkAgent"
+
         @toggle-audio="toggleAudio"
         @show-emergency="showEmergencyModal = true"
         @show-settings="showSettings = true"
@@ -96,7 +96,6 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
-import { usePrintAgent } from '../features/print/composables/usePrintAgent';
 import packingApi from '../features/packing/api';
 import printApi from '../features/print/api';
 import catalogApi from '../features/catalog/api';
@@ -112,7 +111,7 @@ import EmergencyReprintModal from '../features/print/components/EmergencyReprint
 
 const settings = useSettingsStore();
 const system = useSystemStore();
-const { isAgentConnected, agentErrorMessage, checkAgentHealth, sendPrintJob } = usePrintAgent();
+const agentErrorMessage = ref('');
 
 const currentProduct = ref(null);
 const scannedItems = ref([]);
@@ -172,16 +171,7 @@ const progressPercent = computed(() => {
 
 const focusScan = () => { nextTick(() => { if (scanRef.value) scanRef.value.focusScan(); }); initAudio(); };
 
-const checkAgent = async () => {
-  const agentStationId = await checkAgentHealth();
-  system.isAgentConnected = isAgentConnected.value;
-  if (isAgentConnected.value) {
-    if (agentStationId) system.stationId = agentStationId;
-    if (system.notification?.text?.includes('OFFLINE')) system.clearNotification();
-  } else {
-    system.showNotification('CRITICAL: Print Agent is OFFLINE!', 'error', 0);
-  }
-};
+// Agent now integrated into backend
 
 const checkSystem = async () => {
   try {
@@ -256,7 +246,7 @@ const handleScan = () => {
 
   if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
 
-  if (!isAgentConnected.value) { playScanAlert(); system.showNotification('CRITICAL: Agent OFFLINE!', 'error', 0); scanBuffer.value = ''; return; }
+  // In tập trung: Server tự xử lý lỗi kết nối BarTender, Client không bị block
 
   // Lockdown only for real invalid scans (pattern, duplicate, lockdown) — NOT overflow/excess
   const hasRealInvalid = invalidScans.value.some(s => ['pattern', 'duplicate', 'lockdown'].includes(s.type));
@@ -277,10 +267,9 @@ const finalizeCarton = async (isRetry = false) => {
   try {
     let cartonId, cartonSn, btxmlContent;
     if (isRetry && lastCarton.value) {
-      // Always call reprint API to get FRESH btxml with CURRENT settings (template path, printer, etc.)
       const res = await printApi.reprintCarton(
         lastCarton.value.id, 
-        settings.templatePath, 
+        null, 
         settings.printerName
       );
       cartonId = res.data.id;
@@ -292,7 +281,7 @@ const finalizeCarton = async (isRetry = false) => {
       const res = await packingApi.rescanCarton({
         carton_sn: rescanCartonSN.value,
         items,
-        template_path: settings.templatePath || null,
+        template_path: null,
         printer_name: settings.printerName || null
       });
       cartonId = res.data.id;
@@ -317,7 +306,7 @@ const finalizeCarton = async (isRetry = false) => {
       const res = await packingApi.createCarton({ 
         product_id: currentProduct.value.id, 
         items, 
-        template_path: settings.templatePath || null, 
+        template_path: null, 
         printer_name: settings.printerName || null, 
         print_folder: settings.printFolder || null, 
         job_order: jobOrder.value, 
@@ -329,9 +318,9 @@ const finalizeCarton = async (isRetry = false) => {
       lastCarton.value = { ...res.data, status: 'PRINTING' };
       backupScannedItems.value = items;
     }
-    const printResult = await handleClientPrint(btxmlContent, cartonSn, cartonId);
+    // In tập trung: gửi lệnh in qua Backend → Agent Server
+    const printResult = await handleServerPrint(cartonId, cartonSn);
     if (printResult === 'Success') {
-      await printApi.updateCartonStatus(cartonId, 'SUCCESS');
       lastCarton.value.status = 'SUCCESS';
       system.showNotification(`Carton ${cartonSn} Printed!`, 'success');
       
@@ -373,31 +362,53 @@ const finalizeCarton = async (isRetry = false) => {
   } finally { isProcessing.value = false; }
 };
 
-const handleClientPrint = async (content, cartonSn, cartonId) => {
+/** Gửi lệnh in qua Backend → Agent Server */
+const handleServerPrint = async (cartonId, cartonSn) => {
   try {
-    const agentRes = await fetch('http://127.0.0.1:1234/print', { 
-      method: 'POST', 
-      headers: { 'Content-Type': 'application/json' }, 
-      body: JSON.stringify({ 
-        xml: content, 
-        filename: `print_job_${cartonSn}.xml`, 
-        path: settings.printFolder || null,
-        printer_name: settings.printerName || null,
-        fallback_template_path: settings.templatePath || null
-      }) 
-    });
-    isAgentConnected.value = true; system.isAgentConnected = true;
-    return await agentRes.text();
-  } catch (err) { isAgentConnected.value = false; system.isAgentConnected = false; return 'Error: Could not connect to Print Agent.'; }
+    const res = await printApi.serverPrint(
+      cartonId,
+      settings.printerName || null,
+      null
+    );
+    if (res.data?.success) {
+      if (res.data.type === 'pdf' && res.data.data) {
+        // Nhận PDF thật từ Server (BarTender render → PNG → PDF)
+        const byteChars = atob(res.data.data);
+        const byteNums = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+        const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        
+        // Tự động tải file PDF về máy Client
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `label_${cartonSn}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        system.showNotification('PDF tem đã tải về máy bạn!', 'success');
+      }
+      return 'Success';
+    } else {
+      return res.data?.message || 'Server print failed';
+    }
+  } catch (err) {
+    return err.response?.data?.detail || 'Error: Could not reach print server.';
+  }
 };
+
+
 
 const handleEmergencyReprint = async (result) => {
   try {
-    const res = await printApi.reprintCarton(result.id, settings.templatePath, settings.printerName);
+    const res = await printApi.reprintCarton(result.id, null, settings.printerName);
     const newCarton = res.data;
     if (!newCarton?.btxml) { system.showNotification('Could not generate reprint data.', 'error'); return; }
-    const printResult = await handleClientPrint(newCarton.btxml, newCarton.carton_sn, newCarton.id);
-    if (printResult === 'Success') { system.showNotification(`Reprint successful: ${result.carton_sn}`, 'success'); showEmergencyModal.value = false; }
+    
+    const printResult = await handleServerPrint(newCarton.id, newCarton.carton_sn);
+    if (printResult === 'Success') { 
+      system.showNotification(`Reprint successful: ${result.carton_sn}`, 'success'); 
+      showEmergencyModal.value = false; 
+    }
     else system.showNotification('Reprint failed: ' + printResult, 'error');
   } catch (err) { system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error'); }
 };
@@ -537,9 +548,9 @@ onMounted(() => {
     } catch (e) { console.error('Restore failed', e); } 
   }
   settings.loadSettings();
-  checkAgent(); checkSystem();
+  checkSystem();
   nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
-  statusTimer = setInterval(() => { checkAgent(); checkSystem(); refreshNextSN(); }, 3000);
+  statusTimer = setInterval(() => { checkSystem(); refreshNextSN(); }, 3000);
   window.addEventListener('click', (e) => { if (showSettings.value || showEmergencyModal.value) return; if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; focusScan(); });
 });
 onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });

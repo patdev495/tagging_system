@@ -3,7 +3,7 @@ import { ref } from 'vue';
 
 export const useSystemStore = defineStore('system', () => {
   const isOnline = ref(false);
-  const isAgentConnected = ref(false);
+  const isAgentConnected = ref(true); // BarTender tích hợp trong Backend
   const isSidebarCollapsed = ref(false);
   const stationId = ref('');
   const notification = ref(null);

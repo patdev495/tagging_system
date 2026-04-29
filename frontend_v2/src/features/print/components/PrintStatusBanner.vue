@@ -28,7 +28,7 @@ const props = defineProps({
   agentErrorMessage: { type: String, default: '' }
 });
 defineEmits(['retry']);
-const downloadUrl = computed(() => props.lastCarton ? `/api/v1/cartons/${props.lastCarton.id}/btxml` : '');
+const downloadUrl = computed(() => props.lastCarton ? `/api/v1/print/carton/${props.lastCarton.id}/btxml` : '');
 </script>
 
 <style scoped>

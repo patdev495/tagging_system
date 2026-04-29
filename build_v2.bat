@@ -21,6 +21,13 @@ cd backend_v2
 uv run pyinstaller --noconfirm --onedir --console --name "NY_Tagging_System" ^
     --add-data "src;src" ^
     --hidden-import pyodbc ^
+    --hidden-import win32com ^
+    --hidden-import win32com.client ^
+    --hidden-import pythoncom ^
+    --hidden-import win32gui ^
+    --hidden-import win32con ^
+    --hidden-import win32print ^
+    --hidden-import PIL ^
     main.py
 if %errorlevel% neq 0 (
     echo [ERROR] Backend build failed!

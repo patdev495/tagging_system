@@ -6,7 +6,16 @@
         <button @click="$emit('close')" class="btn-close-modern"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body-scrollable">
-        <p class="subtitle">Configure local printer and template paths for this station.</p>
+        <p class="subtitle">Cấu hình máy in và âm thanh cho trạm quét này.</p>
+        
+        <div class="central-print-banner">
+          <i class="fas fa-server"></i>
+          <div>
+            <strong>In Tập Trung</strong>
+            <small>Lệnh in được gửi qua Server đến máy in bạn chọn bên dưới.</small>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Hardware Station ID (MAC)</label>
           <div class="mac-display">
@@ -14,15 +23,34 @@
             <input :value="system.stationId || 'Detecting...'" readonly class="modern-input readonly-input" />
             <span class="badge-auto">AUTO</span>
           </div>
-          <small class="hint-text">This unique ID is fixed to this computer's network hardware for full traceability.</small>
+          <small class="hint-text">ID cố định theo phần cứng máy tính, dùng để truy vết.</small>
         </div>
-        <div class="form-group"><label>Template Path (.btw)</label><div class="input-with-hint"><input v-model="store.templatePath" placeholder="D:\Labels\carton_ui.btw" class="modern-input" /><small>Hint: Shift + Right Click on file -> "Copy as path" then paste here.</small></div></div>
-        <div class="form-group"><label>Print Job Folder</label><div class="input-with-hint"><input v-model="store.printFolder" placeholder="D:\print_test" class="modern-input" /><small class="hint-text">Folder where XML files will be saved for BarTender to watch.</small></div></div>
-        <div class="form-group checkbox-group"><label class="modern-checkbox"><input type="checkbox" v-model="store.serverPrint" /><span>Process Print on Server</span></label><small class="hint-text">If OFF, the local Agent or Browser Download will be used.</small></div>
-        <div class="form-group"><label>Printer Name (Windows)</label><div class="input-with-hint"><input v-model="store.printerName" placeholder="Leave blank for BarTender Default" class="modern-input" /><small>Hint: If blank, BarTender will use the printer saved in the .btw file.</small></div></div>
+
+        <!-- Printer Selection -->
+        <div class="form-group">
+          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>Chọn Máy In</label>
+          <div class="input-with-hint">
+            <div class="printer-select-wrapper">
+              <select v-model="store.printerName" class="modern-input">
+                <option value="">-- Máy in mặc định (trong file .btw) --</option>
+                <option v-for="p in availablePrinters" :key="p.name" :value="p.name">
+                  🖨️ {{ p.name }} ({{ p.port }})
+                </option>
+              </select>
+              <button @click="loadPrinters" class="btn-refresh-printers" title="Làm mới danh sách">
+                <i class="fas fa-sync-alt" :class="{'fa-spin': loadingPrinters}"></i>
+              </button>
+            </div>
+            <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="hint-text">
+              Không tìm thấy máy in nào. Nhấn nút 🔄 để thử lại.
+            </small>
+            <small v-else>Chọn máy in bạn muốn sử dụng. Để trống = dùng máy in mặc định.</small>
+          </div>
+        </div>
+
         <div class="form-group"><label>Alert Speaker (Audio Output)</label><div class="input-with-hint">
           <select v-model="store.audioDeviceId" class="modern-input"><option value="">Default System Output</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
-          <small class="hint-text">Choose which speaker should play the "Invalid Scan" alert sound.</small>
+          <small class="hint-text">Loa phát âm thanh cảnh báo khi quét sai.</small>
         </div></div>
       </div>
       <div class="modal-actions-sticky">
@@ -37,12 +65,15 @@
 import { ref, onMounted, watch } from 'vue';
 import { useSettingsStore } from '../../../core/stores/settings';
 import { useSystemStore } from '../../../core/stores/system';
+import printApi from '../../print/api';
 
 const props = defineProps({ show: Boolean });
 const emit = defineEmits(['close']);
 const store = useSettingsStore();
 const system = useSystemStore();
 const audioDevices = ref([]);
+const availablePrinters = ref([]);
+const loadingPrinters = ref(false);
 
 const loadAudioDevices = async () => {
   if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -52,16 +83,22 @@ const loadAudioDevices = async () => {
   } catch (e) { console.warn('Error loading audio devices:', e); }
 };
 
-const handleSave = async () => {
+const loadPrinters = async () => {
+  loadingPrinters.value = true;
+  try {
+    const res = await printApi.getAvailablePrinters();
+    if (res.data?.printers) availablePrinters.value = res.data.printers;
+  } catch (e) { console.warn('Failed to load printers:', e); }
+  finally { loadingPrinters.value = false; }
+};
+
+const handleSave = () => {
   store.saveSettings();
   emit('close');
   system.showNotification('Settings saved locally', 'success');
-  if (system.isAgentConnected) {
-    try { await fetch('http://127.0.0.1:1234/print', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'config', path: store.printFolder }) }); } catch (e) { console.warn('Failed to notify agent'); }
-  }
 };
 
-watch(() => props.show, (val) => { if (val) loadAudioDevices(); });
+watch(() => props.show, (val) => { if (val) { loadAudioDevices(); loadPrinters(); } });
 onMounted(() => { loadAudioDevices(); });
 </script>
 
@@ -87,12 +124,17 @@ onMounted(() => { loadAudioDevices(); });
 .readonly-input { background: #f1f5f9 !important; color: #64748b; cursor: not-allowed; border-style: dashed; }
 .badge-auto { position: absolute; right: 10px; background: #dcfce7; color: #16a34a; font-size: 0.65rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0; }
 .input-with-hint small.hint-text { color: #64748b; background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 6px; line-height: 1.4; }
-.checkbox-group { margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; }
-.modern-checkbox { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: #1e293b; }
-.modern-checkbox input { width: 18px; height: 18px; cursor: pointer; }
 .modal-actions-sticky { padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 16px; margin-top: auto; }
 .btn-text { background: transparent; color: #64748b; border: none; padding: 10px 20px; cursor: pointer; font-weight: 500; }
 .btn-text:hover { color: #1e293b; }
 .btn-primary { background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 .btn-primary:hover { background: #1d4ed8; }
+.central-print-banner { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; color: #065f46; }
+.central-print-banner i { font-size: 1.4rem; margin-top: 2px; color: #10b981; }
+.central-print-banner strong { display: block; font-size: 0.9rem; }
+.central-print-banner small { display: block; margin-top: 4px; font-size: 0.75rem; color: #047857; }
+.printer-select-wrapper { display: flex; gap: 8px; align-items: center; }
+.printer-select-wrapper select { flex: 1; }
+.btn-refresh-printers { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; flex-shrink: 0; }
+.btn-refresh-printers:hover { background: #e2e8f0; color: #2563eb; }
 </style>

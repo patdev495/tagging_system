@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DB_NAME: str = ""
     DB_USER: str = ""
     DB_PASS: str = ""
-    BARTENDER_WATCH_FOLDER: str = "../print_jobs"
+    PDF_EXPORT_DIR: str = ""  # Đường dẫn lưu file PDF tạm, nếu rỗng dùng %TEMP%\ny_labels
     
     class Config:
         # Determine .env location

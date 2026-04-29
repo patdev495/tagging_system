@@ -2,9 +2,6 @@
   <header class="header">
     <h1><i class="fas fa-box-open"></i> NY Packing Station</h1>
     <div class="header-actions">
-      <div class="status-badge agent" :class="{ connected: system.isAgentConnected }" @click="$emit('check-agent')" title="Click to refresh Agent status">
-        <i class="fas fa-print"></i> {{ system.isAgentConnected ? 'Agent Online' : 'Agent Offline' }}
-      </div>
       <div class="status-badge" :class="{ online: system.isOnline }">
         {{ system.isOnline ? 'System Online' : 'Connecting...' }}
       </div>
@@ -22,17 +19,6 @@
       </router-link>
     </div>
   </header>
-
-  <!-- Agent Offline Critical Alert Banner -->
-  <div v-if="!system.isAgentConnected" class="agent-offline-alert-banner fade-in">
-    <div class="alert-content">
-      <i class="fas fa-exclamation-triangle pulse-icon"></i>
-      <span><strong>PRINT AGENT OFFLINE:</strong> Local printing is disabled. Please start <code>print_agent.exe</code> on this computer.</span>
-    </div>
-    <button @click="$emit('check-agent')" class="btn-retry-agent">
-      <i class="fas fa-sync-alt"></i> Re-check
-    </button>
-  </div>
 </template>
 
 <script setup>
@@ -42,7 +28,7 @@ defineProps({
   isAudioActive: { type: Boolean, default: false }
 });
 
-defineEmits(['check-agent', 'toggle-audio', 'show-emergency', 'show-settings']);
+defineEmits(['toggle-audio', 'show-emergency', 'show-settings']);
 
 const system = useSystemStore();
 </script>
@@ -74,16 +60,6 @@ const system = useSystemStore();
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 600;
-}
-.status-badge.agent {
-  background: #f1f5f9;
-  color: #64748b;
-  margin-right: 8px;
-  cursor: pointer;
-}
-.status-badge.agent.connected {
-  background: #e0f2fe;
-  color: #0369a1;
 }
 .status-badge.online {
   background: #dcfce7;
@@ -133,53 +109,5 @@ const system = useSystemStore();
 .btn-icon.admin-btn:hover {
   background: #334155;
   transform: scale(1.1);
-}
-.agent-offline-alert-banner {
-  background: #ef4444;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-  animation: slideDown 0.3s ease-out;
-}
-.alert-content {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-size: 1rem;
-}
-.pulse-icon {
-  font-size: 1.5rem;
-  animation: pulse 1.5s infinite;
-}
-.btn-retry-agent {
-  background: white;
-  color: #ef4444;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-.btn-retry-agent:hover {
-  background: #fee2e2;
-  transform: scale(1.05);
-}
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.7; }
-  100% { transform: scale(1); opacity: 1; }
-}
-@keyframes slideDown {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
 }
 </style>

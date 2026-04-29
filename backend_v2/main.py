@@ -54,9 +54,24 @@ def create_app() -> FastAPI:
         # - html=True serves index.html for directory requests (SPA support)
         app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
     
+    @app.on_event("startup")
+    def startup_bartender():
+        """Khởi tạo BarTender Engine khi Backend start."""
+        try:
+            from src.features.print.bartender_engine import bt_engine
+            bt_engine.start()
+        except Exception as e:
+            import logging
+            logging.getLogger("main").error(f"BarTender init failed: {e}")
+
     @app.get("/api/v1/health", tags=["Health"])
     def health_check():
-        return {"status": "ok", "version": "v2.0"}
+        from src.features.print.bartender_engine import bt_engine
+        return {
+            "status": "ok", 
+            "version": "v2.0",
+            "bartender": "ready" if bt_engine.is_initialized else "offline"
+        }
 
     return app
 
