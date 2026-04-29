@@ -6,9 +6,13 @@ from src.core import models, utils
 from src.features.box import schemas
 from src.features.print.service import generate_btxml
 
-def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int = None) -> str:
-    now = datetime.datetime.now()
-    yymm = now.strftime("%y%m")
+def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int = None, custom_yymm: str = None) -> str:
+    if custom_yymm:
+        yymm = custom_yymm
+    else:
+        now = datetime.datetime.now()
+        yymm = now.strftime("%y%m")
+    
     prefix = f"{product.start_part}{yymm}{product.middle_part}"
     
     if custom_sn is not None:
@@ -38,7 +42,7 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     if len(carton_in.items) != len(set(carton_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
     
-    new_sn = get_next_carton_sn(db, product, carton_in.custom_sn)
+    new_sn = get_next_carton_sn(db, product, carton_in.custom_sn, carton_in.custom_yymm)
     
     if carton_in.custom_sn is not None:
         existing = db.query(models.Carton).filter(models.Carton.carton_sn == new_sn).first()

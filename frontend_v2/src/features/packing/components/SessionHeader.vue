@@ -70,6 +70,17 @@
             @keyup.enter="$emit('focus-scan')"
           />
         </div>
+        <div class="job-order-input">
+          <label>Manual Date (YYMM)</label>
+          <input 
+            :value="customYYMM"
+            @input="$emit('update:customYYMM', $event.target.value)"
+            placeholder="e.g. 2604" 
+            maxlength="4"
+            class="modern-input-small date-input"
+            @keyup.enter="$emit('focus-scan')"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -85,12 +96,13 @@ const props = defineProps({
   customSN: { type: String, default: '' },
   isSNManual: { type: Boolean, default: false },
   snPattern: { type: String, default: '' },
+  customYYMM: { type: String, default: '' },
   suggestedSNValue: { type: Number, default: 0 },
   snPreview: { type: String, default: '' },
   snExists: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:isSNManual', 'update:snPattern']);
+const emit = defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:isSNManual', 'update:snPattern', 'update:customYYMM']);
 
 const jobOrderInput = ref(null);
 const snInput = ref(null);
@@ -226,6 +238,15 @@ defineExpose({ focusJobOrder });
   width: 100px;
   border-color: #93c5fd;
   color: #1e40af;
+}
+.date-input {
+  width: 90px;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+.date-input:focus {
+  border-color: #d97706;
+  background: #fffbeb;
 }
 .text-danger {
   color: #ef4444 !important;

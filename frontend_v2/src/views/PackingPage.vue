@@ -26,6 +26,7 @@
               v-model:customSN="customSN"
               v-model:isSNManual="isSNManual"
               v-model:snPattern="snPattern"
+              v-model:customYYMM="customYYMM"
               :suggestedSNValue="suggestedSNValue"
               :snPreview="snPreview"
               :snExists="snExists"
@@ -122,6 +123,7 @@ const jobOrder = ref('');
 const cartonOrigin = ref('VN');
 const customSN = ref('');
 const snPattern = ref('');
+const customYYMM = ref('');
 const awaitingNext = ref(false);
 const suggestedSNValue = ref(0);
 const backupScannedItems = ref([]);
@@ -152,11 +154,19 @@ const initAudio = async () => {
 
 const snPreview = computed(() => {
   if (!currentProduct.value) return '';
-  const now = new Date();
-  const yy = String(now.getFullYear()).slice(-2);
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  
+  let yymm = '';
+  if (customYYMM.value && customYYMM.value.length === 4) {
+    yymm = customYYMM.value;
+  } else {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    yymm = `${yy}${mm}`;
+  }
+
   const seq = customSN.value || suggestedSNValue.value || '1';
-  const prefix = `${currentProduct.value.start_part || ''}${yy}${mm}${currentProduct.value.middle_part || ''}`;
+  const prefix = `${currentProduct.value.start_part || ''}${yymm}${currentProduct.value.middle_part || ''}`;
   return `${prefix}${String(seq).padStart(5, '0')}`;
 });
 
@@ -311,6 +321,7 @@ const finalizeCarton = async (isRetry = false) => {
         print_folder: settings.printFolder || null, 
         job_order: jobOrder.value, 
         custom_sn: finalCustomSN, 
+        custom_yymm: customYYMM.value || null,
         carton_origin: cartonOrigin.value,
         station_id: system.stationId 
       });

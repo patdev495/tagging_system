@@ -11,6 +11,7 @@ class CartonCreate(BaseModel):
     custom_sn: Optional[int] = None
     carton_origin: str = "VN"
     station_id: Optional[str] = None
+    custom_yymm: Optional[str] = None
 
 class CartonRescan(BaseModel):
     carton_sn: str
