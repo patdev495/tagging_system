@@ -568,18 +568,88 @@ onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });
 </script>
 
 <style scoped>
-.packing-container { min-height: calc(100vh - 40px); padding: 20px; color: #1e293b; display: flex; justify-content: center; }
-.glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.5); border-radius: 16px; padding: 12px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.main-card { width: 100%; max-width: 1000px; background: white; transition: max-width 0.4s cubic-bezier(0.4,0,0.2,1); }
-.main-card.wide-layout { max-width: 1500px; }
-.packing-workspace { display: flex; gap: 32px; align-items: flex-start; }
-.main-workspace { flex: 1; min-width: 0; }
-.progress-container { margin-bottom: 20px; background: #f1f5f9; padding: 12px 20px; border-radius: 12px; }
-.progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; }
-.progress-bar { height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
-.progress-bar .fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
-@media (max-width: 1100px) { .packing-workspace { flex-direction: column; align-items: stretch; } }
-@media (max-width: 600px) { .packing-container { padding: 10px; } .main-card { padding: 12px; } }
+.packing-container { 
+  min-height: 100vh; 
+  padding: 24px; 
+  color: #1e293b; 
+  display: flex; 
+  justify-content: center; 
+  background: radial-gradient(circle at top right, #f8fafc, #f1f5f9); 
+}
+.glass-card { 
+  background: rgba(255, 255, 255, 0.95); 
+  backdrop-filter: blur(16px); 
+  border: 1px solid rgba(255, 255, 255, 0.8); 
+  border-radius: 24px; 
+  padding: 24px; 
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02); 
+}
+.main-card { 
+  width: 100%; 
+  max-width: 1100px; 
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); 
+  display: flex;
+  flex-direction: column;
+}
+.main-card.wide-layout { max-width: 1550px; }
+.packing-workspace { 
+  display: flex; 
+  gap: 40px; 
+  align-items: flex-start; 
+  margin-top: 10px;
+}
+.main-workspace { flex: 1.4; min-width: 0; }
+.progress-container { 
+  margin-bottom: 24px; 
+  background: #ffffff; 
+  padding: 16px 24px; 
+  border-radius: 20px; 
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  border: 1px solid #f1f5f9;
+}
+.progress-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-end;
+  margin-bottom: 12px; 
+}
+.progress-header .count {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.progress-header .percent {
+  font-size: 0.9rem;
+  color: #3b82f6;
+  font-weight: 700;
+  background: #eff6ff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+.progress-bar { 
+  height: 14px; 
+  background: #f1f5f9; 
+  border-radius: 10px; 
+  overflow: hidden; 
+  position: relative;
+}
+.progress-bar .fill { 
+  height: 100%; 
+  background: linear-gradient(90deg, #3b82f6, #10b981); 
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+@media (max-width: 1280px) {
+  .packing-workspace { gap: 24px; }
+}
+@media (max-width: 1000px) { 
+  .packing-workspace { flex-direction: column; align-items: stretch; } 
+  .main-card { padding: 16px; border-radius: 16px; }
+}
+@media (max-width: 600px) { 
+  .packing-container { padding: 8px; } 
+  .main-card { border-radius: 12px; } 
+}
 
 .rescan-banner {
   background: #fff7ed;
