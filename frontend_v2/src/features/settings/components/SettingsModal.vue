@@ -8,59 +8,130 @@
       <div class="modal-body-scrollable">
         <p class="subtitle">Configure the printer and sound settings for this scanning station.</p>
         
-        <div class="central-print-banner">
+        <!-- Print Mode Selection -->
+        <div class="print-mode-selector mb-6">
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Printing Mode</label>
+          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+            <button 
+              @click="store.printMode = 'centralized'"
+              :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', store.printMode === 'centralized' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
+            >
+              <i class="fas fa-server text-lg"></i>
+              <span class="text-[10px] font-black uppercase">Centralized</span>
+            </button>
+            <button 
+              @click="store.printMode = 'local'"
+              :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', store.printMode === 'local' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
+            >
+              <i class="fas fa-desktop text-lg"></i>
+              <span class="text-[10px] font-black uppercase">Local Agent</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="store.printMode === 'centralized'" class="print-banner centralized-banner fade-in">
           <i class="fas fa-server"></i>
           <div>
-            <strong>Centralized Printing</strong>
-            <small>The print command is sent via the server to the printer you select below.</small>
+            <strong>Server-Side Printing</strong>
+            <small>Commands are sent from the server. BarTender must be installed on the server.</small>
+          </div>
+        </div>
+
+        <div v-else class="print-banner local-banner fade-in">
+          <i class="fas fa-bolt"></i>
+          <div>
+            <strong>Client Agent Mode</strong>
+            <small>Commands are sent to a local agent running on this PC. Best for USB printers.</small>
+          </div>
+        </div>
+
+        <!-- Agent Configuration (Only if local) -->
+        <div v-if="store.printMode === 'local'" class="local-config animate-in slide-in-from-top-2 duration-300">
+          <div class="form-group">
+            <label><i class="fas fa-link" style="margin-right:6px; color:#3b82f6"></i>Agent URL (Auto-detected)</label>
+            <div class="input-with-hint">
+              <div style="display: flex; gap: 8px;">
+                <input 
+                  :value="detectingAgent ? 'Scanning ports...' : store.agentUrl" 
+                  type="text" 
+                  readonly 
+                  class="modern-input font-mono readonly-input" 
+                  style="flex: 1; color: #475569;" 
+                />
+                <button 
+                  @click="discoverAgent" 
+                  class="btn-refresh-printers" 
+                  title="Auto-detect Agent" 
+                  :disabled="detectingAgent"
+                  style="width: 42px; background: #e0e7ff; color: #4f46e5; border-color: #c7d2fe;"
+                >
+                  <i class="fas fa-search" :class="{'fa-spin': detectingAgent}"></i>
+                </button>
+              </div>
+              <small class="hint-text">The system automatically scans local ports to find the Agent.</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-folder-open" style="margin-right:6px; color:#f59e0b"></i>Local Template Root Folder</label>
+            <input 
+              v-model="store.localTemplateDir" 
+              type="text" 
+              placeholder="C:\NY_Templates\" 
+              class="modern-input font-mono" 
+              :class="{ 'field-error-input': dirError }"
+            />
+            <small v-if="dirError" class="error-text-msg">{{ dirError }}</small>
+            <small class="hint-text" v-else>The base folder on this PC where .btw files are stored.</small>
           </div>
         </div>
 
         <div class="form-group">
-          <label> Station IP </label>
+          <label> Station ID / IP </label>
           <div class="mac-display">
             <i class="fas fa-fingerprint"></i>
             <input :value="system.stationId || 'Detecting...'" readonly class="modern-input readonly-input" />
             <span class="badge-auto">AUTO</span>
           </div>
-          <small class="hint-text"></small>
         </div>
 
         <!-- Printer Selection -->
         <div class="form-group">
-          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>Select printer</label>
+          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>Select target printer</label>
           <div class="input-with-hint">
             <div class="printer-select-wrapper">
               <select v-model="store.printerName" class="modern-input">
-                <option value="">-- Máy in mặc định (trong file .btw) --</option>
-                <option v-for="p in availablePrinters" :key="p.name" :value="p.name">
-                  🖨️ {{ p.name }} ({{ p.port }})
+                <option value="">-- Default (defined in template) --</option>
+                <option v-for="p in availablePrinters" :key="typeof p === 'string' ? p : p.name" :value="typeof p === 'string' ? p : p.name">
+                  🖨️ {{ typeof p === 'string' ? p : p.name }} {{ typeof p === 'string' ? '' : `(${p.port})` }}
                 </option>
               </select>
-              <button @click="loadPrinters" class="btn-refresh-printers" title="Làm mới danh sách">
+              <button @click="loadPrinters" class="btn-refresh-printers" :title="store.printMode === 'local' ? 'Refresh Local Printers' : 'Refresh Server Printers'">
                 <i class="fas fa-sync-alt" :class="{'fa-spin': loadingPrinters}"></i>
               </button>
             </div>
             <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="hint-text">
-              Không tìm thấy máy in nào. Nhấn nút 🔄 để thử lại.
+              No printers found. Ensure the {{ store.printMode === 'local' ? 'Agent' : 'Server' }} is running and click 🔄.
             </small>
-            <small v-else>Select the printer you want to use. Leave blank to use the default printer.</small>
+            <small v-else>The printer list is fetched from the {{ store.printMode === 'local' ? 'Local Agent' : 'Backend Server' }}.</small>
           </div>
         </div>
 
         <!-- Template Path (Client Fallback) -->
-        <div class="form-group">
-          <label><i class="fas fa-file-alt" style="margin-right:6px; color:#f59e0b"></i>Fallback Template Path (Client)</label>
+        <div class="form-group" v-if="store.printMode === 'centralized'">
+          <label><i class="fas fa-file-alt" style="margin-right:6px; color:#f59e0b"></i>Fallback Template Path (Server)</label>
           <div class="input-with-hint">
-            <input v-model="store.templatePath" type="text" placeholder="D:\PAT\Templates\carton.ui.btw" class="modern-input font-mono text-xs" />
-            <small class="hint-text">This path is used if the product has not been configured with a template in the system.</small>
+            <input v-model="store.templatePath" type="text" placeholder="D:\Templates\label.btw" class="modern-input font-mono text-xs" />
+            <small class="hint-text">Absolute path on the server used if product config is missing.</small>
           </div>
         </div>
 
-        <div class="form-group"><label>Alert Speaker (Audio Output)</label><div class="input-with-hint">
-          <select v-model="store.audioDeviceId" class="modern-input"><option value="">Default System Output</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
-          <small class="hint-text">Speaker that plays an alert sound when an incorrect scan occurs.</small>
-        </div></div>
+        <div class="form-group">
+          <label>Alert Speaker (Audio Output)</label>
+          <div class="input-with-hint">
+            <select v-model="store.audioDeviceId" class="modern-input"><option value="">Default System Output</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
+            <small class="hint-text">Speaker that plays an alert sound when an incorrect scan occurs.</small>
+          </div>
+        </div>
       </div>
       <div class="modal-actions-sticky">
         <button @click="$emit('close')" class="btn-text">Cancel</button>
@@ -83,6 +154,44 @@ const system = useSystemStore();
 const audioDevices = ref([]);
 const availablePrinters = ref([]);
 const loadingPrinters = ref(false);
+const detectingAgent = ref(false);
+
+const discoverAgent = async () => {
+  if (store.printMode !== 'local') return;
+  detectingAgent.value = true;
+  
+  // Quét dải cổng rộng hơn để linh hoạt (8000-8010, 8080-8090, 9000-9010)
+  const portsToScan = [];
+  for (let i = 8000; i <= 8010; i++) portsToScan.push(i);
+  for (let i = 8080; i <= 8090; i++) portsToScan.push(i);
+  for (let i = 9000; i <= 9010; i++) portsToScan.push(i);
+  
+  let foundUrl = null;
+  
+  for (const port of portsToScan) {
+    try {
+      // Sử dụng 127.0.0.1 thay vì localhost để tránh lỗi phân giải IPv6 trên Windows
+      const url = `http://127.0.0.1:${port}`;
+      const resp = await fetch(`${url}/status`, { signal: AbortSignal.timeout(500) });
+      if (resp.ok) {
+        foundUrl = url;
+        break;
+      }
+    } catch (e) {
+      // Bỏ qua lỗi timeout
+    }
+  }
+  
+  if (foundUrl) {
+    store.agentUrl = foundUrl;
+    system.showNotification(`Found Agent on port ${foundUrl.split(':').pop()}`, 'success');
+    loadPrinters();
+    validateDir(store.localTemplateDir);
+  } else {
+    system.showNotification('Could not detect Agent. Is it running?', 'error');
+  }
+  detectingAgent.value = false;
+};
 
 const loadAudioDevices = async () => {
   if (!navigator.mediaDevices?.enumerateDevices) return;
@@ -95,10 +204,33 @@ const loadAudioDevices = async () => {
 const loadPrinters = async () => {
   loadingPrinters.value = true;
   try {
-    const res = await printApi.getAvailablePrinters();
-    if (res.data?.printers) availablePrinters.value = res.data.printers;
-  } catch (e) { console.warn('Failed to load printers:', e); }
-  finally { loadingPrinters.value = false; }
+    if (store.printMode === 'local') {
+      // Fetch from Local Agent
+      try {
+        const resp = await fetch(`${store.agentUrl}/printers`);
+        if (resp.ok) {
+          availablePrinters.value = await resp.json();
+          system.showNotification('Đã cập nhật danh sách máy in từ Agent cục bộ', 'success');
+        } else {
+          throw new Error('Agent trả về lỗi');
+        }
+      } catch (e) {
+        system.showNotification('Không thể kết nối tới Agent! Hãy đảm bảo agent.py đang chạy.', 'error');
+        throw e;
+      }
+    } else {
+      // Fetch from Backend Server
+      const res = await printApi.getAvailablePrinters();
+      if (res.data?.printers) {
+        availablePrinters.value = res.data.printers;
+      }
+    }
+  } catch (e) { 
+    console.warn('Failed to load printers:', e); 
+    availablePrinters.value = [];
+  } finally { 
+    loadingPrinters.value = false; 
+  }
 };
 
 const handleSave = () => {
@@ -107,7 +239,55 @@ const handleSave = () => {
   system.showNotification('Settings saved locally', 'success');
 };
 
-watch(() => props.show, (val) => { if (val) { loadAudioDevices(); loadPrinters(); } });
+// Thêm biến để lưu lỗi thư mục
+const dirError = ref('');
+const validatingDir = ref(false);
+
+const validateDir = async (path) => {
+  if (!path || store.printMode !== 'local') {
+    dirError.value = '';
+    return;
+  }
+  validatingDir.value = true;
+  try {
+    const resp = await fetch(`${store.agentUrl}/check-dir?path=${encodeURIComponent(path)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      dirError.value = data.exists ? '' : 'Thư mục không tồn tại trên máy client!';
+    } else {
+      dirError.value = 'Không thể kiểm tra thư mục (Lỗi Agent)';
+    }
+  } catch (e) {
+    dirError.value = 'Không thể kết nối tới Agent để kiểm tra thư mục';
+  } finally {
+    validatingDir.value = false;
+  }
+};
+
+// Theo dõi sự thay đổi của printMode để load máy in tương ứng ngay lập tức
+watch(() => store.printMode, async (newVal) => {
+  if (newVal === 'local') {
+    await discoverAgent();
+  } else {
+    loadPrinters();
+  }
+});
+
+// Theo dõi thư mục để validate ngay khi gõ
+watch(() => store.localTemplateDir, (newVal) => {
+  validateDir(newVal);
+});
+
+watch(() => props.show, async (val) => { 
+  if (val) { 
+    loadAudioDevices(); 
+    if (store.printMode === 'local') {
+      await discoverAgent();
+    } else {
+      loadPrinters(); 
+    }
+  } 
+});
 onMounted(() => { loadAudioDevices(); });
 </script>
 
@@ -138,12 +318,30 @@ onMounted(() => { loadAudioDevices(); });
 .btn-text:hover { color: #1e293b; }
 .btn-primary { background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 .btn-primary:hover { background: #1d4ed8; }
-.central-print-banner { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; color: #065f46; }
-.central-print-banner i { font-size: 1.4rem; margin-top: 2px; color: #10b981; }
-.central-print-banner strong { display: block; font-size: 0.9rem; }
-.central-print-banner small { display: block; margin-top: 4px; font-size: 0.75rem; color: #047857; }
+.central-print-banner { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0; color: #065f46; }
+.central-print-banner i { color: #10b981; }
+
+.local-banner { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; }
+.local-banner i { color: #3b82f6; }
+
+.print-banner { border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; }
+.print-banner i { font-size: 1.4rem; margin-top: 2px; }
+.print-banner strong { display: block; font-size: 0.9rem; }
+.print-banner small { display: block; margin-top: 4px; font-size: 0.75rem; opacity: 0.8; }
+
 .printer-select-wrapper { display: flex; gap: 8px; align-items: center; }
 .printer-select-wrapper select { flex: 1; }
 .btn-refresh-printers { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; flex-shrink: 0; }
 .btn-refresh-printers:hover { background: #e2e8f0; color: #2563eb; }
+.field-error-input {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+.error-text-msg {
+  color: #ef4444;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 4px;
+  display: block;
+}
 </style>

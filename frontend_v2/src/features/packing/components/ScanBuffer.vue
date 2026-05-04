@@ -1,20 +1,25 @@
 <template>
   <div class="input-area">
     <div class="input-row">
-      <input 
-        type="text" 
+      <textarea 
         :value="scanBuffer"
         @input="$emit('update:scanBuffer', $event.target.value)"
         @keyup.enter="$emit('scan')"
-        :placeholder="!jobOrder ? '⚠️ PLEASE ENTER JOB ORDER FIRST...' : (awaitingNext ? '📦 BOX FULL — scan to capture overflow...' : 'Scan Item S/N...')"
+        :placeholder="disabled ? placeholder : (!jobOrder ? '⚠️ PLEASE ENTER JOB ORDER FIRST...' : (awaitingNext ? '📦 BOX FULL — scan to capture overflow...' : 'Scan/Paste S/Ns here (Bulk support)...'))"
         ref="scanInput"
+        :disabled="disabled"
         class="scan-input"
-        :class="{ 'input-locked': !jobOrder, 'input-overflow': awaitingNext && jobOrder }"
-      />
+        :class="{ 
+          'input-locked': !jobOrder || disabled, 
+          'input-overflow': awaitingNext && jobOrder && !disabled 
+        }"
+        rows="1"
+      ></textarea>
       <button 
         v-if="awaitingNext" 
         @click="$emit('next-carton')" 
         class="btn-next-carton pulse-animation"
+        :disabled="disabled"
         title="Start New Carton"
       >
         <i class="fas fa-plus-circle"></i> Next Carton
@@ -23,14 +28,16 @@
         v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
         @click="$emit('pack-now')" 
         class="btn-pack-now"
+        :disabled="disabled"
         title="Pack carton immediately (partial)"
       >
         <i class="fas fa-box-open"></i> Pack Now
       </button>
     </div>
-    <p class="hint" v-if="jobOrder && !awaitingNext">Waiting for scanner input (Enter to submit)</p>
-    <p class="hint overflow-hint" v-else-if="awaitingNext">📦 Box Complete! Overflow scans are captured below. Click <strong>Next Carton</strong> when ready.</p>
-    <p class="hint warning" v-else>Please fill in the Job Order field at the top first</p>
+    <p class="hint" v-if="jobOrder && !awaitingNext && !disabled">Waiting for scanner input (Enter to submit)</p>
+    <p class="hint overflow-hint" v-else-if="awaitingNext && !disabled">📦 Box Complete! Overflow scans are captured below. Click <strong>Next Carton</strong> when ready.</p>
+    <p class="hint warning" v-else-if="!jobOrder && !disabled">Please fill in the Job Order field at the top first</p>
+    <p class="hint warning" v-else-if="disabled && placeholder.includes('AGENT')">⚠️ Printing System is Offline. Please check your Agent connection.</p>
 
     <!-- Overflow Scans Area (excess scans after box full) -->
     <div v-if="overflowScans.length > 0" class="overflow-scans-area fade-in">
@@ -78,7 +85,9 @@ defineProps({
   invalidScans: { type: Array, default: () => [] },
   overflowScans: { type: Array, default: () => [] },
   allowPartial: { type: Boolean, default: false },
-  scannedCount: { type: Number, default: 0 }
+  scannedCount: { type: Number, default: 0 },
+  disabled: { type: Boolean, default: false },
+  placeholder: { type: String, default: '' }
 });
 
 defineEmits(['update:scanBuffer', 'scan', 'next-carton', 'pack-now', 'clear-invalid', 'clear-overflow']);
@@ -95,18 +104,23 @@ defineExpose({ focusScan });
 <style scoped>
 .scan-input {
   box-sizing: border-box;
-  padding: 16px;
+  padding: 14px 16px;
   background: #f8fafc;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   color: #0f172a;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 8px;
   transition: all 0.2s;
   flex: 1;
   min-width: 0;
+  resize: none;
+  overflow-y: hidden;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
 }
 .scan-input:focus {
   border-color: #3b82f6;

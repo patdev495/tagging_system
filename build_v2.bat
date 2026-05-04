@@ -5,7 +5,7 @@ echo ===================================================
 echo.
 
 :: 1. Build Frontend
-echo [1/3] Building Frontend V2...
+echo [1/4] Building Frontend V2...
 cd frontend_v2
 call npm run build
 if %errorlevel% neq 0 (
@@ -16,7 +16,7 @@ if %errorlevel% neq 0 (
 cd ..
 
 :: 2. Build Backend
-echo [2/3] Building Backend V2 EXE...
+echo [2/4] Building Backend V2 EXE...
 cd backend_v2
 uv run pyinstaller --noconfirm --onedir --console --name "NY_Tagging_System" ^
     --add-data "src;src" ^
@@ -36,11 +36,27 @@ if %errorlevel% neq 0 (
 )
 cd ..
 
-:: 3. Finalize
-echo [3/3] Finalizing build...
+:: 3. Build Print Agent
+echo [3/4] Building Print Agent V2 EXE...
+cd print_agent_v2
+uv run pyinstaller --noconfirm --onefile --console --name "NY_Print_Agent" ^
+    --hidden-import win32com ^
+    --hidden-import win32com.client ^
+    --hidden-import pythoncom ^
+    agent.py
+if %errorlevel% neq 0 (
+    echo [ERROR] Print Agent build failed!
+    pause
+    exit /b
+)
+cd ..
+
+:: 4. Finalize
+echo [4/4] Finalizing build...
 if not exist "release" mkdir release
 xcopy /E /I /Y "backend_v2\dist\NY_Tagging_System" "release\NY_Tagging_System"
 xcopy /E /I /Y "frontend_v2\dist" "release\frontend_v2\dist"
+copy /Y "print_agent_v2\dist\NY_Print_Agent.exe" "release\NY_Print_Agent.exe"
 xcopy /E /I /Y "backend_v2\resources" "release\NY_Tagging_System\resources"
 copy "backend_v2\.env" "release\NY_Tagging_System\.env"
 

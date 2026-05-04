@@ -45,8 +45,24 @@
             </div>
 
             <div class="progress-container">
+              <!-- Cảnh báo Agent Offline (Chỉ hiện khi ở chế độ Local) -->
+              <div v-if="settings.printMode === 'local' && !agentConnected" class="agent-offline-banner fade-in">
+                <div class="banner-content">
+                  <i class="fas fa-exclamation-triangle fa-beat"></i>
+                  <span><strong>AGENT OFFLINE:</strong> Vui lòng bật <code>agent.py</code> để bắt đầu quét hàng.</span>
+                </div>
+              </div>
+
+              <!-- Cảnh báo Thiếu File Tem -->
+              <div v-if="settings.printMode === 'local' && agentConnected && templateMissing" class="agent-offline-banner template-missing-banner fade-in">
+                <div class="banner-content">
+                  <i class="fas fa-file-circle-exclamation fa-beat"></i>
+                  <span><strong>THIẾU FILE TEM:</strong> Không tìm thấy <code>{{ templateFilename }}</code> trong thư mục cục bộ.</span>
+                </div>
+              </div>
+
               <div class="progress-header">
-                <span class="count">{{ scannedItems.length }} / {{ currentProduct.packed_qty }}</span>
+                <span class="count">{{ scannedItems.length }} / {{ currentProduct?.packed_qty || 0 }}</span>
                 <span class="percent">{{ progressPercent }}%</span>
               </div>
               <div class="progress-bar"><div class="fill" :style="{ width: progressPercent + '%' }"></div></div>
@@ -61,6 +77,8 @@
             <ScanBuffer
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
+              :disabled="isProcessing || (settings.printMode === 'local' && (!agentConnected || templateMissing))"
+              :placeholder="(settings.printMode === 'local' && !agentConnected) ? 'AGENT OFFLINE' : (templateMissing ? 'THIẾU FILE TEM' : 'Scan S/N here...')"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
@@ -110,8 +128,54 @@ import PrintStatusBanner from '../features/print/components/PrintStatusBanner.vu
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import EmergencyReprintModal from '../features/print/components/EmergencyReprintModal.vue';
 
-const settings = useSettingsStore();
 const system = useSystemStore();
+const settings = useSettingsStore();
+
+const agentConnected = ref(true); // Mặc định coi là connected để không bị nháy đỏ lúc đầu
+const templateMissing = ref(false);
+const templateFilename = ref('');
+let agentCheckInterval = null;
+
+const checkTemplateExists = async () => {
+  if (settings.printMode !== 'local' || !agentConnected.value || !currentProduct.value) {
+    templateMissing.value = false;
+    return;
+  }
+  
+  // Lấy tên file từ đường dẫn (Server có thể gửi đường dẫn đầy đủ, ta chỉ lấy tên file)
+  const fullPath = currentProduct.value.template_path || 'carton.ui.btw';
+  const filename = fullPath.split(/[\\/]/).pop();
+  templateFilename.value = filename;
+
+  try {
+    const url = `${settings.agentUrl}/check-file?folder=${encodeURIComponent(settings.localTemplateDir)}&filename=${encodeURIComponent(filename)}`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const data = await resp.json();
+      templateMissing.value = !data.exists;
+    }
+  } catch (err) {
+    templateMissing.value = false;
+  }
+};
+
+const checkAgentHealth = async () => {
+  if (settings.printMode !== 'local') {
+    agentConnected.value = true;
+    templateMissing.value = false;
+    return;
+  }
+  try {
+    // Tăng timeout lên 6000ms để không bị báo lỗi "ảo" khi Agent đang bận xử lý in (COM block event loop)
+    const resp = await fetch(`${settings.agentUrl}/status`, { signal: AbortSignal.timeout(6000) });
+    agentConnected.value = resp.ok;
+    if (agentConnected.value) {
+      await checkTemplateExists();
+    }
+  } catch (err) {
+    agentConnected.value = false;
+  }
+};
 const agentErrorMessage = ref('');
 
 const currentProduct = ref(null);
@@ -216,6 +280,7 @@ const selectProduct = async (p) => {
     if (!jobOrder.value && sessionRef.value) sessionRef.value.focusJobOrder();
     else focusScan();
   });
+  await checkTemplateExists();
 };
 
 const refreshNextSN = async () => {
@@ -237,36 +302,63 @@ const refreshNextSN = async () => {
   } catch (err) { console.warn('Sync SN failed:', err); }
 };
 
-const handleScan = () => {
-  const sn = scanBuffer.value.trim();
+const processSingleScan = (sn) => {
   if (!sn) return;
 
-  // When box is already full (processing or awaiting next), capture overflow — DON'T block
+  // When box is already full (processing or awaiting next), capture overflow
   if (isProcessing.value || awaitingNext.value) {
     if (scannedItems.value.length >= currentProduct.value.packed_qty) {
       playScanAlert();
       overflowScans.value.push({ sn, time: new Date().toLocaleTimeString() });
       system.showNotification(`⚠️ BOX FULL — S/N captured: ${sn}`, 'warning');
-      scanBuffer.value = '';
       return;
     }
-    // Still processing but box not full yet (shouldn't happen, but guard)
     if (isProcessing.value) return;
   }
 
   if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
 
-  // In tập trung: Server tự xử lý lỗi kết nối BarTender, Client không bị block
-
-  // Lockdown only for real invalid scans (pattern, duplicate, lockdown) — NOT overflow/excess
   const hasRealInvalid = invalidScans.value.some(s => ['pattern', 'duplicate', 'lockdown'].includes(s.type));
-  if (hasRealInvalid) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Station locked — clear errors first', type: 'lockdown' }); system.showNotification('STATION LOCKED! Clear errors first.', 'error'); scanBuffer.value = ''; return; }
+  if (hasRealInvalid) { 
+    playScanAlert(); 
+    invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Station locked — clear errors first', type: 'lockdown' }); 
+    system.showNotification('STATION LOCKED!', 'error'); 
+    return; 
+  }
 
-  if (snPattern.value && !sn.startsWith(snPattern.value)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Prefix mismatch', type: 'pattern' }); system.showNotification(`Invalid Pattern! Must start with "${snPattern.value}"`, 'error'); scanBuffer.value = ''; return; }
-  if (scannedItems.value.includes(sn)) { playScanAlert(); invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); system.showNotification(`Duplicate: ${sn}`, 'warning'); scanBuffer.value = ''; return; }
+  if (snPattern.value && !sn.startsWith(snPattern.value)) { 
+    playScanAlert(); 
+    invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Prefix mismatch', type: 'pattern' }); 
+    system.showNotification(`Invalid Pattern: ${sn}`, 'error'); 
+    return; 
+  }
+  
+  if (scannedItems.value.includes(sn)) { 
+    playScanAlert(); 
+    invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); 
+    system.showNotification(`Duplicate: ${sn}`, 'warning'); 
+    return; 
+  }
+
   scannedItems.value.push(sn);
+  if (scannedItems.value.length >= currentProduct.value.packed_qty) { 
+    finalizeCarton(); 
+  }
+};
+
+const handleScan = () => {
+  const rawInput = scanBuffer.value.trim();
+  if (!rawInput) return;
+
+  // Split by newlines, tabs, or commas. Spaces WITHIN S/Ns are preserved.
+  const sns = rawInput.split(/[\n\r\t,]+/).map(s => s.trim()).filter(s => s.length > 0);
+  
+  if (sns.length === 0) return;
+
+  // Process each S/N in the batch
+  sns.forEach(sn => processSingleScan(sn));
+  
   scanBuffer.value = '';
-  if (scannedItems.value.length >= currentProduct.value.packed_qty) { finalizeCarton(); }
 };
 
 const finalizeCarton = async (isRetry = false) => {
@@ -329,13 +421,11 @@ const finalizeCarton = async (isRetry = false) => {
       lastCarton.value = { ...res.data, status: 'PRINTING' };
       backupScannedItems.value = items;
     }
-    // In tập trung: gửi lệnh in qua Backend → Agent Server
-    const printResult = await handleServerPrint(cartonId, cartonSn);
+    // In tập trung hoặc Local Agent dựa trên cấu hình
+    const printResult = await handlePrintExecution(cartonId, cartonSn);
     if (printResult === 'Success') {
       lastCarton.value.status = 'SUCCESS';
       system.showNotification(`Carton ${cartonSn} Printed!`, 'success');
-      
-      // Update the suggestion base immediately from what was just assigned
       if (cartonSn) {
         const lastSeq = parseInt(cartonSn.slice(-5));
         if (!isNaN(lastSeq)) suggestedSNValue.value = lastSeq + 1;
@@ -373,37 +463,59 @@ const finalizeCarton = async (isRetry = false) => {
   } finally { isProcessing.value = false; }
 };
 
-/** Gửi lệnh in qua Backend → Agent Server */
-const handleServerPrint = async (cartonId, cartonSn) => {
+/** Gửi lệnh in (Tự động chọn giữa Server-side hoặc Local Agent) */
+const handlePrintExecution = async (cartonId, cartonSn) => {
   try {
-    const res = await printApi.serverPrint(
-      cartonId,
-      settings.printerName || null,
-      settings.templatePath || null
-    );
-    if (res.data?.success) {
-      if (res.data.type === 'pdf' && res.data.data) {
-        // Nhận PDF thật từ Server (BarTender render → PNG → PDF)
-        const byteChars = atob(res.data.data);
-        const byteNums = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-        const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        
-        // Tự động tải file PDF về máy Client
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `label_${cartonSn}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        system.showNotification('PDF tem đã tải về máy bạn!', 'success');
+    if (settings.printMode === 'local') {
+      // 1. Lấy BTXML từ server trước
+      const resXml = await printApi.download_carton_btxml(cartonId);
+      const xmlContent = resXml.data;
+      
+      // 2. Gửi sang Agent cục bộ
+      const result = await printApi.agentPrint(
+        settings.agentUrl, 
+        xmlContent, 
+        settings.printerName,
+        settings.localTemplateDir
+      );
+      
+      if (result.success) {
+        // Cập nhật trạng thái thành công trên server
+        await printApi.updateCartonStatus(cartonId, 'SUCCESS');
+        return 'Success';
+      } else {
+        return result.message || 'Agent failed to print';
       }
-      return 'Success';
     } else {
-      return res.data?.message || 'Server print failed';
+      // Chế độ in tập trung (Centralized)
+      const res = await printApi.serverPrint(
+        cartonId,
+        settings.printerName || null,
+        settings.templatePath || null
+      );
+      if (res.data?.success) {
+        if (res.data.type === 'pdf' && res.data.data) {
+          // Nhận PDF thật từ Server
+          const byteChars = atob(res.data.data);
+          const byteNums = new Array(byteChars.length);
+          for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+          const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `label_${cartonSn}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+          system.showNotification('PDF label downloaded!', 'success');
+        }
+        return 'Success';
+      } else {
+        return res.data?.message || 'Server print failed';
+      }
     }
   } catch (err) {
-    return err.response?.data?.detail || 'Error: Could not reach print server.';
+    console.error('Print Execution Error:', err);
+    return err.response?.data?.detail || err.message || 'Print connection error.';
   }
 };
 
@@ -415,7 +527,7 @@ const handleEmergencyReprint = async (result) => {
     const newCarton = res.data;
     if (!newCarton?.btxml) { system.showNotification('Could not generate reprint data.', 'error'); return; }
     
-    const printResult = await handleServerPrint(newCarton.id, newCarton.carton_sn);
+    const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn);
     if (printResult === 'Success') { 
       system.showNotification(`Reprint successful: ${result.carton_sn}`, 'success'); 
       showEmergencyModal.value = false; 
@@ -442,6 +554,8 @@ const handleRescan = (carton) => {
   rescanCartonSN.value = carton.carton_sn;
   showEmergencyModal.value = false;
   system.showNotification(`RESCAN MODE ACTIVE for ${carton.carton_sn}`, 'warning');
+  checkAgentHealth();
+  agentCheckInterval = setInterval(checkAgentHealth, 5000);
   focusScan();
 };
 
@@ -560,11 +674,16 @@ onMounted(() => {
   }
   settings.loadSettings();
   checkSystem();
+  checkAgentHealth();
   nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
   statusTimer = setInterval(() => { checkSystem(); refreshNextSN(); }, 3000);
+  agentCheckInterval = setInterval(checkAgentHealth, 5000);
   window.addEventListener('click', (e) => { if (showSettings.value || showEmergencyModal.value) return; if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; focusScan(); });
 });
-onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });
+onUnmounted(() => { 
+  if (statusTimer) clearInterval(statusTimer); 
+  if (agentCheckInterval) clearInterval(agentCheckInterval);
+});
 </script>
 
 <style scoped>
@@ -678,4 +797,49 @@ onUnmounted(() => { if (statusTimer) clearInterval(statusTimer); });
   font-size: 0.85rem;
 }
 .btn-cancel-rescan:hover { background: #fed7aa; }
+
+/* Agent Offline Banner */
+.agent-offline-banner {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+  animation: fadeIn 0.4s ease-out;
+}
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b91c1c;
+}
+.banner-content i {
+  font-size: 1.5rem;
+  color: #ef4444;
+}
+.banner-content span {
+  font-size: 0.95rem;
+}
+.banner-content code {
+  background: #fca5a5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #7f1d1d;
+  font-weight: bold;
+}
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(-10px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+.template-missing-banner {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  border: 2px solid #f97316;
+}
+.template-missing-banner .banner-content {
+  color: #c2410c;
+}
+.template-missing-banner .banner-content i {
+  color: #f97316;
+}
 </style>

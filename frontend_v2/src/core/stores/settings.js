@@ -3,9 +3,12 @@ import { ref } from 'vue';
 
 export const useSettingsStore = defineStore('settings', () => {
   const stationId = ref('');
-   const printerName = ref('');
+  const printerName = ref('');
   const templatePath = ref('');
   const audioDeviceId = ref('');
+  const printMode = ref('centralized'); // 'centralized' or 'local'
+  const agentUrl = ref('http://localhost:8080');
+  const localTemplateDir = ref('C:\\NY_Templates\\');
 
   function loadSettings() {
     const saved = localStorage.getItem('ny_packing_settings');
@@ -16,6 +19,9 @@ export const useSettingsStore = defineStore('settings', () => {
         if (parsed.printerName !== undefined) printerName.value = parsed.printerName;
         if (parsed.templatePath !== undefined) templatePath.value = parsed.templatePath;
         if (parsed.audioDeviceId !== undefined) audioDeviceId.value = parsed.audioDeviceId;
+        if (parsed.printMode !== undefined) printMode.value = parsed.printMode;
+        if (parsed.agentUrl !== undefined) agentUrl.value = parsed.agentUrl;
+        if (parsed.localTemplateDir !== undefined) localTemplateDir.value = parsed.localTemplateDir;
       } catch (e) {
         console.error('Failed to parse settings', e);
       }
@@ -28,6 +34,9 @@ export const useSettingsStore = defineStore('settings', () => {
       printerName: printerName.value,
       templatePath: templatePath.value,
       audioDeviceId: audioDeviceId.value,
+      printMode: printMode.value,
+      agentUrl: agentUrl.value,
+      localTemplateDir: localTemplateDir.value,
     };
     localStorage.setItem('ny_packing_settings', JSON.stringify(data));
   }
@@ -37,6 +46,9 @@ export const useSettingsStore = defineStore('settings', () => {
     printerName,
     templatePath,
     audioDeviceId,
+    printMode,
+    agentUrl,
+    localTemplateDir,
     loadSettings,
     saveSettings
   };
