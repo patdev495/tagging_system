@@ -21,7 +21,7 @@
         v-for="item in menuItems" 
         :key="item.path" 
         :to="item.path"
-        class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/10 group text-indigo-100"
+        class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/10 group text-white"
         active-class="active-link"
         exact-active-class="exact-active-link"
         :title="isCollapsed ? item.label : ''"
@@ -65,11 +65,11 @@ const { isSidebarCollapsed: isCollapsed } = storeToRefs(systemStore);
 const menuItems = [
   { label: 'Packing Station', path: '/', icon: Box },
   { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-  { label: 'Khách hàng', path: '/admin/customers', icon: Users },
-  { label: 'Sản phẩm', path: '/admin/products', icon: Package },
-  { label: 'Lịch sử Carton', path: '/admin/history', icon: ClipboardList },
-  { label: 'Thống kê', path: '/admin/stats', icon: BarChart3 },
-  { label: 'Cài đặt', path: '/admin/settings', icon: Settings },
+  { label: 'Customers', path: '/admin/customers', icon: Users },
+  { label: 'Products', path: '/admin/products', icon: Package },
+  { label: 'Carton History', path: '/admin/history', icon: ClipboardList },
+  { label: 'S/N Lookup', path: '/admin/stats', icon: BarChart3 },
+  { label: 'Settings', path: '/admin/settings', icon: Settings },
 ];
 </script>
 

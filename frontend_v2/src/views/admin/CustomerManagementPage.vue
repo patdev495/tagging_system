@@ -2,12 +2,12 @@
   <div class="p-8">
     <div class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900">Quản lý Khách hàng</h1>
-        <p class="text-slate-500">Thêm, sửa hoặc xóa thông tin khách hàng trong hệ thống.</p>
+        <h1 class="text-3xl font-bold text-slate-900">Customer Management</h1>
+        <p class="text-slate-500">Add, edit, or remove customer information in the system.</p>
       </div>
       <button @click="openCreateModal" class="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-md">
         <Plus class="w-5 h-5" />
-        Thêm Khách hàng
+        Add Customer
       </button>
     </div>
 
@@ -17,7 +17,7 @@
       <input 
         v-model="searchQuery"
         type="text" 
-        placeholder="Tìm kiếm theo mã hoặc tên..." 
+        placeholder="Search by code or name..." 
         class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
       >
     </div>
@@ -28,9 +28,9 @@
         <thead>
           <tr class="bg-slate-50 border-b border-slate-200">
             <th class="p-4 font-semibold text-slate-700">ID</th>
-            <th class="p-4 font-semibold text-slate-700">Mã khách hàng</th>
-            <th class="p-4 font-semibold text-slate-700">Tên khách hàng</th>
-            <th class="p-4 font-semibold text-slate-700 text-right">Thao tác</th>
+            <th class="p-4 font-semibold text-slate-700">Customer Code</th>
+            <th class="p-4 font-semibold text-slate-700">Customer Name</th>
+            <th class="p-4 font-semibold text-slate-700 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -40,17 +40,17 @@
             <td class="p-4 text-slate-700">{{ customer.name }}</td>
             <td class="p-4 text-right">
               <div class="flex justify-end gap-2">
-                <button @click="openEditModal(customer)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Sửa">
+                <button @click="openEditModal(customer)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Edit">
                   <Edit2 class="w-5 h-5" />
                 </button>
-                <button @click="confirmDelete(customer)" class="p-2 text-slate-400 hover:text-red-600 transition-colors" title="Xóa">
+                <button @click="confirmDelete(customer)" class="p-2 text-slate-400 hover:text-red-600 transition-colors" title="Delete">
                   <Trash2 class="w-5 h-5" />
                 </button>
               </div>
             </td>
           </tr>
           <tr v-if="filteredCustomers.length === 0">
-            <td colspan="4" class="p-12 text-center text-slate-400 italic">Không tìm thấy khách hàng nào.</td>
+            <td colspan="4" class="p-12 text-center text-slate-400 italic">No customers found.</td>
           </tr>
         </tbody>
       </table>
@@ -60,7 +60,7 @@
     <div v-if="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-900 text-white">
-          <h2 class="text-xl font-bold">{{ isEdit ? 'Cập nhật Khách hàng' : 'Thêm Khách hàng mới' }}</h2>
+          <h2 class="text-xl font-bold">{{ isEdit ? 'Update Customer' : 'Add New Customer' }}</h2>
           <button @click="showModal = false" class="hover:bg-white/20 p-1 rounded-lg transition-colors">
             <X class="w-6 h-6" />
           </button>
@@ -68,35 +68,35 @@
         
         <form @submit.prevent="saveCustomer" class="p-6 space-y-4">
           <div class="space-y-1">
-            <label class="text-sm font-semibold text-slate-700">Mã khách hàng (Code)</label>
+            <label class="text-sm font-semibold text-slate-700">Customer Code</label>
             <input 
               v-model="form.code"
               type="text" 
               required
-              placeholder="Ví dụ: APPLE, SAMSUNG..." 
+              placeholder="e.g. APPLE, SAMSUNG..." 
               class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
               :disabled="isEdit"
             >
-            <p class="text-xs text-slate-400">Mã này thường là viết tắt, không dấu, dùng để sinh mã thùng.</p>
+            <p class="text-xs text-slate-400">This code is usually an abbreviation, used to generate carton S/Ns.</p>
           </div>
           
           <div class="space-y-1">
-            <label class="text-sm font-semibold text-slate-700">Tên khách hàng</label>
+            <label class="text-sm font-semibold text-slate-700">Customer Name</label>
             <input 
               v-model="form.name"
               type="text" 
               required
-              placeholder="Nhập tên đầy đủ..." 
+              placeholder="Enter full name..." 
               class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
             >
           </div>
 
           <div class="pt-4 flex gap-3">
             <button type="button" @click="showModal = false" class="flex-1 px-4 py-3 rounded-lg border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-              Hủy
+              Cancel
             </button>
             <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50">
-              {{ isSubmitting ? 'Đang lưu...' : 'Lưu thông tin' }}
+              {{ isSubmitting ? 'Saving...' : 'Save Information' }}
             </button>
           </div>
         </form>
@@ -138,7 +138,7 @@ const fetchCustomers = async () => {
     const res = await catalogApi.getCustomers();
     customers.value = res.data;
   } catch (err) {
-    system.showNotification('Không thể tải danh sách khách hàng', 'error');
+    system.showNotification('Could not load customer list', 'error');
   }
 };
 
@@ -161,15 +161,15 @@ const saveCustomer = async () => {
   try {
     if (isEdit.value) {
       await catalogApi.updateCustomer(currentId.value, form.value);
-      system.showNotification('Cập nhật khách hàng thành công', 'success');
+      system.showNotification('Customer updated successfully', 'success');
     } else {
       await catalogApi.createCustomer(form.value);
-      system.showNotification('Thêm khách hàng thành công', 'success');
+      system.showNotification('Customer added successfully', 'success');
     }
     showModal.value = false;
     await fetchCustomers();
   } catch (err) {
-    const msg = err.response?.data?.detail || 'Lỗi khi lưu dữ liệu';
+    const msg = err.response?.data?.detail || 'Error saving data';
     system.showNotification(msg, 'error');
   } finally {
     isSubmitting.value = false;
@@ -177,13 +177,13 @@ const saveCustomer = async () => {
 };
 
 const confirmDelete = async (customer) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa khách hàng "${customer.name}"? Hành động này không thể hoàn tác.`)) {
+  if (confirm(`Are you sure you want to delete customer "${customer.name}"? This action cannot be undone.`)) {
     try {
       await catalogApi.deleteCustomer(customer.id);
-      system.showNotification('Đã xóa khách hàng', 'success');
+      system.showNotification('Customer deleted', 'success');
       await fetchCustomers();
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Không thể xóa khách hàng này (có thể do đang có dữ liệu liên quan)';
+      const msg = err.response?.data?.detail || 'Could not delete this customer (possibly due to related data)';
       system.showNotification(msg, 'error');
     }
   }

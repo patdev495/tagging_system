@@ -2,12 +2,12 @@
   <div class="p-8">
     <div class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900">Quản lý Sản phẩm</h1>
-        <p class="text-slate-500">Cấu hình thông tin SKU, quy cách đóng gói và mẫu tem.</p>
+        <h1 class="text-3xl font-bold text-slate-900">Product Management</h1>
+        <p class="text-slate-500">Configure SKU info, packing specs, and label templates.</p>
       </div>
       <button @click="openCreateModal" class="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-md">
         <Plus class="w-5 h-5" />
-        Thêm Sản phẩm
+        Add Product
       </button>
     </div>
 
@@ -18,7 +18,7 @@
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Tìm kiếm theo tên sản phẩm hoặc UPC..." 
+          placeholder="Search by product name or UPC..." 
           class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
         >
       </div>
@@ -26,7 +26,7 @@
         v-model="selectedCustomerId" 
         class="w-64 p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm bg-white"
       >
-        <option :value="null">Tất cả khách hàng</option>
+        <option :value="null">All Customers</option>
         <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
       </select>
     </div>
@@ -37,14 +37,14 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
-              <th class="p-4 font-semibold text-slate-700 whitespace-nowrap">Tên sản phẩm</th>
-              <th class="p-4 font-semibold text-slate-700">Khách hàng</th>
+              <th class="p-4 font-semibold text-slate-700 whitespace-nowrap">Product Name</th>
+              <th class="p-4 font-semibold text-slate-700">Customer</th>
               <th class="p-4 font-semibold text-slate-700">UPC</th>
-              <th class="p-4 font-semibold text-slate-700">Định mức QTY</th>
+              <th class="p-4 font-semibold text-slate-700">Packed QTY</th>
               <th class="p-4 font-semibold text-slate-700">Prefix (SN)</th>
-              <th class="p-4 font-semibold text-slate-700">Tem</th>
-              <th class="p-4 font-semibold text-slate-700">Đường dẫn Template (Máy Client)</th>
-              <th class="p-4 font-semibold text-slate-700 text-right">Thao tác</th>
+              <th class="p-4 font-semibold text-slate-700">Template</th>
+              <th class="p-4 font-semibold text-slate-700">Template Path (Client PC)</th>
+              <th class="p-4 font-semibold text-slate-700 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -68,22 +68,22 @@
               </td>
               <td class="p-4">
                 <p class="text-[10px] text-slate-400 font-mono truncate max-w-[150px]" :title="product.template_path">
-                  {{ product.template_path || 'Mặc định' }}
+                  {{ product.template_path || 'Default' }}
                 </p>
               </td>
               <td class="p-4 text-right">
                 <div class="flex justify-end gap-1">
-                  <button @click="openEditModal(product)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                  <button @click="openEditModal(product)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Edit">
                     <Edit2 class="w-4 h-4" />
                   </button>
-                  <button @click="confirmDelete(product)" class="p-2 text-slate-400 hover:text-red-600 transition-colors">
+                  <button @click="confirmDelete(product)" class="p-2 text-slate-400 hover:text-red-600 transition-colors" title="Delete">
                     <Trash2 class="w-4 h-4" />
                   </button>
                 </div>
               </td>
             </tr>
             <tr v-if="filteredProducts.length === 0">
-              <td colspan="8" class="p-12 text-center text-slate-400 italic">Không tìm thấy sản phẩm nào.</td>
+              <td colspan="8" class="p-12 text-center text-slate-400 italic">No products found.</td>
             </tr>
           </tbody>
         </table>
@@ -94,7 +94,7 @@
     <div v-if="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-900 text-white">
-          <h2 class="text-xl font-bold">{{ isEdit ? 'Cập nhật Sản phẩm' : 'Thêm Sản phẩm mới' }}</h2>
+          <h2 class="text-xl font-bold">{{ isEdit ? 'Update Product' : 'Add New Product' }}</h2>
           <button @click="showModal = false" class="hover:bg-white/20 p-1 rounded-lg transition-colors">
             <X class="w-6 h-6" />
           </button>
@@ -105,14 +105,14 @@
             <!-- Left Col -->
             <div class="space-y-4">
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Khách hàng</label>
+                <label class="text-sm font-semibold text-slate-700">Customer</label>
                 <select v-model="form.customer_id" required class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                   <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
                 </select>
               </div>
 
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Tên sản phẩm (Item Name)</label>
+                <label class="text-sm font-semibold text-slate-700">Item Name</label>
                 <input v-model="form.item_name" type="text" required class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
               </div>
 
@@ -122,7 +122,7 @@
               </div>
 
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Định mức đóng gói (Packed QTY)</label>
+                <label class="text-sm font-semibold text-slate-700">Packed QTY</label>
                 <input v-model.number="form.packed_qty" type="number" required min="1" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
               </div>
             </div>
@@ -141,35 +141,35 @@
               </div>
 
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Loại mẫu tem (Template Type)</label>
+                <label class="text-sm font-semibold text-slate-700">Template Type</label>
                 <select v-model="form.template_type" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                  <option value="standard">Standard (Cơ bản)</option>
-                  <option value="detailed">Detailed (Chi tiết)</option>
+                  <option value="standard">Standard</option>
+                  <option value="detailed">Detailed</option>
                 </select>
               </div>
 
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Đường dẫn File Template (.btw)</label>
+                <label class="text-sm font-semibold text-slate-700">Template File Path (.btw)</label>
                 <input v-model="form.template_path" type="text" placeholder="D:\PAT\Templates\carton.ui.btw" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-mono">
-                <p class="text-[10px] text-slate-400 italic">* Để trống nếu muốn dùng đường dẫn mặc định của hệ thống.</p>
+                <p class="text-[10px] text-slate-400 italic">* Leave empty to use system default path.</p>
               </div>
 
               <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <label class="flex items-center gap-3 cursor-pointer">
                   <input v-model="form.allow_partial" type="checkbox" :true-value="1" :false-value="0" class="w-5 h-5 rounded text-indigo-600">
-                  <span class="text-sm font-semibold text-slate-700">Cho phép đóng thùng lẻ (Partial)</span>
+                  <span class="text-sm font-semibold text-slate-700">Allow Partial Packing</span>
                 </label>
-                <p class="text-xs text-slate-400 mt-2">Nếu bật, người dùng có thể nhấn "Pack Now" dù chưa đủ số lượng QTY.</p>
+                <p class="text-xs text-slate-400 mt-2">If enabled, users can click "Pack Now" even if target QTY is not met.</p>
               </div>
             </div>
           </div>
 
           <div class="pt-8 flex gap-3">
             <button type="button" @click="showModal = false" class="flex-1 px-4 py-3 rounded-lg border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-              Hủy
+              Cancel
             </button>
             <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50">
-              {{ isSubmitting ? 'Đang lưu...' : 'Lưu sản phẩm' }}
+              {{ isSubmitting ? 'Saving...' : 'Save Product' }}
             </button>
           </div>
         </form>
@@ -230,7 +230,7 @@ const fetchData = async () => {
     products.value = prodRes.data;
     customers.value = custRes.data;
   } catch (err) {
-    system.showNotification('Không thể tải dữ liệu sản phẩm', 'error');
+    system.showNotification('Could not load product data', 'error');
   }
 };
 
@@ -265,22 +265,22 @@ const openEditModal = (product) => {
 
 const saveProduct = async () => {
   if (!form.value.customer_id) {
-    system.showNotification('Vui lòng chọn khách hàng', 'error');
+    system.showNotification('Please select a customer', 'error');
     return;
   }
   isSubmitting.value = true;
   try {
     if (isEdit.value) {
       await catalogApi.updateProduct(currentId.value, form.value);
-      system.showNotification('Cập nhật sản phẩm thành công', 'success');
+      system.showNotification('Product updated successfully', 'success');
     } else {
       await catalogApi.createProduct(form.value);
-      system.showNotification('Thêm sản phẩm thành công', 'success');
+      system.showNotification('Product added successfully', 'success');
     }
     showModal.value = false;
     await fetchData();
   } catch (err) {
-    const msg = err.response?.data?.detail || 'Lỗi khi lưu dữ liệu';
+    const msg = err.response?.data?.detail || 'Error saving data';
     system.showNotification(msg, 'error');
   } finally {
     isSubmitting.value = false;
@@ -288,13 +288,13 @@ const saveProduct = async () => {
 };
 
 const confirmDelete = async (product) => {
-  if (confirm(`Bạn có chắc muốn xóa sản phẩm "${product.item_name}"?`)) {
+  if (confirm(`Are you sure you want to delete product "${product.item_name}"?`)) {
     try {
       await catalogApi.deleteProduct(product.id);
-      system.showNotification('Đã xóa sản phẩm', 'success');
+      system.showNotification('Product deleted', 'success');
       await fetchData();
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Không thể xóa sản phẩm (đã có dữ liệu đóng gói)';
+      const msg = err.response?.data?.detail || 'Could not delete product (possibly has packing records)';
       system.showNotification(msg, 'error');
     }
   }

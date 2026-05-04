@@ -1,8 +1,8 @@
 <template>
   <div class="p-8 max-w-4xl mx-auto">
     <div class="text-center mb-12">
-      <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Tra cứu S/N Sản phẩm</h1>
-      <p class="text-slate-500 text-lg">Tìm kiếm vị trí của sản phẩm trong các thùng đã đóng gói.</p>
+      <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Product S/N Lookup</h1>
+      <p class="text-slate-500 text-lg">Find the location of products within packed cartons.</p>
     </div>
 
     <!-- Search Input Area -->
@@ -12,7 +12,7 @@
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Nhập Serial Number của sản phẩm..." 
+          placeholder="Enter product Serial Number..." 
           class="w-full pl-14 pr-32 py-5 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none text-xl font-mono transition-all"
           :disabled="isSearching"
           ref="searchInput"
@@ -22,11 +22,11 @@
           :disabled="isSearching || !searchQuery"
           class="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-200"
         >
-          {{ isSearching ? 'Đang tìm...' : 'Tìm kiếm' }}
+          {{ isSearching ? 'Searching...' : 'Search' }}
         </button>
       </form>
       <div class="mt-4 flex gap-4 text-xs font-medium text-slate-400 px-2">
-        <span>Gợi ý: Tìm kiếm theo mã S/N chính xác để có kết quả tốt nhất.</span>
+        <span>Tip: Search by exact S/N for best results.</span>
       </div>
     </div>
 
@@ -37,8 +37,8 @@
         <div class="bg-indigo-900 p-8 text-white">
           <div class="flex justify-between items-start mb-6">
             <div>
-              <span class="bg-indigo-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block">Kết quả tìm thấy</span>
-              <h2 class="text-3xl font-bold">Thùng: {{ result.carton_sn }}</h2>
+              <span class="bg-indigo-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block">Result Found</span>
+              <h2 class="text-3xl font-bold">Carton: {{ result.carton_sn }}</h2>
             </div>
             <div :class="['px-4 py-2 rounded-xl font-black text-sm', result.status === 'SUCCESS' ? 'bg-green-500' : 'bg-red-500']">
               {{ result.status }}
@@ -47,7 +47,7 @@
           
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6 opacity-90 text-sm">
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Ngày đóng gói</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Packed At</p>
               <p>{{ formatDate(result.created_at) }}</p>
             </div>
             <div>
@@ -55,11 +55,11 @@
               <p>{{ result.job_order || 'N/A' }}</p>
             </div>
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Người đóng</p>
-              <p>{{ result.packed_by || 'Hệ thống' }}</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Packed By</p>
+              <p>{{ result.packed_by || 'System' }}</p>
             </div>
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Xuất xứ</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Origin</p>
               <p>{{ result.carton_origin || 'VN' }}</p>
             </div>
           </div>
@@ -71,7 +71,7 @@
             <Package class="w-10 h-10 text-indigo-600" />
           </div>
           <div class="flex-1">
-            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Thông tin sản phẩm</p>
+            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Product Information</p>
             <h3 class="text-xl font-bold text-slate-900">{{ result.product?.item_name }}</h3>
             <p class="text-slate-500 font-mono text-sm">UPC: {{ result.product?.upc || '-' }}</p>
           </div>
@@ -82,7 +82,7 @@
           <div class="flex justify-between items-center mb-4">
             <h4 class="font-bold text-slate-700 flex items-center gap-2">
               <ClipboardList class="w-5 h-5 text-indigo-500" />
-              Danh sách S/N trong thùng ({{ result.items?.length || 0 }})
+              S/Ns in Carton ({{ result.items?.length || 0 }})
             </h4>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin rounded-xl p-1">
@@ -104,8 +104,8 @@
       <div class="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
         <AlertCircle class="w-8 h-8 text-slate-300" />
       </div>
-      <h3 class="text-xl font-bold text-slate-700 mb-2">Không tìm thấy sản phẩm</h3>
-      <p class="text-slate-400 max-w-sm mx-auto">S/N <strong>"{{ searchQuery }}"</strong> không tồn tại trong bất kỳ thùng hàng nào đã đóng gói thành công.</p>
+      <h3 class="text-xl font-bold text-slate-700 mb-2">Product Not Found</h3>
+      <p class="text-slate-400 max-w-sm mx-auto">S/N <strong>"{{ searchQuery }}"</strong> does not exist in any successfully packed cartons.</p>
     </div>
 
     <!-- Initial State -->
@@ -114,22 +114,22 @@
         <div class="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
           <Zap class="w-5 h-5 text-slate-400" />
         </div>
-        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Tốc độ cao</p>
-        <p class="text-[10px] text-slate-400">Tìm kiếm tức thì trên hàng triệu bản ghi.</p>
+        <p class="text-xs font-bold text-slate-600 uppercase mb-1">High Speed</p>
+        <p class="text-[10px] text-slate-400">Instant search across millions of records.</p>
       </div>
       <div class="p-6 text-center border border-slate-200 rounded-2xl">
         <div class="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
           <ShieldCheck class="w-5 h-5 text-slate-400" />
         </div>
-        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Chính xác</p>
-        <p class="text-[10px] text-slate-400">Đảm bảo truy xuất đúng nguồn gốc thùng hàng.</p>
+        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Accurate</p>
+        <p class="text-[10px] text-slate-400">Ensure correct carton source retrieval.</p>
       </div>
       <div class="p-6 text-center border border-slate-200 rounded-2xl">
         <div class="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
           <Link class="w-5 h-5 text-slate-400" />
         </div>
-        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Liên kết</p>
-        <p class="text-[10px] text-slate-400">Xem đầy đủ danh sách S/N liên quan.</p>
+        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Linked</p>
+        <p class="text-[10px] text-slate-400">View full list of related S/Ns.</p>
       </div>
     </div>
   </div>
@@ -169,7 +169,7 @@ const handleSearch = async () => {
     result.value = res.data;
   } catch (err) {
     if (err.response?.status !== 404) {
-      system.showNotification('Lỗi hệ thống khi tìm kiếm', 'error');
+      system.showNotification('System error during search', 'error');
     }
   } finally {
     isSearching.value = false;

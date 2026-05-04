@@ -175,6 +175,7 @@ body {
 .text-slate-600 { color: var(--slate-600); }
 .text-slate-700 { color: var(--slate-700); }
 .text-slate-900 { color: var(--slate-900); }
+.text-indigo-100 { color: var(--indigo-100); }
 .text-indigo-300 { color: var(--indigo-300); }
 .text-indigo-500 { color: var(--indigo-500); }
 .text-indigo-600 { color: var(--indigo-600); }
