@@ -1,9 +1,16 @@
 import os
 import sys
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException
 import uvicorn
+
+# Configure logging to show debug info in console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s"
+)
 
 from src.core.config import settings
 from src.core.exceptions import custom_http_exception_handler

@@ -174,6 +174,18 @@ class BarTenderEngine:
                     if name and value_el is not None:
                         substrings[name] = value_el.text
 
+                # Debug: log all SN_ fields found
+                sn_keys = [k for k in substrings.keys() if k.startswith("SN_")]
+                non_sn_keys = [k for k in substrings.keys() if not k.startswith("SN_")]
+                logger.info(f"[BTXML Parse] Total substrings: {len(substrings)}, SN fields: {len(sn_keys)}, "
+                           f"Other fields: {non_sn_keys}")
+                if sn_keys:
+                    # Log first 3 SN values as sample
+                    samples = {k: substrings[k] for k in sorted(sn_keys)[:3]}
+                    logger.info(f"[BTXML Parse] SN samples: {samples}")
+                else:
+                    logger.warning(f"[BTXML Parse] NO SN_ fields found in BTXML! This means detailed template was not used.")
+
                 pythoncom.CoInitialize()
                 try:
                     self._ensure_connected()

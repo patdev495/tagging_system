@@ -1,11 +1,29 @@
 import os
+import sys
+import logging
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from src.core import models, utils
 from src.features.print import schemas
 
+logger = logging.getLogger("PrintService")
+
 MAX_SN_GRID = 30  # Maximum SN slots on the detailed label
+
+def _get_template_base_dir():
+    """Get the correct base directory for XML templates, handling both dev and PyInstaller exe."""
+    if getattr(sys, 'frozen', False):
+        # PyInstaller --onedir: data files are in _internal/src/...
+        # sys._MEIPASS points to _internal/
+        meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+        frozen_path = os.path.join(meipass, "src", "features", "print")
+        logger.info(f"[FROZEN] _MEIPASS={meipass}, template_dir={frozen_path}, exists={os.path.isdir(frozen_path)}")
+        if os.path.isdir(frozen_path):
+            return frozen_path
+    
+    # Dev mode: relative to this file
+    return os.path.dirname(os.path.abspath(__file__))
 
 def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: str = None) -> str:
     raw_origin = carton.carton_origin if carton.carton_origin else "VN"
@@ -15,12 +33,34 @@ def generate_btxml(carton: models.Carton, product: models.Product, items: List[s
     
     # Select template based on product.template_type
     template_type = getattr(product, 'template_type', 'standard') or 'standard'
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = _get_template_base_dir()
     template_file = os.path.join(base_dir, "templates", f"{template_type}.xml")
+    
+    logger.info(f"[BTXML] product.template_type='{product.template_type}' -> resolved='{template_type}', "
+                f"base_dir='{base_dir}', template_file='{template_file}', "
+                f"exists={os.path.exists(template_file)}, frozen={getattr(sys, 'frozen', False)}")
+    
+    # Diagnostic: list what's actually in the templates directory
+    templates_dir = os.path.join(base_dir, "templates")
+    if os.path.isdir(templates_dir):
+        dir_contents = os.listdir(templates_dir)
+        logger.info(f"[BTXML] templates/ dir contents: {dir_contents}")
+    else:
+        logger.warning(f"[BTXML] templates/ dir NOT FOUND at: {templates_dir}")
+        # Try alternative: relative to __file__
+        alt_base = os.path.dirname(os.path.abspath(__file__))
+        alt_templates_dir = os.path.join(alt_base, "templates")
+        logger.info(f"[BTXML] Trying __file__ fallback: __file__={__file__}, alt_base={alt_base}, alt_templates_dir={alt_templates_dir}, exists={os.path.isdir(alt_templates_dir)}")
+        if os.path.isdir(alt_templates_dir):
+            base_dir = alt_base
+            template_file = os.path.join(base_dir, "templates", f"{template_type}.xml")
+            logger.info(f"[BTXML] Using __file__ fallback! template_file={template_file}, exists={os.path.exists(template_file)}")
     
     # Fallback to base.xml if template doesn't exist
     if not os.path.exists(template_file):
-        template_file = os.path.join(base_dir, "templates", "base.xml")
+        fallback_file = os.path.join(base_dir, "templates", "base.xml")
+        logger.warning(f"[BTXML] Template '{template_file}' NOT FOUND! Falling back to '{fallback_file}' (exists={os.path.exists(fallback_file)})")
+        template_file = fallback_file
         template_type = "standard"
     
     with open(template_file, "r", encoding="utf-8") as f:
