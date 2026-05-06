@@ -55,6 +55,17 @@
 Plans:
 - [ ] .planning/phases/25-database-schema-auto-initialization/25-PLAN.md
 
+### Phase 26: Thêm hỗ trợ ngôn ngữ tiếng Việt (Internationalization)
+**Goal:** Tích hợp đa ngôn ngữ (EN/VI) cho toàn bộ giao diện Frontend.
+**Requirements**: UI-I18N
+**Success Criteria**:
+1. Hệ thống hỗ trợ chuyển đổi linh hoạt giữa Tiếng Anh và Tiếng Việt.
+2. Trạng thái ngôn ngữ được lưu trữ bền vững (persistent) trong LocalStorage.
+3. Toàn bộ các chuỗi ký tự cứng trong UI chính (Packing Station, Admin History) được chuyển sang tệp dịch.
+
+Plans:
+- [x] .planning/phases/26-internationalization/26-PLAN.md
+
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.

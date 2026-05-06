@@ -42,7 +42,7 @@ export default {
       return data;
     } catch (err) {
       if (err.message.includes('Failed to fetch')) {
-        throw new Error('Không thể kết nối tới Print Agent. Bạn đã bật file agent.py chưa?');
+        throw new Error('AGENT_CONNECTION_FAILED');
       }
       throw err;
     }

@@ -6,14 +6,14 @@
     ]"
   >
     <!-- Header/Logo -->
-    <div class="p-6 flex items-center gap-3 border-b border-indigo-800">
+    <router-link to="/" class="p-6 flex items-center gap-3 border-b border-indigo-800 hover:bg-white/5 transition-colors cursor-pointer no-underline text-white">
       <div class="logo-box bg-white p-2 rounded-lg flex-shrink-0">
         <Package class="text-indigo-900 w-6 h-6" />
       </div>
       <div v-if="!isCollapsed" class="logo-text overflow-hidden whitespace-nowrap">
         <h1 class="font-black tracking-tight text-xl">NY TAGGING</h1>
       </div>
-    </div>
+    </router-link>
 
     <!-- Navigation -->
     <nav class="flex-1 py-6 px-3 space-y-2 overflow-y-auto">

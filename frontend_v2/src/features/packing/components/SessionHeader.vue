@@ -1,30 +1,30 @@
 <template>
   <div class="session-info">
     <div class="session-header-row">
-      <button @click="$emit('back')" class="btn-back-icon" title="Change Product">
+      <button @click="$emit('back')" class="btn-back-icon" :title="t('packing.back')">
         <i class="fas fa-arrow-left"></i>
       </button>
       <div class="active-product">
         <h2>{{ product.item_name }}</h2>
         <div class="meta">
           <span class="badge-outline">UPC: {{ product.upc }}</span>
-          <span class="badge-outline">Target: {{ product.packed_qty }}</span>
+          <span class="badge-outline">{{ t('packing.target') }}: {{ product.packed_qty }}</span>
         </div>
       </div>
       <div class="header-inputs">
         <div class="job-order-input">
-          <label>Job Order</label>
+          <label>{{ t('packing.job_order') }}</label>
           <input 
             :value="jobOrder" 
             @input="$emit('update:jobOrder', $event.target.value)"
-            placeholder="Enter Job Order..." 
+            :placeholder="t('packing.job_order_placeholder')" 
             class="modern-input-small"
             ref="jobOrderInput"
             @keyup.enter="$emit('focus-scan')"
           />
         </div>
         <div class="job-order-input">
-          <label>Origin</label>
+          <label>{{ t('packing.origin') }}</label>
           <select 
             :value="cartonOrigin"
             @change="$emit('update:cartonOrigin', $event.target.value); $emit('focus-scan')"
@@ -51,17 +51,17 @@
               class="btn-auto-toggle" 
               :class="{ 'active': !isSNManual }"
               @click="toggleMode"
-              :title="!isSNManual ? 'Switch to Manual Entry' : 'Switch to Auto Assignment'"
+              :title="!isSNManual ? t('packing.switch_manual') : t('packing.switch_auto')"
             >
-              {{ !isSNManual ? 'AUTO' : 'MANUAL' }}
+              {{ !isSNManual ? t('packing.auto') : t('packing.manual') }}
             </button>
           </div>
           <div class="sn-preview" v-if="snPreview">
-             Preview: <strong :class="{ 'text-danger': snExists }">{{ snExists ? '⚠️ S/N ALREADY EXISTS!' : snPreview }}</strong>
+             {{ t('packing.preview') }}: <strong :class="{ 'text-danger': snExists }">{{ snExists ? '⚠️ ' + t('packing.sn_exists_short') : snPreview }}</strong>
           </div>
         </div>
         <div class="job-order-input">
-          <label>SN Pattern</label>
+          <label>{{ t('packing.sn_pattern') }}</label>
           <input 
             :value="snPattern"
             @input="$emit('update:snPattern', $event.target.value)"
@@ -71,7 +71,7 @@
           />
         </div>
         <div class="job-order-input">
-          <label>Manual Date (YYMM)</label>
+          <label>{{ t('packing.manual_date') }}</label>
           <input 
             :value="customYYMM"
             @input="$emit('update:customYYMM', $event.target.value)"
@@ -88,6 +88,9 @@
 
 <script setup>
 import { ref, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
   product: { type: Object, required: true },

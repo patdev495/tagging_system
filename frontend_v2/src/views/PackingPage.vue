@@ -3,10 +3,10 @@
     <div class="glass-card main-card" :class="{ 'wide-layout': currentProduct }">
       <AppHeader
         :isAudioActive="isAudioActive"
-
         @toggle-audio="toggleAudio"
         @show-emergency="showEmergencyModal = true"
         @show-settings="showSettings = true"
+        @home="resetSession"
       />
 
       <CatalogSelection
@@ -37,10 +37,10 @@
             <div v-if="isRescanMode" class="rescan-banner fade-in">
               <div class="rescan-info">
                 <i class="fas fa-redo-alt fa-spin"></i>
-                <span><strong>RESCAN MODE:</strong> Updating Carton <strong>{{ rescanCartonSN }}</strong></span>
+                <span><strong>{{ t('packing.rescan_mode', { sn: rescanCartonSN }) }}</strong></span>
               </div>
               <button @click="isRescanMode = false; rescanCartonSN = '';" class="btn-cancel-rescan">
-                <i class="fas fa-times"></i> Cancel
+                <i class="fas fa-times"></i> {{ t('packing.cancel') }}
               </button>
             </div>
 
@@ -49,7 +49,7 @@
               <div v-if="settings.printMode === 'local' && !agentConnected" class="agent-offline-banner fade-in">
                 <div class="banner-content">
                   <i class="fas fa-exclamation-triangle fa-beat"></i>
-                  <span><strong>AGENT OFFLINE:</strong> Vui lòng bật <code>agent.py</code> để bắt đầu quét hàng.</span>
+                  <span><strong>{{ t('packing.agent_offline') }}</strong></span>
                 </div>
               </div>
 
@@ -57,7 +57,7 @@
               <div v-if="settings.printMode === 'local' && agentConnected && templateMissing" class="agent-offline-banner template-missing-banner fade-in">
                 <div class="banner-content">
                   <i class="fas fa-file-circle-exclamation fa-beat"></i>
-                  <span><strong>THIẾU FILE TEM:</strong> Không tìm thấy <code>{{ templateFilename }}</code> trong thư mục cục bộ.</span>
+                  <span><strong>{{ t('packing.template_missing', { file: templateFilename }) }}</strong></span>
                 </div>
               </div>
 
@@ -78,7 +78,7 @@
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
               :disabled="isProcessing || (settings.printMode === 'local' && (!agentConnected || templateMissing))"
-              :placeholder="(settings.printMode === 'local' && !agentConnected) ? 'AGENT OFFLINE' : (templateMissing ? 'THIẾU FILE TEM' : 'Scan S/N here...')"
+              :placeholder="(settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder'))"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
@@ -113,6 +113,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
 import packingApi from '../features/packing/api';
@@ -128,6 +129,7 @@ import PrintStatusBanner from '../features/print/components/PrintStatusBanner.vu
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import EmergencyReprintModal from '../features/print/components/EmergencyReprintModal.vue';
 
+const { t } = useI18n();
 const system = useSystemStore();
 const settings = useSettingsStore();
 
@@ -310,33 +312,33 @@ const processSingleScan = (sn) => {
     if (scannedItems.value.length >= currentProduct.value.packed_qty) {
       playScanAlert();
       overflowScans.value.push({ sn, time: new Date().toLocaleTimeString() });
-      system.showNotification(`⚠️ BOX FULL — S/N captured: ${sn}`, 'warning');
+      system.showNotification(t('packing.box_full', { sn }), 'warning');
       return;
     }
     if (isProcessing.value) return;
   }
 
-  if (!jobOrder.value) { system.showNotification('Please enter Job Order!', 'error'); return; }
+  if (!jobOrder.value) { system.showNotification(t('packing.enter_job_order'), 'error'); return; }
 
   const hasRealInvalid = invalidScans.value.some(s => ['pattern', 'duplicate', 'lockdown'].includes(s.type));
   if (hasRealInvalid) { 
     playScanAlert(); 
     invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Station locked — clear errors first', type: 'lockdown' }); 
-    system.showNotification('STATION LOCKED!', 'error'); 
+    system.showNotification(t('packing.station_locked'), 'error'); 
     return; 
   }
 
   if (snPattern.value && !sn.startsWith(snPattern.value)) { 
     playScanAlert(); 
     invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Prefix mismatch', type: 'pattern' }); 
-    system.showNotification(`Invalid Pattern: ${sn}`, 'error'); 
+    system.showNotification(t('packing.prefix_mismatch', { sn }), 'error'); 
     return; 
   }
   
   if (scannedItems.value.includes(sn)) { 
     playScanAlert(); 
     invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Duplicate S/N', type: 'duplicate' }); 
-    system.showNotification(`Duplicate: ${sn}`, 'warning'); 
+    system.showNotification(t('packing.duplicate_sn'), 'warning'); 
     return; 
   }
 
@@ -392,12 +394,12 @@ const finalizeCarton = async (isRetry = false) => {
       lastCarton.value = { ...res.data, status: 'PRINTING' };
     } else {
       if (snExists.value) {
-        system.showNotification('S/N already exists! Please use a different number.', 'error');
+        system.showNotification(t('packing.sn_exists'), 'error');
         isProcessing.value = false;
         return;
       }
       const items = [...scannedItems.value];
-      if (items.length === 0) { system.showNotification('No items!', 'error'); isProcessing.value = false; return; }
+      if (items.length === 0) { system.showNotification(t('packing.no_items'), 'error'); isProcessing.value = false; return; }
       
       // Clear previous banner/status to avoid confusion with old SNs
       lastCarton.value = { status: 'PRINTING', carton_sn: snPreview.value };
@@ -425,7 +427,7 @@ const finalizeCarton = async (isRetry = false) => {
     const printResult = await handlePrintExecution(cartonId, cartonSn);
     if (printResult === 'Success') {
       lastCarton.value.status = 'SUCCESS';
-      system.showNotification(`Carton ${cartonSn} Printed!`, 'success');
+      system.showNotification(t('packing.carton_printed', { sn: cartonSn }), 'success');
       if (cartonSn) {
         const lastSeq = parseInt(cartonSn.slice(-5));
         if (!isNaN(lastSeq)) suggestedSNValue.value = lastSeq + 1;
@@ -442,11 +444,12 @@ const finalizeCarton = async (isRetry = false) => {
         awaitingNext.value = true; 
         focusScan(); 
       }
-    } else { lastCarton.value.status = 'FAILED'; agentErrorMessage.value = printResult; system.showNotification(`Print failed: ${printResult}`, 'error'); }
+    } else { lastCarton.value.status = 'FAILED'; agentErrorMessage.value = printResult; system.showNotification(t('packing.print_failed', { error: printResult }), 'error'); }
   } catch (err) {
     console.error(err);
     if (lastCarton.value && !isRetry) lastCarton.value.status = 'FAILED';
-    const msg = err.response?.data?.detail || 'Server error.';
+    let msg = err.response?.data?.detail || err.message || t('packing.server_error');
+    if (msg === 'AGENT_CONNECTION_FAILED') msg = t('packing.agent_offline');
     system.showNotification(msg, 'error');
     
     // If SN is already in use, refresh the suggestion
@@ -454,9 +457,14 @@ const finalizeCarton = async (isRetry = false) => {
       try {
         const snRes = await packingApi.getNextSN(currentProduct.value.id);
         if (snRes.data?.next_seq) {
-          suggestedSNValue.value = snRes.data.next_seq;
+          const updateSuggestedSN = (newVal) => {
+            suggestedSNValue.value = newVal;
+            if (newVal) {
+              system.showNotification(t('packing.suggested_sn', { sn: newVal }), 'warning');
+            }
+          };
+          updateSuggestedSN(snRes.data.next_seq);
           customSN.value = snRes.data.next_seq.toString();
-          system.showNotification(`Suggested S/N updated to ${snRes.data.next_seq}`, 'warning');
         }
       } catch (e) {}
     }

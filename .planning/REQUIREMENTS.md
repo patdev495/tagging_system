@@ -18,6 +18,8 @@
 - [ ] **STATS-02**: Báo cáo theo sản phẩm: Thống kê số lượng carton/qty theo từng sản phẩm trong khoảng thời gian.
 - [ ] **STATS-03**: Tìm kiếm nâng cao: Tìm kiếm vị trí của một S/N sản phẩm (thuộc Carton nào, ngày nào, khách hàng nào).
 - [ ] **STATS-04**: Export dữ liệu (Excel/CSV) cho các báo cáo thống kê.
+### Internationalization (I18N)
+- [ ] **I18N-01**: Hỗ trợ đa ngôn ngữ (Tiếng Anh & Tiếng Việt) cho toàn bộ giao diện hệ thống.
 
 ## Future Requirements
 - [ ] Quản lý người dùng và phân quyền chi tiết (RBAC).
@@ -42,3 +44,4 @@
 | STATS-02 | 24 | Pending |
 | STATS-03 | 23 | Pending |
 | STATS-04 | 24 | Pending |
+| I18N-01 | 26 | Pending |

@@ -1,8 +1,8 @@
 <template>
   <div class="p-8 max-w-4xl mx-auto">
     <div class="text-center mb-12">
-      <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Product S/N Lookup</h1>
-      <p class="text-slate-500 text-lg">Find the location of products within packed cartons.</p>
+      <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">{{ t('admin.sn_lookup') }}</h1>
+      <p class="text-slate-500 text-lg">{{ t('admin.sn_lookup_subtitle') }}</p>
     </div>
 
     <!-- Search Input Area -->
@@ -12,7 +12,7 @@
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Enter product Serial Number..." 
+          :placeholder="t('admin.sn_lookup_placeholder')" 
           class="w-full pl-14 pr-32 py-5 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none text-xl font-mono transition-all"
           :disabled="isSearching"
           ref="searchInput"
@@ -22,11 +22,11 @@
           :disabled="isSearching || !searchQuery"
           class="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-200"
         >
-          {{ isSearching ? 'Searching...' : 'Search' }}
+          {{ isSearching ? t('admin.searching') : t('admin.search') }}
         </button>
       </form>
       <div class="mt-4 flex gap-4 text-xs font-medium text-slate-400 px-2">
-        <span>Tip: Search by exact S/N for best results.</span>
+        <span>{{ t('admin.tip_sn') }}</span>
       </div>
     </div>
 
@@ -37,8 +37,8 @@
         <div class="bg-indigo-900 p-8 text-white">
           <div class="flex justify-between items-start mb-6">
             <div>
-              <span class="bg-indigo-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block">Result Found</span>
-              <h2 class="text-3xl font-bold">Carton: {{ result.carton_sn }}</h2>
+              <span class="bg-indigo-500 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block">{{ t('admin.result_found') }}</span>
+              <h2 class="text-3xl font-bold">{{ t('admin.carton') }}: {{ result.carton_sn }}</h2>
             </div>
             <div :class="['px-4 py-2 rounded-xl font-black text-sm', result.status === 'SUCCESS' ? 'bg-green-500' : 'bg-red-500']">
               {{ result.status }}
@@ -47,19 +47,19 @@
           
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6 opacity-90 text-sm">
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Packed At</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">{{ t('admin.packed_at') }}</p>
               <p>{{ formatDate(result.created_at) }}</p>
             </div>
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Job Order</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">{{ t('packing.job_order') }}</p>
               <p>{{ result.job_order || 'N/A' }}</p>
             </div>
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Packed By</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">{{ t('admin.packed_by') }}</p>
               <p>{{ result.packed_by || 'System' }}</p>
             </div>
             <div>
-              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">Origin</p>
+              <p class="text-indigo-300 font-bold uppercase text-[10px] mb-1">{{ t('admin.origin') }}</p>
               <p>{{ result.carton_origin || 'VN' }}</p>
             </div>
           </div>
@@ -71,9 +71,9 @@
             <Package class="w-10 h-10 text-indigo-600" />
           </div>
           <div class="flex-1">
-            <p class="text-xs font-bold text-slate-400 uppercase mb-1">Product Information</p>
+            <p class="text-xs font-bold text-slate-400 uppercase mb-1">{{ t('admin.product_info') }}</p>
             <h3 class="text-xl font-bold text-slate-900">{{ result.product?.item_name }}</h3>
-            <p class="text-slate-500 font-mono text-sm">UPC: {{ result.product?.upc || '-' }}</p>
+            <p class="text-slate-500 font-mono text-sm">{{ t('admin.upc') }}: {{ result.product?.upc || '-' }}</p>
           </div>
         </div>
 
@@ -82,7 +82,7 @@
           <div class="flex justify-between items-center mb-4">
             <h4 class="font-bold text-slate-700 flex items-center gap-2">
               <ClipboardList class="w-5 h-5 text-indigo-500" />
-              S/Ns in Carton ({{ result.items?.length || 0 }})
+              {{ t('admin.items_in_carton', { count: result.items?.length || 0 }) }}
             </h4>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin rounded-xl p-1">
@@ -104,8 +104,8 @@
       <div class="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
         <AlertCircle class="w-8 h-8 text-slate-300" />
       </div>
-      <h3 class="text-xl font-bold text-slate-700 mb-2">Product Not Found</h3>
-      <p class="text-slate-400 max-w-sm mx-auto">S/N <strong>"{{ searchQuery }}"</strong> does not exist in any successfully packed cartons.</p>
+      <h3 class="text-xl font-bold text-slate-700 mb-2">{{ t('admin.product_not_found') }}</h3>
+      <p class="text-slate-400 max-w-sm mx-auto">{{ t('admin.sn_not_exist', { sn: searchQuery }) }}</p>
     </div>
 
     <!-- Initial State -->
@@ -114,22 +114,22 @@
         <div class="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
           <Zap class="w-5 h-5 text-slate-400" />
         </div>
-        <p class="text-xs font-bold text-slate-600 uppercase mb-1">High Speed</p>
-        <p class="text-[10px] text-slate-400">Instant search across millions of records.</p>
+        <p class="text-xs font-bold text-slate-600 uppercase mb-1">{{ t('admin.high_speed') }}</p>
+        <p class="text-[10px] text-slate-400">{{ t('admin.high_speed_desc') }}</p>
       </div>
       <div class="p-6 text-center border border-slate-200 rounded-2xl">
         <div class="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
           <ShieldCheck class="w-5 h-5 text-slate-400" />
         </div>
-        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Accurate</p>
-        <p class="text-[10px] text-slate-400">Ensure correct carton source retrieval.</p>
+        <p class="text-xs font-bold text-slate-600 uppercase mb-1">{{ t('admin.accurate') }}</p>
+        <p class="text-[10px] text-slate-400">{{ t('admin.accurate_desc') }}</p>
       </div>
       <div class="p-6 text-center border border-slate-200 rounded-2xl">
         <div class="bg-slate-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
           <Link class="w-5 h-5 text-slate-400" />
         </div>
-        <p class="text-xs font-bold text-slate-600 uppercase mb-1">Linked</p>
-        <p class="text-[10px] text-slate-400">View full list of related S/Ns.</p>
+        <p class="text-xs font-bold text-slate-600 uppercase mb-1">{{ t('admin.linked') }}</p>
+        <p class="text-[10px] text-slate-400">{{ t('admin.linked_desc') }}</p>
       </div>
     </div>
   </div>
@@ -137,6 +137,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { 
   Search, 
   Package, 
@@ -150,6 +151,7 @@ import {
 import historyApi from '../../features/history/api';
 import { useSystemStore } from '../../core/stores/system';
 
+const { t } = useI18n();
 const system = useSystemStore();
 const searchQuery = ref('');
 const isSearching = ref(false);

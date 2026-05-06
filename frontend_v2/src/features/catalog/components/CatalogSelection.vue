@@ -2,20 +2,20 @@
   <section class="selection-panel">
     <div class="selection-header-row">
       <div class="control-group customer-select">
-        <label>Customer</label>
+        <label>{{ t('catalog.customer') }}</label>
         <select v-model="selectedCustomerId" @change="onCustomerChange" class="modern-select">
-          <option value="" disabled>Choose a customer...</option>
+          <option value="" disabled>{{ t('catalog.choose_customer') }}</option>
           <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
         </select>
       </div>
 
       <div class="control-group product-search" v-if="selectedCustomerId">
-        <label>Search Product</label>
+        <label>{{ t('catalog.search_product') }}</label>
         <div class="search-input-wrapper">
           <i class="fas fa-search search-icon"></i>
           <input 
             v-model="productSearch" 
-            placeholder="Filter items..." 
+            :placeholder="t('catalog.filter_items')" 
             class="modern-input-small"
             ref="productSearchInput"
           />
@@ -33,10 +33,10 @@
         >
           <h3>{{ p.item_name }}</h3>
           <p>UPC: {{ p.upc }}</p>
-          <div class="qty-tag">Target: {{ p.packed_qty }}</div>
+          <div class="qty-tag">{{ t('catalog.target') }}: {{ p.packed_qty }}</div>
         </div>
         <div v-if="filteredProducts.length === 0" class="no-results-hint">
-           No products match your search.
+           {{ t('catalog.no_products') }}
         </div>
       </div>
     </div>
@@ -45,7 +45,10 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import catalogApi from '../api';
+
+const { t } = useI18n();
 
 const emit = defineEmits(['select-product']);
 

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import i18n from '../../i18n';
 
 export const useSettingsStore = defineStore('settings', () => {
   const stationId = ref('');
@@ -9,6 +10,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const printMode = ref('centralized'); // 'centralized' or 'local'
   const agentUrl = ref('http://localhost:8080');
   const localTemplateDir = ref('C:\\NY_Templates\\');
+  const language = ref('vi');
 
   function loadSettings() {
     const saved = localStorage.getItem('ny_packing_settings');
@@ -22,10 +24,13 @@ export const useSettingsStore = defineStore('settings', () => {
         if (parsed.printMode !== undefined) printMode.value = parsed.printMode;
         if (parsed.agentUrl !== undefined) agentUrl.value = parsed.agentUrl;
         if (parsed.localTemplateDir !== undefined) localTemplateDir.value = parsed.localTemplateDir;
+        if (parsed.language !== undefined) language.value = parsed.language;
       } catch (e) {
         console.error('Failed to parse settings', e);
       }
     }
+    // Sync i18n on load
+    i18n.global.locale.value = language.value;
   }
 
   function saveSettings() {
@@ -37,9 +42,15 @@ export const useSettingsStore = defineStore('settings', () => {
       printMode: printMode.value,
       agentUrl: agentUrl.value,
       localTemplateDir: localTemplateDir.value,
+      language: language.value,
     };
     localStorage.setItem('ny_packing_settings', JSON.stringify(data));
   }
+
+  // Sync i18n when language changes
+  watch(language, (newLang) => {
+    i18n.global.locale.value = newLang;
+  });
 
   return {
     stationId,
@@ -49,6 +60,7 @@ export const useSettingsStore = defineStore('settings', () => {
     printMode,
     agentUrl,
     localTemplateDir,
+    language,
     loadSettings,
     saveSettings
   };

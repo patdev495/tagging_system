@@ -3,18 +3,18 @@
     <div class="success-banner" :class="{ 'error-banner': lastCarton.status === 'FAILED', 'printing-banner': lastCarton.status === 'PRINTING' }">
       <i class="fas" :class="{ 'fa-check-circle': lastCarton.status === 'SUCCESS', 'fa-exclamation-triangle': lastCarton.status === 'FAILED', 'fa-spinner fa-spin': lastCarton.status === 'PRINTING' }"></i>
       <span>
-        <template v-if="lastCarton.status === 'PRINTING'">Printing Carton: <strong>{{ lastCarton.carton_sn }}</strong>...</template>
-        <template v-else-if="lastCarton.status === 'SUCCESS'">Last Carton: <strong>{{ lastCarton.carton_sn }}</strong></template>
-        <template v-else>Previous Attempt Failed: <strong class="text-strike">{{ lastCarton.carton_sn }}</strong>
+        <template v-if="lastCarton.status === 'PRINTING'">{{ t('print.printing_carton') }}: <strong>{{ lastCarton.carton_sn }}</strong>...</template>
+        <template v-else-if="lastCarton.status === 'SUCCESS'">{{ t('print.last_carton') }}: <strong>{{ lastCarton.carton_sn }}</strong></template>
+        <template v-else>{{ t('print.attempt_failed') }}: <strong class="text-strike">{{ lastCarton.carton_sn }}</strong>
           <span v-if="agentErrorMessage" class="error-detail"> - {{ agentErrorMessage }}</span>
         </template>
       </span>
       <div class="banner-actions" v-if="lastCarton.status !== 'PRINTING'">
         <a v-if="lastCarton.status === 'SUCCESS'" :href="downloadUrl" class="btn-reprint" download>
-          <i class="fas fa-file-download"></i> Manual Download
+          <i class="fas fa-file-download"></i> {{ t('print.manual_download') }}
         </a>
         <button @click="$emit('retry')" class="btn-reprint" :class="lastCarton.status === 'SUCCESS' ? 'secondary' : 'primary-err'">
-          <i class="fas fa-redo"></i> {{ lastCarton.status === 'SUCCESS' ? 'Re-Print' : 'Try Again' }}
+          <i class="fas fa-redo"></i> {{ lastCarton.status === 'SUCCESS' ? t('print.reprint') : t('print.try_again') }}
         </button>
       </div>
     </div>
@@ -23,6 +23,9 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const props = defineProps({
   lastCarton: Object,
   agentErrorMessage: { type: String, default: '' }

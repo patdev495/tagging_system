@@ -5,7 +5,7 @@
         :value="scanBuffer"
         @input="$emit('update:scanBuffer', $event.target.value)"
         @keyup.enter="$emit('scan')"
-        :placeholder="disabled ? placeholder : (!jobOrder ? '⚠️ PLEASE ENTER JOB ORDER FIRST...' : (awaitingNext ? '📦 BOX FULL — scan to capture overflow...' : 'Scan/Paste S/Ns here (Bulk support)...'))"
+        :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : t('packing.scan_prompt_default')))"
         ref="scanInput"
         :disabled="disabled"
         class="scan-input"
@@ -20,30 +20,30 @@
         @click="$emit('next-carton')" 
         class="btn-next-carton pulse-animation"
         :disabled="disabled"
-        title="Start New Carton"
+        :title="t('packing.next_carton_title')"
       >
-        <i class="fas fa-plus-circle"></i> Next Carton
+        <i class="fas fa-plus-circle"></i> {{ t('packing.next_carton') }}
       </button>
       <button 
         v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
         @click="$emit('pack-now')" 
         class="btn-pack-now"
         :disabled="disabled"
-        title="Pack carton immediately (partial)"
+        :title="t('packing.pack_now_title')"
       >
-        <i class="fas fa-box-open"></i> Pack Now
+        <i class="fas fa-box-open"></i> {{ t('packing.pack_now') }}
       </button>
     </div>
-    <p class="hint" v-if="jobOrder && !awaitingNext && !disabled">Waiting for scanner input (Enter to submit)</p>
-    <p class="hint overflow-hint" v-else-if="awaitingNext && !disabled">📦 Box Complete! Overflow scans are captured below. Click <strong>Next Carton</strong> when ready.</p>
-    <p class="hint warning" v-else-if="!jobOrder && !disabled">Please fill in the Job Order field at the top first</p>
-    <p class="hint warning" v-else-if="disabled && placeholder.includes('AGENT')">⚠️ Printing System is Offline. Please check your Agent connection.</p>
+    <p class="hint" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
+    <p class="hint overflow-hint" v-else-if="awaitingNext && !disabled">{{ t('packing.box_complete_hint') }}</p>
+    <p class="hint warning" v-else-if="!jobOrder && !disabled">{{ t('packing.fill_job_order_hint') }}</p>
+    <p class="hint warning" v-else-if="disabled && placeholder.includes('AGENT')">{{ t('packing.agent_offline_hint') }}</p>
 
     <!-- Overflow Scans Area (excess scans after box full) -->
     <div v-if="overflowScans.length > 0" class="overflow-scans-area fade-in">
       <div class="overflow-header">
-        <span><i class="fas fa-exclamation-triangle"></i> Overflow Scans ({{ overflowScans.length }}) — Remove these from box!</span>
-        <button @click="$emit('clear-overflow')" class="btn-clear-small btn-clear-overflow">Clear</button>
+        <span><i class="fas fa-exclamation-triangle"></i> {{ t('packing.overflow_title', { count: overflowScans.length }) }}</span>
+        <button @click="$emit('clear-overflow')" class="btn-clear-small btn-clear-overflow">{{ t('packing.clear') }}</button>
       </div>
       <div class="overflow-list">
         <div v-for="(item, idx) in overflowScans" :key="idx" class="overflow-item">
@@ -59,8 +59,8 @@
     <!-- Invalid Scans Area -->
     <div v-if="invalidScans.length > 0" class="invalid-scans-area fade-in">
       <div class="invalid-header">
-        <span><i class="fas fa-exclamation-circle"></i> Invalid Scans</span>
-        <button @click="$emit('clear-invalid')" class="btn-clear-small">Clear</button>
+        <span><i class="fas fa-exclamation-circle"></i> {{ t('packing.invalid_scans_title') }}</span>
+        <button @click="$emit('clear-invalid')" class="btn-clear-small">{{ t('packing.clear') }}</button>
       </div>
       <div class="invalid-list">
         <div v-for="(err, idx) in [...invalidScans].reverse()" :key="idx" class="invalid-item" :class="`type-${err.type || 'generic'}`">
@@ -77,6 +77,9 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps({
   scanBuffer: { type: String, default: '' },

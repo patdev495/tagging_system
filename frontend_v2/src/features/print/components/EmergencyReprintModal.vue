@@ -2,40 +2,40 @@
   <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-card emergency-modal">
       <div class="modal-header-modern">
-        <div class="header-title"><i class="fas fa-search"></i><h2>Find & Reprint</h2></div>
+        <div class="header-title"><i class="fas fa-search"></i><h2>{{ t('print.emergency_title') }}</h2></div>
         <button @click="$emit('close')" class="btn-close-modern"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body-modern">
-        <p class="emergency-hint">Enter an exact Carton S/N to retrieve and reprint its label.</p>
+        <p class="emergency-hint">{{ t('print.emergency_hint') }}</p>
         <div class="search-box-modern">
           <div class="search-input-wrapper"><i class="fas fa-barcode search-icon"></i>
-            <input v-model="searchSN" placeholder="e.g. CN26040000001" @keyup.enter="handleSearch" class="modern-search-input" />
+            <input v-model="searchSN" :placeholder="t('print.emergency_placeholder')" @keyup.enter="handleSearch" class="modern-search-input" />
           </div>
           <button @click="handleSearch" :disabled="loading" class="btn-search-modern">
-            <i class="fas fa-spinner fa-spin" v-if="loading"></i><span v-else>Search</span>
+            <i class="fas fa-spinner fa-spin" v-if="loading"></i><span v-else>{{ t('admin.search') }}</span>
           </button>
         </div>
         <div v-if="result" class="emergency-result-card fade-in">
           <div class="result-header"><div class="status-indicator success"></div><h3>{{ result.carton_sn }}</h3></div>
           <div class="result-details">
-            <div class="detail-group"><span class="label">Product</span><span class="value">{{ result.product.item_name }}</span></div>
+            <div class="detail-group"><span class="label">{{ t('admin.product') }}</span><span class="value">{{ result.product.item_name }}</span></div>
             <div class="detail-row">
-              <div class="detail-group"><span class="label">Job Order</span><span class="value">{{ result.job_order || 'N/A' }}</span></div>
-              <div class="detail-group"><span class="label">Items</span><span class="value">{{ result.items_count !== undefined ? result.items_count : (result.items ? result.items.length : '?') }} pcs</span></div>
-              <div class="detail-group"><span class="label">Date</span><span class="value">{{ new Date(result.created_at).toLocaleDateString() }}</span></div>
+              <div class="detail-group"><span class="label">{{ t('packing.job_order') }}</span><span class="value">{{ result.job_order || 'N/A' }}</span></div>
+              <div class="detail-group"><span class="label">{{ t('print.items') }}</span><span class="value">{{ result.items_count !== undefined ? result.items_count : (result.items ? result.items.length : '?') }} pcs</span></div>
+              <div class="detail-group"><span class="label">{{ t('admin.date') }}</span><span class="value">{{ new Date(result.created_at).toLocaleDateString() }}</span></div>
             </div>
           </div>
           <div class="result-actions">
             <button @click="$emit('rescan', result)" class="btn-rescan-action">
-              <i class="fas fa-redo"></i><span>Rescan Items</span>
+              <i class="fas fa-redo"></i><span>{{ t('print.rescan_items') }}</span>
             </button>
             <button @click="$emit('reprint', result)" :disabled="loading" class="btn-print-action">
-              <i class="fas fa-spinner fa-spin" v-if="loading"></i><i class="fas fa-print" v-else></i><span>Print Label</span>
+              <i class="fas fa-spinner fa-spin" v-if="loading"></i><i class="fas fa-print" v-else></i><span>{{ t('print.print_label') }}</span>
             </button>
           </div>
         </div>
         <div v-else-if="searchSN && !loading && searched" class="no-result-card">
-          <div class="no-result-icon"><i class="fas fa-box-open"></i></div><p>No successful carton found with this S/N.</p>
+          <div class="no-result-icon"><i class="fas fa-box-open"></i></div><p>{{ t('print.no_carton_found') }}</p>
         </div>
       </div>
     </div>
@@ -44,8 +44,11 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import printApi from '../api';
 import { useSystemStore } from '../../../core/stores/system';
+
+const { t } = useI18n();
 
 defineProps({ show: Boolean });
 defineEmits(['close', 'reprint', 'rescan']);

@@ -5,13 +5,13 @@
         <div class="logo-circle">
           <i class="fas fa-user-shield"></i>
         </div>
-        <h2>Admin Authentication</h2>
-        <p>Please enter the administrative password to continue</p>
+        <h2>{{ t('admin.login_title') }}</h2>
+        <p>{{ t('admin.login_subtitle') }}</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="input-group">
-          <label for="password">Password</label>
+          <label for="password">{{ t('admin.password') }}</label>
           <div class="input-wrapper">
             <i class="fas fa-lock"></i>
             <input 
@@ -28,12 +28,12 @@
         </div>
 
         <button type="submit" :disabled="loading" class="btn-login">
-          <span v-if="!loading">Unlock Dashboard</span>
+          <span v-if="!loading">{{ t('admin.unlock') }}</span>
           <i v-else class="fas fa-spinner fa-spin"></i>
         </button>
         
         <router-link to="/" class="btn-back">
-          <i class="fas fa-arrow-left"></i> Return to Packing Station
+          <i class="fas fa-arrow-left"></i> {{ t('admin.return_packing') }}
         </router-link>
       </form>
     </div>
@@ -42,8 +42,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const password = ref('');
@@ -63,7 +65,7 @@ const handleLogin = async () => {
     const redirectPath = route.query.redirect || '/admin';
     router.push(redirectPath);
   } else {
-    error.value = 'Incorrect password. Access denied.';
+    error.value = t('admin.incorrect_password');
     password.value = '';
   }
   loading.value = false;

@@ -2,57 +2,68 @@
   <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
     <div class="glass-card modal-content settings-modal">
       <div class="modal-header-modern">
-        <div class="header-title"><i class="fas fa-cog"></i><h2>Station Settings</h2></div>
+        <div class="header-title"><i class="fas fa-cog"></i><h2>{{ t('settings.title') }}</h2></div>
         <button @click="$emit('close')" class="btn-close-modern"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body-scrollable">
-        <p class="subtitle">Configure the printer and sound settings for this scanning station.</p>
+        <p class="subtitle">{{ t('settings.subtitle') }}</p>
         
         <!-- Print Mode Selection -->
         <div class="print-mode-selector mb-6">
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Printing Mode</label>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ t('settings.print_mode') }}</label>
           <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
             <button 
               @click="store.printMode = 'centralized'"
               :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', store.printMode === 'centralized' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
             >
               <i class="fas fa-server text-lg"></i>
-              <span class="text-[10px] font-black uppercase">Centralized</span>
+              <span class="text-[10px] font-black uppercase">{{ t('settings.centralized') }}</span>
             </button>
             <button 
               @click="store.printMode = 'local'"
               :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', store.printMode === 'local' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
             >
               <i class="fas fa-desktop text-lg"></i>
-              <span class="text-[10px] font-black uppercase">Local Agent</span>
+              <span class="text-[10px] font-black uppercase">{{ t('settings.local_agent') }}</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="form-group">
+          <label><i class="fas fa-globe" style="margin-right:6px; color:#10b981"></i>{{ t('settings.language') }}</label>
+          <div class="input-with-hint">
+            <select v-model="store.language" class="modern-input">
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
           </div>
         </div>
 
         <div v-if="store.printMode === 'centralized'" class="print-banner centralized-banner fade-in">
           <i class="fas fa-server"></i>
           <div>
-            <strong>Server-Side Printing</strong>
-            <small>Commands are sent from the server. BarTender must be installed on the server.</small>
+            <strong>{{ t('settings.centralized_title') }}</strong>
+            <small>{{ t('settings.centralized_desc') }}</small>
           </div>
         </div>
 
         <div v-else class="print-banner local-banner fade-in">
           <i class="fas fa-bolt"></i>
           <div>
-            <strong>Client Agent Mode</strong>
-            <small>Commands are sent to a local agent running on this PC. Best for USB printers.</small>
+            <strong>{{ t('settings.local_title') }}</strong>
+            <small>{{ t('settings.local_desc') }}</small>
           </div>
         </div>
 
         <!-- Agent Configuration (Only if local) -->
         <div v-if="store.printMode === 'local'" class="local-config animate-in slide-in-from-top-2 duration-300">
           <div class="form-group">
-            <label><i class="fas fa-link" style="margin-right:6px; color:#3b82f6"></i>Agent URL (Auto-detected)</label>
+            <label><i class="fas fa-link" style="margin-right:6px; color:#3b82f6"></i>{{ t('settings.agent_url') }}</label>
             <div class="input-with-hint">
               <div style="display: flex; gap: 8px;">
                 <input 
-                  :value="detectingAgent ? 'Scanning ports...' : store.agentUrl" 
+                  :value="detectingAgent ? t('settings.detecting_agent') : store.agentUrl" 
                   type="text" 
                   readonly 
                   class="modern-input font-mono readonly-input" 
@@ -68,11 +79,11 @@
                   <i class="fas fa-search" :class="{'fa-spin': detectingAgent}"></i>
                 </button>
               </div>
-              <small class="hint-text">The system automatically scans local ports to find the Agent.</small>
+              <small class="hint-text">{{ t('settings.agent_url_hint') }}</small>
             </div>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-folder-open" style="margin-right:6px; color:#f59e0b"></i>Local Template Root Folder</label>
+            <label><i class="fas fa-folder-open" style="margin-right:6px; color:#f59e0b"></i>{{ t('settings.local_folder') }}</label>
             <input 
               v-model="store.localTemplateDir" 
               type="text" 
@@ -81,26 +92,26 @@
               :class="{ 'field-error-input': dirError }"
             />
             <small v-if="dirError" class="error-text-msg">{{ dirError }}</small>
-            <small class="hint-text" v-else>The base folder on this PC where .btw files are stored.</small>
+            <small class="hint-text" v-else>{{ t('settings.local_folder_hint') }}</small>
           </div>
         </div>
 
         <div class="form-group">
-          <label> Station ID / IP </label>
+          <label> {{ t('settings.station_id') }} </label>
           <div class="mac-display">
             <i class="fas fa-fingerprint"></i>
-            <input :value="system.stationId || 'Detecting...'" readonly class="modern-input readonly-input" />
+            <input :value="system.stationId || t('settings.detecting')" readonly class="modern-input readonly-input" />
             <span class="badge-auto">AUTO</span>
           </div>
         </div>
 
         <!-- Printer Selection -->
         <div class="form-group">
-          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>Select target printer</label>
+          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>{{ t('settings.printer_name') }}</label>
           <div class="input-with-hint">
             <div class="printer-select-wrapper">
               <select v-model="store.printerName" class="modern-input">
-                <option value="">-- Default (defined in template) --</option>
+                <option value="">-- {{ t('settings.default_printer') }} --</option>
                 <option v-for="p in availablePrinters" :key="typeof p === 'string' ? p : p.name" :value="typeof p === 'string' ? p : p.name">
                   🖨️ {{ typeof p === 'string' ? p : p.name }} {{ typeof p === 'string' ? '' : `(${p.port})` }}
                 </option>
@@ -110,32 +121,32 @@
               </button>
             </div>
             <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="hint-text">
-              No printers found. Ensure the {{ store.printMode === 'local' ? 'Agent' : 'Server' }} is running and click 🔄.
+              {{ t('settings.no_printers_found', { mode: store.printMode === 'local' ? t('settings.agent') : t('settings.server') }) }}
             </small>
-            <small v-else>The printer list is fetched from the {{ store.printMode === 'local' ? 'Local Agent' : 'Backend Server' }}.</small>
+            <small v-else>{{ t('settings.printer_list_source', { mode: store.printMode === 'local' ? t('settings.local_agent') : t('settings.backend_server') }) }}</small>
           </div>
         </div>
 
         <!-- Template Path (Client Fallback) -->
         <div class="form-group" v-if="store.printMode === 'centralized'">
-          <label><i class="fas fa-file-alt" style="margin-right:6px; color:#f59e0b"></i>Fallback Template Path (Server)</label>
+          <label><i class="fas fa-file-alt" style="margin-right:6px; color:#f59e0b"></i>{{ t('settings.fallback_template') }}</label>
           <div class="input-with-hint">
             <input v-model="store.templatePath" type="text" placeholder="D:\Templates\label.btw" class="modern-input font-mono text-xs" />
-            <small class="hint-text">Absolute path on the server used if product config is missing.</small>
+            <small class="hint-text">{{ t('settings.fallback_template_hint') }}</small>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Alert Speaker (Audio Output)</label>
+          <label>{{ t('settings.audio_output') }}</label>
           <div class="input-with-hint">
-            <select v-model="store.audioDeviceId" class="modern-input"><option value="">Default System Output</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
-            <small class="hint-text">Speaker that plays an alert sound when an incorrect scan occurs.</small>
+            <select v-model="store.audioDeviceId" class="modern-input"><option value="">{{ t('settings.audio_output_default') }}</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
+            <small class="hint-text">{{ t('settings.audio_output_hint') }}</small>
           </div>
         </div>
       </div>
       <div class="modal-actions-sticky">
-        <button @click="$emit('close')" class="btn-text">Cancel</button>
-        <button @click="handleSave" class="btn-primary">Save Settings</button>
+        <button @click="$emit('close')" class="btn-text">{{ t('settings.close') }}</button>
+        <button @click="handleSave" class="btn-primary">{{ t('settings.save') }}</button>
       </div>
     </div>
   </div>
@@ -143,12 +154,14 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../core/stores/settings';
 import { useSystemStore } from '../../../core/stores/system';
 import printApi from '../../print/api';
 
 const props = defineProps({ show: Boolean });
 const emit = defineEmits(['close']);
+const { t } = useI18n();
 const store = useSettingsStore();
 const system = useSystemStore();
 const audioDevices = ref([]);

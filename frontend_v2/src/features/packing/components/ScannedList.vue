@@ -1,11 +1,11 @@
 <template>
   <div class="scanned-sidebar glass-sidebar">
     <div class="sidebar-header">
-      <h3>Scanned ({{ items.length }})</h3>
-      <button @click="$emit('clear')" class="btn-clear" v-if="items.length > 0">Clear</button>
+      <h3>{{ t('packing.scanned') }} ({{ items.length }})</h3>
+      <button @click="$emit('clear')" class="btn-clear" v-if="items.length > 0">{{ t('packing.clear') }}</button>
     </div>
     <div class="scanned-list-container" ref="listContainer">
-      <div v-if="items.length === 0" class="empty-list-hint">No items scanned</div>
+      <div v-if="items.length === 0" class="empty-list-hint">{{ t('packing.no_items_scanned') }}</div>
       <ul class="scanned-list" v-else>
         <li v-for="(item, idx) in items" :key="idx" class="item-card">
           <span class="sn">{{ item }}</span>
@@ -18,6 +18,9 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const props = defineProps({ items: { type: Array, default: () => [] } });
 defineEmits(['clear']);
 const listContainer = ref(null);

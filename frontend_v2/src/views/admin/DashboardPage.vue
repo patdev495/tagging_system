@@ -1,8 +1,8 @@
 <template>
   <div class="admin-dashboard p-8">
     <div class="header mb-8">
-      <h1 class="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
-      <p class="text-slate-500">Welcome to the data management system.</p>
+      <h1 class="text-3xl font-bold text-slate-900">{{ t('header.admin_dashboard') }}</h1>
+      <p class="text-slate-500">{{ t('admin.welcome') }}</p>
     </div>
 
     <div class="grid md:grid-cols-3 gap-6">
@@ -20,19 +20,22 @@
     </div>
     
     <div class="mt-12 bg-white p-8 rounded-xl shadow-md border border-slate-200 text-center">
-      <p class="text-slate-400 italic">Statistical charts will be updated in future phases.</p>
+      <p class="text-slate-400 italic">{{ t('admin.charts_future') }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Package, Users, BarChart3 } from 'lucide-vue-next';
 
+const { t } = useI18n();
+
 const stats = ref([
-  { label: 'Total Customers', value: '12', icon: Users, color: 'indigo' },
-  { label: 'Active Products', value: '148', icon: Package, color: 'indigo' },
-  { label: 'Cartons Today', value: '45', icon: BarChart3, color: 'indigo' },
+  { label: t('admin.total_customers'), value: '12', icon: Users, color: 'indigo' },
+  { label: t('admin.active_products'), value: '148', icon: Package, color: 'indigo' },
+  { label: t('admin.cartons_today'), value: '45', icon: BarChart3, color: 'indigo' },
 ]);
 </script>
 
