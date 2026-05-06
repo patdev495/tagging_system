@@ -62,13 +62,20 @@ def create_app() -> FastAPI:
         app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
     
     @app.on_event("startup")
-    def startup_bartender():
-        """Khởi tạo BarTender Engine khi Backend start."""
+    def startup_event():
+        """Khởi tạo các dịch vụ khi Backend start."""
+        # 1. Khởi tạo Database
+        try:
+            from src.core.database import init_db
+            init_db()
+        except Exception as e:
+            logging.getLogger("main").error(f"Database init failed: {e}")
+
+        # 2. Khởi tạo BarTender Engine
         try:
             from src.features.print.bartender_engine import bt_engine
             bt_engine.start()
         except Exception as e:
-            import logging
             logging.getLogger("main").error(f"BarTender init failed: {e}")
 
     @app.get("/api/v1/health", tags=["Health"])

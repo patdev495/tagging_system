@@ -44,6 +44,17 @@
 2. Thống kê năng suất theo ngày/tháng được hiển thị trực quan.
 3. Chức năng Export CSV/Excel hoạt động cho các báo cáo.
 
+### Phase 25: Database Schema Auto-Initialization
+**Goal**: Tự động tạo cấu trúc bảng (schema) khi Backend khởi chạy.
+**Requirements**: DATA-BOOTSTRAP
+**Success Criteria**:
+1. Backend tự động tạo các bảng `customers`, `products`, `cartons`, `carton_items` nếu chưa có.
+2. Không làm mất dữ liệu nếu các bảng đã tồn tại.
+3. Có log thông báo trạng thái khởi tạo DB.
+
+Plans:
+- [ ] .planning/phases/25-database-schema-auto-initialization/25-PLAN.md
+
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.

@@ -2,9 +2,9 @@
 
 ## Current Position
 
-Phase: 23 (Completed)
-Plan: .planning/phases/23-carton-explorer-advanced-search/23-PLAN.md
-Status: Phase 23 completed. Ready for Phase 24.
+Phase: 25 (Completed)
+Plan: .planning/phases/25-database-schema-auto-initialization/25-PLAN.md
+Status: Phase 25 completed. Database schema auto-initialization is implemented.
 Last activity: 2026-04-24 — Milestone v3.0 started
 
 ## Project Reference
