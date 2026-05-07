@@ -66,6 +66,16 @@ Plans:
 Plans:
 - [x] .planning/phases/26-internationalization/26-PLAN.md
 
+### Phase 27: Responsive hệ thống với mọi kích thước màn hình
+
+**Goal:** Làm cho hệ thống responsive tốt trên PC, Laptop, và Mobile.
+**Requirements**: UI-RESPONSIVE
+**Depends on:** Phase 26
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 27 to break down)
+
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.

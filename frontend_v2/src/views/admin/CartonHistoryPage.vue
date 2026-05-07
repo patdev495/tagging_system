@@ -72,9 +72,14 @@
             </td>
             <td class="p-4 text-[10px] font-mono text-slate-400">{{ carton.station_id || '-' }}</td>
             <td class="p-4 text-right">
-              <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
-                <ExternalLink class="w-5 h-5" />
-              </button>
+              <div class="flex justify-end gap-2">
+                <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
+                  <ExternalLink class="w-5 h-5" />
+                </button>
+                <button @click="handleDelete(carton)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Carton">
+                  <Trash2 class="w-5 h-5" />
+                </button>
+              </div>
             </td>
           </tr>
           <tr v-if="history.length === 0">
@@ -165,7 +170,11 @@
         </div>
 
         <!-- Sticky Footer -->
-        <div class="p-6 border-t border-slate-100 flex justify-end shrink-0 bg-white">
+        <div class="p-6 border-t border-slate-100 flex justify-between shrink-0 bg-white">
+          <button @click="handleDelete(selectedCarton)" class="px-6 py-3 rounded-xl bg-red-50 font-bold text-red-600 hover:bg-red-100 transition-colors flex items-center gap-2">
+            <Trash2 class="w-5 h-5" />
+            Delete Carton
+          </button>
           <button @click="selectedCarton = null" class="px-8 py-3 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200 transition-colors">
             {{ t('admin.close_window') }}
           </button>
@@ -178,7 +187,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Search, Filter, ExternalLink, X, Box, CheckCircle2 } from 'lucide-vue-next';
+import { Search, Filter, ExternalLink, X, Box, CheckCircle2, Trash2 } from 'lucide-vue-next';
 import historyApi from '../../features/history/api';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
@@ -234,6 +243,23 @@ const viewDetail = async (carton) => {
     system.showNotification('Could not load item details', 'error');
   } finally {
     isLoadingItems.value = false;
+  }
+};
+
+const handleDelete = async (carton) => {
+  if (!confirm(`Are you sure you want to delete carton ${carton.carton_sn}? This will also delete all associated S/Ns.`)) {
+    return;
+  }
+  
+  try {
+    await historyApi.deleteCarton(carton.id);
+    system.showNotification('Carton deleted successfully', 'success');
+    if (selectedCarton.value?.id === carton.id) {
+      selectedCarton.value = null;
+    }
+    fetchHistory(currentPage.value);
+  } catch (err) {
+    system.showNotification('Failed to delete carton', 'error');
   }
 };
 

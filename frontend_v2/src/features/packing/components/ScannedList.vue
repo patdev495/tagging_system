@@ -124,7 +124,7 @@ watch(() => props.items, () => {
   padding: 2px 8px;
   border-radius: 6px;
 }
-@media (max-width: 1100px) { 
+@media (max-width: 1200px) { 
   .scanned-sidebar { 
     width: 100% !important; 
     height: 450px !important; 

@@ -54,3 +54,16 @@ def search_by_item_sn(item_sn: str, db: Session):
     
     # Return the associated carton with details
     return get_carton_detail(db, item.carton_id)
+
+def delete_carton(db: Session, carton_id: int):
+    carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
+    if not carton:
+        raise HTTPException(status_code=404, detail="Carton not found")
+    
+    # Delete associated items first (if no cascade delete in models)
+    db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton_id).delete()
+    
+    # Delete the carton
+    db.delete(carton)
+    db.commit()
+    return {"message": "Carton deleted successfully"}

@@ -12,5 +12,8 @@ export default {
   },
   searchByItemSN(sn) {
     return api.get('/cartons/search/item', { params: { item_sn: sn } });
+  },
+  deleteCarton(id) {
+    return api.delete(`/cartons/${id}`);
   }
 };

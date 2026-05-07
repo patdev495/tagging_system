@@ -32,3 +32,8 @@ def search_by_item(item_sn: str, db: Session = Depends(get_db)):
 def get_carton_detail(carton_id: int, db: Session = Depends(get_db)):
     """Lấy chi tiết một thùng hàng bao gồm danh sách S/N sản phẩm"""
     return service.get_carton_detail(db, carton_id)
+
+@router.delete("/{carton_id}")
+def delete_carton(carton_id: int, db: Session = Depends(get_db)):
+    """Xóa một thùng hàng và toàn bộ S/N bên trong nó"""
+    return service.delete_carton(db, carton_id)

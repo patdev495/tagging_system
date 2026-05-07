@@ -58,7 +58,7 @@ const toggleLanguage = () => {
 <style scoped>
 .header {
   background: white;
-  padding: 12px 24px;
+  padding: 8px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -79,12 +79,12 @@ const toggleLanguage = () => {
 
 h1 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #0f172a;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 h1 i { color: #2563eb; }
@@ -92,13 +92,13 @@ h1 i { color: #2563eb; }
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .status-badge {
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   background: #f1f5f9;
   color: #64748b;
@@ -109,8 +109,8 @@ h1 i { color: #2563eb; }
 
 .status-badge::before {
   content: '';
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #cbd5e1;
 }
@@ -129,14 +129,15 @@ h1 i { color: #2563eb; }
   background: #ffffff;
   border: 1px solid #e2e8f0;
   color: #64748b;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+  font-size: 0.9rem;
 }
 
 .btn-icon:hover {

@@ -41,3 +41,4 @@ See: .planning/PROJECT.md (updated 2026-04-22)
 ### Roadmap Evolution
 
 - Phase 26 added: Thêm hỗ trợ ngôn ngữ tiếng Việt cho toàn bộ giao diện hệ thống
+- Phase 27 added: Responsive hệ thống với mọi kích thước màn hình

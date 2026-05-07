@@ -697,7 +697,7 @@ onUnmounted(() => {
 <style scoped>
 .packing-container { 
   min-height: 100vh; 
-  padding: 24px; 
+  padding: 12px 16px; 
   color: #1e293b; 
   display: flex; 
   justify-content: center; 
@@ -707,8 +707,8 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.95); 
   backdrop-filter: blur(16px); 
   border: 1px solid rgba(255, 255, 255, 0.8); 
-  border-radius: 24px; 
-  padding: 24px; 
+  border-radius: 20px; 
+  padding: 16px; 
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02); 
 }
 .main-card { 
@@ -721,16 +721,16 @@ onUnmounted(() => {
 .main-card.wide-layout { max-width: 1550px; }
 .packing-workspace { 
   display: flex; 
-  gap: 40px; 
+  gap: 24px; 
   align-items: flex-start; 
   margin-top: 10px;
 }
 .main-workspace { flex: 1.4; min-width: 0; }
 .progress-container { 
-  margin-bottom: 24px; 
+  margin-bottom: 16px; 
   background: #ffffff; 
-  padding: 16px 24px; 
-  border-radius: 20px; 
+  padding: 12px 16px; 
+  border-radius: 16px; 
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
   border: 1px solid #f1f5f9;
 }
@@ -738,7 +738,7 @@ onUnmounted(() => {
   display: flex; 
   justify-content: space-between; 
   align-items: flex-end;
-  margin-bottom: 12px; 
+  margin-bottom: 8px; 
 }
 .progress-header .count {
   font-size: 1.25rem;
@@ -769,7 +769,7 @@ onUnmounted(() => {
 @media (max-width: 1280px) {
   .packing-workspace { gap: 24px; }
 }
-@media (max-width: 1000px) { 
+@media (max-width: 1200px) { 
   .packing-workspace { flex-direction: column; align-items: stretch; } 
   .main-card { padding: 16px; border-radius: 16px; }
 }
@@ -782,8 +782,8 @@ onUnmounted(() => {
   background: #fff7ed;
   border: 1px solid #ffedd5;
   border-radius: 12px;
-  padding: 12px 20px;
-  margin-bottom: 20px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -811,8 +811,8 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #fef2f2, #fee2e2);
   border: 2px solid #ef4444;
   border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
   box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
   animation: fadeIn 0.4s ease-out;
 }

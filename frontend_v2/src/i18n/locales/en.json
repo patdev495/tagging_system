@@ -32,8 +32,8 @@
     "job_order": "Job Order",
     "job_order_placeholder": "Enter Job Order...",
     "origin": "Origin",
-    "sn_pattern": "SN Pattern",
-    "manual_date": "Manual Date (YYMM)",
+    "sn_pattern": "SN start",
+    "manual_date": "Date (YYMM)",
     "preview": "Preview",
     "sn_exists_short": "S/N EXISTS!",
     "min_sn": "Min: {min} (Next Carton)",
@@ -42,7 +42,7 @@
     "switch_manual": "Switch to Manual Entry",
     "switch_auto": "Switch to Auto Assignment",
     "scanned": "Scanned",
-    "target": "Target",
+    "target": "QTY",
     "no_items_scanned": "No items scanned.",
     "scan_prompt_job": "⚠️ PLEASE ENTER JOB ORDER FIRST...",
     "scan_prompt_overflow": "📦 BOX FULL — scan to capture overflow...",
@@ -81,7 +81,7 @@
     "choose_customer": "Choose a customer...",
     "search_product": "Search Product",
     "filter_items": "Filter items...",
-    "target": "Target",
+    "target": "QTY",
     "no_products": "No products match your search."
   },
   "settings": {

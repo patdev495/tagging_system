@@ -1,6 +1,6 @@
 <template>
   <div class="session-info">
-    <div class="session-header-row">
+    <div class="session-header-top">
       <button @click="$emit('back')" class="btn-back-icon" :title="t('packing.back')">
         <i class="fas fa-arrow-left"></i>
       </button>
@@ -11,76 +11,77 @@
           <span class="badge-outline">{{ t('packing.target') }}: {{ product.packed_qty }}</span>
         </div>
       </div>
-      <div class="header-inputs">
-        <div class="job-order-input">
-          <label>{{ t('packing.job_order') }}</label>
+    </div>
+    
+    <div class="header-inputs">
+      <div class="job-order-input job-order-field">
+        <label>{{ t('packing.job_order') }}</label>
+        <input 
+          :value="jobOrder" 
+          @input="$emit('update:jobOrder', $event.target.value)"
+          :placeholder="t('packing.job_order_placeholder')" 
+          class="modern-input-small"
+          ref="jobOrderInput"
+          @keyup.enter="$emit('focus-scan')"
+        />
+      </div>
+      <div class="job-order-input origin-field">
+        <label>{{ t('packing.origin') }}</label>
+        <select 
+          :value="cartonOrigin"
+          @change="$emit('update:cartonOrigin', $event.target.value); $emit('focus-scan')"
+          class="modern-input-small origin-select"
+        >
+          <option value="VN">VN</option>
+          <option value="CN">CN</option>
+        </select>
+      </div>
+      <div class="job-order-input sn-field">
+        <div class="input-with-toggle">
           <input 
-            :value="jobOrder" 
-            @input="$emit('update:jobOrder', $event.target.value)"
-            :placeholder="t('packing.job_order_placeholder')" 
-            class="modern-input-small"
-            ref="jobOrderInput"
+            :value="customSN"
+            @input="$emit('update:customSN', $event.target.value)"
+            type="number"
+            :placeholder="suggestedSNValue || '00001'" 
+            class="modern-input-small sn-input"
+            :class="{ 'is-auto': !isSNManual, 'input-err': isSNManual && snExists }"
+            :readonly="!isSNManual"
             @keyup.enter="$emit('focus-scan')"
+            ref="snInput"
           />
-        </div>
-        <div class="job-order-input">
-          <label>{{ t('packing.origin') }}</label>
-          <select 
-            :value="cartonOrigin"
-            @change="$emit('update:cartonOrigin', $event.target.value); $emit('focus-scan')"
-            class="modern-input-small origin-select"
+          <button 
+            class="btn-auto-toggle" 
+            :class="{ 'active': !isSNManual }"
+            @click="toggleMode"
+            :title="!isSNManual ? t('packing.switch_manual') : t('packing.switch_auto')"
           >
-            <option value="VN">VN</option>
-            <option value="CN">CN</option>
-          </select>
+            {{ !isSNManual ? t('packing.auto') : t('packing.manual') }}
+          </button>
         </div>
-        <div class="job-order-input">
-          <div class="input-with-toggle">
-            <input 
-              :value="customSN"
-              @input="$emit('update:customSN', $event.target.value)"
-              type="number"
-              :placeholder="suggestedSNValue || '00001'" 
-              class="modern-input-small sn-input"
-              :class="{ 'is-auto': !isSNManual, 'input-err': isSNManual && snExists }"
-              :readonly="!isSNManual"
-              @keyup.enter="$emit('focus-scan')"
-              ref="snInput"
-            />
-            <button 
-              class="btn-auto-toggle" 
-              :class="{ 'active': !isSNManual }"
-              @click="toggleMode"
-              :title="!isSNManual ? t('packing.switch_manual') : t('packing.switch_auto')"
-            >
-              {{ !isSNManual ? t('packing.auto') : t('packing.manual') }}
-            </button>
-          </div>
-          <div class="sn-preview" v-if="snPreview">
-             {{ t('packing.preview') }}: <strong :class="{ 'text-danger': snExists }">{{ snExists ? '⚠️ ' + t('packing.sn_exists_short') : snPreview }}</strong>
-          </div>
+        <div class="sn-preview" v-if="snPreview">
+           {{ t('packing.preview') }}: <strong :class="{ 'text-danger': snExists }">{{ snExists ? '⚠️ ' + t('packing.sn_exists_short') : snPreview }}</strong>
         </div>
-        <div class="job-order-input">
-          <label>{{ t('packing.sn_pattern') }}</label>
-          <input 
-            :value="snPattern"
-            @input="$emit('update:snPattern', $event.target.value)"
-            placeholder="e.g. AS" 
-            class="modern-input-small sn-pattern-input"
-            @keyup.enter="$emit('focus-scan')"
-          />
-        </div>
-        <div class="job-order-input">
-          <label>{{ t('packing.manual_date') }}</label>
-          <input 
-            :value="customYYMM"
-            @input="$emit('update:customYYMM', $event.target.value)"
-            placeholder="e.g. 2604" 
-            maxlength="4"
-            class="modern-input-small date-input"
-            @keyup.enter="$emit('focus-scan')"
-          />
-        </div>
+      </div>
+      <div class="job-order-input pattern-field">
+        <label>{{ t('packing.sn_pattern') }}</label>
+        <input 
+          :value="snPattern"
+          @input="$emit('update:snPattern', $event.target.value)"
+          placeholder="e.g. AS" 
+          class="modern-input-small sn-pattern-input"
+          @keyup.enter="$emit('focus-scan')"
+        />
+      </div>
+      <div class="job-order-input date-field">
+        <label>{{ t('packing.manual_date') }}</label>
+        <input 
+          :value="customYYMM"
+          @input="$emit('update:customYYMM', $event.target.value)"
+          placeholder="e.g. 2604" 
+          maxlength="4"
+          class="modern-input-small date-input"
+          @keyup.enter="$emit('focus-scan')"
+        />
       </div>
     </div>
   </div>
@@ -133,29 +134,30 @@ defineExpose({ focusJobOrder });
 <style scoped>
 .session-info {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 24px;
-  padding: 20px 24px;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, #f8fafc, #ffffff);
-  border-radius: 20px;
+  border-radius: 16px;
   border: 1px solid #eef2f6;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
-.session-header-row {
+.session-header-top {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #cbd5e1;
 }
 .btn-back-icon {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   color: #64748b;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -173,35 +175,47 @@ defineExpose({ focusJobOrder });
 .active-product { flex: 1; }
 .active-product h2 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
 }
 .meta { 
   display: flex;
-  gap: 10px;
-  margin-top: 8px; 
+  gap: 8px;
+  margin-top: 4px; 
 }
 .badge-outline {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  padding: 2px 10px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #475569;
   background: #f8fafc;
 }
 .header-inputs { 
   display: flex; 
-  gap: 16px; 
-  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px; 
+  align-items: flex-start;
+  width: 100%;
 }
-.job-order-input { display: flex; flex-direction: column; gap: 6px; }
+.job-order-input { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 4px; 
+}
+.job-order-field { flex: 1 1 180px; max-width: 300px; }
+.origin-field { flex: 0 0 80px; }
+.sn-field { flex: 1 1 180px; max-width: 250px; }
+.pattern-field { flex: 0 0 90px; }
+.date-field { flex: 0 0 90px; }
+
 .job-order-input label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #64748b;
   font-weight: 700;
   text-transform: uppercase;
@@ -209,24 +223,24 @@ defineExpose({ focusJobOrder });
   padding-left: 2px;
 }
 .modern-input-small {
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 1.1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #1e293b;
   outline: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-sizing: border-box;
-  min-width: 80px;
+  width: 100%;
 }
 .origin-select {
-  width: 80px;
+  width: 100%;
 }
 .sn-input {
-  width: 160px;
-  padding-right: 70px !important;
+  width: 100%;
+  padding-right: 65px !important;
 }
 .modern-input-small:focus {
   border-color: #3b82f6;
@@ -259,12 +273,10 @@ defineExpose({ focusJobOrder });
   font-size: 0.8rem;
 }
 .sn-pattern-input {
-  width: 100px;
   border-color: #93c5fd;
   color: #1e40af;
 }
 .date-input {
-  width: 90px;
   border-color: #f59e0b;
   color: #92400e;
 }
@@ -316,7 +328,7 @@ defineExpose({ focusJobOrder });
   transform: scale(1.05);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .session-info { flex-direction: column; align-items: flex-start; }
 }
 </style>
