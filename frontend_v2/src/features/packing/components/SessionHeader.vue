@@ -42,7 +42,7 @@
               type="number"
               :placeholder="suggestedSNValue || '00001'" 
               class="modern-input-small sn-input"
-              :class="{ 'is-auto': !isSNManual }"
+              :class="{ 'is-auto': !isSNManual, 'input-err': isSNManual && snExists }"
               :readonly="!isSNManual"
               @keyup.enter="$emit('focus-scan')"
               ref="snInput"

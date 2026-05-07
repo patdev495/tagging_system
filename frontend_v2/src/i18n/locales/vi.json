@@ -36,6 +36,7 @@
     "manual_date": "Ngày in (YYMM)",
     "preview": "Xem trước",
     "sn_exists_short": "S/N ĐÃ CÓ!",
+    "min_sn": "Tối thiểu: {min} (Thùng tiếp theo)",
     "auto": "TỰ ĐỘNG",
     "manual": "THỦ CÔNG",
     "switch_manual": "Chuyển sang Nhập tay",

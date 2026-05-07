@@ -36,6 +36,7 @@
     "manual_date": "Manual Date (YYMM)",
     "preview": "Preview",
     "sn_exists_short": "S/N EXISTS!",
+    "min_sn": "Min: {min} (Next Carton)",
     "auto": "AUTO",
     "manual": "MANUAL",
     "switch_manual": "Switch to Manual Entry",

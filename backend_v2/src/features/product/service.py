@@ -38,20 +38,26 @@ def delete_product(db: Session, product_id: int):
     return True
 
 def get_next_sn(product_id: int, db: Session):
-    # Logic to get the next S/N for a product
-    # Existing logic preserved from original project
+    product = get_product_by_id(product_id, db)
+    if not product:
+        return {"next_seq": 1}
+        
+    import datetime
+    now = datetime.datetime.now()
+    yymm = now.strftime("%y%m")
+    prefix = f"{product.start_part or ''}{yymm}{product.middle_part or ''}"
+    
     last_carton = db.query(Carton).filter(
         Carton.product_id == product_id,
-        Carton.status == 'SUCCESS'
+        Carton.status == 'SUCCESS',
+        Carton.carton_sn.like(f"{prefix}%")
     ).order_by(Carton.carton_sn.desc()).first()
+    
     if not last_carton:
         return {"next_seq": 1}
     
-    # Try to parse sequence from carton_sn [PREFIX][YYMM][MID][SEQ]
-    # Simple logic: just increment the last successful sequence
     last_seq = 0
     try:
-        # Assuming last 5 digits are sequence
         last_seq = int(last_carton.carton_sn[-5:])
     except:
         pass
