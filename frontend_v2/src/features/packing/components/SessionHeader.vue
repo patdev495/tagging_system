@@ -1,85 +1,88 @@
 <template>
-  <div class="session-info">
-    <div class="session-header-top">
-      <button @click="$emit('back')" class="btn-back-icon" :title="t('packing.back')">
+  <div class="flex flex-col gap-3 mb-4 px-5 py-3 bg-linear-to-br from-slate-50 to-white rounded-2xl border border-slate-100 shadow-sm">
+    <div class="flex items-center gap-4 w-full pb-3 border-b border-dashed border-slate-300">
+      <button @click="$emit('back')" class="w-9 h-9 flex items-center justify-center bg-white border border-slate-200 text-slate-500 rounded-[10px] cursor-pointer transition-all duration-300 ease-out shadow-xs hover:bg-slate-50 hover:text-blue-600 hover:border-blue-500 hover:-translate-x-1 hover:shadow-blue-500/10" :title="t('packing.back')">
         <i class="fas fa-arrow-left"></i>
       </button>
-      <div class="active-product">
-        <h2>{{ product.item_name }}</h2>
-        <div class="meta">
-          <span class="badge-outline">UPC: {{ product.upc }}</span>
-          <span class="badge-outline">{{ t('packing.target') }}: {{ product.packed_qty }}</span>
+      <div class="flex-1">
+        <h2 class="m-0 text-[1.25rem] font-extrabold text-slate-900 tracking-tight">{{ product.item_name }}</h2>
+        <div class="flex gap-2 mt-1">
+          <span class="inline-flex items-center px-2.5 py-0.5 border border-slate-200 rounded-md text-[0.75rem] font-semibold text-slate-600 bg-slate-50">UPC: {{ product.upc }}</span>
+          <span class="inline-flex items-center px-2.5 py-0.5 border border-slate-200 rounded-md text-[0.75rem] font-semibold text-slate-600 bg-slate-50">{{ t('packing.target') }}: {{ product.packed_qty }}</span>
         </div>
       </div>
     </div>
     
-    <div class="header-inputs">
-      <div class="job-order-input job-order-field">
-        <label>{{ t('packing.job_order') }}</label>
+    <div class="flex flex-wrap gap-3 items-start w-full">
+      <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[300px]">
+        <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.job_order') }}</label>
         <input 
           :value="jobOrder" 
           @input="$emit('update:jobOrder', $event.target.value)"
           :placeholder="t('packing.job_order_placeholder')" 
-          class="modern-input-small"
+          class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm"
           ref="jobOrderInput"
           @keyup.enter="$emit('focus-scan')"
         />
       </div>
-      <div class="job-order-input origin-field">
-        <label>{{ t('packing.origin') }}</label>
+      <div class="flex flex-col gap-1 flex-none w-20">
+        <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.origin') }}</label>
         <select 
           :value="cartonOrigin"
           @change="$emit('update:cartonOrigin', $event.target.value); $emit('focus-scan')"
-          class="modern-input-small origin-select"
+          class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm"
         >
           <option value="VN">VN</option>
           <option value="CN">CN</option>
         </select>
       </div>
-      <div class="job-order-input sn-field">
-        <div class="input-with-toggle">
+      <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[250px]">
+        <div class="relative flex items-center">
           <input 
             :value="customSN"
             @input="$emit('update:customSN', $event.target.value)"
             type="number"
             :placeholder="suggestedSNValue || '00001'" 
-            class="modern-input-small sn-input"
-            :class="{ 'is-auto': !isSNManual, 'input-err': isSNManual && snExists }"
+            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm pr-[70px]!"
+            :class="{ 
+              'bg-emerald-50! border-emerald-500! text-emerald-600! cursor-default': !isSNManual, 
+              'border-rose-500! bg-rose-50! ring-rose-500/10!': isSNManual && snExists 
+            }"
             :readonly="!isSNManual"
             @keyup.enter="$emit('focus-scan')"
             ref="snInput"
           />
           <button 
-            class="btn-auto-toggle" 
-            :class="{ 'active': !isSNManual }"
+            class="absolute right-1 top-1 bottom-1 border-none bg-slate-200 text-slate-500 text-[0.65rem] font-extrabold px-2 rounded-md cursor-pointer transition-all hover:scale-105" 
+            :class="{ 'bg-emerald-500! text-white!': !isSNManual }"
             @click="toggleMode"
             :title="!isSNManual ? t('packing.switch_manual') : t('packing.switch_auto')"
           >
             {{ !isSNManual ? t('packing.auto') : t('packing.manual') }}
           </button>
         </div>
-        <div class="sn-preview" v-if="snPreview">
-           {{ t('packing.preview') }}: <strong :class="{ 'text-danger': snExists }">{{ snExists ? '⚠️ ' + t('packing.sn_exists_short') : snPreview }}</strong>
+        <div class="text-[0.7rem] text-emerald-500 mt-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100" v-if="snPreview">
+           {{ t('packing.preview') }}: <strong class="font-mono text-[0.8rem]" :class="{ 'text-rose-500!': snExists }">{{ snExists ? '⚠️ ' + t('packing.sn_exists_short') : snPreview }}</strong>
         </div>
       </div>
-      <div class="job-order-input pattern-field">
-        <label>{{ t('packing.sn_pattern') }}</label>
+      <div class="flex flex-col gap-1 flex-none w-[90px]">
+        <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.sn_pattern') }}</label>
         <input 
           :value="snPattern"
           @input="$emit('update:snPattern', $event.target.value)"
           placeholder="e.g. AS" 
-          class="modern-input-small sn-pattern-input"
+          class="w-full px-3 py-2 bg-white rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm border-blue-300 text-blue-800 focus:border-blue-500 focus:ring-blue-500/8 focus:bg-blue-50!"
           @keyup.enter="$emit('focus-scan')"
         />
       </div>
-      <div class="job-order-input date-field">
-        <label>{{ t('packing.manual_date') }}</label>
+      <div class="flex flex-col gap-1 flex-none w-[90px]">
+        <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.manual_date') }}</label>
         <input 
           :value="customYYMM"
           @input="$emit('update:customYYMM', $event.target.value)"
           placeholder="e.g. 2604" 
           maxlength="4"
-          class="modern-input-small date-input"
+          class="w-full px-3 py-2 bg-white border rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm border-amber-500 text-amber-800 focus:border-amber-600 focus:bg-amber-50! focus:ring-amber-500/8"
           @keyup.enter="$emit('focus-scan')"
         />
       </div>
@@ -130,205 +133,3 @@ const toggleMode = () => {
 
 defineExpose({ focusJobOrder });
 </script>
-
-<style scoped>
-.session-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #f8fafc, #ffffff);
-  border-radius: 16px;
-  border: 1px solid #eef2f6;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-.session-header-top {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  padding-bottom: 12px;
-  border-bottom: 1px dashed #cbd5e1;
-}
-.btn-back-icon {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-.btn-back-icon:hover {
-  background: #f8fafc;
-  color: #2563eb;
-  border-color: #3b82f6;
-  transform: translateX(-4px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
-}
-.active-product { flex: 1; }
-.active-product h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-}
-.meta { 
-  display: flex;
-  gap: 8px;
-  margin-top: 4px; 
-}
-.badge-outline {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #475569;
-  background: #f8fafc;
-}
-.header-inputs { 
-  display: flex; 
-  flex-wrap: wrap;
-  gap: 12px; 
-  align-items: flex-start;
-  width: 100%;
-}
-.job-order-input { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 4px; 
-}
-.job-order-field { flex: 1 1 180px; max-width: 300px; }
-.origin-field { flex: 0 0 80px; }
-.sn-field { flex: 1 1 180px; max-width: 250px; }
-.pattern-field { flex: 0 0 90px; }
-.date-field { flex: 0 0 90px; }
-
-.job-order-input label {
-  font-size: 0.7rem;
-  color: #64748b;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding-left: 2px;
-}
-.modern-input-small {
-  padding: 8px 12px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #1e293b;
-  outline: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
-  width: 100%;
-}
-.origin-select {
-  width: 100%;
-}
-.sn-input {
-  width: 100%;
-  padding-right: 65px !important;
-}
-.modern-input-small:focus {
-  border-color: #3b82f6;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08), 0 1px 2px rgba(0,0,0,0.05);
-}
-.modern-input-small.input-err {
-  border-color: #ef4444 !important;
-  background: #fff1f2 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
-.input-error-hint {
-  color: #e11d48;
-  font-size: 0.65rem;
-  font-weight: 600;
-  margin-top: 2px;
-  display: block;
-}
-.sn-preview {
-  font-size: 0.7rem;
-  color: #10b981;
-  margin-top: 4px;
-  background: #f0fdf4;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #dcfce7;
-}
-.sn-preview strong {
-  font-family: monospace;
-  font-size: 0.8rem;
-}
-.sn-pattern-input {
-  border-color: #93c5fd;
-  color: #1e40af;
-}
-.date-input {
-  border-color: #f59e0b;
-  color: #92400e;
-}
-.date-input:focus {
-  border-color: #d97706;
-  background: #fffbeb;
-}
-.text-danger {
-  color: #ef4444 !important;
-}
-.sn-pattern-input:focus {
-  border-color: #2563eb;
-  background: #eff6ff;
-}
-.input-with-toggle {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.sn-input {
-  padding-right: 70px !important;
-}
-.sn-input.is-auto {
-  background: #f0fdf4;
-  border-color: #10b981;
-  color: #059669;
-  cursor: default;
-}
-.btn-auto-toggle {
-  position: absolute;
-  right: 4px;
-  top: 4px;
-  bottom: 4px;
-  border: none;
-  background: #e2e8f0;
-  color: #64748b;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 0 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-auto-toggle.active {
-  background: #10b981;
-  color: white;
-}
-.btn-auto-toggle:hover {
-  transform: scale(1.05);
-}
-
-@media (max-width: 768px) {
-  .session-info { flex-direction: column; align-items: flex-start; }
-}
-</style>
