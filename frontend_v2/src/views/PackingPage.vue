@@ -79,7 +79,7 @@
             <ScanBuffer
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
-              :disabled="isProcessing || (settings.printMode === 'local' && (!agentConnected || templateMissing))"
+              :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing))"
               :placeholder="(settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder'))"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
