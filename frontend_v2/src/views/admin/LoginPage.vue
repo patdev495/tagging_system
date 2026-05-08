@@ -40,7 +40,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
@@ -48,10 +48,10 @@ import { useRouter, useRoute } from 'vue-router';
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-const password = ref('');
-const error = ref('');
-const loading = ref(false);
-const passInput = ref(null);
+const password = ref<string>('');
+const error = ref<string>('');
+const loading = ref<boolean>(false);
+const passInput = ref<HTMLInputElement | null>(null);
 
 const handleLogin = async () => {
   loading.value = true;
@@ -62,7 +62,7 @@ const handleLogin = async () => {
   
   if (password.value === 'admin123') {
     sessionStorage.setItem('admin_session', 'true');
-    const redirectPath = route.query.redirect || '/admin';
+    const redirectPath = (route.query.redirect as string) || '/admin';
     router.push(redirectPath);
   } else {
     error.value = t('admin.incorrect_password');

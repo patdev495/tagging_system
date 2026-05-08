@@ -135,7 +135,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { 
@@ -150,14 +150,22 @@ import {
 } from 'lucide-vue-next';
 import historyApi from '../../features/history/api';
 import { useSystemStore } from '../../core/stores/system';
+import type { Carton, Product } from '../../types/api';
 
 const { t } = useI18n();
 const system = useSystemStore();
-const searchQuery = ref('');
-const isSearching = ref(false);
-const hasSearched = ref(false);
-const result = ref(null);
-const searchInput = ref(null);
+const searchQuery = ref<string>('');
+const isSearching = ref<boolean>(false);
+const hasSearched = ref<boolean>(false);
+
+interface SearchResult extends Carton {
+  product?: Product;
+  items?: { id: number, item_sn: string }[];
+  packed_by?: string;
+}
+
+const result = ref<SearchResult | null>(null);
+const searchInput = ref<HTMLInputElement | null>(null);
 
 const handleSearch = async () => {
   if (!searchQuery.value) return;
@@ -169,7 +177,7 @@ const handleSearch = async () => {
   try {
     const res = await historyApi.searchByItemSN(searchQuery.value.trim());
     result.value = res.data;
-  } catch (err) {
+  } catch (err: any) {
     if (err.response?.status !== 404) {
       system.showNotification('System error during search', 'error');
     }
@@ -178,7 +186,7 @@ const handleSearch = async () => {
   }
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
   return d.toLocaleString('vi-VN');
 };

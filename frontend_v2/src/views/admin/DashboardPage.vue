@@ -25,14 +25,22 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Package, Users, BarChart3 } from 'lucide-vue-next';
+import type { Component } from 'vue';
 
 const { t } = useI18n();
 
-const stats = ref([
+interface Stat {
+  label: string;
+  value: string;
+  icon: Component;
+  color: string;
+}
+
+const stats = ref<Stat[]>([
   { label: t('admin.total_customers'), value: '12', icon: Users, color: 'indigo' },
   { label: t('admin.active_products'), value: '148', icon: Package, color: 'indigo' },
   { label: t('admin.cartons_today'), value: '45', icon: BarChart3, color: 'indigo' },

@@ -184,38 +184,43 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search, Filter, ExternalLink, X, Box, CheckCircle2, Trash2 } from 'lucide-vue-next';
 import historyApi from '../../features/history/api';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
+import type { Carton, Product } from '../../types/api';
 
 const { t } = useI18n();
 const system = useSystemStore();
-const history = ref([]);
-const products = ref([]);
-const totalCount = ref(0);
-const currentPage = ref(0);
-const selectedCarton = ref(null);
-const cartonItems = ref([]);
-const isLoadingItems = ref(false);
+const history = ref<(Carton & { product?: Product })[]>([]);
+const products = ref<Product[]>([]);
+const totalCount = ref<number>(0);
+const currentPage = ref<number>(0);
+const selectedCarton = ref<(Carton & { product?: Product }) | null>(null);
+const cartonItems = ref<{ id: number, item_sn: string }[]>([]);
+const isLoadingItems = ref<boolean>(false);
 
-const filters = ref({
+const filters = ref<{
+  search: string;
+  product_id: number | null;
+  status: string | null;
+}>({
   search: '',
   product_id: null,
   status: null
 });
 
-const fetchHistory = async (page = 0) => {
+const fetchHistory = async (page: number = 0) => {
   try {
     currentPage.value = page;
     const res = await historyApi.getCartons({
       skip: page * 50,
       limit: 50,
       search: filters.value.search || undefined,
-      product_id: filters.value.product_id || undefined,
+      product_id: (filters.value.product_id as any) || undefined,
       status: filters.value.status || undefined
     });
     history.value = res.data.items;
@@ -232,7 +237,7 @@ const fetchProducts = async () => {
   } catch (err) {}
 };
 
-const viewDetail = async (carton) => {
+const viewDetail = async (carton: Carton & { product?: Product }) => {
   selectedCarton.value = carton;
   cartonItems.value = [];
   isLoadingItems.value = true;
@@ -246,7 +251,7 @@ const viewDetail = async (carton) => {
   }
 };
 
-const handleDelete = async (carton) => {
+const handleDelete = async (carton: Carton) => {
   if (!confirm(`Are you sure you want to delete carton ${carton.carton_sn}? This will also delete all associated S/Ns.`)) {
     return;
   }
@@ -263,7 +268,7 @@ const handleDelete = async (carton) => {
   }
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
   return d.toLocaleString('vi-VN');
 };

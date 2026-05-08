@@ -105,21 +105,25 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2, X } from 'lucide-vue-next';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
+import type { Customer } from '../../types/api';
 
 const system = useSystemStore();
-const customers = ref([]);
-const searchQuery = ref('');
-const showModal = ref(false);
-const isEdit = ref(false);
-const isSubmitting = ref(false);
-const currentId = ref(null);
+const customers = ref<Customer[]>([]);
+const searchQuery = ref<string>('');
+const showModal = ref<boolean>(false);
+const isEdit = ref<boolean>(false);
+const isSubmitting = ref<boolean>(false);
+const currentId = ref<number | null>(null);
 
-const form = ref({
+const form = ref<{
+  code: string;
+  name: string;
+}>({
   code: '',
   name: ''
 });
@@ -149,17 +153,17 @@ const openCreateModal = () => {
   showModal.value = true;
 };
 
-const openEditModal = (customer) => {
+const openEditModal = (customer: Customer) => {
   isEdit.value = true;
   currentId.value = customer.id;
-  form.value = { ...customer };
+  form.value = { code: customer.code, name: customer.name };
   showModal.value = true;
 };
 
 const saveCustomer = async () => {
   isSubmitting.value = true;
   try {
-    if (isEdit.value) {
+    if (isEdit.value && currentId.value !== null) {
       await catalogApi.updateCustomer(currentId.value, form.value);
       system.showNotification('Customer updated successfully', 'success');
     } else {
@@ -168,7 +172,7 @@ const saveCustomer = async () => {
     }
     showModal.value = false;
     await fetchCustomers();
-  } catch (err) {
+  } catch (err: any) {
     const msg = err.response?.data?.detail || 'Error saving data';
     system.showNotification(msg, 'error');
   } finally {
@@ -176,13 +180,13 @@ const saveCustomer = async () => {
   }
 };
 
-const confirmDelete = async (customer) => {
+const confirmDelete = async (customer: Customer) => {
   if (confirm(`Are you sure you want to delete customer "${customer.name}"? This action cannot be undone.`)) {
     try {
       await catalogApi.deleteCustomer(customer.id);
       system.showNotification('Customer deleted', 'success');
       await fetchCustomers();
-    } catch (err) {
+    } catch (err: any) {
       const msg = err.response?.data?.detail || 'Could not delete this customer (possibly due to related data)';
       system.showNotification(msg, 'error');
     }

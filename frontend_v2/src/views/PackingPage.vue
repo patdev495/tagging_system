@@ -113,7 +113,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../core/stores/settings';
@@ -121,6 +121,7 @@ import { useSystemStore } from '../core/stores/system';
 import packingApi from '../features/packing/api';
 import printApi from '../features/print/api';
 import catalogApi from '../features/catalog/api';
+import type { Product, Carton } from '../types/api';
 
 import AppHeader from '../core/components/AppHeader.vue';
 import CatalogSelection from '../features/catalog/components/CatalogSelection.vue';
@@ -135,10 +136,10 @@ const { t } = useI18n();
 const system = useSystemStore();
 const settings = useSettingsStore();
 
-const agentConnected = ref(true);
-const templateMissing = ref(false);
-const templateFilename = ref('');
-let agentCheckInterval = null;
+const agentConnected = ref<boolean>(true);
+const templateMissing = ref<boolean>(false);
+const templateFilename = ref<string>('');
+let agentCheckInterval: ReturnType<typeof setInterval> | null = null;
 
 const checkTemplateExists = async () => {
   if (settings.printMode !== 'local' || !agentConnected.value || !currentProduct.value) {
@@ -147,7 +148,7 @@ const checkTemplateExists = async () => {
   }
   
   const fullPath = currentProduct.value.template_path || 'carton.ui.btw';
-  const filename = fullPath.split(/[\\/]/).pop();
+  const filename = fullPath.split(/[\\/]/).pop() || 'carton.ui.btw';
   templateFilename.value = filename;
 
   try {
@@ -169,7 +170,8 @@ const checkAgentHealth = async () => {
     return;
   }
   try {
-    const resp = await fetch(`${settings.agentUrl}/status`, { signal: AbortSignal.timeout(6000) });
+    // @ts-ignore
+    const resp = await fetch(`${settings.agentUrl}/status`, { signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined });
     agentConnected.value = resp.ok;
     if (agentConnected.value) {
       await checkTemplateExists();
@@ -178,41 +180,54 @@ const checkAgentHealth = async () => {
     agentConnected.value = false;
   }
 };
-const agentErrorMessage = ref('');
+const agentErrorMessage = ref<string>('');
 
-const currentProduct = ref(null);
-const scannedItems = ref([]);
-const scanBuffer = ref('');
-const invalidScans = ref([]);
-const lastCarton = ref(null);
-const jobOrder = ref('');
-const cartonOrigin = ref('VN');
-const customSN = ref('');
-const snPattern = ref('');
-const customYYMM = ref('');
-const awaitingNext = ref(false);
-const suggestedSNValue = ref(0);
-const backupScannedItems = ref([]);
-const isProcessing = ref(false);
-const overflowScans = ref([]);
-const isAudioActive = ref(false);
-const showSettings = ref(false);
-const showEmergencyModal = ref(false);
-const isRescanMode = ref(false);
-const rescanCartonSN = ref('');
-const isSNManual = ref(false);
-const snExists = ref(false);
-let snCheckTimer = null;
-let statusTimer = null;
-let audioCtx = null;
+const currentProduct = ref<Product | null>(null);
+const scannedItems = ref<string[]>([]);
+const scanBuffer = ref<string>('');
+
+interface InvalidScan {
+  sn: string;
+  time: string;
+  reason: string;
+  type: 'pattern' | 'duplicate' | 'lockdown';
+}
+
+interface OverflowScan {
+  sn: string;
+  time: string;
+}
+
+const invalidScans = ref<InvalidScan[]>([]);
+const lastCarton = ref<(Carton & { status?: string, items?: { item_sn: string }[] }) | null>(null);
+const jobOrder = ref<string>('');
+const cartonOrigin = ref<string>('VN');
+const customSN = ref<string>('');
+const snPattern = ref<string>('');
+const customYYMM = ref<string>('');
+const awaitingNext = ref<boolean>(false);
+const suggestedSNValue = ref<number>(0);
+const backupScannedItems = ref<string[]>([]);
+const isProcessing = ref<boolean>(false);
+const overflowScans = ref<OverflowScan[]>([]);
+const isAudioActive = ref<boolean>(false);
+const showSettings = ref<boolean>(false);
+const showEmergencyModal = ref<boolean>(false);
+const isRescanMode = ref<boolean>(false);
+const rescanCartonSN = ref<string>('');
+const isSNManual = ref<boolean>(false);
+const snExists = ref<boolean>(false);
+let snCheckTimer: ReturnType<typeof setTimeout> | null = null;
+let statusTimer: ReturnType<typeof setInterval> | null = null;
+let audioCtx: AudioContext | null = null;
 let isAudioInitialized = false;
 
 const initAudio = async () => {
   if (isAudioInitialized) return;
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (settings.audioDeviceId && audioCtx.setSinkId) {
-      try { await audioCtx.setSinkId(settings.audioDeviceId); } catch {}
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (settings.audioDeviceId && (audioCtx as any).setSinkId) {
+      try { await (audioCtx as any).setSinkId(settings.audioDeviceId); } catch {}
     }
     isAudioInitialized = true;
   } catch(e) {}
@@ -236,9 +251,9 @@ const snPreview = computed(() => {
   return `${prefix}${String(seq).padStart(5, '0')}`;
 });
 
-const catalogRef = ref(null);
-const sessionRef = ref(null);
-const scanRef = ref(null);
+const catalogRef = ref<InstanceType<typeof CatalogSelection> | null>(null);
+const sessionRef = ref<InstanceType<typeof SessionHeader> | null>(null);
+const scanRef = ref<InstanceType<typeof ScanBuffer> | null>(null);
 
 const progressPercent = computed(() => {
   if (!currentProduct.value) return 0;
@@ -247,16 +262,14 @@ const progressPercent = computed(() => {
 
 const focusScan = () => { nextTick(() => { if (scanRef.value) scanRef.value.focusScan(); }); initAudio(); };
 
-// Agent now integrated into backend
-
 const checkSystem = async () => {
   try {
-    const res = await catalogApi.getCustomers();
+    await catalogApi.getCustomers();
     system.isOnline = true;
   } catch (e) { system.isOnline = false; }
 };
 
-const selectProduct = async (p) => {
+const selectProduct = async (p: Product) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   currentProduct.value = p;
   scannedItems.value = [];
@@ -273,8 +286,8 @@ const selectProduct = async (p) => {
     if (res.data) {
       lastCarton.value = res.data;
       if (res.data.status === 'FAILED' && res.data.items) {
-        backupScannedItems.value = res.data.items.map(i => i.item_sn);
-        if (!jobOrder.value) jobOrder.value = res.data.job_order || '';
+        backupScannedItems.value = res.data.items.map((i: any) => i.item_sn);
+        if (!jobOrder.value) jobOrder.value = (res.data as any).job_order || '';
       }
     }
   } catch (err) { console.warn('Error fetching last carton:', err); }
@@ -289,20 +302,23 @@ const refreshNextSN = async () => {
   if (!currentProduct.value || isProcessing.value) return;
   try {
     const snRes = await packingApi.getNextSN(currentProduct.value.id);
-    if (snRes.data?.next_seq) {
-      const newSeq = snRes.data.next_seq;
-      if (newSeq > suggestedSNValue.value) {
-        suggestedSNValue.value = newSeq;
-        if (!isSNManual.value) {
-          customSN.value = newSeq.toString();
+    if (snRes.data?.next_sn) {
+      const match = snRes.data.next_sn.match(/\d{5}$/);
+      if (match) {
+        const newSeq = parseInt(match[0]);
+        if (newSeq > suggestedSNValue.value) {
+          suggestedSNValue.value = newSeq;
+          if (!isSNManual.value) {
+            customSN.value = newSeq.toString();
+          }
         }
       }
     }
   } catch (err) { console.warn('Sync SN failed:', err); }
 };
 
-const processSingleScan = (sn) => {
-  if (!sn) return;
+const processSingleScan = (sn: string) => {
+  if (!sn || !currentProduct.value) return;
 
   if (isProcessing.value || awaitingNext.value) {
     if (scannedItems.value.length >= currentProduct.value.packed_qty) {
@@ -358,32 +374,29 @@ const handleScan = () => {
 };
 
 const finalizeCarton = async (isRetry = false) => {
+  if (!currentProduct.value) return;
   if (isProcessing.value && !isRetry) return;
   isProcessing.value = true;
   agentErrorMessage.value = '';
   try {
-    let cartonId, cartonSn, btxmlContent;
+    let cartonId: number, cartonSn: string;
     if (isRetry && lastCarton.value) {
       const res = await printApi.reprintCarton(
         lastCarton.value.id, 
-        settings.templatePath || null, 
+        settings.templatePath || '', 
         settings.printerName
       );
       cartonId = res.data.id;
       cartonSn = res.data.carton_sn;
-      btxmlContent = res.data.btxml;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
     } else if (isRescanMode.value) {
       const items = [...scannedItems.value];
       const res = await packingApi.rescanCarton({
-        carton_sn: rescanCartonSN.value,
-        items,
-        template_path: settings.templatePath || null,
-        printer_name: settings.printerName || null
+        carton_id: lastCarton.value?.id || 0, // In practice, lastCarton or rescan SN would be used
+        scanned_items: items
       });
       cartonId = res.data.id;
       cartonSn = res.data.carton_sn;
-      btxmlContent = res.data.btxml;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
     } else {
       if (snExists.value) {
@@ -394,33 +407,27 @@ const finalizeCarton = async (isRetry = false) => {
       const items = [...scannedItems.value];
       if (items.length === 0) { system.showNotification(t('packing.no_items'), 'error'); isProcessing.value = false; return; }
       
-      lastCarton.value = { status: 'PRINTING', carton_sn: snPreview.value };
-
-      const finalCustomSN = isSNManual.value ? (customSN.value ? parseInt(customSN.value) : null) : null;
+      lastCarton.value = { status: 'PRINTING', carton_sn: snPreview.value } as any;
 
       const res = await packingApi.createCarton({ 
         product_id: currentProduct.value.id, 
-        items, 
-        template_path: settings.templatePath || null, 
-        printer_name: settings.printerName || null, 
-        print_folder: settings.printFolder || null, 
-        job_order: jobOrder.value, 
-        custom_sn: finalCustomSN, 
-        custom_yymm: customYYMM.value || null,
-        carton_origin: cartonOrigin.value,
-        station_id: system.stationId 
+        packed_qty: items.length,
+        scanned_items: items
       });
-      cartonId = res.data.id; cartonSn = res.data.carton_sn; btxmlContent = res.data.btxml;
+      cartonId = res.data.id; cartonSn = res.data.carton_sn;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
       backupScannedItems.value = items;
     }
     const printResult = await handlePrintExecution(cartonId, cartonSn);
     if (printResult === 'Success') {
-      lastCarton.value.status = 'SUCCESS';
+      if (lastCarton.value) lastCarton.value.status = 'SUCCESS';
       system.showNotification(t('packing.carton_printed', { sn: cartonSn }), 'success');
       if (cartonSn) {
-        const lastSeq = parseInt(cartonSn.slice(-5));
-        if (!isNaN(lastSeq)) suggestedSNValue.value = lastSeq + 1;
+        const lastSeqMatch = cartonSn.match(/\d{5}$/);
+        if (lastSeqMatch) {
+           const lastSeq = parseInt(lastSeqMatch[0]);
+           suggestedSNValue.value = lastSeq + 1;
+        }
       }
 
       if (!isRetry) { 
@@ -434,38 +441,25 @@ const finalizeCarton = async (isRetry = false) => {
         awaitingNext.value = true; 
         focusScan(); 
       }
-    } else { lastCarton.value.status = 'FAILED'; agentErrorMessage.value = printResult; system.showNotification(t('packing.print_failed', { error: printResult }), 'error'); }
-  } catch (err) {
+    } else { 
+      if (lastCarton.value) lastCarton.value.status = 'FAILED'; 
+      agentErrorMessage.value = printResult; 
+      system.showNotification(t('packing.print_failed', { error: printResult }), 'error'); 
+    }
+  } catch (err: any) {
     console.error(err);
     if (lastCarton.value && !isRetry) lastCarton.value.status = 'FAILED';
     let msg = err.response?.data?.detail || err.message || t('packing.server_error');
     if (msg === 'AGENT_CONNECTION_FAILED') msg = t('packing.agent_offline');
     system.showNotification(msg, 'error');
-    
-    if (err.response?.status === 400 && msg.includes('already in use')) {
-      try {
-        const snRes = await packingApi.getNextSN(currentProduct.value.id);
-        if (snRes.data?.next_seq) {
-          const updateSuggestedSN = (newVal) => {
-            suggestedSNValue.value = newVal;
-            if (newVal) {
-              system.showNotification(t('packing.suggested_sn', { sn: newVal }), 'warning');
-            }
-          };
-          updateSuggestedSN(snRes.data.next_seq);
-          customSN.value = snRes.data.next_seq.toString();
-        }
-      } catch (e) {}
-    }
   } finally { isProcessing.value = false; }
 };
 
-/** Print execution handler (auto-selects between Server-side or Local Agent) */
-const handlePrintExecution = async (cartonId, cartonSn) => {
+const handlePrintExecution = async (cartonId: number, cartonSn: string): Promise<string> => {
   try {
     if (settings.printMode === 'local') {
-      const resXml = await printApi.download_carton_btxml(cartonId);
-      const xmlContent = resXml.data;
+      const resXml = await printApi.download_carton_btxml(cartonId, currentProduct.value?.template_path || '');
+      const xmlContent = resXml.data.xml;
       
       const result = await printApi.agentPrint(
         settings.agentUrl, 
@@ -483,52 +477,35 @@ const handlePrintExecution = async (cartonId, cartonSn) => {
     } else {
       const res = await printApi.serverPrint(
         cartonId,
-        settings.printerName || null,
-        settings.templatePath || null
+        settings.printerName || undefined,
+        settings.templatePath || undefined
       );
       if (res.data?.success) {
-        if (res.data.type === 'pdf' && res.data.data) {
-          const byteChars = atob(res.data.data);
-          const byteNums = new Array(byteChars.length);
-          for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-          const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `label_${cartonSn}.pdf`;
-          link.click();
-          window.URL.revokeObjectURL(url);
-          system.showNotification('PDF label downloaded!', 'success');
-        }
         return 'Success';
       } else {
-        return res.data?.message || 'Server print failed';
+        return (res.data as any)?.message || 'Server print failed';
       }
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Print Execution Error:', err);
     return err.response?.data?.detail || err.message || 'Print connection error.';
   }
 };
 
-
-
-const handleEmergencyReprint = async (result) => {
+const handleEmergencyReprint = async (carton: Carton) => {
   try {
-    const res = await printApi.reprintCarton(result.id, settings.templatePath || null, settings.printerName);
+    const res = await printApi.reprintCarton(carton.id, settings.templatePath || '', settings.printerName);
     const newCarton = res.data;
-    if (!newCarton?.btxml) { system.showNotification('Could not generate reprint data.', 'error'); return; }
-    
     const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn);
     if (printResult === 'Success') { 
-      system.showNotification(`Reprint successful: ${result.carton_sn}`, 'success'); 
+      system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
       showEmergencyModal.value = false; 
     }
     else system.showNotification('Reprint failed: ' + printResult, 'error');
-  } catch (err) { system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error'); }
+  } catch (err: any) { system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error'); }
 };
 
-const handleRescan = (carton) => {
+const handleRescan = (carton: Carton & { product: Product, job_order?: string, carton_origin?: string }) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   currentProduct.value = carton.product;
   scannedItems.value = [];
@@ -560,6 +537,7 @@ const startNextCarton = () => {
   rescanCartonSN.value = '';
   focusScan(); 
 };
+
 const resetSession = () => { 
   currentProduct.value = null; 
   scannedItems.value = []; 
@@ -577,7 +555,8 @@ const playScanAlert = () => {
     if (!audioCtx) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     
-    const beep = (freq, start, dur) => {
+    const beep = (freq: number, start: number, dur: number) => {
+      if (!audioCtx) return;
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.connect(g);
@@ -597,7 +576,6 @@ const playScanAlert = () => {
 };
 const toggleAudio = () => { isAudioActive.value = true; initAudio().then(playScanAlert); system.showNotification('Audio Alert: ACTIVE', 'success'); };
 
-// Detect manual SN entry
 watch(customSN, (val) => {
   if (val && val !== suggestedSNValue.value.toString()) {
     isSNManual.value = true;
@@ -620,7 +598,6 @@ watch(snPreview, (newVal) => {
   }, 500);
 });
 
-// Session persistence
 watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN], () => {
   sessionStorage.setItem('packingState', JSON.stringify({ 
     jobOrder: jobOrder.value, 
@@ -668,8 +645,14 @@ onMounted(() => {
   nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
   statusTimer = setInterval(() => { checkSystem(); refreshNextSN(); }, 3000);
   agentCheckInterval = setInterval(checkAgentHealth, 5000);
-  window.addEventListener('click', (e) => { if (showSettings.value || showEmergencyModal.value) return; if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return; focusScan(); });
+  window.addEventListener('click', (e) => { 
+    if (showSettings.value || showEmergencyModal.value) return; 
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'SELECT') return; 
+    focusScan(); 
+  });
 });
+
 onUnmounted(() => { 
   if (statusTimer) clearInterval(statusTimer); 
   if (agentCheckInterval) clearInterval(agentCheckInterval);

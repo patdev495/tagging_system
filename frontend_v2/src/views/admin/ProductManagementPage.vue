@@ -178,23 +178,34 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2, X } from 'lucide-vue-next';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
+import type { Product, Customer } from '../../types/api';
 
 const system = useSystemStore();
-const products = ref([]);
-const customers = ref([]);
-const searchQuery = ref('');
-const selectedCustomerId = ref(null);
-const showModal = ref(false);
-const isEdit = ref(false);
-const isSubmitting = ref(false);
-const currentId = ref(null);
+const products = ref<Product[]>([]);
+const customers = ref<Customer[]>([]);
+const searchQuery = ref<string>('');
+const selectedCustomerId = ref<number | null>(null);
+const showModal = ref<boolean>(false);
+const isEdit = ref<boolean>(false);
+const isSubmitting = ref<boolean>(false);
+const currentId = ref<number | null>(null);
 
-const form = ref({
+const form = ref<{
+  item_name: string;
+  upc: string;
+  packed_qty: number;
+  start_part: string;
+  middle_part: string;
+  template_type: string;
+  template_path: string;
+  allow_partial: number;
+  customer_id: number | null;
+}>({
   item_name: '',
   upc: '',
   packed_qty: 1,
@@ -234,7 +245,7 @@ const fetchData = async () => {
   }
 };
 
-const getCustomerName = (id) => {
+const getCustomerName = (id: number) => {
   const c = customers.value.find(c => c.id === id);
   return c ? c.name : 'Unknown';
 };
@@ -256,10 +267,20 @@ const openCreateModal = () => {
   showModal.value = true;
 };
 
-const openEditModal = (product) => {
+const openEditModal = (product: Product) => {
   isEdit.value = true;
   currentId.value = product.id;
-  form.value = { ...product };
+  form.value = { 
+    item_name: product.item_name,
+    upc: product.upc || '',
+    packed_qty: product.packed_qty,
+    start_part: product.start_part || '',
+    middle_part: product.middle_part || '',
+    template_type: product.template_type || 'standard',
+    template_path: product.template_path || '',
+    allow_partial: product.allow_partial || 0,
+    customer_id: product.customer_id
+  };
   showModal.value = true;
 };
 
@@ -270,7 +291,7 @@ const saveProduct = async () => {
   }
   isSubmitting.value = true;
   try {
-    if (isEdit.value) {
+    if (isEdit.value && currentId.value !== null) {
       await catalogApi.updateProduct(currentId.value, form.value);
       system.showNotification('Product updated successfully', 'success');
     } else {
@@ -279,7 +300,7 @@ const saveProduct = async () => {
     }
     showModal.value = false;
     await fetchData();
-  } catch (err) {
+  } catch (err: any) {
     const msg = err.response?.data?.detail || 'Error saving data';
     system.showNotification(msg, 'error');
   } finally {
@@ -287,13 +308,13 @@ const saveProduct = async () => {
   }
 };
 
-const confirmDelete = async (product) => {
+const confirmDelete = async (product: Product) => {
   if (confirm(`Are you sure you want to delete product "${product.item_name}"?`)) {
     try {
       await catalogApi.deleteProduct(product.id);
       system.showNotification('Product deleted', 'success');
       await fetchData();
-    } catch (err) {
+    } catch (err: any) {
       const msg = err.response?.data?.detail || 'Could not delete product (possibly has packing records)';
       system.showNotification(msg, 'error');
     }
