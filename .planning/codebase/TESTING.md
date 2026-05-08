@@ -1,5 +1,11 @@
 # Testing Guide
 
+## Automated All-in-One Test
+You can run all tests (Backend + Frontend) using the automated script in the root directory:
+```bash
+.\run_tests.bat
+```
+
 ## Backend (Pytest)
 
 ```bash

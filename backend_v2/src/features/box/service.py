@@ -42,6 +42,14 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     if len(carton_in.items) != len(set(carton_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
     
+    # Validation: Check if partial packing is allowed
+    allow_partial = getattr(product, 'allow_partial', 0) or 0
+    if not allow_partial and len(carton_in.items) < product.packed_qty:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(carton_in.items)}."
+        )
+    
     new_sn = get_next_carton_sn(db, product, carton_in.custom_sn, carton_in.custom_yymm)
     
     if carton_in.custom_sn is not None:
