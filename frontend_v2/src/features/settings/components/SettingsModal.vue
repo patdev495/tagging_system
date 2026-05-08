@@ -1,15 +1,15 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
-    <div class="glass-card modal-content settings-modal">
-      <div class="modal-header-modern">
-        <div class="header-title"><i class="fas fa-cog"></i><h2>{{ t('settings.title') }}</h2></div>
-        <button @click="$emit('close')" class="btn-close-modern"><i class="fas fa-times"></i></button>
+  <div v-if="show" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[2000]" @click.self="$emit('close')">
+    <div class="bg-white p-0 rounded-2xl w-[90%] max-w-[500px] shadow-2xl text-slate-800 overflow-hidden max-h-[90vh] flex flex-col animate-in">
+      <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-white">
+        <div class="flex items-center gap-3 text-slate-900"><i class="fas fa-cog"></i><h2 class="m-0 text-[1.25rem] font-bold">{{ t('settings.title') }}</h2></div>
+        <button @click="$emit('close')" class="bg-transparent border-none text-slate-400 text-[1.25rem] cursor-pointer transition-colors hover:text-rose-500"><i class="fas fa-times"></i></button>
       </div>
-      <div class="modal-body-scrollable">
-        <p class="subtitle">{{ t('settings.subtitle') }}</p>
+      <div class="px-6 py-5 overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <p class="text-slate-500 mb-6 text-[0.9rem]">{{ t('settings.subtitle') }}</p>
         
         <!-- Print Mode Selection -->
-        <div class="print-mode-selector mb-6">
+        <div class="mb-6">
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ t('settings.print_mode') }}</label>
           <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
             <button 
@@ -30,123 +30,121 @@
         </div>
 
         <!-- Language Selection -->
-        <div class="form-group">
-          <label><i class="fas fa-globe" style="margin-right:6px; color:#10b981"></i>{{ t('settings.language') }}</label>
+        <div class="mb-4">
+          <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-globe mr-1.5 text-emerald-500"></i>{{ t('settings.language') }}</label>
           <div class="input-with-hint">
-            <select v-model="store.language" class="modern-input">
+            <select v-model="store.language" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
               <option value="vi">Tiếng Việt</option>
               <option value="en">English</option>
             </select>
           </div>
         </div>
 
-        <div v-if="store.printMode === 'centralized'" class="print-banner centralized-banner fade-in">
-          <i class="fas fa-server"></i>
+        <div v-if="store.printMode === 'centralized'" class="rounded-xl p-3.5 md:p-4.5 mb-5 flex items-start gap-3.5 bg-linear-to-br from-emerald-50 to-emerald-100 border border-emerald-200 text-emerald-900 animate-in">
+          <i class="fas fa-server text-[1.4rem] mt-0.5 text-emerald-500"></i>
           <div>
-            <strong>{{ t('settings.centralized_title') }}</strong>
-            <small>{{ t('settings.centralized_desc') }}</small>
+            <strong class="block text-[0.9rem] font-bold">{{ t('settings.centralized_title') }}</strong>
+            <small class="block mt-1 text-[0.75rem] opacity-80">{{ t('settings.centralized_desc') }}</small>
           </div>
         </div>
 
-        <div v-else class="print-banner local-banner fade-in">
-          <i class="fas fa-bolt"></i>
+        <div v-else class="rounded-xl p-3.5 md:p-4.5 mb-5 flex items-start gap-3.5 bg-linear-to-br from-blue-50 to-blue-100 border border-blue-200 text-blue-900 animate-in">
+          <i class="fas fa-bolt text-[1.4rem] mt-0.5 text-blue-500"></i>
           <div>
-            <strong>{{ t('settings.local_title') }}</strong>
-            <small>{{ t('settings.local_desc') }}</small>
+            <strong class="block text-[0.9rem] font-bold">{{ t('settings.local_title') }}</strong>
+            <small class="block mt-1 text-[0.75rem] opacity-80">{{ t('settings.local_desc') }}</small>
           </div>
         </div>
 
         <!-- Agent Configuration (Only if local) -->
-        <div v-if="store.printMode === 'local'" class="local-config animate-in slide-in-from-top-2 duration-300">
-          <div class="form-group">
-            <label><i class="fas fa-link" style="margin-right:6px; color:#3b82f6"></i>{{ t('settings.agent_url') }}</label>
+        <div v-if="store.printMode === 'local'" class="animate-in slide-in-from-top-2 duration-300">
+          <div class="mb-4">
+            <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-link mr-1.5 text-blue-500"></i>{{ t('settings.agent_url') }}</label>
             <div class="input-with-hint">
-              <div style="display: flex; gap: 8px;">
+              <div class="flex gap-2">
                 <input 
                   :value="detectingAgent ? t('settings.detecting_agent') : store.agentUrl" 
                   type="text" 
                   readonly 
-                  class="modern-input font-mono readonly-input" 
-                  style="flex: 1; color: #475569;" 
+                  class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-100 text-slate-500 outline-none transition-all font-mono border-dashed cursor-not-allowed" 
                 />
                 <button 
                   @click="discoverAgent" 
-                  class="btn-refresh-printers" 
+                  class="w-[42px] h-[42px] bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg flex items-center justify-center cursor-pointer transition-all hover:bg-indigo-100 disabled:opacity-50" 
                   title="Auto-detect Agent" 
                   :disabled="detectingAgent"
-                  style="width: 42px; background: #e0e7ff; color: #4f46e5; border-color: #c7d2fe;"
                 >
                   <i class="fas fa-search" :class="{'fa-spin': detectingAgent}"></i>
                 </button>
               </div>
-              <small class="hint-text">{{ t('settings.agent_url_hint') }}</small>
+              <small class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">{{ t('settings.agent_url_hint') }}</small>
             </div>
           </div>
-          <div class="form-group">
-            <label><i class="fas fa-folder-open" style="margin-right:6px; color:#f59e0b"></i>{{ t('settings.local_folder') }}</label>
+          <div class="mb-4">
+            <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-folder-open mr-1.5 text-orange-500"></i>{{ t('settings.local_folder') }}</label>
             <input 
               v-model="store.localTemplateDir" 
               type="text" 
               placeholder="C:\NY_Templates\" 
-              class="modern-input font-mono" 
-              :class="{ 'field-error-input': dirError }"
+              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all font-mono focus:border-blue-500 focus:bg-white" 
+              :class="{ 'border-rose-500 bg-rose-50': dirError }"
             />
-            <small v-if="dirError" class="error-text-msg">{{ dirError }}</small>
-            <small class="hint-text" v-else>{{ t('settings.local_folder_hint') }}</small>
+            <small v-if="dirError" class="block mt-1 text-rose-500 text-[0.75rem] font-bold">{{ dirError }}</small>
+            <small class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed" v-else>{{ t('settings.local_folder_hint') }}</small>
           </div>
         </div>
 
-        <div class="form-group">
-          <label> {{ t('settings.station_id') }} </label>
-          <div class="mac-display">
-            <i class="fas fa-fingerprint"></i>
-            <input :value="system.stationId || t('settings.detecting')" readonly class="modern-input readonly-input" />
-            <span class="badge-auto">AUTO</span>
+        <div class="mb-4">
+          <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"> {{ t('settings.station_id') }} </label>
+          <div class="relative flex items-center">
+            <i class="fas fa-fingerprint absolute left-3 text-blue-500 text-[0.9rem]"></i>
+            <input :value="system.stationId || t('settings.detecting')" readonly class="w-full pl-9 pr-15 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-100 text-slate-500 outline-none transition-all border-dashed cursor-not-allowed" />
+            <span class="absolute right-2.5 bg-emerald-50 text-emerald-600 text-[0.65rem] font-black px-1.5 py-0.5 rounded border border-emerald-100">AUTO</span>
           </div>
         </div>
 
         <!-- Printer Selection -->
-        <div class="form-group">
-          <label><i class="fas fa-print" style="margin-right:6px; color:#2563eb"></i>{{ t('settings.printer_name') }}</label>
+        <div class="mb-4">
+          <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-print mr-1.5 text-blue-600"></i>{{ t('settings.printer_name') }}</label>
           <div class="input-with-hint">
-            <div class="printer-select-wrapper">
-              <select v-model="store.printerName" class="modern-input">
+            <div class="flex gap-2 items-center">
+              <select v-model="store.printerName" class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
                 <option value="">-- {{ t('settings.default_printer') }} --</option>
                 <option v-for="p in availablePrinters" :key="typeof p === 'string' ? p : p.name" :value="typeof p === 'string' ? p : p.name">
                   🖨️ {{ typeof p === 'string' ? p : p.name }} {{ typeof p === 'string' ? '' : `(${p.port})` }}
                 </option>
               </select>
-              <button @click="loadPrinters" class="btn-refresh-printers" :title="store.printMode === 'local' ? 'Refresh Local Printers' : 'Refresh Server Printers'">
+              <button @click="loadPrinters" class="w-10 h-10 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center cursor-pointer text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600" :title="store.printMode === 'local' ? 'Refresh Local Printers' : 'Refresh Server Printers'">
                 <i class="fas fa-sync-alt" :class="{'fa-spin': loadingPrinters}"></i>
               </button>
             </div>
-            <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="hint-text">
+            <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">
               {{ t('settings.no_printers_found', { mode: store.printMode === 'local' ? t('settings.agent') : t('settings.server') }) }}
             </small>
-            <small v-else>{{ t('settings.printer_list_source', { mode: store.printMode === 'local' ? t('settings.local_agent') : t('settings.backend_server') }) }}</small>
+            <small class="block mt-1 text-[0.75rem] text-blue-600" v-else>{{ t('settings.printer_list_source', { mode: store.printMode === 'local' ? t('settings.local_agent') : t('settings.backend_server') }) }}</small>
           </div>
         </div>
 
         <!-- Template Path (Client Fallback) -->
-        <div class="form-group" v-if="store.printMode === 'centralized'">
-          <label><i class="fas fa-file-alt" style="margin-right:6px; color:#f59e0b"></i>{{ t('settings.fallback_template') }}</label>
+        <div class="mb-4" v-if="store.printMode === 'centralized'">
+          <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-file-alt mr-1.5 text-orange-500"></i>{{ t('settings.fallback_template') }}</label>
           <div class="input-with-hint">
-            <input v-model="store.templatePath" type="text" placeholder="D:\Templates\label.btw" class="modern-input font-mono text-xs" />
-            <small class="hint-text">{{ t('settings.fallback_template_hint') }}</small>
+            <input v-model="store.templatePath" type="text" placeholder="D:\Templates\label.btw" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 outline-none transition-all font-mono focus:border-blue-500 focus:bg-white" />
+            <small class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">{{ t('settings.fallback_template_hint') }}</small>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>{{ t('settings.audio_output') }}</label>
+        <div class="mb-4">
+          <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600">{{ t('settings.audio_output') }}</label>
           <div class="input-with-hint">
-            <select v-model="store.audioDeviceId" class="modern-input"><option value="">{{ t('settings.audio_output_default') }}</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
-            <small class="hint-text">{{ t('settings.audio_output_hint') }}</small>
+            <select v-model="store.audioDeviceId" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white"><option value="">{{ t('settings.audio_output_default') }}</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
+            <small class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">{{ t('settings.audio_output_hint') }}</small>
           </div>
         </div>
       </div>
-      <div class="modal-actions-sticky">
-        <button @click="$emit('close')" class="btn-text">{{ t('settings.close') }}</button>
-        <button @click="handleSave" class="btn-primary">{{ t('settings.save') }}</button>
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-4 mt-auto">
+        <button @click="$emit('close')" class="bg-transparent text-slate-500 border-none px-5 py-2.5 cursor-pointer font-medium transition-colors hover:text-slate-900">{{ t('settings.close') }}</button>
+        <button @click="handleSave" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg border-none font-semibold cursor-pointer transition-colors hover:bg-blue-700">{{ t('settings.save') }}</button>
       </div>
     </div>
   </div>
@@ -303,58 +301,3 @@ watch(() => props.show, async (val) => {
 });
 onMounted(() => { loadAudioDevices(); });
 </script>
-
-<style scoped>
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-.modal-content { background: white; padding: 0; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); color: #1e293b; overflow: hidden; }
-.settings-modal { max-height: 90vh; display: flex; flex-direction: column; }
-.modal-header-modern { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: white; }
-.header-title { display: flex; align-items: center; gap: 12px; color: #0f172a; }
-.header-title h2 { margin: 0; font-size: 1.25rem; }
-.btn-close-modern { background: transparent; border: none; color: #64748b; font-size: 1.25rem; cursor: pointer; }
-.btn-close-modern:hover { color: #ef4444; }
-.modal-body-scrollable { padding: 20px 24px; overflow-y: auto; flex: 1; }
-.subtitle { color: #64748b; margin-bottom: 24px; font-size: 0.9rem; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #475569; }
-.modern-input { width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; background: #f8fafc; color: #1e293b; outline: none; }
-.modern-input:focus { border-color: #3b82f6; background: white; }
-.input-with-hint small { display: block; margin-top: 4px; font-size: 0.75rem; color: #2563eb; }
-.mac-display { position: relative; display: flex; align-items: center; }
-.mac-display i { position: absolute; left: 12px; color: #3b82f6; font-size: 0.9rem; }
-.mac-display .modern-input { padding-left: 36px; padding-right: 60px; }
-.readonly-input { background: #f1f5f9 !important; color: #64748b; cursor: not-allowed; border-style: dashed; }
-.badge-auto { position: absolute; right: 10px; background: #dcfce7; color: #16a34a; font-size: 0.65rem; font-weight: 900; padding: 2px 6px; border-radius: 4px; border: 1px solid #bbf7d0; }
-.input-with-hint small.hint-text { color: #64748b; background: #f1f5f9; padding: 8px; border-radius: 6px; margin-top: 6px; line-height: 1.4; }
-.modal-actions-sticky { padding: 16px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: flex-end; gap: 16px; margin-top: auto; }
-.btn-text { background: transparent; color: #64748b; border: none; padding: 10px 20px; cursor: pointer; font-weight: 500; }
-.btn-text:hover { color: #1e293b; }
-.btn-primary { background: #2563eb; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
-.btn-primary:hover { background: #1d4ed8; }
-.central-print-banner { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0; color: #065f46; }
-.central-print-banner i { color: #10b981; }
-
-.local-banner { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; }
-.local-banner i { color: #3b82f6; }
-
-.print-banner { border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px; }
-.print-banner i { font-size: 1.4rem; margin-top: 2px; }
-.print-banner strong { display: block; font-size: 0.9rem; }
-.print-banner small { display: block; margin-top: 4px; font-size: 0.75rem; opacity: 0.8; }
-
-.printer-select-wrapper { display: flex; gap: 8px; align-items: center; }
-.printer-select-wrapper select { flex: 1; }
-.btn-refresh-printers { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; flex-shrink: 0; }
-.btn-refresh-printers:hover { background: #e2e8f0; color: #2563eb; }
-.field-error-input {
-  border-color: #ef4444 !important;
-  background-color: #fef2f2 !important;
-}
-.error-text-msg {
-  color: #ef4444;
-  font-size: 0.75rem;
-  font-weight: 700;
-  margin-top: 4px;
-  display: block;
-}
-</style>
