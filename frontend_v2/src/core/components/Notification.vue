@@ -1,6 +1,22 @@
 <template>
-  <Transition name="slide-up">
-    <div v-if="system.notification" class="notification" :class="system.notification.type">
+  <Transition 
+    enter-active-class="transition duration-300 ease-out"
+    enter-from-class="translate-y-5 opacity-0"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition duration-300 ease-in"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-5 opacity-0"
+  >
+    <div 
+      v-if="system.notification" 
+      class="fixed bottom-[30px] right-[30px] px-6 py-4 rounded-xl z-[3000] shadow-2xl font-medium text-white flex items-center gap-3"
+      :class="{
+        'bg-emerald-500': system.notification.type === 'success',
+        'bg-rose-500': system.notification.type === 'error',
+        'bg-amber-500': system.notification.type === 'warning',
+        'bg-slate-800': !['success', 'error', 'warning'].includes(system.notification.type)
+      }"
+    >
       <i class="fas" :class="system.notification.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
       {{ system.notification.text }}
     </div>
@@ -11,25 +27,3 @@
 import { useSystemStore } from '../stores/system';
 const system = useSystemStore();
 </script>
-
-<style scoped>
-.notification {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  padding: 16px 24px;
-  border-radius: 12px;
-  background: #1e293b;
-  color: white;
-  z-index: 3000;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-  font-weight: 500;
-}
-.notification.success { background: #10b981; }
-.notification.error { background: #ef4444; }
-.notification.warning { background: #f59e0b; }
-
-.slide-up-enter-active, .slide-up-leave-active { transition: all 0.3s ease; }
-.slide-up-enter-from { transform: translateY(20px); opacity: 0; }
-.slide-up-leave-to { transform: translateY(20px); opacity: 0; }
-</style>
