@@ -85,7 +85,7 @@
               {{ t('admin.items_in_carton', { count: result.items?.length || 0 }) }}
             </h4>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin rounded-xl p-1">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent rounded-xl p-1">
             <div 
               v-for="item in result.items" 
               :key="item.id" 
@@ -187,19 +187,3 @@ onMounted(() => {
   if (searchInput.value) searchInput.value.focus();
 });
 </script>
-
-<style scoped>
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 10px;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
-}
-</style>
