@@ -110,8 +110,8 @@
             <div class="flex gap-2 items-center">
               <select v-model="store.printerName" class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
                 <option value="">-- {{ t('settings.default_printer') }} --</option>
-                <option v-for="p in availablePrinters" :key="typeof p === 'string' ? p : p.name" :value="typeof p === 'string' ? p : p.name">
-                  🖨️ {{ typeof p === 'string' ? p : p.name }} {{ typeof p === 'string' ? '' : `(${p.port})` }}
+                <option v-for="p in availablePrinters" :key="typeof p === 'string' ? p : (p.name || Math.random().toString())" :value="typeof p === 'string' ? p : p.name">
+                  🖨️ {{ typeof p === 'string' ? p : (p.name || 'Unknown Printer') }} {{ typeof p === 'string' ? '' : (p.port ? `(${p.port})` : '') }}
                 </option>
               </select>
               <button @click="loadPrinters" class="w-10 h-10 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center cursor-pointer text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600" :title="store.printMode === 'local' ? 'Refresh Local Printers' : 'Refresh Server Printers'">
@@ -235,7 +235,12 @@ const loadPrinters = async () => {
       try {
         const resp = await fetch(`${store.agentUrl}/printers`);
         if (resp.ok) {
-          availablePrinters.value = await resp.json();
+          const raw = await resp.json() as (string | Printer)[];
+          availablePrinters.value = raw.filter(p => {
+            if (!p) return false;
+            if (typeof p === 'string') return true;
+            return typeof p === 'object' && !!p.name;
+          });
           system.showNotification('Đã cập nhật danh sách máy in từ Agent cục bộ', 'success');
         } else {
           throw new Error('Agent trả về lỗi');
@@ -246,9 +251,12 @@ const loadPrinters = async () => {
       }
     } else {
       const res = await printApi.getAvailablePrinters();
-      if (res.data) {
-        availablePrinters.value = res.data;
-      }
+      const rawPrinters = (res.data || []) as (string | Printer)[];
+      availablePrinters.value = rawPrinters.filter(p => {
+        if (!p) return false;
+        if (typeof p === 'string') return true;
+        return typeof p === 'object' && !!p.name;
+      });
     }
   } catch (e) { 
     console.warn('Failed to load printers:', e); 
