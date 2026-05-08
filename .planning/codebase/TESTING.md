@@ -1,25 +1,38 @@
-# Testing
+# Testing Guide
 
-## Current Testing Strategy
-The project currently relies on manual verification, developer-led UAT, and standalone utility scripts.
+## Backend (Pytest)
 
-## Available Utility Scripts
-- **Backend (`backend_v2/scratch/`)**:
-  - `list_routes.py`: Lists all registered FastAPI routes for auditing.
-- **Client Agent (`print_agent_v2/`)**:
-  - Contains internal logic for verifying COM connections to BarTender.
+```bash
+cd backend_v2
+uv run pytest
+```
 
-## Simulation Environment
-- **Backend**: Uvicorn with `--reload` for real-time development.
-- **Frontend**: Vite dev server with TypeScript type checking (`vue-tsc`).
-- **Debugging**: Extensive logging in both `backend_v2` and `print_agent_v2`.
+### Test files
+- `tests/test_health.py` — API health check endpoint
+- `tests/test_print_service.py` — BTXML generation, SN grid, origin text logic
 
-## Verification Loop
-1.  **Code Review**: Changes are reviewed for architectural alignment.
-2.  **Manual UAT**: Core workflows (Scan -> Pack -> Print) are verified manually after each feature update.
-3.  **Static Analysis**: ESLint and TypeScript compiler for frontend quality.
+### Adding new tests
+1. Create `tests/test_<module>.py`
+2. Use `pytest-mock` for mocking DB sessions
+3. Use `pytest-asyncio` for async endpoint tests
 
-## Future Testing Roadmap
-- [ ] **Unit Tests**: Implement Pytest for sequence generation logic in the backend.
-- [ ] **Component Tests**: Implement Vitest for critical UI components (e.g., `ScanBuffer`, `SettingsModal`).
-- [ ] **E2E Tests**: Use Playwright to simulate full scan-to-print workflows.
+## Frontend (Vitest)
+
+```bash
+cd frontend_v2
+npm run test        # single run
+npm run test:watch  # watch mode
+```
+
+### Test files
+- `src/features/packing/__tests__/scanLogic.spec.ts` — scan validation, bulk splitting, SN preview
+
+### Adding new tests
+1. Create `__tests__/<name>.spec.ts` next to the module being tested
+2. For pure logic: import and test directly
+3. For Vue components: use `@vue/test-utils` with `mount()`
+
+## Architecture
+- **Backend**: `pytest.ini` sets `pythonpath = .` so imports work from project root
+- **Frontend**: `vitest.config.ts` uses `pool: 'threads'` (required for Windows) and `jsdom` environment
+- **Extractable logic**: Core validation lives in `src/features/packing/utils/scanLogic.ts` for easy testing without component overhead
