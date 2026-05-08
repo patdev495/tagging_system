@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 from src.core.models import Product, Carton
 from . import schemas
