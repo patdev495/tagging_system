@@ -3,8 +3,11 @@ Tests for History Service — carton search and lookup logic.
 """
 import pytest
 from unittest.mock import MagicMock, PropertyMock
+# pyrefly: ignore [missing-import]
 from src.core import models
+# pyrefly: ignore [missing-import]
 from src.features.history import service
+# pyrefly: ignore [missing-import]
 from fastapi import HTTPException
 
 

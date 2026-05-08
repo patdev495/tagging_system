@@ -8,6 +8,7 @@ venv/
 ENV/
 .env
 release/
+.pytest_cache/
 # Node.js
 node_modules/
 dist/

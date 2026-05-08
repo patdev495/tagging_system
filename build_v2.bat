@@ -20,6 +20,11 @@ echo [2/4] Building Backend V2 EXE...
 cd backend_v2
 uv run pyinstaller --noconfirm --onedir --console --name "NY_Tagging_System" ^
     --add-data "src;src" ^
+    --collect-all pydantic ^
+    --collect-all pydantic_core ^
+    --collect-submodules pydantic_core ^
+    --hidden-import pydantic_core ^
+    --hidden-import pydantic_core._pydantic_core ^
     --hidden-import pyodbc ^
     --hidden-import win32com ^
     --hidden-import win32com.client ^

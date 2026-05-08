@@ -11,7 +11,7 @@ set FRONTEND_STATUS=0
 echo.
 echo [1/2] Running BACKEND tests (Pytest)...
 cd backend_v2
-uv run pytest
+uv run pytest -v
 if %errorlevel% neq 0 (
     set BACKEND_STATUS=1
     echo.
