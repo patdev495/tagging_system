@@ -196,6 +196,7 @@ interface InvalidScan {
 interface OverflowScan {
   sn: string;
   time: string;
+  reason: string;
 }
 
 const invalidScans = ref<InvalidScan[]>([]);
@@ -320,7 +321,7 @@ const processSingleScan = (sn: string) => {
   if (isProcessing.value || awaitingNext.value) {
     if (scannedItems.value.length >= currentProduct.value.packed_qty) {
       playScanAlert();
-      overflowScans.value.push({ sn, time: new Date().toLocaleTimeString() });
+      overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Box Full' });
       system.showNotification(t('packing.box_full', { sn }), 'warning');
       return;
     }
@@ -351,8 +352,15 @@ const processSingleScan = (sn: string) => {
     return; 
   }
 
+  if (scannedItems.value.length >= currentProduct.value.packed_qty) {
+    playScanAlert();
+    overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Box Full' });
+    system.showNotification(t('packing.box_full'), 'error');
+    return;
+  }
+
   scannedItems.value.push(sn);
-  if (scannedItems.value.length >= currentProduct.value.packed_qty) { 
+  if (scannedItems.value.length === currentProduct.value.packed_qty) { 
     finalizeCarton(); 
   }
 };
