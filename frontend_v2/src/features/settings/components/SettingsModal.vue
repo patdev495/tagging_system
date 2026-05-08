@@ -235,12 +235,10 @@ const loadPrinters = async () => {
       try {
         const resp = await fetch(`${store.agentUrl}/printers`);
         if (resp.ok) {
-          const raw = await resp.json() as (string | Printer)[];
-          availablePrinters.value = raw.filter(p => {
-            if (!p) return false;
-            if (typeof p === 'string') return true;
-            return typeof p === 'object' && !!p.name;
-          });
+          const raw = await resp.json();
+          // Agent returns list directly or {"printers": [...]}
+          const list = (Array.isArray(raw) ? raw : (raw.printers || [])) as (string | Printer)[];
+          availablePrinters.value = list.filter(p => p && (typeof p === 'string' || (typeof p === 'object' && (p as any).name)));
           system.showNotification('Đã cập nhật danh sách máy in từ Agent cục bộ', 'success');
         } else {
           throw new Error('Agent trả về lỗi');
@@ -251,12 +249,9 @@ const loadPrinters = async () => {
       }
     } else {
       const res = await printApi.getAvailablePrinters();
-      const rawPrinters = (res.data || []) as (string | Printer)[];
-      availablePrinters.value = rawPrinters.filter(p => {
-        if (!p) return false;
-        if (typeof p === 'string') return true;
-        return typeof p === 'object' && !!p.name;
-      });
+      const data = res.data as any;
+      const list = (Array.isArray(data) ? data : (data.printers || [])) as (string | Printer)[];
+      availablePrinters.value = list.filter(p => p && (typeof p === 'string' || (typeof p === 'object' && (p as any).name)));
     }
   } catch (e) { 
     console.warn('Failed to load printers:', e); 
