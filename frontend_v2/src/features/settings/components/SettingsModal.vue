@@ -227,6 +227,10 @@ const loadAudioDevices = async () => {
     audioDevices.value = devices.filter(d => d.kind === 'audiooutput').map(d => ({ id: d.deviceId, label: d.label || `Speaker (${d.deviceId.slice(0, 5)}...)` }));
   } catch (e) { console.warn('Error loading audio devices:', e); }
 };
+watch(() => store.printMode, () => {
+  availablePrinters.value = [];
+  loadPrinters();
+});
 
 const loadPrinters = async () => {
   loadingPrinters.value = true;
