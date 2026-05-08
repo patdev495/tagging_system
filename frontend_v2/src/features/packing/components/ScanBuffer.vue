@@ -1,6 +1,6 @@
 <template>
   <div class="input-area">
-    <div class="input-row">
+    <div class="flex gap-3 items-start">
       <textarea 
         :value="scanBuffer"
         @input="$emit('update:scanBuffer', $event.target.value)"
@@ -8,17 +8,17 @@
         :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : t('packing.scan_prompt_default')))"
         ref="scanInput"
         :disabled="disabled"
-        class="scan-input"
+        class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1.15rem] font-bold text-center mb-2 transition-all resize-none min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0 min-w-0"
         :class="{ 
-          'input-locked': !jobOrder || disabled, 
-          'input-overflow': awaitingNext && jobOrder && !disabled 
+          'bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed': !jobOrder || disabled, 
+          'bg-orange-50 border-orange-500 text-orange-900 focus:border-orange-600 focus:bg-orange-50 focus:ring-orange-500/15': awaitingNext && jobOrder && !disabled 
         }"
         rows="1"
       ></textarea>
       <button 
         v-if="awaitingNext" 
         @click="$emit('next-carton')" 
-        class="btn-next-carton pulse-animation"
+        class="px-6 h-[58px] bg-linear-to-br from-emerald-500 to-emerald-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(16,185,129,0.4)] hover:bg-linear-to-br hover:from-emerald-600 hover:to-emerald-700 animate-pulse-gentle"
         :disabled="disabled"
         :title="t('packing.next_carton_title')"
       >
@@ -27,48 +27,60 @@
       <button 
         v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
         @click="$emit('pack-now')" 
-        class="btn-pack-now"
+        class="px-6 h-[58px] bg-linear-to-br from-blue-500 to-blue-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(59,130,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(59,130,246,0.4)] hover:bg-linear-to-br hover:from-blue-600 hover:to-blue-700"
         :disabled="disabled"
         :title="t('packing.pack_now_title')"
       >
         <i class="fas fa-box-open"></i> {{ t('packing.pack_now') }}
       </button>
     </div>
-    <p class="hint" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
-    <p class="hint overflow-hint" v-else-if="awaitingNext && !disabled">{{ t('packing.box_complete_hint') }}</p>
-    <p class="hint warning" v-else-if="!jobOrder && !disabled">{{ t('packing.fill_job_order_hint') }}</p>
-    <p class="hint warning" v-else-if="disabled && placeholder.includes('AGENT')">{{ t('packing.agent_offline_hint') }}</p>
+    <p class="text-center text-slate-400 text-[0.85rem]" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
+    <p class="text-center text-[0.85rem] text-orange-600 font-bold" v-else-if="awaitingNext && !disabled">{{ t('packing.box_complete_hint') }}</p>
+    <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="!jobOrder && !disabled">{{ t('packing.fill_job_order_hint') }}</p>
+    <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="disabled && placeholder.includes('AGENT')">{{ t('packing.agent_offline_hint') }}</p>
 
     <!-- Overflow Scans Area (excess scans after box full) -->
-    <div v-if="overflowScans.length > 0" class="overflow-scans-area fade-in">
-      <div class="overflow-header">
-        <span><i class="fas fa-exclamation-triangle"></i> {{ t('packing.overflow_title', { count: overflowScans.length }) }}</span>
-        <button @click="$emit('clear-overflow')" class="btn-clear-small btn-clear-overflow">{{ t('packing.clear') }}</button>
+    <div v-if="overflowScans.length > 0" class="mt-4 bg-orange-50 border-2 border-orange-400 rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(249,115,22,0.15)] transition-opacity animate-in">
+      <div class="px-3.5 py-2.5 bg-linear-to-br from-orange-50 to-orange-100 border-b border-orange-400 flex justify-between items-center text-orange-800 text-[0.85rem] font-bold">
+        <span><i class="fas fa-exclamation-triangle text-orange-600 mr-1.5"></i> {{ t('packing.overflow_title', { count: overflowScans.length }) }}</span>
+        <button @click="$emit('clear-overflow')" class="bg-transparent border border-orange-400 text-orange-800 px-2 py-0.5 rounded-md text-[0.7rem] cursor-pointer transition-all hover:bg-orange-100">{{ t('packing.clear') }}</button>
       </div>
-      <div class="overflow-list">
-        <div v-for="(item, idx) in overflowScans" :key="idx" class="overflow-item">
-          <div class="overflow-info">
-            <span class="overflow-index">#{{ idx + 1 }}</span>
-            <span class="overflow-sn">{{ item.sn }}</span>
+      <div class="max-h-[200px] overflow-y-auto p-2">
+        <div v-for="(item, idx) in overflowScans" :key="idx" class="flex justify-between items-center px-3 py-2 bg-white rounded-lg mb-1 border border-orange-200 border-l-4 border-l-orange-500 transition-all hover:bg-amber-50">
+          <div class="flex items-center gap-2.5">
+            <span class="text-[0.7rem] font-extrabold text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded-sm">#{{ idx + 1 }}</span>
+            <span class="font-mono font-bold text-orange-950 text-[0.95rem]">{{ item.sn }}</span>
           </div>
-          <span class="overflow-time">{{ item.time }}</span>
+          <span class="text-[0.75rem] text-slate-400">{{ item.time }}</span>
         </div>
       </div>
     </div>
 
     <!-- Invalid Scans Area -->
-    <div v-if="invalidScans.length > 0" class="invalid-scans-area fade-in">
-      <div class="invalid-header">
-        <span><i class="fas fa-exclamation-circle"></i> {{ t('packing.invalid_scans_title') }}</span>
-        <button @click="$emit('clear-invalid')" class="btn-clear-small">{{ t('packing.clear') }}</button>
+    <div v-if="invalidScans.length > 0" class="mt-5 bg-rose-50 border border-rose-200 rounded-xl overflow-hidden shadow-md transition-opacity animate-in">
+      <div class="px-3 py-2 bg-white border-b border-rose-200 flex justify-between items-center text-rose-700 text-[0.85rem] font-bold">
+        <span><i class="fas fa-exclamation-circle mr-1.5"></i> {{ t('packing.invalid_scans_title') }}</span>
+        <button @click="$emit('clear-invalid')" class="bg-transparent border border-rose-200 text-rose-700 px-2 py-0.5 rounded-md text-[0.7rem] cursor-pointer transition-all hover:bg-rose-50 hover:border-rose-700">{{ t('packing.clear') }}</button>
       </div>
-      <div class="invalid-list">
-        <div v-for="(err, idx) in [...invalidScans].reverse()" :key="idx" class="invalid-item" :class="`type-${err.type || 'generic'}`">
-          <div class="bad-info">
-            <span class="bad-sn">{{ err.sn }}</span>
-            <span class="bad-reason">{{ err.reason }}</span>
+      <div class="max-h-[150px] overflow-y-auto p-2">
+        <div v-for="(err, idx) in [...invalidScans].reverse()" :key="idx" class="flex justify-between items-center px-2.5 py-1.5 bg-white rounded-md mb-1 border border-rose-100 border-l-4"
+          :class="{
+            'border-l-orange-500': err.type === 'pattern',
+            'border-l-purple-500': err.type === 'duplicate',
+            'border-l-rose-500': !['pattern', 'duplicate'].includes(err.type)
+          }"
+        >
+          <div class="flex items-center">
+            <span class="font-mono font-semibold text-rose-600">{{ err.sn }}</span>
+            <span class="text-[0.7rem] px-1.5 py-0.5 rounded-sm ml-2.5 font-bold uppercase tracking-wider"
+              :class="{
+                'bg-orange-100 text-orange-800': err.type === 'pattern',
+                'bg-purple-100 text-purple-800': err.type === 'duplicate',
+                'bg-rose-200 text-rose-900': !['pattern', 'duplicate'].includes(err.type)
+              }"
+            >{{ err.reason }}</span>
           </div>
-          <span class="bad-time">{{ err.time }}</span>
+          <span class="text-[0.75rem] text-slate-400">{{ item?.time || err.time }}</span>
         </div>
       </div>
     </div>
@@ -103,227 +115,3 @@ const focusScan = () => {
 
 defineExpose({ focusScan });
 </script>
-
-<style scoped>
-.scan-input {
-  box-sizing: border-box;
-  padding: 14px 16px;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  color: #0f172a;
-  font-size: 1.15rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 8px;
-  transition: all 0.2s;
-  flex: 1;
-  min-width: 0;
-  resize: none;
-  overflow-y: hidden;
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-}
-.scan-input:focus {
-  border-color: #3b82f6;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-  outline: none;
-}
-.scan-input.input-locked {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #64748b;
-  cursor: not-allowed;
-  flex: 1;
-  min-width: 0;
-}
-.scan-input.input-overflow {
-  background: #fff7ed;
-  border-color: #f97316;
-  color: #9a3412;
-  flex: 1;
-  min-width: 0;
-}
-.scan-input.input-overflow:focus {
-  border-color: #ea580c;
-  background: #fff7ed;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
-}
-.input-row { display: flex; gap: 12px; align-items: flex-start; }
-.hint { text-align: center; color: #94a3b8; font-size: 0.85rem; }
-.hint.warning { color: #ef4444; font-weight: 600; }
-.hint.success { color: #059669; font-weight: 700; }
-.hint.overflow-hint { color: #ea580c; font-weight: 700; }
-.btn-next-carton {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  padding: 0 24px;
-  height: 58px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  transition: all 0.2s;
-}
-.btn-next-carton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-.btn-pack-now {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  border: none;
-  padding: 0 24px;
-  height: 58px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-  transition: all 0.2s;
-}
-.btn-pack-now:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-}
-.pulse-animation { animation: pulse-green 2s infinite; }
-@keyframes pulse-green {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-/* Overflow Scans */
-.overflow-scans-area {
-  margin-top: 16px;
-  background: #fff7ed;
-  border: 2px solid #fb923c;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
-}
-.overflow-header {
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #fff7ed, #ffedd5);
-  border-bottom: 1px solid #fb923c;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #c2410c;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-.overflow-header i { margin-right: 6px; color: #ea580c; }
-.btn-clear-overflow {
-  border-color: #fb923c !important;
-  color: #c2410c !important;
-}
-.btn-clear-overflow:hover { background: #ffedd5 !important; }
-.overflow-list { max-height: 200px; overflow-y: auto; padding: 8px; }
-.overflow-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 4px;
-  border: 1px solid #fed7aa;
-  border-left: 4px solid #f97316;
-  transition: all 0.2s;
-}
-.overflow-item:hover { background: #fffbeb; }
-.overflow-info { display: flex; align-items: center; gap: 10px; }
-.overflow-index {
-  font-size: 0.7rem;
-  font-weight: 800;
-  color: #c2410c;
-  background: #ffedd5;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.overflow-sn {
-  font-family: monospace;
-  font-weight: 700;
-  color: #9a3412;
-  font-size: 0.95rem;
-}
-.overflow-time { font-size: 0.75rem; color: #a0aec0; }
-
-/* Invalid Scans */
-.invalid-scans-area {
-  margin-top: 20px;
-  background: #fff5f5;
-  border: 1px solid #feb2b2;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-.invalid-header {
-  padding: 8px 12px;
-  background: #fff;
-  border-bottom: 1px solid #feb2b2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #c53030;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-.invalid-header i { margin-right: 6px; }
-.btn-clear-small {
-  background: transparent;
-  border: 1px solid #feb2b2;
-  color: #c53030;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-clear-small:hover { background: #fff5f5; border-color: #c53030; }
-.invalid-list { max-height: 150px; overflow-y: auto; padding: 8px; }
-.invalid-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  background: white;
-  border-radius: 6px;
-  margin-bottom: 4px;
-  border: 1px solid #fed7d7;
-}
-.bad-sn { font-family: monospace; font-weight: 600; color: #e53e3e; }
-.bad-reason {
-  font-size: 0.7rem;
-  background: #fecaca;
-  color: #b91c1c;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-left: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.bad-info { display: flex; align-items: center; }
-.bad-time { font-size: 0.75rem; color: #a0aec0; }
-.type-pattern .bad-reason { background: #ffedd5; color: #9a3412; }
-.type-duplicate .bad-reason { background: #f3e8ff; color: #6b21a8; }
-.type-pattern { border-left: 4px solid #f97316; }
-.type-duplicate { border-left: 4px solid #a855f7; }
-.type-excess { border-left: 4px solid #ef4444; }
-.type-generic { border-left: 4px solid #ef4444; }
-.type-lockdown { border-left: 4px solid #ef4444; }
-</style>
