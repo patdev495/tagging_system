@@ -1,19 +1,30 @@
 <template>
-  <div class="result-actions fade-in" v-if="lastCarton">
-    <div class="success-banner" :class="{ 'error-banner': lastCarton.status === 'FAILED', 'printing-banner': lastCarton.status === 'PRINTING' }">
+  <div class="mb-4 animate-in" v-if="lastCarton">
+    <div 
+      class="p-4 rounded-xl flex items-center gap-4 animate-in transition-colors" 
+      :class="{ 
+        'bg-rose-100 text-rose-800': lastCarton.status === 'FAILED', 
+        'bg-blue-100 text-blue-800': lastCarton.status === 'PRINTING',
+        'bg-emerald-100 text-emerald-800': lastCarton.status === 'SUCCESS'
+      }"
+    >
       <i class="fas" :class="{ 'fa-check-circle': lastCarton.status === 'SUCCESS', 'fa-exclamation-triangle': lastCarton.status === 'FAILED', 'fa-spinner fa-spin': lastCarton.status === 'PRINTING' }"></i>
       <span>
         <template v-if="lastCarton.status === 'PRINTING'">{{ t('print.printing_carton') }}: <strong>{{ lastCarton.carton_sn }}</strong>...</template>
         <template v-else-if="lastCarton.status === 'SUCCESS'">{{ t('print.last_carton') }}: <strong>{{ lastCarton.carton_sn }}</strong></template>
-        <template v-else>{{ t('print.attempt_failed') }}: <strong class="text-strike">{{ lastCarton.carton_sn }}</strong>
-          <span v-if="agentErrorMessage" class="error-detail"> - {{ agentErrorMessage }}</span>
+        <template v-else>{{ t('print.attempt_failed') }}: <strong class="line-through opacity-70">{{ lastCarton.carton_sn }}</strong>
+          <span v-if="agentErrorMessage" class="text-[0.85rem] font-normal ml-1"> - {{ agentErrorMessage }}</span>
         </template>
       </span>
-      <div class="banner-actions" v-if="lastCarton.status !== 'PRINTING'">
-        <a v-if="lastCarton.status === 'SUCCESS'" :href="downloadUrl" class="btn-reprint" download>
+      <div class="flex gap-2.5 ml-auto" v-if="lastCarton.status !== 'PRINTING'">
+        <a v-if="lastCarton.status === 'SUCCESS'" :href="downloadUrl" class="bg-emerald-700 text-white border-none px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 font-semibold transition-all no-underline hover:bg-emerald-800" download>
           <i class="fas fa-file-download"></i> {{ t('print.manual_download') }}
         </a>
-        <button @click="$emit('retry')" class="btn-reprint" :class="lastCarton.status === 'SUCCESS' ? 'secondary' : 'primary-err'">
+        <button 
+          @click="$emit('retry')" 
+          class="border-none px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 font-semibold transition-all no-underline" 
+          :class="lastCarton.status === 'SUCCESS' ? 'bg-white text-emerald-700 border border-emerald-700 hover:bg-emerald-50' : 'bg-rose-500 text-white hover:bg-rose-600'"
+        >
           <i class="fas fa-redo"></i> {{ lastCarton.status === 'SUCCESS' ? t('print.reprint') : t('print.try_again') }}
         </button>
       </div>
@@ -33,17 +44,3 @@ const props = defineProps({
 defineEmits(['retry']);
 const downloadUrl = computed(() => props.lastCarton ? `/api/v1/print/carton/${props.lastCarton.id}/btxml` : '');
 </script>
-
-<style scoped>
-.result-actions { margin-bottom: 16px; }
-.success-banner { background: #dcfce7; color: #166534; padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 16px; animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-.success-banner.error-banner { background: #fee2e2; color: #991b1b; }
-.text-strike { text-decoration: line-through; opacity: 0.7; }
-.error-detail { font-size: 0.85rem; font-weight: normal; margin-left: 5px; }
-.btn-reprint { margin-left: auto; background: #166534; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s; text-decoration: none; }
-.btn-reprint.primary-err { background: #ef4444; }
-.btn-reprint.primary-err:hover { background: #dc2626; }
-.btn-reprint.secondary { background: white; color: #166534; border: 1px solid #166534; }
-.banner-actions { display: flex; gap: 10px; margin-left: auto; }
-@keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); opacity: 1; } 70% { transform: scale(0.9); } 100% { transform: scale(1); } }
-</style>
