@@ -1,16 +1,16 @@
 <template>
   <aside 
     :class="[
-      'sidebar fixed left-0 top-0 h-screen bg-indigo-900 text-white transition-all duration-300 z-50 flex flex-col',
+      'fixed left-0 top-0 h-screen transition-all duration-300 z-50 flex flex-col shadow-[4px_0_20px_rgba(0,0,0,0.1)] bg-linear-to-b from-[#1e1b4b] to-[#0f172a] text-white',
       isCollapsed ? 'w-20' : 'w-64'
     ]"
   >
     <!-- Header/Logo -->
     <router-link to="/" class="p-6 flex items-center gap-3 border-b border-indigo-800 hover:bg-white/5 transition-colors cursor-pointer no-underline text-white">
-      <div class="logo-box bg-white p-2 rounded-lg flex-shrink-0">
+      <div class="bg-white p-2 rounded-lg flex-shrink-0 shadow-sm">
         <Package class="text-indigo-900 w-6 h-6" />
       </div>
-      <div v-if="!isCollapsed" class="logo-text overflow-hidden whitespace-nowrap">
+      <div v-if="!isCollapsed" class="overflow-hidden whitespace-nowrap">
         <h1 class="font-black tracking-tight text-xl">NY TAGGING</h1>
       </div>
     </router-link>
@@ -21,9 +21,9 @@
         v-for="item in menuItems" 
         :key="item.path" 
         :to="item.path"
-        class="nav-item flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/10 group text-white"
-        active-class="active-link"
-        exact-active-class="exact-active-link"
+        class="flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/10 group text-white"
+        active-class="bg-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]"
+        exact-active-class="bg-indigo-600 shadow-[0_4px_12px_rgba(79,70,229,0.3)]"
         :title="isCollapsed ? item.label : ''"
       >
         <component :is="item.icon" class="w-6 h-6 flex-shrink-0" />
@@ -35,7 +35,7 @@
     <div class="p-4 border-t border-indigo-800">
       <button 
         @click="isCollapsed = !isCollapsed"
-        class="w-full flex items-center justify-center p-2 rounded-lg hover:bg-indigo-800 transition-colors"
+        class="w-full flex items-center justify-center p-2 rounded-lg hover:bg-indigo-800 transition-colors cursor-pointer"
       >
         <ChevronLeft v-if="!isCollapsed" class="w-6 h-6" />
         <ChevronRight v-else class="w-6 h-6" />
@@ -72,20 +72,3 @@ const menuItems = [
   { label: 'Settings', path: '/admin/settings', icon: Settings },
 ];
 </script>
-
-<style scoped>
-.sidebar {
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
-}
-
-.nav-item.exact-active-link {
-  background-color: var(--indigo-600);
-  color: white;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-}
-
-.nav-item:hover {
-  color: white;
-}
-</style>
