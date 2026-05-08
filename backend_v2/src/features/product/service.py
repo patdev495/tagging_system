@@ -62,9 +62,9 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
     max_seq = 0
     for c in cartons:
         try:
-            # Tìm phần số ở cuối (thường là 5 chữ số nhưng có thể thay đổi)
+            # Tìm phần số ở cuối (5 chữ số cuối là số thứ tự)
             import re
-            match = re.search(r'(\d+)$', c.carton_sn)
+            match = re.search(r'(\d{5})$', c.carton_sn)
             if match:
                 seq = int(match.group(1))
                 if seq > max_seq:

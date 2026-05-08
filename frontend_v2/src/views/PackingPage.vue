@@ -303,7 +303,7 @@ const refreshNextSN = async () => {
   try {
     const snRes = await packingApi.getNextSN(currentProduct.value.id, customYYMM.value);
     const data = snRes.data as any;
-    const newSeq = data.next_seq || (data.next_sn ? parseInt(data.next_sn.match(/\d+$/)?.[0] || '0') : 1);
+    const newSeq = data.next_seq || (data.next_sn ? parseInt(data.next_sn.match(/\d{5}$/)?.[0] || '0') : 1);
     
     if (newSeq) {
       suggestedSNValue.value = newSeq;
