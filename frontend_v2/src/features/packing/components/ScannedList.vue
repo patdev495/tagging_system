@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[380px] bg-white rounded-[24px] border border-slate-100 flex flex-col h-[calc(100vh-120px)] sticky top-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] lg:w-full lg:h-[450px] lg:relative lg:top-0 lg:mt-5">
+  <div class="w-full h-[450px] relative mt-5 bg-white rounded-[24px] border border-slate-100 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.03)] xl:w-[380px] xl:h-[calc(100vh-120px)] xl:sticky xl:top-5 xl:mt-0">
     <div class="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-linear-to-b from-slate-50 to-white rounded-t-[24px]">
       <h3 class="m-0 text-[1.1rem] font-extrabold text-slate-900">{{ t('packing.scanned') }} ({{ items.length }})</h3>
       <button @click="$emit('clear')" class="px-3 py-1.5 text-[0.8rem] font-bold text-rose-500 bg-rose-50 border-none rounded-lg cursor-pointer transition-all hover:bg-rose-100 hover:-translate-y-0.5" v-if="items.length > 0">{{ t('packing.clear') }}</button>

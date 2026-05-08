@@ -16,7 +16,7 @@
       />
 
       <section class="mt-2.5" v-else>
-        <div class="flex gap-6 items-start lg:flex-col lg:items-stretch">
+        <div class="flex flex-col xl:flex-row gap-6 items-stretch xl:items-start">
           <div class="flex-[1.4] min-w-0">
             <SessionHeader
               ref="sessionRef"
