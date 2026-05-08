@@ -380,7 +380,7 @@ const finalizeCarton = async (isRetry = false) => {
   agentErrorMessage.value = '';
   try {
     let cartonId: number, cartonSn: string;
-    if (isRetry && lastCarton.value) {
+    if (isRetry && lastCarton.value?.id) {
       const res = await printApi.reprintCarton(
         lastCarton.value.id, 
         settings.templatePath || '', 
@@ -389,7 +389,7 @@ const finalizeCarton = async (isRetry = false) => {
       cartonId = res.data.id;
       cartonSn = res.data.carton_sn;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
-    } else if (isRescanMode.value) {
+    } else if (isRescanMode.value && lastCarton.value?.id) {
       const items = [...scannedItems.value];
       const res = await packingApi.rescanCarton({
         carton_id: lastCarton.value?.id || 0, // In practice, lastCarton or rescan SN would be used
@@ -418,6 +418,9 @@ const finalizeCarton = async (isRetry = false) => {
       lastCarton.value = { ...res.data, status: 'PRINTING' };
       backupScannedItems.value = items;
     }
+
+    if (!cartonId) throw new Error('Invalid Carton ID received from server');
+
     const printResult = await handlePrintExecution(cartonId, cartonSn);
     if (printResult === 'Success') {
       if (lastCarton.value) lastCarton.value.status = 'SUCCESS';
@@ -496,9 +499,15 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promis
 };
 
 const handleEmergencyReprint = async (carton: Carton) => {
+  if (!carton.id) {
+    system.showNotification('Invalid Carton ID', 'error');
+    return;
+  }
   try {
     const res = await printApi.reprintCarton(carton.id, settings.templatePath || '', settings.printerName);
     const newCarton = res.data;
+    if (!newCarton?.id) throw new Error('Failed to create reprint record');
+    
     const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn);
     if (printResult === 'Success') { 
       system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
@@ -515,7 +524,7 @@ const handleRescan = (carton: Carton) => {
   invalidScans.value = [];
   overflowScans.value = [];
   awaitingNext.value = false;
-  lastCarton.value = null;
+  lastCarton.value = carton;
   agentErrorMessage.value = '';
   customSN.value = '';
   snPattern.value = '';
