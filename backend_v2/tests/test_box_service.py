@@ -1,0 +1,174 @@
+"""
+Tests for Box Service — S/N generation logic.
+This is the most critical business logic in the system.
+"""
+import pytest
+from unittest.mock import MagicMock, patch
+from src.core import models
+from src.features.box import service, schemas
+from fastapi import HTTPException
+
+
+# ============================================================
+# get_next_carton_sn — Pure S/N generation
+# ============================================================
+
+class TestGetNextCartonSN:
+    """Test the S/N generation algorithm."""
+
+    def _make_product(self, **kwargs):
+        defaults = dict(id=1, start_part="VN", middle_part="11", packed_qty=10)
+        defaults.update(kwargs)
+        return models.Product(**defaults)
+
+    def test_first_sn_of_month(self):
+        """First carton of the month should be seq 00001."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = None
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product)
+        
+        assert sn.endswith("00001")
+        assert product.start_part in sn
+        assert product.middle_part in sn
+
+    def test_increment_from_existing(self):
+        """Should increment from the highest existing S/N."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = "VN26051100042"
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product)
+        
+        assert sn.endswith("00043")
+
+    def test_custom_sn_bypasses_sequence(self):
+        """Custom S/N should use the provided number directly."""
+        db = MagicMock()
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product, custom_sn=99)
+        
+        assert sn.endswith("00099")
+        # DB should NOT be queried when custom_sn is provided
+        db.query.assert_not_called()
+
+    def test_custom_yymm_overrides_date(self):
+        """Custom YYMM should override the current date."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = None
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product, custom_yymm="2601")
+        
+        assert "2601" in sn
+        assert sn.endswith("00001")
+
+    def test_different_products_have_different_prefixes(self):
+        """Products with different start_part/middle_part should produce different prefixes."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = None
+        
+        product_vn = self._make_product(start_part="VN", middle_part="11")
+        product_cn = self._make_product(start_part="CN", middle_part="16")
+        
+        sn_vn = service.get_next_carton_sn(db, product_vn, custom_yymm="2605")
+        sn_cn = service.get_next_carton_sn(db, product_cn, custom_yymm="2605")
+        
+        assert sn_vn.startswith("VN260511")
+        assert sn_cn.startswith("CN260516")
+
+    def test_month_rollover_resets_sequence(self):
+        """When switching months, sequence should start from 1 (no existing match)."""
+        db = MagicMock()
+        # Old month had cartons, new month has none
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = None
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product, custom_yymm="2606")
+        
+        assert "2606" in sn
+        assert sn.endswith("00001")
+
+    def test_high_sequence_number(self):
+        """Should handle high sequence numbers (e.g., 99999)."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = "VN26051199999"
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product, custom_yymm="2605")
+        
+        assert sn.endswith("100000")  # 6 digits when exceeding 99999
+
+    def test_corrupted_max_sn_fallback(self):
+        """Should fallback to seq 1 if max_sn has corrupted suffix."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.scalar.return_value = "VN260511XXXXX"
+        product = self._make_product()
+        
+        sn = service.get_next_carton_sn(db, product, custom_yymm="2605")
+        
+        assert sn.endswith("00001")
+
+
+# ============================================================
+# create_carton — Carton creation with validations
+# ============================================================
+
+class TestCreateCarton:
+    """Test carton creation business rules."""
+
+    def _make_carton_input(self, **kwargs):
+        defaults = dict(
+            product_id=1,
+            items=["SN001", "SN002", "SN003"],
+            template_path="dummy.btw",
+            printer_name="Printer1",
+            job_order="JO-001",
+            carton_origin="VN",
+        )
+        defaults.update(kwargs)
+        return schemas.CartonCreate(**defaults)
+
+    def test_rejects_duplicate_items_in_scan(self):
+        """Should reject carton if scanned items contain duplicates."""
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=3)
+        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
+        
+        carton_in = self._make_carton_input(items=["SN001", "SN001", "SN002"])
+        
+        with pytest.raises(HTTPException) as exc:
+            service.create_carton(carton_in, db)
+        assert exc.value.status_code == 400
+        assert "Duplicate" in exc.value.detail
+
+    def test_rejects_nonexistent_product(self):
+        """Should return 404 if product doesn't exist."""
+        db = MagicMock()
+        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = None
+        
+        carton_in = self._make_carton_input(product_id=999)
+        
+        with pytest.raises(HTTPException) as exc:
+            service.create_carton(carton_in, db)
+        assert exc.value.status_code == 404
+
+    def test_rejects_custom_sn_already_in_use(self):
+        """Should reject if custom S/N already exists."""
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=3)
+        existing_carton = models.Carton(id=5, carton_sn="VN26051100042", status="SUCCESS")
+        
+        # First query = product lookup
+        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
+        # Second query = existing carton check
+        db.query.return_value.filter.return_value.first.return_value = existing_carton
+        
+        carton_in = self._make_carton_input(custom_sn=42)
+        
+        with pytest.raises(HTTPException) as exc:
+            service.create_carton(carton_in, db)
+        assert exc.value.status_code == 400
+        assert "already in use" in exc.value.detail
