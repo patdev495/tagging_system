@@ -83,6 +83,17 @@ Plans:
 **Depends on:** Phase 28
 **Status**: [x] Completed
 
+### Phase 30: Automated Testing Suite Implementation
+**Goal**: Implement unit and integration tests for core business logic (S/N generation, Packing logic) to reduce manual regression testing.
+**Requirements**: TEST-01, TEST-02
+**Success Criteria**:
+1. Pytest suite covering backend S/N sequence generation and reset logic.
+2. Vitest suite covering frontend scan buffer and validation logic.
+3. Automated verification of "Box Full" and "Print Trigger" workflows.
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 30 to break down)
+
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.
