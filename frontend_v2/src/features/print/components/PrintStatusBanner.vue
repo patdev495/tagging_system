@@ -47,5 +47,11 @@ defineEmits<{
   (e: 'retry'): void;
 }>();
 
-const downloadUrl = computed(() => props.lastCarton ? `/api/v1/print/carton/${props.lastCarton.id}/btxml` : '');
+const downloadUrl = computed(() => {
+  if (!props.lastCarton) return '';
+  const base = import.meta.env.DEV 
+    ? `http://${window.location.hostname}:8001/api/v1` 
+    : '/api/v1';
+  return `${base}/print/carton/${props.lastCarton.id}/btxml`;
+});
 </script>

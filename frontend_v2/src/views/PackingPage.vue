@@ -490,6 +490,12 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promis
         settings.templatePath || undefined
       );
       if (res.data?.success) {
+        if ((res.data as any).type === 'pdf' && (res.data as any).data) {
+          const link = document.createElement('a');
+          link.href = `data:application/pdf;base64,${(res.data as any).data}`;
+          link.download = `Label_${_cartonSn}.pdf`;
+          link.click();
+        }
         return 'Success';
       } else {
         return (res.data as any)?.message || 'Server print failed';
