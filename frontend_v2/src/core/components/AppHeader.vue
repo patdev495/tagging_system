@@ -65,16 +65,21 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { useSystemStore } from '../stores/system';
 import { useSettingsStore } from '../stores/settings';
 
-defineProps({
-  isAudioActive: { type: Boolean, default: false }
-});
+defineProps<{
+  isAudioActive?: boolean
+}>();
 
-defineEmits(['toggle-audio', 'show-emergency', 'show-settings', 'home']);
+const emit = defineEmits<{
+  (e: 'toggle-audio'): void
+  (e: 'show-emergency'): void
+  (e: 'show-settings'): void
+  (e: 'home'): void
+}>();
 
 const { t } = useI18n();
 const system = useSystemStore();

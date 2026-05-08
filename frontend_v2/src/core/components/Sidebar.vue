@@ -44,7 +44,7 @@
   </aside>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { 
   Package, 
   LayoutDashboard, 
@@ -58,11 +58,18 @@ import {
 } from 'lucide-vue-next';
 import { useSystemStore } from '../stores/system';
 import { storeToRefs } from 'pinia';
+import type { Component } from 'vue';
 
 const systemStore = useSystemStore();
 const { isSidebarCollapsed: isCollapsed } = storeToRefs(systemStore);
 
-const menuItems = [
+interface MenuItem {
+  label: string;
+  path: string;
+  icon: Component;
+}
+
+const menuItems: MenuItem[] = [
   { label: 'Packing Station', path: '/', icon: Box },
   { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
   { label: 'Customers', path: '/admin/customers', icon: Users },

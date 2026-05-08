@@ -18,7 +18,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import Sidebar from '../components/Sidebar.vue';
 import { useSystemStore } from '../stores/system';
 import { storeToRefs } from 'pinia';

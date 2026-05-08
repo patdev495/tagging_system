@@ -23,7 +23,7 @@
   </Transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useSystemStore } from '../stores/system';
 const system = useSystemStore();
 </script>
