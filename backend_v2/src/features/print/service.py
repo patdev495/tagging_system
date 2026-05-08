@@ -124,8 +124,10 @@ def download_carton_btxml(carton_id: int, template_path: str = None, db: Session
     return carton.carton_sn, btxml_content
 
 def reprint_carton(carton_id: int, printer_name: str = None, template_path: str = None, station_id: str = None, db: Session = None):
+    logger.info(f"Reprinting carton {carton_id} (printer={printer_name}, template={template_path})")
     original = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not original:
+        logger.warning(f"Reprint failed: Carton {carton_id} not found in database")
         raise HTTPException(status_code=404, detail="Original carton not found")
     
     new_carton = models.Carton(

@@ -18,7 +18,7 @@ def list_cartons(
     """Lấy danh sách lịch sử thùng hàng (có phân trang và lọc)"""
     return service.get_cartons(db, skip, limit, search, product_id, status)
 
-@router.get("/search", response_model=schemas.Carton)
+@router.get("/search", response_model=schemas.CartonDetail)
 def search_carton(carton_sn: str, db: Session = Depends(get_db)):
     """Tìm kiếm thùng theo Carton Serial Number"""
     return service.search_carton_by_sn(carton_sn, db)

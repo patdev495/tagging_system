@@ -369,7 +369,7 @@ const handleScan = () => {
   const rawInput = scanBuffer.value.trim();
   if (!rawInput) return;
 
-  const sns = rawInput.split(/[\n\r\t,]+/).map(s => s.trim()).filter(s => s.length > 0);
+  const sns = rawInput.split(/\s*[\n\r\t,]+\s*/).map(s => s.trim()).filter(s => s.length > 0);
   
   if (sns.length === 0) return;
 

@@ -13,15 +13,15 @@
           <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{{ t('settings.print_mode') }}</label>
           <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
             <button 
-              @click="store.printMode = 'centralized'"
-              :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', store.printMode === 'centralized' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
+              @click="formData.printMode = 'centralized'"
+              :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', formData.printMode === 'centralized' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
             >
               <i class="fas fa-server text-lg"></i>
               <span class="text-[10px] font-black uppercase">{{ t('settings.centralized') }}</span>
             </button>
             <button 
-              @click="store.printMode = 'local'"
-              :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', store.printMode === 'local' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
+              @click="formData.printMode = 'local'"
+              :class="['flex flex-col items-center gap-1 py-3 rounded-lg transition-all', formData.printMode === 'local' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50']"
             >
               <i class="fas fa-desktop text-lg"></i>
               <span class="text-[10px] font-black uppercase">{{ t('settings.local_agent') }}</span>
@@ -33,14 +33,14 @@
         <div class="mb-4">
           <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-globe mr-1.5 text-emerald-500"></i>{{ t('settings.language') }}</label>
           <div class="input-with-hint">
-            <select v-model="store.language" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
+            <select v-model="formData.language" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
               <option value="vi">Tiếng Việt</option>
               <option value="en">English</option>
             </select>
           </div>
         </div>
 
-        <div v-if="store.printMode === 'centralized'" class="rounded-xl p-3.5 md:p-4.5 mb-5 flex items-start gap-3.5 bg-linear-to-br from-emerald-50 to-emerald-100 border border-emerald-200 text-emerald-900 animate-in">
+        <div v-if="formData.printMode === 'centralized'" class="rounded-xl p-3.5 md:p-4.5 mb-5 flex items-start gap-3.5 bg-linear-to-br from-emerald-50 to-emerald-100 border border-emerald-200 text-emerald-900 animate-in">
           <i class="fas fa-server text-[1.4rem] mt-0.5 text-emerald-500"></i>
           <div>
             <strong class="block text-[0.9rem] font-bold">{{ t('settings.centralized_title') }}</strong>
@@ -57,13 +57,13 @@
         </div>
 
         <!-- Agent Configuration (Only if local) -->
-        <div v-if="store.printMode === 'local'" class="animate-in slide-in-from-top-2 duration-300">
+        <div v-if="formData.printMode === 'local'" class="animate-in slide-in-from-top-2 duration-300">
           <div class="mb-4">
             <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-link mr-1.5 text-blue-500"></i>{{ t('settings.agent_url') }}</label>
             <div class="input-with-hint">
               <div class="flex gap-2">
                 <input 
-                  :value="detectingAgent ? t('settings.detecting_agent') : store.agentUrl" 
+                  :value="detectingAgent ? t('settings.detecting_agent') : formData.agentUrl" 
                   type="text" 
                   readonly 
                   class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-100 text-slate-500 outline-none transition-all font-mono border-dashed cursor-not-allowed" 
@@ -83,7 +83,7 @@
           <div class="mb-4">
             <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-folder-open mr-1.5 text-orange-500"></i>{{ t('settings.local_folder') }}</label>
             <input 
-              v-model="store.localTemplateDir" 
+              v-model="formData.localTemplateDir" 
               type="text" 
               placeholder="C:\NY_Templates\" 
               class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all font-mono focus:border-blue-500 focus:bg-white" 
@@ -108,28 +108,28 @@
           <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-print mr-1.5 text-blue-600"></i>{{ t('settings.printer_name') }}</label>
           <div class="input-with-hint">
             <div class="flex gap-2 items-center">
-              <select v-model="store.printerName" class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
+              <select v-model="formData.printerName" class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
                 <option value="">-- {{ t('settings.default_printer') }} --</option>
                 <option v-for="p in availablePrinters" :key="typeof p === 'string' ? p : (p.name || Math.random().toString())" :value="typeof p === 'string' ? p : p.name">
                   🖨️ {{ typeof p === 'string' ? p : (p.name || 'Unknown Printer') }} {{ typeof p === 'string' ? '' : (p.port ? `(${p.port})` : '') }}
                 </option>
               </select>
-              <button @click="loadPrinters" class="w-10 h-10 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center cursor-pointer text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600" :title="store.printMode === 'local' ? 'Refresh Local Printers' : 'Refresh Server Printers'">
+              <button @click="loadPrinters" class="w-10 h-10 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center cursor-pointer text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600" :title="formData.printMode === 'local' ? 'Refresh Local Printers' : 'Refresh Server Printers'">
                 <i class="fas fa-sync-alt" :class="{'fa-spin': loadingPrinters}"></i>
               </button>
             </div>
             <small v-if="availablePrinters.length === 0 && !loadingPrinters" class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">
-              {{ t('settings.no_printers_found', { mode: store.printMode === 'local' ? t('settings.agent') : t('settings.server') }) }}
+              {{ t('settings.no_printers_found', { mode: formData.printMode === 'local' ? t('settings.agent') : t('settings.server') }) }}
             </small>
-            <small class="block mt-1 text-[0.75rem] text-blue-600" v-else>{{ t('settings.printer_list_source', { mode: store.printMode === 'local' ? t('settings.local_agent') : t('settings.backend_server') }) }}</small>
+            <small class="block mt-1 text-[0.75rem] text-blue-600" v-else>{{ t('settings.printer_list_source', { mode: formData.printMode === 'local' ? t('settings.local_agent') : t('settings.backend_server') }) }}</small>
           </div>
         </div>
 
         <!-- Template Path (Client Fallback) -->
-        <div class="mb-4" v-if="store.printMode === 'centralized'">
+        <div class="mb-4" v-if="formData.printMode === 'centralized'">
           <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-file-alt mr-1.5 text-orange-500"></i>{{ t('settings.fallback_template') }}</label>
           <div class="input-with-hint">
-            <input v-model="store.templatePath" type="text" placeholder="D:\Templates\label.btw" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 outline-none transition-all font-mono focus:border-blue-500 focus:bg-white" />
+            <input v-model="formData.templatePath" type="text" placeholder="D:\Templates\label.btw" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 outline-none transition-all font-mono focus:border-blue-500 focus:bg-white" />
             <small class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">{{ t('settings.fallback_template_hint') }}</small>
           </div>
         </div>
@@ -137,7 +137,7 @@
         <div class="mb-4">
           <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600">{{ t('settings.audio_output') }}</label>
           <div class="input-with-hint">
-            <select v-model="store.audioDeviceId" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white"><option value="">{{ t('settings.audio_output_default') }}</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
+            <select v-model="formData.audioDeviceId" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white"><option value="">{{ t('settings.audio_output_default') }}</option><option v-for="d in audioDevices" :key="d.id" :value="d.id">{{ d.label }}</option></select>
             <small class="block mt-1.5 text-[0.75rem] text-slate-500 bg-slate-100 p-2 rounded-md leading-relaxed">{{ t('settings.audio_output_hint') }}</small>
           </div>
         </div>
@@ -184,8 +184,19 @@ const availablePrinters = ref<(string | Printer)[]>([]);
 const loadingPrinters = ref<boolean>(false);
 const detectingAgent = ref<boolean>(false);
 
+const formData = ref({
+  printMode: store.printMode,
+  language: store.language,
+  agentUrl: store.agentUrl,
+  localTemplateDir: store.localTemplateDir,
+  printerName: store.printerName,
+  templatePath: store.templatePath,
+  audioDeviceId: store.audioDeviceId
+});
+
 const discoverAgent = async () => {
-  if (store.printMode !== 'local') return;
+  if (formData.value.printMode !== 'local') return;
+  availablePrinters.value = [];
   detectingAgent.value = true;
   
   const portsToScan: number[] = [];
@@ -210,10 +221,10 @@ const discoverAgent = async () => {
   }
   
   if (foundUrl) {
-    store.agentUrl = foundUrl;
+    formData.value.agentUrl = foundUrl;
     system.showNotification(`Found Agent on port ${foundUrl.split(':').pop()}`, 'success');
     loadPrinters();
-    validateDir(store.localTemplateDir);
+    validateDir(formData.value.localTemplateDir);
   } else {
     system.showNotification('Could not detect Agent. Is it running?', 'error');
   }
@@ -227,17 +238,14 @@ const loadAudioDevices = async () => {
     audioDevices.value = devices.filter(d => d.kind === 'audiooutput').map(d => ({ id: d.deviceId, label: d.label || `Speaker (${d.deviceId.slice(0, 5)}...)` }));
   } catch (e) { console.warn('Error loading audio devices:', e); }
 };
-watch(() => store.printMode, () => {
-  availablePrinters.value = [];
-  loadPrinters();
-});
+// Consolidated watcher for print mode below
 
 const loadPrinters = async () => {
   loadingPrinters.value = true;
   try {
-    if (store.printMode === 'local') {
+    if (formData.value.printMode === 'local') {
       try {
-        const resp = await fetch(`${store.agentUrl}/printers`);
+        const resp = await fetch(`${formData.value.agentUrl}/printers`);
         if (resp.ok) {
           const raw = await resp.json();
           // Agent returns list directly or {"printers": [...]}
@@ -266,6 +274,14 @@ const loadPrinters = async () => {
 };
 
 const handleSave = () => {
+  store.printMode = formData.value.printMode;
+  store.language = formData.value.language;
+  store.agentUrl = formData.value.agentUrl;
+  store.localTemplateDir = formData.value.localTemplateDir;
+  store.printerName = formData.value.printerName;
+  store.templatePath = formData.value.templatePath;
+  store.audioDeviceId = formData.value.audioDeviceId;
+  
   store.saveSettings();
   emit('close');
   system.showNotification('Settings saved locally', 'success');
@@ -295,22 +311,37 @@ const validateDir = async (path: string) => {
   }
 };
 
-watch(() => store.printMode, async (newVal) => {
+watch(() => formData.value.printMode, async (newVal) => {
+  // Immediately clear printers when switching modes
+  availablePrinters.value = [];
+  formData.value.printerName = ''; 
+  
   if (newVal === 'local') {
     await discoverAgent();
   } else {
-    loadPrinters();
+    await loadPrinters();
   }
 });
 
-watch(() => store.localTemplateDir, (newVal) => {
+watch(() => formData.value.localTemplateDir, (newVal) => {
   validateDir(newVal);
 });
 
 watch(() => props.show, async (val) => { 
   if (val) { 
+    // Reset formData to current store state
+    formData.value = {
+      printMode: store.printMode,
+      language: store.language,
+      agentUrl: store.agentUrl,
+      localTemplateDir: store.localTemplateDir,
+      printerName: store.printerName,
+      templatePath: store.templatePath,
+      audioDeviceId: store.audioDeviceId
+    };
+    
     loadAudioDevices(); 
-    if (store.printMode === 'local') {
+    if (formData.value.printMode === 'local') {
       await discoverAgent();
     } else {
       loadPrinters(); 

@@ -1,19 +1,20 @@
 <template>
   <div class="mb-4">
     <div class="flex gap-3 items-start">
-      <input 
+      <textarea 
         :value="scanBuffer"
         @input="handleInput"
-        @keyup.enter="$emit('scan')"
+        @keydown.enter.prevent="$emit('scan')"
         :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : t('packing.scan_prompt_default')))"
         ref="scanInput"
         :disabled="disabled"
-        class="flex-1 min-w-0 px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1.15rem] font-bold text-center mb-2 transition-all min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0"
+        rows="1"
+        class="flex-1 min-w-0 px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1.15rem] font-bold text-center mb-2 transition-all min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0 resize-none overflow-hidden"
         :class="{ 
           'bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed': !jobOrder || disabled, 
           'bg-orange-50 border-orange-500 text-orange-900 focus:border-orange-600 focus:bg-orange-50 focus:ring-orange-500/15': awaitingNext && jobOrder && !disabled 
         }"
-      />
+      ></textarea>
       <button 
         v-if="awaitingNext" 
         @click="$emit('next-carton')" 
@@ -127,7 +128,7 @@ const emit = defineEmits<{
 
 const scanInput = ref<HTMLTextAreaElement | null>(null);
 
-const handleInput = (e: Event) => emit('update:scanBuffer', (e.target as HTMLInputElement).value);
+const handleInput = (e: Event) => emit('update:scanBuffer', (e.target as HTMLTextAreaElement).value);
 
 const focusScan = () => {
   if (scanInput.value) scanInput.value.focus({ preventScroll: true });

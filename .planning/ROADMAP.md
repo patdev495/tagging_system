@@ -81,6 +81,16 @@ Plans:
 **Requirements**: UI-CLEANUP
 **Status**: [x] Completed
 
+### Phase 29: Migrate frontend to TypeScript for better maintainability
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 28
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 29 to break down)
+
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.

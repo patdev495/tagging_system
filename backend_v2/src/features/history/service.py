@@ -38,13 +38,11 @@ def get_carton_detail(db: Session, carton_id: int):
     return carton
 
 def search_carton_by_sn(carton_sn: str, db: Session):
-    carton = db.query(models.Carton).options(joinedload(models.Carton.product)).filter(models.Carton.carton_sn == carton_sn).order_by(models.Carton.id.desc()).first()
+    carton = db.query(models.Carton).filter(models.Carton.carton_sn == carton_sn).order_by(models.Carton.id.desc()).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     
-    # Add items_count
-    carton.items_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton.id).count()
-    return carton
+    return get_carton_detail(db, carton.id)
 
 def search_by_item_sn(item_sn: str, db: Session):
     # Find the item first
