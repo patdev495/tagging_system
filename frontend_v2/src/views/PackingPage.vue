@@ -206,7 +206,7 @@ const customSN = ref<string>('');
 const snPattern = ref<string>('');
 const customYYMM = ref<string>('');
 const awaitingNext = ref<boolean>(false);
-const suggestedSNValue = ref<number>(0);
+const suggestedSNValue = ref<number>(1);
 const backupScannedItems = ref<string[]>([]);
 const isProcessing = ref<boolean>(false);
 const overflowScans = ref<OverflowScan[]>([]);
@@ -277,7 +277,7 @@ const selectProduct = async (p: Product) => {
   agentErrorMessage.value = '';
   customSN.value = '';
   isSNManual.value = false;
-  suggestedSNValue.value = 0;
+  suggestedSNValue.value = 1;
   isRescanMode.value = false;
   rescanCartonSN.value = '';
   await refreshNextSN();
@@ -309,7 +309,7 @@ const refreshNextSN = async () => {
         if (newSeq > suggestedSNValue.value) {
           suggestedSNValue.value = newSeq;
           if (!isSNManual.value) {
-            customSN.value = newSeq.toString();
+            customSN.value = newSeq.toString().padStart(5, '0');
           }
         }
       }
@@ -425,9 +425,12 @@ const finalizeCarton = async (isRetry = false) => {
       if (cartonSn) {
         const lastSeqMatch = cartonSn.match(/\d{5}$/);
         if (lastSeqMatch) {
-           const lastSeq = parseInt(lastSeqMatch[0]);
-           suggestedSNValue.value = lastSeq + 1;
-        }
+            const lastSeq = parseInt(lastSeqMatch[0]);
+            suggestedSNValue.value = lastSeq + 1;
+            if (!isSNManual.value) {
+              customSN.value = (lastSeq + 1).toString().padStart(5, '0');
+            }
+         }
       }
 
       if (!isRetry) { 
