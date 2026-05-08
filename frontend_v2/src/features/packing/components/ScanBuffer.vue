@@ -1,5 +1,5 @@
 <template>
-  <div class="input-area">
+  <div class="mb-4">
     <div class="flex gap-3 items-start">
       <textarea 
         :value="scanBuffer"
