@@ -1,41 +1,41 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-card emergency-modal">
-      <div class="modal-header-modern">
-        <div class="header-title"><i class="fas fa-search"></i><h2>{{ t('print.emergency_title') }}</h2></div>
-        <button @click="$emit('close')" class="btn-close-modern"><i class="fas fa-times"></i></button>
+  <div v-if="show" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[2000]" @click.self="$emit('close')">
+    <div class="w-[95%] max-w-[600px] bg-white rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-in">
+      <div class="flex justify-between items-center px-8 pt-6 pb-4">
+        <div class="flex items-center gap-3 text-slate-800"><i class="fas fa-search text-[1.5rem] text-blue-600"></i><h2 class="m-0 text-[1.5rem] font-bold">{{ t('print.emergency_title') }}</h2></div>
+        <button @click="$emit('close')" class="bg-slate-100 border-none w-9 h-9 rounded-xl text-slate-500 cursor-pointer flex items-center justify-center transition-all hover:bg-slate-200 hover:text-slate-900 hover:rotate-90"><i class="fas fa-times"></i></button>
       </div>
-      <div class="modal-body-modern">
-        <p class="emergency-hint">{{ t('print.emergency_hint') }}</p>
-        <div class="search-box-modern">
-          <div class="search-input-wrapper"><i class="fas fa-barcode search-icon"></i>
-            <input v-model="searchSN" :placeholder="t('print.emergency_placeholder')" @keyup.enter="handleSearch" class="modern-search-input" />
+      <div class="px-8 pb-8">
+        <p class="text-slate-500 text-[0.95rem] mb-6">{{ t('print.emergency_hint') }}</p>
+        <div class="border border-slate-200 rounded-xl p-1.5 flex gap-2 bg-white mb-8 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
+          <div class="flex-1 flex items-center pl-3"><i class="fas fa-barcode text-slate-400 text-[1.1rem]"></i>
+            <input v-model="searchSN" :placeholder="t('print.emergency_placeholder')" @keyup.enter="handleSearch" class="w-full border-none px-3.5 py-3 text-[1rem] text-slate-800 outline-none bg-transparent" />
           </div>
-          <button @click="handleSearch" :disabled="loading" class="btn-search-modern">
+          <button @click="handleSearch" :disabled="loading" class="bg-blue-600 text-white border-none px-6 rounded-lg font-semibold cursor-pointer flex items-center gap-2 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed">
             <i class="fas fa-spinner fa-spin" v-if="loading"></i><span v-else>{{ t('admin.search') }}</span>
           </button>
         </div>
-        <div v-if="result" class="emergency-result-card fade-in">
-          <div class="result-header"><div class="status-indicator success"></div><h3>{{ result.carton_sn }}</h3></div>
-          <div class="result-details">
-            <div class="detail-group"><span class="label">{{ t('admin.product') }}</span><span class="value">{{ result.product.item_name }}</span></div>
-            <div class="detail-row">
-              <div class="detail-group"><span class="label">{{ t('packing.job_order') }}</span><span class="value">{{ result.job_order || 'N/A' }}</span></div>
-              <div class="detail-group"><span class="label">{{ t('print.items') }}</span><span class="value">{{ result.items_count !== undefined ? result.items_count : (result.items ? result.items.length : '?') }} pcs</span></div>
-              <div class="detail-group"><span class="label">{{ t('admin.date') }}</span><span class="value">{{ new Date(result.created_at).toLocaleDateString() }}</span></div>
+        <div v-if="result" class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden animate-in">
+          <div class="px-5 py-4 bg-white border-b border-slate-200 flex items-center gap-3"><div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"></div><h3 class="m-0 text-[1.2rem] text-slate-900 font-mono">{{ result.carton_sn }}</h3></div>
+          <div class="p-5">
+            <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.product') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result.product.item_name }}</span></div>
+            <div class="flex gap-6 mt-4">
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('packing.job_order') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result.job_order || 'N/A' }}</span></div>
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('print.items') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result.items_count !== undefined ? result.items_count : (result.items ? result.items.length : '?') }} pcs</span></div>
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.date') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ new Date(result.created_at).toLocaleDateString() }}</span></div>
             </div>
           </div>
-          <div class="result-actions">
-            <button @click="$emit('rescan', result)" class="btn-rescan-action">
+          <div class="px-5 py-4 bg-white border-t border-slate-200 flex justify-end gap-3">
+            <button @click="$emit('rescan', result)" class="bg-slate-100 text-slate-600 border border-slate-200 px-5 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2 mr-auto transition-colors hover:bg-slate-200 hover:text-slate-900">
               <i class="fas fa-redo"></i><span>{{ t('print.rescan_items') }}</span>
             </button>
-            <button @click="$emit('reprint', result)" :disabled="loading" class="btn-print-action">
+            <button @click="$emit('reprint', result)" :disabled="loading" class="bg-slate-900 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2.5 transition-all hover:bg-black hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed">
               <i class="fas fa-spinner fa-spin" v-if="loading"></i><i class="fas fa-print" v-else></i><span>{{ t('print.print_label') }}</span>
             </button>
           </div>
         </div>
-        <div v-else-if="searchSN && !loading && searched" class="no-result-card">
-          <div class="no-result-icon"><i class="fas fa-box-open"></i></div><p>{{ t('print.no_carton_found') }}</p>
+        <div v-else-if="searchSN && !loading && searched" class="text-center p-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 animate-in">
+          <div class="text-[3rem] text-slate-300 mb-4"><i class="fas fa-box-open"></i></div><p class="text-slate-500 m-0">{{ t('print.no_carton_found') }}</p>
         </div>
       </div>
     </div>
@@ -70,44 +70,3 @@ const handleSearch = async () => {
   finally { loading.value = false; searched.value = true; }
 };
 </script>
-
-<style scoped>
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-.emergency-modal { width: 95%; max-width: 600px; background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
-.modal-header-modern { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px 16px; }
-.header-title { display: flex; align-items: center; gap: 12px; color: #1e293b; }
-.header-title i { font-size: 1.5rem; color: #2563eb; }
-.header-title h2 { margin: 0; font-size: 1.5rem; font-weight: 700; }
-.btn-close-modern { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 10px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.btn-close-modern:hover { background: #e2e8f0; color: #0f172a; transform: rotate(90deg); }
-.modal-body-modern { padding: 0 32px 32px; }
-.emergency-hint { color: #64748b; font-size: 0.95rem; margin-bottom: 24px; }
-.search-box-modern { border: 1px solid #e2e8f0; border-radius: 12px; padding: 6px; display: flex; gap: 8px; background: #fff; margin-bottom: 32px; }
-.search-box-modern:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
-.search-input-wrapper { flex: 1; display: flex; align-items: center; padding-left: 12px; }
-.search-icon { color: #94a3b8; font-size: 1.1rem; }
-.modern-search-input { width: 100%; border: none; padding: 12px 14px; font-size: 1rem; color: #1e293b; outline: none; background: transparent; }
-.btn-search-modern { background: #2563eb; color: white; border: none; padding: 0 24px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-.btn-search-modern:hover { background: #1d4ed8; }
-.btn-search-modern:disabled { background: #94a3b8; cursor: not-allowed; }
-.emergency-result-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
-.result-header { padding: 16px 20px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
-.status-indicator { width: 10px; height: 10px; border-radius: 50%; }
-.status-indicator.success { background: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.1); }
-.result-header h3 { margin: 0; font-size: 1.2rem; color: #0f172a; font-family: monospace; }
-.result-details { padding: 20px; }
-.detail-row { display: flex; gap: 24px; margin-top: 16px; }
-.detail-group { display: flex; flex-direction: column; gap: 4px; }
-.detail-group .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; }
-.detail-group .value { color: #1e293b; font-weight: 500; font-size: 0.95rem; }
-.result-actions { padding: 16px 20px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; }
-.btn-print-action { background: #1e293b; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-.btn-print-action:hover:not(:disabled) { background: #0f172a; transform: translateY(-2px); }
-.btn-print-action:disabled { opacity: 0.7; cursor: not-allowed; }
-
-.btn-rescan-action { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-right: auto; }
-.btn-rescan-action:hover { background: #e2e8f0; color: #1e293b; }
-.no-result-card { text-align: center; padding: 40px 20px; background: #f8fafc; border-radius: 16px; border: 1px dashed #cbd5e1; }
-.no-result-icon { font-size: 3rem; color: #cbd5e1; margin-bottom: 16px; }
-.no-result-card p { color: #64748b; margin: 0; }
-</style>
