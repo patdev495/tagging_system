@@ -45,3 +45,5 @@
 | STATS-03 | 23 | Pending |
 | STATS-04 | 24 | Pending |
 | I18N-01 | 26 | Pending |
+| UI-CLEANUP | 28 | Pending |
+| UI-RESPONSIVE | 27 | Pending |

@@ -76,6 +76,11 @@ Plans:
 Plans:
 - [ ] TBD (run /gsd-plan-phase 27 to break down)
 
+### Phase 28: Convert all CSS to Tailwind CSS for cleaner code
+**Goal:** Chuyển đổi toàn bộ mã CSS hiện tại sang Tailwind CSS để mã nguồn gọn gàng và dễ bảo trì hơn.
+**Requirements**: UI-CLEANUP
+**Status**: [x] Completed
+
 ---
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.
