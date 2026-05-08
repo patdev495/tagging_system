@@ -1,26 +1,27 @@
 # Concerns and Technical Debt
 
-## Monolithic Backend
-- **Issue**: `main.py` handles everything: API routing, business logic, SN generation, and static file serving.
-- **Risk**: Becomes unmaintainable as more features (inventory, reports) are added.
-- **Recommendation**: Refactor to a modular/feature-based structure (e.g., `api/v1/endpoints/`, `core/`, `crud/`).
+## Resolved Concerns
+- [x] **Monolithic Backend**: Refactored to feature-based structure in `v2`.
+- [x] **Frontend Maintainability**: Migrated to TypeScript for better type safety and documentation.
+- [x] **UI Layout**: Migrated to Tailwind CSS 4 for more robust responsive design.
 
-## Hardcoded Paths and Configuration
-- **Issue**: Many paths like `C:\print_jobs` or BarTender template paths are hardcoded or defaults.
-- **Risk**: Deployment errors across different station configurations.
-- **Recommendation**: Move all environment-specific settings to `.env` or a database-backed configuration table.
+## Current Concerns
+### Hardcoded Paths
+- **Issue**: Some paths for BarTender templates and logging are still tied to local disk structures (`C:\`).
+- **Risk**: Environment mismatch during multi-station deployment.
+- **Recommendation**: Standardize path resolution in `src.core.config`.
 
-## Printing Dependencies
-- **Issue**: Complete reliance on BarTender and `pywin32`.
-- **Risk**: Hard to port to other labeling systems or OS platforms.
-- **Recommendation**: Abstract the printer interface so other engines (ZPL direct, Dymo) could be added.
+### Printing Reliability
+- **Issue**: Reliance on `win32com` for BarTender automation can be brittle if BarTender is busy or unlicensed.
+- **Risk**: Print agent hanging or failing silently.
+- **Recommendation**: Implement better health checks and retry logic in `agent.py`.
 
-## UI Response Time
-- **Issue**: No immediate feedback during the async relay of BTXML to the local agent.
-- **Risk**: Operator might scan twice if response is slow.
-- **Recommendation**: Implement optimistic UI updates or clear visual loaders during the print handoff.
+### Validation Coverage
+- **Issue**: Basic serial number validation exists, but edge cases (e.g., duplicate sequence resets) need more automated testing.
+- **Risk**: Data integrity issues in high-volume production.
+- **Recommendation**: Add Pytest suite for sequence generation logic.
 
-## Data Fragmentation
-- **Issue**: Some logic for origin ("MADE IN VIETNAM") is hardcoded in Python strings.
-- **Risk**: Inconsistency if labels change.
-- **Recommendation**: Move static label text into a database-managed `labels` or `metadata` table.
+### Environment Consistency
+- **Issue**: Local development often uses SQLite or different DB configurations compared to production MSSQL.
+- **Risk**: "Works on my machine" bugs.
+- **Recommendation**: Use Docker for a local MSSQL instance to mirror production.

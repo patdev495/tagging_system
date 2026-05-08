@@ -10,10 +10,13 @@
 
 ## Frontend
 - **Framework**: Vue 3 (Composition API)
-- **Build Tool**: Vite
+- **Language**: TypeScript 6.0+
+- **Build Tool**: Vite 8.0+
+- **State Management**: Pinia
+- **Styling**: Tailwind CSS 4.0
 - **HTTP Client**: Axios
 - **Icons**: Lucide-Vue-Next
-- **Styling**: Vanilla CSS (based on directory contents)
+- **Internationalization**: vue-i18n
 
 ## Client Agent (Print Agent)
 - **Language**: Python
@@ -22,6 +25,7 @@
 - **Printer Management**: win32print
 
 ## Infrastructure
-- **Web Application Server**: Windows (likely, given BarTender and ODBC usage)
+- **Web Application Server**: Windows (required for BarTender COM)
 - **Database**: Microsoft SQL Server
 - **Labeling**: BarTender Integration / SDK (COM)
+- **Containerization**: Docker (optional, for non-printing components)

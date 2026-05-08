@@ -1,21 +1,31 @@
 # Conventions
 
 ## Coding Standards
-- **Python**: PEP 8 followed (mostly). Uses 4 spaces for indentation.
-- **JavaScript**: Vue 3 Composition API style. Use ES modules.
-- **HTML/CSS**: BEM-like naming for classes where possible, otherwise standard Vue scoped styling.
+- **Python**: PEP 8 followed. Uses 4 spaces for indentation. Strict typing via `typing` module.
+- **TypeScript**: 
+  - Prefer `interface` for data shapes, `type` for unions/fixed sets.
+  - Strict mode enabled in `tsconfig.json`.
+  - Use PascalCase for components and camelCase for variables/functions.
+- **Vue**: 
+  - Composition API with `<script setup lang="ts">`.
+  - Single Responsibility Principle for components.
+- **CSS**: 
+  - Tailwind CSS 4 utility-first approach.
+  - Custom styles in `index.css` using `@theme` and `@utility` layers.
 
 ## Naming Conventions
-- **Database Tables**: `dbo.tableName` (PascalCase or camelCase observed).
-- **API Routes**: `/api/{resource}` plural for collections, singular for instances.
-- **File Names**: `snake_case.py` for Python, `camelCase.js` or `PascalCase.vue` for frontend.
+- **Files**: 
+  - Python: `snake_case.py`
+  - TypeScript: `camelCase.ts`
+  - Vue: `PascalCase.vue`
+- **Database**: PascalCase for table names (e.g., `Products`, `Cartons`).
 
-## Database Patterns
-- Uses SQLAlchemy `declarative_base`.
-- Manual sequence generation using `func.max()` with `with_for_update()` to ensure uniqueness.
-- Relationships defined via `back_populates`.
+## Architecture Patterns
+- **Feature-Sliced Design (FSD-lite)**: Code is organized by feature rather than layer to improve maintainability.
+- **Thin Views**: Logic moved to composables (frontend) or services (backend).
+- **Graceful Error Handling**: Global exception handlers on both ends (FastAPI + Axios interceptors).
 
 ## UI/UX Patterns
-- Dark mode primary theme (based on rich aesthetics goal).
-- Focus on keyboard efficiency (auto-focus on scan inputs).
-- Toast notifications for feedback (Success/Error).
+- **Responsiveness**: Mobile-first grid/flex layouts via Tailwind.
+- **Efficiency**: Auto-focus on scan inputs, multi-line bulk scan support.
+- **Feedback**: Toast notifications and clear visual states (loading, error, success).
