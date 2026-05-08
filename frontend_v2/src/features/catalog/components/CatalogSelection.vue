@@ -1,41 +1,41 @@
 <template>
   <section class="selection-panel">
-    <div class="selection-header-row">
-      <div class="control-group customer-select">
-        <label>{{ t('catalog.customer') }}</label>
-        <select v-model="selectedCustomerId" @change="onCustomerChange" class="modern-select">
+    <div class="flex gap-4 items-center mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="w-[250px]">
+        <label class="mb-1.5 text-[0.75rem] font-bold text-slate-400 uppercase block">{{ t('catalog.customer') }}</label>
+        <select v-model="selectedCustomerId" @change="onCustomerChange" class="w-full h-[42px] px-3 py-0 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[0.95rem] outline-none transition-colors focus:border-blue-500">
           <option value="" disabled>{{ t('catalog.choose_customer') }}</option>
           <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
         </select>
       </div>
 
-      <div class="control-group product-search" v-if="selectedCustomerId">
-        <label>{{ t('catalog.search_product') }}</label>
-        <div class="search-input-wrapper">
-          <i class="fas fa-search search-icon"></i>
+      <div class="flex-1" v-if="selectedCustomerId">
+        <label class="mb-1.5 text-[0.75rem] font-bold text-slate-400 uppercase block">{{ t('catalog.search_product') }}</label>
+        <div class="relative flex items-center">
+          <i class="fas fa-search absolute left-[18px] text-blue-500 text-[0.95rem]"></i>
           <input 
             v-model="productSearch" 
             :placeholder="t('catalog.filter_items')" 
-            class="modern-input-small"
+            class="pl-12 w-full h-[42px] bg-white border border-slate-300 rounded-[10px] text-[1rem] font-semibold text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10"
             ref="productSearchInput"
           />
         </div>
       </div>
     </div>
 
-    <div class="control-group" v-if="selectedCustomerId">
-      <div class="product-grid">
+    <div v-if="selectedCustomerId">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5 mt-5">
         <div 
           v-for="p in filteredProducts" 
           :key="p.id" 
-          class="product-card"
+          class="bg-slate-50 border border-slate-200 rounded-2xl p-5 cursor-pointer transition-all duration-200 ease-out hover:bg-white hover:-translate-y-1 hover:border-blue-500 hover:shadow-xl"
           @click="$emit('select-product', p)"
         >
-          <h3>{{ p.item_name }}</h3>
-          <p>UPC: {{ p.upc }}</p>
-          <div class="qty-tag">{{ t('catalog.target') }}: {{ p.packed_qty }}</div>
+          <h3 class="m-0 mb-2 text-slate-900 font-bold">{{ p.item_name }}</h3>
+          <p class="text-slate-500 text-[0.85rem] mb-3">UPC: {{ p.upc }}</p>
+          <div class="inline-block px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-[0.75rem] font-semibold">{{ t('catalog.target') }}: {{ p.packed_qty }}</div>
         </div>
-        <div v-if="filteredProducts.length === 0" class="no-results-hint">
+        <div v-if="filteredProducts.length === 0" class="col-span-full p-10 text-center text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200">
            {{ t('catalog.no_products') }}
         </div>
       </div>
@@ -113,128 +113,3 @@ onMounted(() => {
 
 defineExpose({ focusSearch });
 </script>
-
-<style scoped>
-.selection-header-row {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  margin-bottom: 24px;
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-}
-.customer-select {
-  width: 250px;
-  margin-bottom: 0;
-}
-.product-search {
-  flex: 1;
-  margin-bottom: 0;
-}
-.customer-select label, .product-search label {
-  margin-bottom: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-  display: block;
-}
-.control-group label {
-  display: block;
-  margin-bottom: 10px;
-  color: #64748b;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-.modern-select {
-  width: 100%;
-  padding: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  color: #1e293b;
-  font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s;
-  height: 42px;
-  padding: 0 12px;
-  font-size: 0.95rem;
-}
-.modern-select:focus { border-color: #3b82f6; }
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.search-input-wrapper .search-icon {
-  position: absolute;
-  left: 18px;
-  color: #3b82f6;
-  font-size: 0.95rem;
-}
-.search-input-wrapper input.modern-input-small {
-  padding-left: 48px;
-  width: 100%;
-  height: 42px;
-}
-.modern-input-small {
-  padding: 10px 14px;
-  background: white;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-  outline: none;
-  transition: all 0.2s;
-  box-sizing: border-box;
-}
-.modern-input-small:focus {
-  background: white;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-.product-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.product-card:hover {
-  background: white;
-  transform: translateY(-4px);
-  border-color: #3b82f6;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-.product-card h3 { margin: 0 0 8px 0; color: #0f172a; }
-.product-card p { color: #64748b; font-size: 0.85rem; margin-bottom: 12px; }
-.qty-tag {
-  display: inline-block;
-  padding: 4px 10px;
-  background: #eff6ff;
-  color: #2563eb;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-.no-results-hint {
-  grid-column: 1 / -1;
-  padding: 40px;
-  text-align: center;
-  color: #94a3b8;
-  font-style: italic;
-  background: #f8fafc;
-  border-radius: 12px;
-  border: 1px dashed #e2e8f0;
-}
-</style>
