@@ -1,14 +1,14 @@
 <template>
-  <div class="admin-dashboard p-8">
-    <div class="header mb-8">
+  <div class="p-8 animate-in">
+    <div class="mb-8">
       <h1 class="text-3xl font-bold text-slate-900">{{ t('header.admin_dashboard') }}</h1>
       <p class="text-slate-500">{{ t('admin.welcome') }}</p>
     </div>
 
     <div class="grid md:grid-cols-3 gap-6">
-      <div v-for="stat in stats" :key="stat.label" class="stat-card bg-white p-6 rounded-xl shadow-md border border-slate-200">
+      <div v-for="stat in stats" :key="stat.label" class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
         <div class="flex items-center gap-4">
-          <div :class="`icon-box p-3 rounded-lg bg-${stat.color}-50 text-${stat.color}-500`">
+          <div :class="['p-3 rounded-lg', stat.color === 'indigo' ? 'bg-indigo-50 text-indigo-500' : '']">
             <component :is="stat.icon" class="w-6 h-6" />
           </div>
           <div>
@@ -38,14 +38,3 @@ const stats = ref([
   { label: t('admin.cartons_today'), value: '45', icon: BarChart3, color: 'indigo' },
 ]);
 </script>
-
-<style scoped>
-.admin-dashboard {
-  animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-</style>
