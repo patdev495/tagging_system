@@ -8,7 +8,7 @@
         :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : t('packing.scan_prompt_default')))"
         ref="scanInput"
         :disabled="disabled"
-        class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1.15rem] font-bold text-center mb-2 transition-all resize-none min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0 min-w-0"
+        class="flex-1 min-w-0 px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1.15rem] font-bold text-center mb-2 transition-all resize-none min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0"
         :class="{ 
           'bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed': !jobOrder || disabled, 
           'bg-orange-50 border-orange-500 text-orange-900 focus:border-orange-600 focus:bg-orange-50 focus:ring-orange-500/15': awaitingNext && jobOrder && !disabled 
