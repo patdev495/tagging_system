@@ -389,11 +389,11 @@ const finalizeCarton = async (isRetry = false) => {
       cartonId = res.data.id;
       cartonSn = res.data.carton_sn;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
-    } else if (isRescanMode.value && lastCarton.value?.id) {
+    } else if (isRescanMode.value && rescanCartonSN.value) {
       const items = [...scannedItems.value];
       const res = await packingApi.rescanCarton({
-        carton_id: lastCarton.value?.id || 0, // In practice, lastCarton or rescan SN would be used
-        scanned_items: items
+        carton_sn: rescanCartonSN.value,
+        items: items
       });
       cartonId = res.data.id;
       cartonSn = res.data.carton_sn;
@@ -411,8 +411,11 @@ const finalizeCarton = async (isRetry = false) => {
 
       const res = await packingApi.createCarton({ 
         product_id: currentProduct.value.id, 
-        packed_qty: items.length,
-        scanned_items: items
+        items: items,
+        job_order: jobOrder.value || undefined,
+        custom_sn: isSNManual.value ? parseInt(customSN.value) : undefined,
+        carton_origin: cartonOrigin.value,
+        custom_yymm: customYYMM.value || undefined
       });
       cartonId = res.data.id; cartonSn = res.data.carton_sn;
       lastCarton.value = { ...res.data, status: 'PRINTING' };
