@@ -40,9 +40,9 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     return {"message": "Product deleted successfully"}
 
 @router.get("/products/{product_id}/next-sn")
-def get_next_sn(product_id: int, db: Session = Depends(get_db)):
+def get_next_sn(product_id: int, yymm: Optional[str] = None, db: Session = Depends(get_db)):
     """Lấy S/N tiếp theo cho sản phẩm"""
-    return service.get_next_sn(product_id, db)
+    return service.get_next_sn(product_id, db, yymm)
 
 @router.get("/products/{product_id}/last-carton")
 def get_last_carton(product_id: int, db: Session = Depends(get_db)):

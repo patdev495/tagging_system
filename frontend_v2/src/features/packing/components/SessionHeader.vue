@@ -43,7 +43,7 @@
             @input="onCustomSNInput"
             type="text"
             inputmode="numeric"
-            :placeholder="suggestedSNValue ? String(suggestedSNValue).padStart(5, '0') : '00001'" 
+            :placeholder="suggestedSNValue?.toString() || '1'" 
             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm pr-[70px]!"
             :class="{ 
               'bg-emerald-50! border-emerald-500! text-emerald-600! cursor-default': !isSNManual, 
@@ -142,7 +142,7 @@ const toggleMode = () => {
   if (!props.isSNManual) {
     // Switch to manual
     emit('update:isSNManual', true);
-    emit('update:customSN', props.suggestedSNValue.toString().padStart(5, '0'));
+    emit('update:customSN', props.suggestedSNValue.toString());
     nextTick(() => { if (snInput.value) snInput.value.focus(); });
   } else {
     // Switch to auto

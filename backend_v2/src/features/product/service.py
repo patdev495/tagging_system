@@ -37,32 +37,41 @@ def delete_product(db: Session, product_id: int):
     db.commit()
     return True
 
-def get_next_sn(product_id: int, db: Session):
+def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
     product = get_product_by_id(product_id, db)
     if not product:
         return {"next_seq": 1}
         
     import datetime
-    now = datetime.datetime.now()
-    yymm = now.strftime("%y%m")
+    if not yymm:
+        yymm = datetime.datetime.now().strftime("%y%m")
+        
     prefix = f"{product.start_part or ''}{yymm}{product.middle_part or ''}"
     
-    last_carton = db.query(Carton).filter(
+    # Lấy tất cả carton trong tháng này để tìm max seq
+    cartons = db.query(Carton).filter(
         Carton.product_id == product_id,
         Carton.status == 'SUCCESS',
         Carton.carton_sn.like(f"{prefix}%")
-    ).order_by(Carton.carton_sn.desc()).first()
+    ).all()
     
-    if not last_carton:
+    if not cartons:
         return {"next_seq": 1}
     
-    last_seq = 0
-    try:
-        last_seq = int(last_carton.carton_sn[-5:])
-    except:
-        pass
+    max_seq = 0
+    for c in cartons:
+        try:
+            # Tìm phần số ở cuối (thường là 5 chữ số nhưng có thể thay đổi)
+            import re
+            match = re.search(r'(\d+)$', c.carton_sn)
+            if match:
+                seq = int(match.group(1))
+                if seq > max_seq:
+                    max_seq = seq
+        except:
+            pass
     
-    return {"next_seq": last_seq + 1}
+    return {"next_seq": max_seq + 1}
 
 def get_last_carton(product_id: int, db: Session):
     carton = db.query(Carton).filter(

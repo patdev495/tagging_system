@@ -301,17 +301,14 @@ const selectProduct = async (p: Product) => {
 const refreshNextSN = async () => {
   if (!currentProduct.value || isProcessing.value) return;
   try {
-    const snRes = await packingApi.getNextSN(currentProduct.value.id);
-    if (snRes.data?.next_sn) {
-      const match = snRes.data.next_sn.match(/\d{5}$/);
-      if (match) {
-        const newSeq = parseInt(match[0]);
-        if (newSeq > suggestedSNValue.value) {
-          suggestedSNValue.value = newSeq;
-          if (!isSNManual.value) {
-            customSN.value = newSeq.toString().padStart(5, '0');
-          }
-        }
+    const snRes = await packingApi.getNextSN(currentProduct.value.id, customYYMM.value);
+    const data = snRes.data as any;
+    const newSeq = data.next_seq || (data.next_sn ? parseInt(data.next_sn.match(/\d+$/)?.[0] || '0') : 1);
+    
+    if (newSeq) {
+      suggestedSNValue.value = newSeq;
+      if (!isSNManual.value) {
+        customSN.value = newSeq.toString();
       }
     }
   } catch (err) { console.warn('Sync SN failed:', err); }
@@ -434,7 +431,7 @@ const finalizeCarton = async (isRetry = false) => {
             const lastSeq = parseInt(lastSeqMatch[0]);
             suggestedSNValue.value = lastSeq + 1;
             if (!isSNManual.value) {
-              customSN.value = (lastSeq + 1).toString().padStart(5, '0');
+              customSN.value = (lastSeq + 1).toString();
             }
          }
       }

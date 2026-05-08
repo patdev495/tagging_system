@@ -15,8 +15,8 @@ export default {
   getLastCarton(productId: number) {
     return api.get<Carton>(`/products/${productId}/last-carton`);
   },
-  getNextSN(productId: number) {
-    return api.get<{ next_sn: string }>(`/products/${productId}/next-sn`);
+  getNextSN(productId: number, yymm?: string) {
+    return api.get<{ next_seq: number }>(`/products/${productId}/next-sn`, { params: { yymm } });
   },
   rescanCarton(data: { carton_sn: string; items: string[] }) {
     return api.put<Carton>('/cartons/rescan', data);
