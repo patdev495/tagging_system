@@ -16,14 +16,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-const props = defineProps({ items: { type: Array, default: () => [] } });
-defineEmits(['clear']);
-const listContainer = ref(null);
+const props = defineProps<{
+  items: string[]
+}>();
+defineEmits<{
+  (e: 'clear'): void
+}>();
+const listContainer = ref<HTMLElement | null>(null);
 watch(() => props.items, () => {
   nextTick(() => { if (listContainer.value) listContainer.value.scrollTo({ top: listContainer.value.scrollHeight, behavior: 'smooth' }); });
 }, { deep: true });

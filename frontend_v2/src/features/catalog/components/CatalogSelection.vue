@@ -43,27 +43,30 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import catalogApi from '../api';
+import type { Customer, Product } from '../../../types/api';
 
 const { t } = useI18n();
 
-const emit = defineEmits(['select-product']);
+const emit = defineEmits<{
+  (e: 'select-product', product: Product): void
+}>();
 
-const customers = ref([]);
-const products = ref([]);
-const selectedCustomerId = ref('');
-const productSearch = ref('');
-const productSearchInput = ref(null);
+const customers = ref<Customer[]>([]);
+const products = ref<Product[]>([]);
+const selectedCustomerId = ref<number | ''>('');
+const productSearch = ref<string>('');
+const productSearchInput = ref<HTMLInputElement | null>(null);
 
 const filteredProducts = computed(() => {
   if (!productSearch.value) return products.value;
   const q = productSearch.value.toLowerCase();
   return products.value.filter(p => 
     p.item_name.toLowerCase().includes(q) || 
-    p.upc.toLowerCase().includes(q)
+    (p.upc && p.upc.toLowerCase().includes(q))
   );
 });
 

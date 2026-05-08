@@ -150,46 +150,62 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../core/stores/settings';
 import { useSystemStore } from '../../../core/stores/system';
 import printApi from '../../print/api';
 
-const props = defineProps({ show: Boolean });
-const emit = defineEmits(['close']);
+const props = defineProps<{
+  show: boolean
+}>();
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>();
+
 const { t } = useI18n();
 const store = useSettingsStore();
 const system = useSystemStore();
-const audioDevices = ref([]);
-const availablePrinters = ref([]);
-const loadingPrinters = ref(false);
-const detectingAgent = ref(false);
+
+interface AudioDevice {
+  id: string;
+  label: string;
+}
+
+interface Printer {
+  name: string;
+  port?: string;
+}
+
+const audioDevices = ref<AudioDevice[]>([]);
+const availablePrinters = ref<(string | Printer)[]>([]);
+const loadingPrinters = ref<boolean>(false);
+const detectingAgent = ref<boolean>(false);
 
 const discoverAgent = async () => {
   if (store.printMode !== 'local') return;
   detectingAgent.value = true;
   
-  // Quét dải cổng rộng hơn để linh hoạt (8000-8010, 8080-8090, 9000-9010)
-  const portsToScan = [];
+  const portsToScan: number[] = [];
   for (let i = 8000; i <= 8010; i++) portsToScan.push(i);
   for (let i = 8080; i <= 8090; i++) portsToScan.push(i);
   for (let i = 9000; i <= 9010; i++) portsToScan.push(i);
   
-  let foundUrl = null;
+  let foundUrl: string | null = null;
   
   for (const port of portsToScan) {
     try {
-      // Sử dụng 127.0.0.1 thay vì localhost để tránh lỗi phân giải IPv6 trên Windows
       const url = `http://127.0.0.1:${port}`;
-      const resp = await fetch(`${url}/status`, { signal: AbortSignal.timeout(500) });
+      // @ts-ignore - AbortSignal.timeout is relatively new
+      const resp = await fetch(`${url}/status`, { signal: AbortSignal.timeout ? AbortSignal.timeout(500) : undefined });
       if (resp.ok) {
         foundUrl = url;
         break;
       }
     } catch (e) {
-      // Bỏ qua lỗi timeout
+      // Ignore
     }
   }
   
@@ -216,7 +232,6 @@ const loadPrinters = async () => {
   loadingPrinters.value = true;
   try {
     if (store.printMode === 'local') {
-      // Fetch from Local Agent
       try {
         const resp = await fetch(`${store.agentUrl}/printers`);
         if (resp.ok) {
@@ -230,10 +245,9 @@ const loadPrinters = async () => {
         throw e;
       }
     } else {
-      // Fetch from Backend Server
       const res = await printApi.getAvailablePrinters();
-      if (res.data?.printers) {
-        availablePrinters.value = res.data.printers;
+      if (res.data) {
+        availablePrinters.value = res.data;
       }
     }
   } catch (e) { 
@@ -250,11 +264,10 @@ const handleSave = () => {
   system.showNotification('Settings saved locally', 'success');
 };
 
-// Thêm biến để lưu lỗi thư mục
-const dirError = ref('');
-const validatingDir = ref(false);
+const dirError = ref<string>('');
+const validatingDir = ref<boolean>(false);
 
-const validateDir = async (path) => {
+const validateDir = async (path: string) => {
   if (!path || store.printMode !== 'local') {
     dirError.value = '';
     return;
@@ -275,7 +288,6 @@ const validateDir = async (path) => {
   }
 };
 
-// Theo dõi sự thay đổi của printMode để load máy in tương ứng ngay lập tức
 watch(() => store.printMode, async (newVal) => {
   if (newVal === 'local') {
     await discoverAgent();
@@ -284,7 +296,6 @@ watch(() => store.printMode, async (newVal) => {
   }
 });
 
-// Theo dõi thư mục để validate ngay khi gõ
 watch(() => store.localTemplateDir, (newVal) => {
   validateDir(newVal);
 });

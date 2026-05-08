@@ -32,15 +32,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { Carton } from '../../../types/api';
 
 const { t } = useI18n();
-const props = defineProps({
-  lastCarton: Object,
-  agentErrorMessage: { type: String, default: '' }
-});
-defineEmits(['retry']);
+const props = defineProps<{
+  lastCarton: (Carton & { status?: string }) | null;
+  agentErrorMessage: string;
+}>();
+
+defineEmits<{
+  (e: 'retry'): void;
+}>();
+
 const downloadUrl = computed(() => props.lastCarton ? `/api/v1/print/carton/${props.lastCarton.id}/btxml` : '');
 </script>

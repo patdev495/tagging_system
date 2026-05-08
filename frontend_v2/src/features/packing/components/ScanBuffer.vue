@@ -87,27 +87,46 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps({
-  scanBuffer: { type: String, default: '' },
-  jobOrder: { type: String, default: '' },
-  awaitingNext: { type: Boolean, default: false },
-  invalidScans: { type: Array, default: () => [] },
-  overflowScans: { type: Array, default: () => [] },
-  allowPartial: { type: Boolean, default: false },
-  scannedCount: { type: Number, default: 0 },
-  disabled: { type: Boolean, default: false },
-  placeholder: { type: String, default: '' }
-});
+interface InvalidScan {
+  sn: string;
+  time: string;
+  type?: string;
+  reason: string;
+}
 
-defineEmits(['update:scanBuffer', 'scan', 'next-carton', 'pack-now', 'clear-invalid', 'clear-overflow']);
+interface OverflowScan {
+  sn: string;
+  time: string;
+}
 
-const scanInput = ref(null);
+defineProps<{
+  scanBuffer: string;
+  jobOrder: string;
+  awaitingNext: boolean;
+  invalidScans: InvalidScan[];
+  overflowScans: OverflowScan[];
+  allowPartial: boolean;
+  scannedCount: number;
+  disabled: boolean;
+  placeholder: string;
+}>();
+
+defineEmits<{
+  (e: 'update:scanBuffer', val: string): void;
+  (e: 'scan'): void;
+  (e: 'next-carton'): void;
+  (e: 'pack-now'): void;
+  (e: 'clear-invalid'): void;
+  (e: 'clear-overflow'): void;
+}>();
+
+const scanInput = ref<HTMLTextAreaElement | null>(null);
 
 const focusScan = () => {
   if (scanInput.value) scanInput.value.focus({ preventScroll: true });

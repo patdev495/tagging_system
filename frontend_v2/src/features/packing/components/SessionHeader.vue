@@ -90,29 +90,39 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { Product } from '../../../types/api';
 
 const { t } = useI18n();
 
-const props = defineProps({
-  product: { type: Object, required: true },
-  jobOrder: { type: String, default: '' },
-  cartonOrigin: { type: String, default: 'VN' },
-  customSN: { type: String, default: '' },
-  isSNManual: { type: Boolean, default: false },
-  snPattern: { type: String, default: '' },
-  customYYMM: { type: String, default: '' },
-  suggestedSNValue: { type: Number, default: 0 },
-  snPreview: { type: String, default: '' },
-  snExists: { type: Boolean, default: false }
-});
+const props = defineProps<{
+  product: Product;
+  jobOrder: string;
+  cartonOrigin: string;
+  customSN: string;
+  isSNManual: boolean;
+  snPattern: string;
+  customYYMM: string;
+  suggestedSNValue: number;
+  snPreview: string;
+  snExists: boolean;
+}>();
 
-const emit = defineEmits(['back', 'focus-scan', 'update:jobOrder', 'update:cartonOrigin', 'update:customSN', 'update:isSNManual', 'update:snPattern', 'update:customYYMM']);
+const emit = defineEmits<{
+  (e: 'back'): void;
+  (e: 'focus-scan'): void;
+  (e: 'update:jobOrder', val: string): void;
+  (e: 'update:cartonOrigin', val: string): void;
+  (e: 'update:customSN', val: string): void;
+  (e: 'update:isSNManual', val: boolean): void;
+  (e: 'update:snPattern', val: string): void;
+  (e: 'update:customYYMM', val: string): void;
+}>();
 
-const jobOrderInput = ref(null);
-const snInput = ref(null);
+const jobOrderInput = ref<HTMLInputElement | null>(null);
+const snInput = ref<HTMLInputElement | null>(null);
 
 const focusJobOrder = () => {
   if (jobOrderInput.value) jobOrderInput.value.focus({ preventScroll: true });

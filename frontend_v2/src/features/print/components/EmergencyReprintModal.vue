@@ -42,31 +42,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import printApi from '../api';
 import { useSystemStore } from '../../../core/stores/system';
+import type { Carton, Product } from '../../../types/api';
 
 const { t } = useI18n();
 
-defineProps({ show: Boolean });
-defineEmits(['close', 'reprint', 'rescan']);
+defineProps<{
+  show: boolean
+}>();
+
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'reprint', carton: Carton): void
+  (e: 'rescan', carton: Carton): void
+}>();
 
 const system = useSystemStore();
-const searchSN = ref('');
-const result = ref(null);
-const loading = ref(false);
-const searched = ref(false);
+const searchSN = ref<string>('');
+const result = ref<(Carton & { product: Product, items_count?: number, items?: string[], job_order?: string }) | null>(null);
+const loading = ref<boolean>(false);
+const searched = ref<boolean>(false);
 
 const handleSearch = async () => {
   if (!searchSN.value) return;
   loading.value = true; result.value = null; searched.value = false;
   try {
     const res = await printApi.searchCarton(searchSN.value.trim());
-    if (res.data) result.value = res.data;
+    if (res.data) result.value = res.data as any;
     else system.showNotification('Carton not found.', 'warning');
-  } catch (err) { system.showNotification('Search failed: ' + (err.response?.data?.detail || err.message), 'error'); }
+  } catch (err: any) { 
+    system.showNotification('Search failed: ' + (err.response?.data?.detail || err.message), 'error'); 
+  }
   finally { loading.value = false; searched.value = true; }
 };
 </script>
