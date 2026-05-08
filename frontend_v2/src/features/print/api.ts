@@ -39,7 +39,10 @@ export default {
         })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'Agent print failed');
+      if (!response.ok) {
+        const detail = typeof data.detail === 'object' ? JSON.stringify(data.detail) : (data.detail || 'Agent print failed');
+        throw new Error(detail);
+      }
       return data;
     } catch (err: any) {
       if (err.message?.includes('Failed to fetch')) {

@@ -508,7 +508,9 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promis
     }
   } catch (err: any) {
     console.error('Print Execution Error:', err);
-    return err.response?.data?.detail || err.message || 'Print connection error.';
+    const rawMsg = err.response?.data?.detail || err.message || 'Print connection error.';
+    const finalMsg = typeof rawMsg === 'object' ? JSON.stringify(rawMsg) : String(rawMsg);
+    return finalMsg;
   }
 };
 
