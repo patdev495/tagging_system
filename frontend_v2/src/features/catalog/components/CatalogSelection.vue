@@ -1,22 +1,22 @@
 <template>
   <section class="selection-panel">
-    <div class="flex gap-4 items-center mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-      <div class="w-[250px]">
-        <label class="mb-1.5 text-[0.75rem] font-bold text-slate-400 uppercase block">{{ t('catalog.customer') }}</label>
-        <select v-model="selectedCustomerId" @change="onCustomerChange" class="w-full h-[42px] px-3 py-0 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[0.95rem] outline-none transition-colors focus:border-blue-500">
+    <div class="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-center mb-4 md:mb-6 bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div class="w-full sm:w-[200px] md:w-[250px]">
+        <label class="mb-1 text-[0.7rem] md:text-[0.75rem] font-bold text-slate-400 uppercase block">{{ t('catalog.customer') }}</label>
+        <select v-model="selectedCustomerId" @change="onCustomerChange" class="w-full h-[38px] md:h-[42px] px-3 py-0 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[0.9rem] md:text-[0.95rem] outline-none transition-colors focus:border-blue-500">
           <option value="" disabled>{{ t('catalog.choose_customer') }}</option>
           <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
         </select>
       </div>
 
       <div class="flex-1" v-if="selectedCustomerId">
-        <label class="mb-1.5 text-[0.75rem] font-bold text-slate-400 uppercase block">{{ t('catalog.search_product') }}</label>
+        <label class="mb-1 text-[0.7rem] md:text-[0.75rem] font-bold text-slate-400 uppercase block">{{ t('catalog.search_product') }}</label>
         <div class="relative flex items-center">
-          <i class="fas fa-search absolute left-[18px] text-blue-500 text-[0.95rem]"></i>
+          <i class="fas fa-search absolute left-[15px] md:left-[18px] text-blue-500 text-[0.85rem] md:text-[0.95rem]"></i>
           <input 
             v-model="productSearch" 
             :placeholder="t('catalog.filter_items')" 
-            class="pl-12 w-full h-[42px] bg-white border border-slate-300 rounded-[10px] text-[1rem] font-semibold text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10"
+            class="pl-10 md:pl-12 w-full h-[38px] md:h-[42px] bg-white border border-slate-300 rounded-[10px] text-[0.9rem] md:text-[1rem] font-semibold text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10"
             ref="productSearchInput"
           />
         </div>

@@ -1,7 +1,7 @@
 <template>
-  <header class="bg-white px-5 py-2 flex justify-between items-center border-b border-slate-200 shadow-sm">
+  <header class="bg-white px-3 md:px-5 py-1.5 md:py-2 flex justify-between items-center border-b border-slate-200 shadow-sm">
     <div @click="$emit('home')" class="no-underline text-inherit transition-opacity duration-200 cursor-pointer hover:opacity-80">
-      <h1 class="m-0 text-[1.1rem] font-extrabold text-slate-900 flex items-center gap-2">
+      <h1 class="m-0 text-[1rem] md:text-[1.1rem] font-extrabold text-slate-900 flex items-center gap-2">
         <i class="fas fa-box-open text-blue-600"></i> {{ t('header.title') }}
       </h1>
     </div>

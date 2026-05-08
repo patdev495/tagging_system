@@ -67,14 +67,10 @@ Plans:
 - [x] .planning/phases/26-internationalization/26-PLAN.md
 
 ### Phase 27: Responsive hệ thống với mọi kích thước màn hình
-
-**Goal:** Làm cho hệ thống responsive tốt trên PC, Laptop, và Mobile.
+**Goal:** Restore and optimize the responsive layout for Desktop, Laptop, and Mobile following the TS/Tailwind migration.
 **Requirements**: UI-RESPONSIVE
 **Depends on:** Phase 26
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd-plan-phase 27 to break down)
+**Status**: [x] Completed
 
 ### Phase 28: Convert all CSS to Tailwind CSS for cleaner code
 **Goal:** Chuyển đổi toàn bộ mã CSS hiện tại sang Tailwind CSS để mã nguồn gọn gàng và dễ bảo trì hơn.
@@ -82,14 +78,10 @@ Plans:
 **Status**: [x] Completed
 
 ### Phase 29: Migrate frontend to TypeScript for better maintainability
-
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** [x] Migrated all frontend logic to TypeScript for better type safety and DX.
+**Requirements**: UI-STABILITY
 **Depends on:** Phase 28
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd-plan-phase 29 to break down)
+**Status**: [x] Completed
 
 ---
 ## Milestone 999: Backlog

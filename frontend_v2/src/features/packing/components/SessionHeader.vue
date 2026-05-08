@@ -1,19 +1,19 @@
 <template>
-  <div class="flex flex-col gap-3 mb-4 px-5 py-3 bg-linear-to-br from-slate-50 to-white rounded-2xl border border-slate-100 shadow-sm">
-    <div class="flex items-center gap-4 w-full pb-3 border-b border-dashed border-slate-300">
-      <button @click="$emit('back')" class="w-9 h-9 flex items-center justify-center bg-white border border-slate-200 text-slate-500 rounded-[10px] cursor-pointer transition-all duration-300 ease-out shadow-xs hover:bg-slate-50 hover:text-blue-600 hover:border-blue-500 hover:-translate-x-1 hover:shadow-blue-500/10" :title="t('packing.back')">
-        <i class="fas fa-arrow-left"></i>
+  <div class="flex flex-col gap-2 mb-3 px-3 md:px-5 py-2 md:py-3 bg-linear-to-br from-slate-50 to-white rounded-2xl border border-slate-100 shadow-sm">
+    <div class="flex items-center gap-3 md:gap-4 w-full pb-2 border-b border-dashed border-slate-300">
+      <button @click="$emit('back')" class="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center bg-white border border-slate-200 text-slate-500 rounded-[10px] cursor-pointer transition-all duration-300 ease-out shadow-xs hover:bg-slate-50 hover:text-blue-600 hover:border-blue-500 hover:-translate-x-1 hover:shadow-blue-500/10" :title="t('packing.back')">
+        <i class="fas fa-arrow-left text-[0.8rem] md:text-[1rem]"></i>
       </button>
       <div class="flex-1">
-        <h2 class="m-0 text-[1.25rem] font-extrabold text-slate-900 tracking-tight">{{ product.item_name }}</h2>
-        <div class="flex gap-2 mt-1">
-          <span class="inline-flex items-center px-2.5 py-0.5 border border-slate-200 rounded-md text-[0.75rem] font-semibold text-slate-600 bg-slate-50">UPC: {{ product.upc }}</span>
-          <span class="inline-flex items-center px-2.5 py-0.5 border border-slate-200 rounded-md text-[0.75rem] font-semibold text-slate-600 bg-slate-50">{{ t('packing.target') }}: {{ product.packed_qty }}</span>
+        <h2 class="m-0 text-[1.1rem] md:text-[1.25rem] font-extrabold text-slate-900 tracking-tight">{{ product.item_name }}</h2>
+        <div class="flex gap-2 mt-0.5">
+          <span class="inline-flex items-center px-2 py-0.5 border border-slate-200 rounded-md text-[0.7rem] font-semibold text-slate-600 bg-slate-50">UPC: {{ product.upc }}</span>
+          <span class="inline-flex items-center px-2 py-0.5 border border-slate-200 rounded-md text-[0.7rem] font-semibold text-slate-600 bg-slate-50">{{ t('packing.target') }}: {{ product.packed_qty }}</span>
         </div>
       </div>
     </div>
     
-    <div class="flex flex-wrap gap-3 items-start w-full">
+    <div class="flex flex-wrap gap-2 md:gap-3 items-start w-full">
       <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[300px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.job_order') }}</label>
         <input 

@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen p-3 md:p-4 text-slate-800 flex justify-center bg-radial-at-tr from-slate-50 to-slate-200">
-    <div class="w-full max-w-[1100px] transition-all duration-500 ease-out flex flex-col bg-white/95 backdrop-blur-2xl border border-white/80 rounded-[20px] p-4 shadow-2xl shadow-slate-900/5" :class="{ 'max-w-[1550px]': currentProduct }">
+    <div class="w-full max-w-[1100px] transition-all duration-500 ease-out flex flex-col bg-white/95 backdrop-blur-2xl border border-white/80 rounded-[20px] p-2.5 md:p-4 shadow-2xl shadow-slate-900/5" :class="{ 'max-w-[1550px]': currentProduct }">
       <AppHeader
         :isAudioActive="isAudioActive"
         @toggle-audio="toggleAudio"
@@ -15,8 +15,8 @@
         @select-product="selectProduct"
       />
 
-      <section class="mt-2.5" v-else>
-        <div class="flex flex-col xl:flex-row gap-6 items-stretch xl:items-start">
+      <section class="mt-2" v-else>
+        <div class="flex flex-col lg:flex-row gap-4 xl:gap-6 items-stretch lg:items-start">
           <div class="flex-[1.4] min-w-0">
             <SessionHeader
               ref="sessionRef"

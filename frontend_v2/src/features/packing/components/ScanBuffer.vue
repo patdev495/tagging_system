@@ -1,6 +1,6 @@
 <template>
   <div class="mb-4">
-    <div class="flex gap-3 items-start">
+    <div class="flex gap-2 md:gap-3 items-start">
       <textarea 
         :value="scanBuffer"
         @input="handleInput"
@@ -9,7 +9,7 @@
         ref="scanInput"
         :disabled="disabled"
         rows="1"
-        class="flex-1 min-w-0 px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1.15rem] font-bold text-center mb-2 transition-all min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0 resize-none overflow-hidden"
+        class="flex-1 min-w-0 px-3 md:px-4 py-2.5 md:py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1rem] md:text-[1.15rem] font-bold text-center mb-1.5 md:mb-2 transition-all min-h-[48px] md:min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0 resize-none overflow-hidden"
         :class="{ 
           'bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed': !jobOrder || disabled, 
           'bg-orange-50 border-orange-500 text-orange-900 focus:border-orange-600 focus:bg-orange-50 focus:ring-orange-500/15': awaitingNext && jobOrder && !disabled 
@@ -18,20 +18,20 @@
       <button 
         v-if="awaitingNext" 
         @click="$emit('next-carton')" 
-        class="px-6 h-[58px] bg-linear-to-br from-emerald-500 to-emerald-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(16,185,129,0.4)] hover:bg-linear-to-br hover:from-emerald-600 hover:to-emerald-700 animate-pulse-gentle"
+        class="px-4 md:px-6 h-[48px] md:h-[58px] bg-linear-to-br from-emerald-500 to-emerald-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(16,185,129,0.4)] hover:bg-linear-to-br hover:from-emerald-600 hover:to-emerald-700 animate-pulse-gentle"
         :disabled="disabled"
         :title="t('packing.next_carton_title')"
       >
-        <i class="fas fa-plus-circle"></i> {{ t('packing.next_carton') }}
+        <i class="fas fa-plus-circle text-[0.85rem] md:text-[1rem]"></i> {{ t('packing.next_carton') }}
       </button>
       <button 
         v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
         @click="$emit('pack-now')" 
-        class="px-6 h-[58px] bg-linear-to-br from-blue-500 to-blue-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(59,130,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(59,130,246,0.4)] hover:bg-linear-to-br hover:from-blue-600 hover:to-blue-700"
+        class="px-4 md:px-6 h-[48px] md:h-[58px] bg-linear-to-br from-blue-500 to-blue-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(59,130,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(59,130,246,0.4)] hover:bg-linear-to-br hover:from-blue-600 hover:to-blue-700"
         :disabled="disabled"
         :title="t('packing.pack_now_title')"
       >
-        <i class="fas fa-box-open"></i> {{ t('packing.pack_now') }}
+        <i class="fas fa-box-open text-[0.85rem] md:text-[1rem]"></i> {{ t('packing.pack_now') }}
       </button>
     </div>
     <p class="text-center text-slate-400 text-[0.85rem]" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
