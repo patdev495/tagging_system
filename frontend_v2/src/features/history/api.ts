@@ -3,10 +3,10 @@ import type { Carton } from '../../types/api';
 
 export default {
   getCartons(params: Record<string, any> = {}) {
-    return api.get<Carton[]>('/cartons', { params });
+    return api.get<{ items: Carton[]; total: number }>('/cartons', { params });
   },
   getCartonDetail(id: number) {
-    return api.get<Carton & { items: string[] }>(`/cartons/${id}`);
+    return api.get<Carton>(`/cartons/${id}`);
   },
   searchByCartonSN(sn: string) {
     return api.get<Carton>('/cartons/search', { params: { carton_sn: sn } });

@@ -195,11 +195,11 @@ import type { Carton, Product } from '../../types/api';
 
 const { t } = useI18n();
 const system = useSystemStore();
-const history = ref<(Carton & { product?: Product })[]>([]);
+const history = ref<Carton[]>([]);
 const products = ref<Product[]>([]);
 const totalCount = ref<number>(0);
 const currentPage = ref<number>(0);
-const selectedCarton = ref<(Carton & { product?: Product }) | null>(null);
+const selectedCarton = ref<Carton | null>(null);
 const cartonItems = ref<{ id: number, item_sn: string }[]>([]);
 const isLoadingItems = ref<boolean>(false);
 
@@ -237,7 +237,7 @@ const fetchProducts = async () => {
   } catch (err) {}
 };
 
-const viewDetail = async (carton: Carton & { product?: Product }) => {
+const viewDetail = async (carton: Carton) => {
   selectedCarton.value = carton;
   cartonItems.value = [];
   isLoadingItems.value = true;

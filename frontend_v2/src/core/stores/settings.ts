@@ -10,7 +10,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const printMode = ref<'centralized' | 'local'>('centralized');
   const agentUrl = ref<string>('http://localhost:8080');
   const localTemplateDir = ref<string>('C:\\NY_Templates\\');
-  const language = ref<string>('vi');
+  const language = ref<'vi' | 'en'>('vi');
 
   function loadSettings() {
     const saved = localStorage.getItem('ny_packing_settings');

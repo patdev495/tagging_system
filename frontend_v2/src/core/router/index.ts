@@ -51,7 +51,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   // Check for admin routes
   if (to.path.startsWith('/admin')) {
     // Allow access to login page

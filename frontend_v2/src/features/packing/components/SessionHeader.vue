@@ -18,7 +18,7 @@
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.job_order') }}</label>
         <input 
           :value="jobOrder" 
-          @input="$emit('update:jobOrder', $event.target.value)"
+          @input="onJobOrderInput"
           :placeholder="t('packing.job_order_placeholder')" 
           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm"
           ref="jobOrderInput"
@@ -29,7 +29,7 @@
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.origin') }}</label>
         <select 
           :value="cartonOrigin"
-          @change="$emit('update:cartonOrigin', $event.target.value); $emit('focus-scan')"
+          @change="onOriginChange"
           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm"
         >
           <option value="VN">VN</option>
@@ -40,9 +40,9 @@
         <div class="relative flex items-center">
           <input 
             :value="customSN"
-            @input="$emit('update:customSN', $event.target.value)"
+            @input="onCustomSNInput"
             type="number"
-            :placeholder="suggestedSNValue || '00001'" 
+            :placeholder="suggestedSNValue?.toString() || '00001'" 
             class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm pr-[70px]!"
             :class="{ 
               'bg-emerald-50! border-emerald-500! text-emerald-600! cursor-default': !isSNManual, 
@@ -69,7 +69,7 @@
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.sn_pattern') }}</label>
         <input 
           :value="snPattern"
-          @input="$emit('update:snPattern', $event.target.value)"
+          @input="onPatternInput"
           placeholder="e.g. AS" 
           class="w-full px-3 py-2 bg-white rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm border-blue-300 text-blue-800 focus:border-blue-500 focus:ring-blue-500/8 focus:bg-blue-50!"
           @keyup.enter="$emit('focus-scan')"
@@ -79,7 +79,7 @@
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.manual_date') }}</label>
         <input 
           :value="customYYMM"
-          @input="$emit('update:customYYMM', $event.target.value)"
+          @input="onDateInput"
           placeholder="e.g. 2604" 
           maxlength="4"
           class="w-full px-3 py-2 bg-white border rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm border-amber-500 text-amber-800 focus:border-amber-600 focus:bg-amber-50! focus:ring-amber-500/8"
@@ -127,6 +127,15 @@ const snInput = ref<HTMLInputElement | null>(null);
 const focusJobOrder = () => {
   if (jobOrderInput.value) jobOrderInput.value.focus({ preventScroll: true });
 };
+
+const onJobOrderInput = (e: Event) => emit('update:jobOrder', (e.target as HTMLInputElement).value);
+const onOriginChange = (e: Event) => {
+  emit('update:cartonOrigin', (e.target as HTMLSelectElement).value);
+  emit('focus-scan');
+};
+const onCustomSNInput = (e: Event) => emit('update:customSN', (e.target as HTMLInputElement).value);
+const onPatternInput = (e: Event) => emit('update:snPattern', (e.target as HTMLInputElement).value);
+const onDateInput = (e: Event) => emit('update:customYYMM', (e.target as HTMLInputElement).value);
 
 const toggleMode = () => {
   if (!props.isSNManual) {

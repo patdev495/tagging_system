@@ -455,7 +455,7 @@ const finalizeCarton = async (isRetry = false) => {
   } finally { isProcessing.value = false; }
 };
 
-const handlePrintExecution = async (cartonId: number, cartonSn: string): Promise<string> => {
+const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promise<string> => {
   try {
     if (settings.printMode === 'local') {
       const resXml = await printApi.download_carton_btxml(cartonId, currentProduct.value?.template_path || '');
@@ -505,9 +505,9 @@ const handleEmergencyReprint = async (carton: Carton) => {
   } catch (err: any) { system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error'); }
 };
 
-const handleRescan = (carton: Carton & { product: Product, job_order?: string, carton_origin?: string }) => {
+const handleRescan = (carton: Carton) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  currentProduct.value = carton.product;
+  currentProduct.value = carton.product || null;
   scannedItems.value = [];
   invalidScans.value = [];
   overflowScans.value = [];

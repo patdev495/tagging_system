@@ -18,11 +18,11 @@
         <div v-if="result" class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden animate-in">
           <div class="px-5 py-4 bg-white border-b border-slate-200 flex items-center gap-3"><div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"></div><h3 class="m-0 text-[1.2rem] text-slate-900 font-mono">{{ result.carton_sn }}</h3></div>
           <div class="p-5">
-            <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.product') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result.product.item_name }}</span></div>
+            <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.product') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.product?.item_name || 'N/A' }}</span></div>
             <div class="flex gap-6 mt-4">
-              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('packing.job_order') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result.job_order || 'N/A' }}</span></div>
-              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('print.items') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result.items_count !== undefined ? result.items_count : (result.items ? result.items.length : '?') }} pcs</span></div>
-              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.date') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ new Date(result.created_at).toLocaleDateString() }}</span></div>
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('packing.job_order') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.job_order || 'N/A' }}</span></div>
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('print.items') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.items?.length || 0 }} pcs</span></div>
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.date') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result ? new Date(result.created_at).toLocaleDateString() : '-' }}</span></div>
             </div>
           </div>
           <div class="px-5 py-4 bg-white border-t border-slate-200 flex justify-end gap-3">
@@ -47,7 +47,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import printApi from '../api';
 import { useSystemStore } from '../../../core/stores/system';
-import type { Carton, Product } from '../../../types/api';
+import type { Carton } from '../../../types/api';
 
 const { t } = useI18n();
 
@@ -63,7 +63,7 @@ const emit = defineEmits<{
 
 const system = useSystemStore();
 const searchSN = ref<string>('');
-const result = ref<(Carton & { product: Product, items_count?: number, items?: string[], job_order?: string }) | null>(null);
+const result = ref<Carton | null>(null);
 const loading = ref<boolean>(false);
 const searched = ref<boolean>(false);
 
@@ -72,7 +72,7 @@ const handleSearch = async () => {
   loading.value = true; result.value = null; searched.value = false;
   try {
     const res = await printApi.searchCarton(searchSN.value.trim());
-    if (res.data) result.value = res.data as any;
+    if (res.data) result.value = res.data;
     else system.showNotification('Carton not found.', 'warning');
   } catch (err: any) { 
     system.showNotification('Search failed: ' + (err.response?.data?.detail || err.message), 'error'); 

@@ -26,6 +26,13 @@ export interface Carton {
   customer_name: string;
   packed_qty: number;
   created_at: string;
+  status?: string;
+  job_order?: string;
+  station_id?: string;
+  carton_origin?: string;
+  is_reprint?: boolean;
+  product?: Product;
+  items?: { id: number; item_sn: string }[];
 }
 
 export interface ScanItem {

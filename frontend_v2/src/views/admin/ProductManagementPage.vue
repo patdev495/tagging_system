@@ -292,10 +292,10 @@ const saveProduct = async () => {
   isSubmitting.value = true;
   try {
     if (isEdit.value && currentId.value !== null) {
-      await catalogApi.updateProduct(currentId.value, form.value);
+      await catalogApi.updateProduct(currentId.value, form.value as any);
       system.showNotification('Product updated successfully', 'success');
     } else {
-      await catalogApi.createProduct(form.value);
+      await catalogApi.createProduct(form.value as any);
       system.showNotification('Product added successfully', 'success');
     }
     showModal.value = false;
