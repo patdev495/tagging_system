@@ -1,33 +1,64 @@
 <template>
-  <header class="header">
-    <div @click="$emit('home')" class="title-link cursor-pointer">
-      <h1><i class="fas fa-box-open"></i> {{ t('header.title') }}</h1>
+  <header class="bg-white px-5 py-2 flex justify-between items-center border-b border-slate-200 shadow-sm">
+    <div @click="$emit('home')" class="no-underline text-inherit transition-opacity duration-200 cursor-pointer hover:opacity-80">
+      <h1 class="m-0 text-[1.1rem] font-extrabold text-slate-900 flex items-center gap-2">
+        <i class="fas fa-box-open text-blue-600"></i> {{ t('header.title') }}
+      </h1>
     </div>
-    <div class="header-actions">
-      <div class="status-badge" :class="{ online: system.isOnline }">
+    <div class="flex items-center gap-[10px]">
+      <div 
+        class="px-[10px] py-1 rounded-full text-[0.7rem] font-bold flex items-center gap-[6px] transition-colors"
+        :class="system.isOnline ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500'"
+      >
+        <span 
+          class="w-1.5 h-1.5 rounded-full" 
+          :class="system.isOnline ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-slate-300'"
+        ></span>
         {{ system.isOnline ? t('header.status_online') : t('header.connecting') }}
       </div>
-      <button @click="$emit('toggle-audio')" class="btn-icon status-audio" :class="{ active: isAudioActive }" :title="isAudioActive ? t('header.audio_active') : t('header.audio_inactive')">
+      
+      <button 
+        @click="$emit('toggle-audio')" 
+        class="w-9 h-9 rounded-[10px] cursor-pointer flex items-center justify-center transition-all duration-200 text-[0.9rem] border hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 hover:-translate-y-[2px]"
+        :class="isAudioActive ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-200 text-slate-500'" 
+        :title="isAudioActive ? t('header.audio_active') : t('header.audio_inactive')"
+      >
         <i class="fas" :class="isAudioActive ? 'fa-volume-up' : 'fa-volume-mute'"></i>
       </button>
-      <button @click="$emit('show-emergency')" class="btn-icon warning" :title="t('header.emergency_reprint')">
+
+      <button 
+        @click="$emit('show-emergency')" 
+        class="w-9 h-9 rounded-[10px] cursor-pointer flex items-center justify-center transition-all duration-200 text-[0.9rem] bg-white border border-slate-200 text-slate-500 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 hover:-translate-y-[2px]" 
+        :title="t('header.emergency_reprint')"
+      >
         <i class="fas fa-exclamation-triangle"></i>
       </button>
-      <div class="lang-switcher">
+
+      <div class="border-l border-slate-200 pl-3 ml-1">
         <button 
           @click="toggleLanguage" 
-          class="btn-lang" 
-          :class="{ active: settings.language === 'en' }"
+          class="px-[10px] py-1 rounded-lg cursor-pointer flex items-center gap-[6px] font-bold text-[0.7rem] transition-all duration-200 border" 
+          :class="settings.language === 'en' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'"
           :title="settings.language === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'"
         >
-          <span class="lang-text">{{ settings.language === 'vi' ? 'VI' : 'EN' }}</span>
+          <span class="font-sans">{{ settings.language === 'vi' ? 'VI' : 'EN' }}</span>
           <i class="fas fa-language"></i>
         </button>
       </div>
-      <button @click="$emit('show-settings')" class="btn-icon" :title="t('header.settings')">
+
+      <button 
+        @click="$emit('show-settings')" 
+        class="w-9 h-9 rounded-[10px] cursor-pointer flex items-center justify-center transition-all duration-200 text-[0.9rem] bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 hover:-translate-y-[2px]" 
+        :title="t('header.settings')"
+      >
         <i class="fas fa-cog"></i>
       </button>
-      <router-link to="/admin" class="btn-icon admin-btn" :title="t('header.admin_dashboard')">
+
+      <router-link 
+        to="/admin" 
+        class="w-9 h-9 rounded-[10px] cursor-pointer flex items-center justify-center transition-all duration-200 text-[0.9rem] border bg-slate-50 text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-800 hover:-translate-y-[2px]" 
+        :title="t('header.admin_dashboard')"
+      >
         <i class="fas fa-user-shield"></i>
       </router-link>
     </div>
@@ -54,156 +85,3 @@ const toggleLanguage = () => {
   settings.saveSettings();
 };
 </script>
-
-<style scoped>
-.header {
-  background: white;
-  padding: 8px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.title-link {
-  text-decoration: none;
-  color: inherit;
-  transition: opacity 0.2s;
-  cursor: pointer;
-}
-
-.title-link:hover {
-  opacity: 0.8;
-}
-
-h1 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-h1 i { color: #2563eb; }
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.status-badge {
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  background: #f1f5f9;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.status-badge::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #cbd5e1;
-}
-
-.status-badge.online {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.online::before {
-  background: #22c55e;
-  box-shadow: 0 0 8px #22c55e;
-}
-
-.btn-icon {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-.btn-icon:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
-  transform: translateY(-2px);
-}
-
-.btn-icon.warning:hover {
-  background: #fff1f2;
-  border-color: #fecaca;
-  color: #e11d48;
-}
-
-.status-audio.active {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
-}
-
-.admin-btn {
-  background: #f8fafc;
-  color: #4f46e5;
-  border-color: #c7d2fe;
-}
-
-.admin-btn:hover {
-  background: #eef2ff;
-  color: #3730a3;
-}
-
-.lang-switcher {
-  border-left: 1px solid #e2e8f0;
-  padding-left: 12px;
-  margin-left: 4px;
-}
-
-.btn-lang {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  padding: 4px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  font-size: 0.7rem;
-  transition: all 0.2s;
-}
-
-.btn-lang:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #0f172a;
-}
-
-.btn-lang.active {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #166534;
-}
-
-.lang-text {
-  font-family: 'Inter', sans-serif;
-}
-</style>
