@@ -473,7 +473,7 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promis
   try {
     if (settings.printMode === 'local') {
       const resXml = await printApi.download_carton_btxml(cartonId, currentProduct.value?.template_path || '');
-      const xmlContent = resXml.data.xml;
+      const xmlContent = resXml.data;
       
       const result = await printApi.agentPrint(
         settings.agentUrl, 

@@ -61,8 +61,9 @@ export default {
   },
   /** Lấy file .xml của thùng để in qua Agent */
   download_carton_btxml(cartonId: number, templatePath: string) {
-    return api.get<{ xml: string }>(`/print/carton/${cartonId}/btxml`, {
-      params: { template_path: templatePath }
+    return api.get<string>(`/print/carton/${cartonId}/btxml`, {
+      params: { template_path: templatePath },
+      responseType: 'text'
     });
   }
 };
