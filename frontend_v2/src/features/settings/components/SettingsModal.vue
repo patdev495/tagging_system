@@ -199,10 +199,7 @@ const discoverAgent = async () => {
   availablePrinters.value = [];
   detectingAgent.value = true;
   
-  const portsToScan: number[] = [];
-  for (let i = 8000; i <= 8010; i++) portsToScan.push(i);
-  for (let i = 8080; i <= 8090; i++) portsToScan.push(i);
-  for (let i = 9000; i <= 9010; i++) portsToScan.push(i);
+  const portsToScan: number[] = [8080, 8081, 8082, 8001, 8000, 9000];
   
   let foundUrl: string | null = null;
   
@@ -210,10 +207,14 @@ const discoverAgent = async () => {
     try {
       const url = `http://127.0.0.1:${port}`;
       // @ts-ignore - AbortSignal.timeout is relatively new
-      const resp = await fetch(`${url}/status`, { signal: AbortSignal.timeout ? AbortSignal.timeout(500) : undefined });
+      const resp = await fetch(`${url}/status`, { signal: (AbortSignal as any).timeout ? (AbortSignal as any).timeout(500) : undefined });
       if (resp.ok) {
-        foundUrl = url;
-        break;
+        const data = await resp.json();
+        // Verify this is actually the Print Agent (Agent returns mode: 'COM')
+        if (data.mode === 'COM') {
+          foundUrl = url;
+          break;
+        }
       }
     } catch (e) {
       // Ignore
@@ -297,7 +298,7 @@ const validateDir = async (path: string) => {
   }
   validatingDir.value = true;
   try {
-    const resp = await fetch(`${store.agentUrl}/check-dir?path=${encodeURIComponent(path)}`);
+    const resp = await fetch(`${formData.value.agentUrl}/check-dir?path=${encodeURIComponent(path)}`);
     if (resp.ok) {
       const data = await resp.json();
       dirError.value = data.exists ? '' : 'Thư mục không tồn tại trên máy client!';
