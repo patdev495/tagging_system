@@ -25,3 +25,31 @@ docker compose logs -f
 docker compose down
 docker compose ps
 docker compose up -d
+
+
+Delete from HR_MEAL_ORDER
+where EMP_NO = 'NY232604090'
+
+Delete from HR_MEAL_PICKUP_LOG
+where EMP_NO = 'NYV2012002'
+
+INSERT INTO HR_MEAL_ORDER (
+    MFG_DAY, 
+    EMP_NO, 
+    EMP_NAME, 
+    DEPARTMENT, 
+    AREA, 
+    MEAL_CODE, 
+    MEAL_NAME_VI, 
+    MEAL_NAME_ZH
+) VALUES (
+    '20260511', 
+    'NY232604090', 
+    N'Phạm Anh Tú', -- Thêm N
+    N'PHONG IT', 
+    'VN', 
+    'RICE', 
+    N'Cơm', -- Thêm N
+    N'咸饭' -- Thêm N
+);
+

@@ -89,7 +89,17 @@ Plans:
 **Depends on:** Phase 29
 **Status**: [x] Completed
 
+### Phase 31: Deploy to Render (Unified Service)
+**Goal**: Triển khai hệ thống lên Render với một dịch vụ duy nhất, phục vụ cả Backend và Frontend (từ thư mục static) và đính kèm dữ liệu hiện tại.
+**Requirements**: DEPLOY-01, DEPLOY-02, DEPLOY-03
+**Success Criteria**:
+1. Frontend được build và copy vào thư mục `static` của Backend.
+2. Backend (FastAPI) phục vụ toàn bộ file tĩnh từ thư mục `static`.
+3. Dự án chạy được trên Render (môi trường Linux/Docker) với SQLite database đính kèm.
+4. Truy cập được qua domain `.onrender.com`.
+
 ---
+
 ## Milestone 999: Backlog
 - [ ] Auto-update product catalog from remote ERP if needed.
 - [ ] Support for multiple locations (VN vs CN selection).
