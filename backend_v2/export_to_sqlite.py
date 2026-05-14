@@ -1,5 +1,9 @@
 import os
 import sys
+
+# MUST SET THIS BEFORE IMPORTING src.core.database
+os.environ["DATABASE_URL"] = "sqlite:///database.db"
+
 import pyodbc
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -111,6 +115,4 @@ def migrate():
     session.close()
 
 if __name__ == "__main__":
-    # Ensure we use SQLite for this script
-    os.environ["DATABASE_URL"] = "sqlite:///database.db"
     migrate()
