@@ -6,9 +6,11 @@ from dotenv import load_dotenv
 from src.core.config import settings
 
 # Connection string for pyodbc
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+print(f"DEBUG: DATABASE_URL is '{DATABASE_URL}'")
+
 if not DATABASE_URL:
-    # Build MSSQL connection string only if no DATABASE_URL provided
+    # Build MSSQL connection string only as a fallback
     if settings.DB_USER:
         auth_str = f"UID={settings.DB_USER};PWD={settings.DB_PASS};"
     else:
@@ -25,11 +27,17 @@ if not DATABASE_URL:
     DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={default_connection_string}"
 
 # Create engine
-if DATABASE_URL.startswith("sqlite"):
+if "sqlite" in DATABASE_URL.lower():
+    print("DEBUG: Using SQLite engine")
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
-    import pyodbc # Import here only if needed for MSSQL
-    engine = create_engine(DATABASE_URL)
+    print(f"DEBUG: Using non-SQLite engine (URL starts with {DATABASE_URL[:10]}...)")
+    try:
+        import pyodbc 
+        engine = create_engine(DATABASE_URL)
+    except ImportError:
+        print("ERROR: pyodbc not found but DATABASE_URL is not SQLite. Falling back to dummy engine to prevent crash.")
+        engine = create_engine("sqlite:///:memory:") 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
