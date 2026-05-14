@@ -1,0 +1,1 @@
+import{r as e}from"./system-VXgi0Bcp.js";var t={getCartons(t={}){return e.get(`/cartons`,{params:t})},getCartonDetail(t){return e.get(`/cartons/${t}`)},searchByCartonSN(t){return e.get(`/cartons/search`,{params:{carton_sn:t}})},searchByItemSN(t){return e.get(`/cartons/search/item`,{params:{item_sn:t}})},deleteCarton(t){return e.delete(`/cartons/${t}`)}};export{t};
