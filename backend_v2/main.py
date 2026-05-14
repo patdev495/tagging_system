@@ -43,23 +43,35 @@ def create_app() -> FastAPI:
     app.include_router(print_router, prefix="/api/v1")
 
     # --- Serve Frontend Production Build ---
-    # Determine frontend dist path
-    base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    frontend_dist = os.path.join(base_path, "frontend_v2", "dist")
+    # In Docker, we will copy frontend build to a 'static' folder inside backend_v2
+    frontend_dist = os.path.join(os.path.dirname(__file__), "static")
     
-    # If running as PyInstaller EXE, check relative to the EXE location
-    if getattr(sys, 'frozen', False):
-        exe_base = os.path.dirname(sys.executable)
-        prod_frontend_dist = os.path.abspath(os.path.join(exe_base, "..", "frontend_v2", "dist"))
-        if os.path.exists(prod_frontend_dist):
-            frontend_dist = prod_frontend_dist
+    # If not in Docker (local dev with production build), check the old path
+    if not os.path.exists(frontend_dist):
+        base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        frontend_dist = os.path.join(base_path, "frontend_v2", "dist")
 
     if os.path.exists(frontend_dist):
         from fastapi.staticfiles import StaticFiles
-        # Mount at "/" with html=True:
-        # - Starlette checks routes BEFORE mounts, so API routes always win
-        # - html=True serves index.html for directory requests (SPA support)
-        app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+        from fastapi.responses import FileResponse
+        
+        # Mount assets specifically first (if they exist in a subfolder)
+        assets_path = os.path.join(frontend_dist, "assets")
+        if os.path.exists(assets_path):
+            app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+
+        # Catch-all route for SPA:
+        # This will serve index.html for any request that isn't handled by API routers
+        @app.get("/{full_path:path}")
+        async def serve_frontend(full_path: str):
+            # Check if requested path is a file in frontend_dist
+            file_path = os.path.join(frontend_dist, full_path)
+            if os.path.isfile(file_path):
+                return FileResponse(file_path)
+            # Otherwise return index.html for SPA routing
+            return FileResponse(os.path.join(frontend_dist, "index.html"))
+    else:
+        logging.getLogger("main").warning(f"Frontend dist not found at {frontend_dist}")
     
     @app.on_event("startup")
     def startup_event():
@@ -98,12 +110,15 @@ if __name__ == "__main__":
     # Check if running as EXE
     is_prod = getattr(sys, 'frozen', False)
     
+    # Use PORT from environment for Render
+    port = int(os.environ.get("PORT", settings.API_PORT))
+    
     if is_prod:
         # In production EXE, pass the app object directly
         uvicorn.run(
             app, 
             host="0.0.0.0", 
-            port=settings.API_PORT, 
+            port=port, 
             reload=False
         )
     else:
@@ -111,6 +126,6 @@ if __name__ == "__main__":
         uvicorn.run(
             "main:app", 
             host="0.0.0.0", 
-            port=settings.API_PORT, 
+            port=port, 
             reload=True
         )

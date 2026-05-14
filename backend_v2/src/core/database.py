@@ -11,7 +11,7 @@ if settings.DB_USER:
 else:
     auth_str = "Trusted_Connection=yes;"
 
-connection_string = (
+default_connection_string = (
     f"DRIVER={{ODBC Driver 18 for SQL Server}};"
     f"SERVER={settings.DB_SERVER};"
     f"DATABASE={settings.DB_NAME};"
@@ -20,9 +20,15 @@ connection_string = (
     "TrustServerCertificate=yes;"
 )
 
-DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={connection_string}"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={default_connection_string}"
 
-engine = create_engine(DATABASE_URL)
+# Create engine
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
