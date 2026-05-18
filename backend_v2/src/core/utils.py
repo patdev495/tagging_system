@@ -88,6 +88,6 @@ def get_backend_root() -> str:
     """Lấy thư mục gốc của backend (chứa src hoặc exe)."""
     return TemplateResolver.get_execution_root()
 
-def resolve_template_path(primary_path: str = None, fallback_path: str = None) -> str:
+def resolve_template_path(primary_path: Optional[str] = None, fallback_path: Optional[str] = None) -> str:
     """Phân giải đường dẫn tệp tem nhãn BarTender."""
     return TemplateResolver.resolve(primary_path, fallback_path)
