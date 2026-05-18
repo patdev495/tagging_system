@@ -41,7 +41,7 @@ class TemplateResolver:
             if os.path.exists(local_path):
                 return local_path
             
-        def evaluate_path(p: str) -> Optional[str]:
+        def evaluate_path(p: Optional[str]) -> Optional[str]:
             if not p:
                 return None
             
