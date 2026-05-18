@@ -52,6 +52,9 @@ export const useSettingsStore = defineStore('settings', () => {
     i18n.global.locale.value = newLang;
   });
 
+  // Auto-load settings on store initialization to prevent race conditions
+  loadSettings();
+
   return {
     stationId,
     printerName,
