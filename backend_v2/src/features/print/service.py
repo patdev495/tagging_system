@@ -7,96 +7,26 @@ from fastapi import HTTPException
 from src.core import models, utils
 from src.features.print import schemas
 
+from src.features.print.domain import BTXMLDocument
+
 logger = logging.getLogger("PrintService")
 
 MAX_SN_GRID = 30  # Maximum SN slots on the detailed label
 
-def _get_template_base_dir():
-    """Get the correct base directory for XML templates, handling both dev and PyInstaller exe."""
-    if getattr(sys, 'frozen', False):
-        # PyInstaller --onedir: data files are in _internal/src/...
-        # sys._MEIPASS points to _internal/
-        meipass = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
-        frozen_path = os.path.join(meipass, "src", "features", "print")
-        logger.info(f"[FROZEN] _MEIPASS={meipass}, template_dir={frozen_path}, exists={os.path.isdir(frozen_path)}")
-        if os.path.isdir(frozen_path):
-            return frozen_path
-    
-    # Dev mode: relative to this file
-    return os.path.dirname(os.path.abspath(__file__))
-
 def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: str = None) -> str:
-    raw_origin = carton.carton_origin if carton.carton_origin else "VN"
-    origin_text = "MADE IN CHINA" if raw_origin == "CN" else "MADE IN VIETNAM"
-    qr_content = "&#xA;".join(items)
-    printer_tag = f"<Printer>{printer_name}</Printer>" if printer_name else ""
+    # Use the unified domain object to build the document applying all validation and schema rules
+    doc = BTXMLDocument.from_carton_data(
+        carton=carton,
+        product=product,
+        items=items,
+        template_path=template_path,
+        printer_name=printer_name
+    )
     
-    # Select template based on product.template_type
     template_type = getattr(product, 'template_type', 'standard') or 'standard'
-    base_dir = _get_template_base_dir()
-    template_file = os.path.join(base_dir, "templates", f"{template_type}.xml")
-    
-    logger.info(f"[BTXML] product.template_type='{product.template_type}' -> resolved='{template_type}', "
-                f"base_dir='{base_dir}', template_file='{template_file}', "
-                f"exists={os.path.exists(template_file)}, frozen={getattr(sys, 'frozen', False)}")
-    
-    # Diagnostic: list what's actually in the templates directory
-    templates_dir = os.path.join(base_dir, "templates")
-    if os.path.isdir(templates_dir):
-        dir_contents = os.listdir(templates_dir)
-        logger.info(f"[BTXML] templates/ dir contents: {dir_contents}")
-    else:
-        logger.warning(f"[BTXML] templates/ dir NOT FOUND at: {templates_dir}")
-        # Try alternative: relative to __file__
-        alt_base = os.path.dirname(os.path.abspath(__file__))
-        alt_templates_dir = os.path.join(alt_base, "templates")
-        logger.info(f"[BTXML] Trying __file__ fallback: __file__={__file__}, alt_base={alt_base}, alt_templates_dir={alt_templates_dir}, exists={os.path.isdir(alt_templates_dir)}")
-        if os.path.isdir(alt_templates_dir):
-            base_dir = alt_base
-            template_file = os.path.join(base_dir, "templates", f"{template_type}.xml")
-            logger.info(f"[BTXML] Using __file__ fallback! template_file={template_file}, exists={os.path.exists(template_file)}")
-    
-    # Fallback to base.xml if template doesn't exist
-    if not os.path.exists(template_file):
-        fallback_file = os.path.join(base_dir, "templates", "base.xml")
-        logger.warning(f"[BTXML] Template '{template_file}' NOT FOUND! Falling back to '{fallback_file}' (exists={os.path.exists(fallback_file)})")
-        template_file = fallback_file
-        template_type = "standard"
-    
-    with open(template_file, "r", encoding="utf-8") as f:
-        xml_template = f.read()
-    
-    # For partial packing, QTY = actual scanned count, not packed_qty
-    allow_partial = getattr(product, 'allow_partial', 0) or 0
-    actual_qty = len(items)
-    if allow_partial:
-        qty_text = f"{actual_qty}PCS"
-    else:
-        qty_text = f"{product.packed_qty}PCS"
-        
-    data_dict = {
-        "template_path": template_path,
-        "printer_tag": printer_tag,
-        "item_name": product.item_name,
-        "qty": qty_text,
-        "carton_sn": carton.carton_sn,
-        "upc": product.upc,
-        "qr_content": qr_content,
-        "origin_text": origin_text,
-        "mac_id": f"MAC ID ({actual_qty})"
-    }
-    
-    # Detailed template: generate SN grid tags dynamically
-    if template_type == "detailed":
-        sn_tags = []
-        for i in range(MAX_SN_GRID):
-            sn_value = items[i] if i < len(items) else " "
-            sn_tags.append(f'            <NamedSubString Name="SN_{i+1}"><Value>{sn_value}</Value></NamedSubString>')
-        data_dict["sn_grid_tags"] = "\n".join(sn_tags)
-    
-    # Simple string formatting for the template
-    btxml_content = xml_template.format(**data_dict)
-    return btxml_content.strip()
+    btxml_content = doc.to_xml(template_type=template_type)
+    return btxml_content
+
 
 def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db: Session):
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()

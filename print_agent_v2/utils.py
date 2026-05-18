@@ -1,17 +1,16 @@
 """
-Core Utility Functions — Unified and robust system helpers.
+Agent Utility Functions — Unified and robust system helpers.
 Encapsulates Template Path Resolution and Environment Detection.
 """
 import os
 import sys
 from typing import Optional
-from src.core.config import settings
 
 class TemplateResolver:
     """
     Unified template resolver for BarTender BTW files.
     Acts as the Single Source of Truth for path resolution and template search strategies.
-    Supports both backend server execution and client-side print agent execution.
+    Specially adapted for client-side Print Agent environments.
     """
     
     @staticmethod
@@ -22,9 +21,9 @@ class TemplateResolver:
         
         # Dev mode safe root detection
         cwd = os.getcwd()
-        if os.path.exists(os.path.join(cwd, "main.py")) or os.path.exists(os.path.join(cwd, "src")):
+        if os.path.exists(os.path.join(cwd, "agent.py")):
             return cwd
-        return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        return os.path.dirname(os.path.abspath(__file__))
 
     @classmethod
     def resolve(cls, path: Optional[str], fallback_path: Optional[str] = None, local_dir: Optional[str] = None, default_filename: str = "carton.ui.btw") -> str:
@@ -52,9 +51,8 @@ class TemplateResolver:
                     return norm
                 return None
                 
-            # Strategy 2: Check relative to settings template directory
-            templates_dir = getattr(settings, 'LABEL_TEMPLATES_DIR', 'resources/templates')
-            path1 = os.path.normpath(os.path.join(root, templates_dir, p))
+            # Strategy 2: Check relative to standard resources/templates directory
+            path1 = os.path.normpath(os.path.join(root, "resources", "templates", p))
             if os.path.exists(path1):
                 return path1
                 
@@ -77,17 +75,5 @@ class TemplateResolver:
                 return resolved
 
         # Final absolute fallback path if nothing exists (safety net)
-        fallback_dir = getattr(settings, 'LABEL_TEMPLATES_DIR', 'resources/templates')
-        final_path = os.path.normpath(os.path.join(root, fallback_dir, os.path.basename(path or fallback_path or default_filename)))
+        final_path = os.path.normpath(os.path.join(root, "resources", "templates", os.path.basename(path or fallback_path or default_filename)))
         return final_path
-
-
-# --- Backward Compatible Thin Wrappers ---
-
-def get_backend_root() -> str:
-    """Lấy thư mục gốc của backend (chứa src hoặc exe)."""
-    return TemplateResolver.get_execution_root()
-
-def resolve_template_path(primary_path: str = None, fallback_path: str = None) -> str:
-    """Phân giải đường dẫn tệp tem nhãn BarTender."""
-    return TemplateResolver.resolve(primary_path, fallback_path)
