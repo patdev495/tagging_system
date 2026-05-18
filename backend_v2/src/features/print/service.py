@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-from typing import List
+from typing import List, Optional, Any
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from src.core import models, utils
@@ -13,7 +13,7 @@ logger = logging.getLogger("PrintService")
 
 MAX_SN_GRID = 40  # Maximum SN slots on the detailed label
 
-def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: str = None) -> str:
+def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: Optional[str] = None) -> str:
     # Use the unified domain object to build the document applying all validation and schema rules
     doc = BTXMLDocument.from_carton_data(
         carton=carton,
@@ -37,13 +37,13 @@ def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db:
     db.refresh(carton)
     return carton
 
-def download_carton_btxml(carton_id: int, template_path: str = None, db: Session = None):
-    carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
+def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, db: Optional[Session] = None):
+    carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first() if db else None
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     
     btxml_content = carton.btxml
-    if not btxml_content:
+    if not btxml_content and db:
         product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
         item_sns = [item.item_sn for item in carton.items]
         # Priority logic inside resolve_template_path: DB -> Client -> Default
@@ -53,8 +53,10 @@ def download_carton_btxml(carton_id: int, template_path: str = None, db: Session
         
     return carton.carton_sn, btxml_content
 
-def reprint_carton(carton_id: int, printer_name: str = None, template_path: str = None, station_id: str = None, db: Session = None):
+def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_path: Optional[str] = None, station_id: Optional[str] = None, db: Optional[Session] = None):
     logger.info(f"Reprinting carton {carton_id} (printer={printer_name}, template={template_path})")
+    if not db:
+        raise HTTPException(status_code=500, detail="Database session not provided")
     original = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not original:
         logger.warning(f"Reprint failed: Carton {carton_id} not found in database")
