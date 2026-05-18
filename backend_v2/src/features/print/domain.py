@@ -48,12 +48,12 @@ class BTXMLDocument:
                 raise ValueError("Invalid BTXML structure: No <Print> element found.")
 
             format_element = print_element.find('Format')
-            template_path = format_element.text if format_element is not None else ""
+            template_path = (format_element.text or "") if format_element is not None else ""
 
             printer_name = ""
             printer_el = print_element.find('.//Printer')
             if printer_el is not None and printer_el.text:
-                printer_name = printer_el.text
+                printer_name = printer_el.text or ""
 
             # Parse NamedSubStrings
             substrings = {}

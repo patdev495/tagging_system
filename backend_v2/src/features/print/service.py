@@ -32,7 +32,7 @@ def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db:
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
-    carton.status = status_update.status
+    carton.status = status_update.status  # type: ignore
     db.commit()
     db.refresh(carton)
     return carton
@@ -82,7 +82,7 @@ def reprint_carton(carton_id: int, printer_name: str = None, template_path: str 
     db_path = getattr(product, 'template_path', None)
     path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=template_path)
     btxml_content = generate_btxml(new_carton, product, item_sns, path_to_use, printer_name)
-    new_carton.btxml = btxml_content
+    new_carton.btxml = btxml_content  # type: ignore
     
     db.commit()
     db.refresh(new_carton)
