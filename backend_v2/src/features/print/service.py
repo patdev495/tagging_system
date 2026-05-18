@@ -11,7 +11,7 @@ from src.features.print.domain import BTXMLDocument
 
 logger = logging.getLogger("PrintService")
 
-MAX_SN_GRID = 30  # Maximum SN slots on the detailed label
+MAX_SN_GRID = 40  # Maximum SN slots on the detailed label
 
 def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: str = None) -> str:
     # Use the unified domain object to build the document applying all validation and schema rules

@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger("BarTenderDomain")
 
-MAX_SN_GRID = 30  # Maximum SN slots on the detailed label
+MAX_SN_GRID = 40  # Maximum SN slots on the detailed label
 
 def _get_template_base_dir() -> str:
     """Get the correct base directory for XML templates, handling both dev and PyInstaller exe."""
