@@ -39,12 +39,12 @@ Hệ thống được thiết kế theo mô hình Client-Server phân tán tối
 
 ```mermaid
 graph TD
-    subgraph Cloud / Central Server
+    subgraph "Cloud / Central Server"
         FE[Vue 3 SPA Web Interface] <--> BE[FastAPI REST API Server]
         BE <--> DB[(SQLite Database)]
     end
 
-    subgraph Local Workstation (Windows Client)
+    subgraph "Local Workstation (Windows Client)"
         FE_Local[Web Browser - Scan UI] <--> Agent[Python Print Agent - Port 8080]
         Agent <--> |COM Automation| BT[BarTender Suite]
         BT <--> |USB / LAN| HW_Printer[Physical Label Printer]
