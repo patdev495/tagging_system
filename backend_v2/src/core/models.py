@@ -20,7 +20,7 @@ class Product(Base):
     item_name = Column(String(200), index=True)
     upc = Column(String(50))
     packed_qty = Column(Integer)
-    start_part = Column(String(10)) # CN or VN
+    start_part = Column(String(10)) # E.g., CN (Carton Number)
     middle_part = Column(String(20)) # e.g. 11, 16, A, B
     template_type = Column(String(50), default="standard") # "standard" | "detailed"
     template_path = Column(String(500), nullable=True) # E.g. D:\PAT\Template\carton.btw
@@ -41,7 +41,7 @@ class Carton(Base):
     status = Column(String(20), default="FAILED", index=True) # SUCCESS or FAILED
     btxml = Column(UnicodeText, nullable=True) # Stores original print data
     is_reprint = Column(Integer, default=0) # 0 for Original, 1 for Reprint
-    carton_origin = Column(String(50), default="VN") # E.g., CN or VN
+    carton_origin = Column(String(50), default="VN") # Origin country, e.g. CN (China) or VN (Vietnam)
     station_id = Column(String(50), nullable=True) # Station ID derived from MAC address
     
     product = relationship("Product", back_populates="cartons")

@@ -4,7 +4,7 @@
 
 ### Issue tracker
 
-GitHub Issues is used to track work for this repository. See `docs/agents/issue-tracker.md`.
+Local markdown is used to track work for this repository. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

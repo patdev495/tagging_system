@@ -78,12 +78,8 @@ class BTXMLDocument:
         origin_text = "MADE IN CHINA" if raw_origin == "CN" else "MADE IN VIETNAM"
         qr_content = "&#xA;".join(items)
 
-        allow_partial = getattr(product, 'allow_partial', 0) or 0
         actual_qty = len(items)
-        if allow_partial:
-            qty_text = f"{actual_qty}PCS"
-        else:
-            qty_text = f"{product.packed_qty}PCS"
+        qty_text = f"{actual_qty}PCS"
 
         substrings = {
             "ItemName": product.item_name,

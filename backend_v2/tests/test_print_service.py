@@ -25,7 +25,7 @@ def test_generate_btxml_standard():
             result = service.generate_btxml(carton, product, items, "dummy.btw")
             
     assert "Test Product" in result
-    assert "10PCS" in result
+    assert "2PCS" in result
     assert "VN-11-2605001" in result
 
 def test_generate_btxml_detailed_sn_grid():

@@ -172,3 +172,29 @@ class TestCreateCarton:
             service.create_carton(carton_in, db)
         assert exc.value.status_code == 400
         assert "already in use" in exc.value.detail
+        
+    def test_rejects_exceeded_capacity(self):
+        """Should reject if scanned items exceed product packed_qty."""
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=2)
+        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
+        
+        carton_in = self._make_carton_input(items=["SN001", "SN002", "SN003"]) # 3 items, max is 2
+        
+        with pytest.raises(HTTPException) as exc:
+            service.create_carton(carton_in, db)
+        assert exc.value.status_code == 400
+        assert "capacity exceeded" in exc.value.detail.lower()
+
+    def test_rejects_partial_packing_if_disabled(self):
+        """Should reject partial packing if allow_partial is disabled (default)."""
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=5, allow_partial=0)
+        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
+        
+        carton_in = self._make_carton_input(items=["SN001", "SN002"]) # 2 items, max is 5
+        
+        with pytest.raises(HTTPException) as exc:
+            service.create_carton(carton_in, db)
+        assert exc.value.status_code == 400
+        assert "partial packing is not allowed" in exc.value.detail.lower()

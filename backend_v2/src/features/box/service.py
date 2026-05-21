@@ -42,7 +42,12 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     if len(carton_in.items) != len(set(carton_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
     
-    # Validation: Check if partial packing is allowed
+    # Validation: Check capacity and partial packing
+    if len(carton_in.items) > product.packed_qty:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Carton capacity exceeded. Maximum is {product.packed_qty} items, but got {len(carton_in.items)}."
+        )
     allow_partial = getattr(product, 'allow_partial', 0) or 0
     if not allow_partial and len(carton_in.items) < product.packed_qty:
         raise HTTPException(
@@ -106,6 +111,19 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
     
     if len(rescan_in.items) != len(set(rescan_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
+        
+    # Validation: Check capacity and partial packing
+    if len(rescan_in.items) > product.packed_qty:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Carton capacity exceeded. Maximum is {product.packed_qty} items, but got {len(rescan_in.items)}."
+        )
+    allow_partial = getattr(product, 'allow_partial', 0) or 0
+    if not allow_partial and len(rescan_in.items) < product.packed_qty:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(rescan_in.items)}."
+        )
         
     try:
         # Delete old items
