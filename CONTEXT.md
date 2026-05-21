@@ -40,6 +40,22 @@ _Avoid_: Máy in, print device
 Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt Nam hoặc `CN` - Trung Quốc), quyết định xuất xứ in trên nhãn là "MADE IN VIETNAM" hay "MADE IN CHINA".
 _Avoid_: Quốc gia sê-ri
 
+**Reprint**:
+Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng.
+_Avoid_: In bù, in mới, in đè
+
+**Station ID**:
+Mã định danh duy nhất của máy tính client hoặc trạm đóng gói thực hiện lệnh in (thường được lưu dưới dạng địa chỉ MAC hoặc địa chỉ IP của Client).
+_Avoid_: MAC ID (trừ phi nói về phần cứng), IP máy, Terminal ID
+
+**Template Type**:
+Kiểu định dạng nhãn in được cấu hình cho Product. Hệ thống hỗ trợ hai loại chính: `standard` (chỉ hiển thị thông tin Carton và mã vạch chung) và `detailed` (hiển thị lưới sê-ri chi tiết của từng Carton Item bên trong, tối đa 40 dòng).
+_Avoid_: Cấu hình tem, kiểu mẫu
+
+**UPC**:
+Mã vạch sản phẩm tiêu chuẩn (Universal Product Code) tương ứng với từng Product, được in trực tiếp lên nhãn Carton để nhận diện sản phẩm ở cấp độ bán lẻ.
+_Avoid_: Mã vạch thùng, barcode sản phẩm
+
 
 ## Relationships
 
