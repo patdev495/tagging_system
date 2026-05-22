@@ -59,7 +59,17 @@
     "clear": "Clear",
     "invalid_scans_title": "Invalid Scans",
     "print_failed": "Print failed: {error}",
-    "server_error": "Server error."
+    "server_error": "Server error.",
+    "verification_title": "Carton Verification",
+    "verification_desc": "Scan the printed Carton SN barcode to verify and unlock the station.",
+    "expected_sn": "Expected Carton SN",
+    "verification_placeholder": "Scan printed Carton SN...",
+    "verification_error": "Carton SN Mismatch! Please verify and scan again.",
+    "manual_verify": "Verify Manually (Bypass)",
+    "bypass_confirm": "Are you sure you want to bypass verification for this carton?",
+    "verification_success": "Carton {sn} verified successfully!",
+    "update_status_failed": "Failed to update carton status.",
+    "back_home": "Back to Home"
   },
   "print": {
     "printing_carton": "Printing Carton",

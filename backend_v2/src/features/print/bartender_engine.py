@@ -4,6 +4,7 @@ Quản lý COM connection tới BarTender, in tem, xuất PDF.
 Delegates heavy lifting to the unified BarTenderCOMApp module.
 """
 import logging
+from typing import Optional
 from src.features.print.bartender_com import bt_com_app
 
 logger = logging.getLogger("BarTenderEngine")
@@ -23,7 +24,7 @@ class BarTenderEngine:
         """Khởi tạo kết nối COM tới BarTender."""
         return self.com_app.start()
 
-    def print_xml(self, xml_content: str, printer_name_override: str = None, fallback_path: str = None) -> dict:
+    def print_xml(self, xml_content: str, printer_name_override: Optional[str] = None, fallback_path: Optional[str] = None) -> dict:
         """In tem từ BTXML (BTXML string)."""
         return self.com_app.print_xml(
             xml_content=xml_content, 

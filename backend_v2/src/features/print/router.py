@@ -21,7 +21,7 @@ def get_print_config():
 @router.get("/whoami")
 def get_client_ip(request: Request):
     """Trả về IP của Client gửi yêu cầu."""
-    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
     return {"ip": client_ip}
 
 @router.get("/printers")
@@ -50,36 +50,47 @@ def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, d
 @router.post("/carton/{carton_id}/reprint", response_model=Carton)
 def reprint_carton(carton_id: int, request: Request, template_path: Optional[str] = None, printer_name: Optional[str] = None, db: Session = Depends(get_db)):
     """In lại thùng đã đóng gói (Tạo bản ghi mới với is_reprint=1)"""
-    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
     return service.reprint_carton(carton_id, printer_name, template_path, client_ip, db)
 
 @router.post("/carton/{carton_id}/server-print")
 def server_print_carton(carton_id: int, request: Request, printer_name: Optional[str] = None, fallback_template_path: Optional[str] = None, db: Session = Depends(get_db)):
     """In tem trực tiếp qua BarTender Engine (không cần Agent riêng)."""
-    client_ip = request.headers.get("X-Forwarded-For") or request.client.host
+    client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
 
     carton = db.query(service.models.Carton).filter(service.models.Carton.id == carton_id).first()
     if not carton:
         return {"success": False, "message": "Carton not found"}
     
     # Cập nhật trạm thực hiện in nếu chưa có hoặc in từ máy khác
-    carton.station_id = client_ip
+    carton.station_id = client_ip  # type: ignore
 
-    if not carton.btxml:
+    if not carton.btxml:  # type: ignore
         return {"success": False, "message": "No BTXML data available for this carton"}
 
     # Gọi BarTender trực tiếp — không qua HTTP nữa
     result = bt_engine.print_xml(
-        xml_content=carton.btxml,
+        xml_content=carton.btxml,  # type: ignore
         printer_name_override=printer_name,
         fallback_path=fallback_template_path,
     )
 
     # Cập nhật trạng thái
     if result["success"]:
-        carton.status = "SUCCESS"
+        # If this is a reprint, check if the original carton was verified (status == SUCCESS)
+        if carton.is_reprint == 1:  # type: ignore
+            original = db.query(service.models.Carton).filter(
+                service.models.Carton.carton_sn == carton.carton_sn,
+                service.models.Carton.is_reprint == 0
+            ).first()
+            if original and original.status == "SUCCESS":  # type: ignore
+                carton.status = "SUCCESS"  # type: ignore
+            else:
+                carton.status = "PRINTED"  # type: ignore
+        else:
+            carton.status = "PRINTED"  # type: ignore
     else:
-        carton.status = "FAILED"
+        carton.status = "FAILED"  # type: ignore
     db.commit()
 
     return result

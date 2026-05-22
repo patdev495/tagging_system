@@ -74,3 +74,63 @@ def test_origin_text_logic():
         with patch("os.path.exists", return_value=True):
             res_cn = service.generate_btxml(carton_cn, product, ["I"], "D")
             assert "MADE IN CHINA" in res_cn
+
+def test_reprint_carton_inherits_success_status():
+    db = MagicMock()
+    original_carton = models.Carton(
+        id=10,
+        product_id=1,
+        carton_sn="CN26051600001",
+        job_order="JO-123",
+        packed_by="User A",
+        status="SUCCESS",
+        carton_origin="CN",
+        station_id="127.0.0.1",
+        items=[]
+    )
+    
+    product = models.Product(id=1, template_path="carton.btw")
+    db.query.return_value.filter.return_value.first.side_effect = [original_carton, product]
+    
+    with patch("src.features.print.service.generate_btxml", return_value="<xml></xml>"):
+        new_carton = service.reprint_carton(
+            carton_id=10,
+            printer_name="Printer A",
+            template_path="carton.btw",
+            station_id="127.0.0.1",
+            db=db
+        )
+        
+    assert new_carton.status == "SUCCESS"
+    assert new_carton.is_reprint == 1
+    assert new_carton.carton_sn == "CN26051600001"
+
+def test_reprint_carton_defaults_printed_status():
+    db = MagicMock()
+    original_carton = models.Carton(
+        id=10,
+        product_id=1,
+        carton_sn="CN26051600001",
+        job_order="JO-123",
+        packed_by="User A",
+        status="PRINTED",
+        carton_origin="CN",
+        station_id="127.0.0.1",
+        items=[]
+    )
+    
+    product = models.Product(id=1, template_path="carton.btw")
+    db.query.return_value.filter.return_value.first.side_effect = [original_carton, product]
+    
+    with patch("src.features.print.service.generate_btxml", return_value="<xml></xml>"):
+        new_carton = service.reprint_carton(
+            carton_id=10,
+            printer_name="Printer A",
+            template_path="carton.btw",
+            station_id="127.0.0.1",
+            db=db
+        )
+        
+    assert new_carton.status == "PRINTED"
+    assert new_carton.is_reprint == 1
+    assert new_carton.carton_sn == "CN26051600001"

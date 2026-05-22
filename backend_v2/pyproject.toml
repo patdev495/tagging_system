@@ -24,3 +24,5 @@ dev = [
 
 [tool.pyright]
 extraPaths = ["."]
+venvPath = "d:/Workspace/NY_tagging_sys/backend_v2"
+venv = ".venv"

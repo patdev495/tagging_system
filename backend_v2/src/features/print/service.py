@@ -62,12 +62,13 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
         logger.warning(f"Reprint failed: Carton {carton_id} not found in database")
         raise HTTPException(status_code=404, detail="Original carton not found")
     
+    initial_status = "SUCCESS" if original.status == "SUCCESS" else "PRINTED"
     new_carton = models.Carton(
         product_id=original.product_id,
         carton_sn=original.carton_sn,
         job_order=original.job_order,
         packed_by=printer_name or original.packed_by,
-        status="SUCCESS",
+        status=initial_status,
         is_reprint=1,
         carton_origin=original.carton_origin,
         station_id=station_id or original.station_id

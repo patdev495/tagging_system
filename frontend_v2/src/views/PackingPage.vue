@@ -110,6 +110,98 @@
       @reprint="handleEmergencyReprint" 
       @rescan="handleRescan"
     />
+
+    <!-- Carton Verification Modal -->
+    <div v-if="showVerificationModal" class="fixed inset-0 bg-black/70 backdrop-blur-md flex justify-center items-center z-[2000]">
+      <div class="w-[95%] max-w-[600px] bg-white rounded-[24px] overflow-hidden shadow-2xl flex flex-col animate-in border border-slate-100" :class="{ 'ring-4 ring-rose-500/20 border-rose-300 animate-shake': verificationError }">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center px-8 pt-6 pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-3 text-slate-800">
+            <i class="fas fa-barcode text-[1.5rem] text-blue-600 animate-pulse"></i>
+            <h2 class="m-0 text-[1.5rem] font-black text-slate-900">{{ t('packing.verification_title') }}</h2>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="px-8 py-6 flex-1">
+          <p class="text-slate-500 text-[0.95rem] mb-6">
+            {{ t('packing.verification_desc') }}
+          </p>
+
+          <!-- Expected SN display -->
+          <div class="mb-6">
+            <span class="text-[0.75rem] uppercase tracking-wider text-slate-400 font-bold block mb-2">{{ t('packing.expected_sn') }}</span>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center shadow-inner-sm">
+              <span class="font-mono text-[2rem] font-bold text-slate-900 select-all tracking-wider">
+                {{ cartonToVerify?.carton_sn }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Product info details -->
+          <div class="grid grid-cols-2 gap-4 mb-6 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+            <div>
+              <span class="text-[0.7rem] uppercase tracking-wider text-slate-400 font-bold block">{{ t('admin.product') }}</span>
+              <span class="text-slate-700 font-medium text-[0.85rem] truncate block">{{ currentProduct?.item_name || 'N/A' }}</span>
+            </div>
+            <div>
+              <span class="text-[0.7rem] uppercase tracking-wider text-slate-400 font-bold block">{{ t('packing.job_order') }}</span>
+              <span class="text-slate-700 font-medium text-[0.85rem]">{{ cartonToVerify?.job_order || 'N/A' }}</span>
+            </div>
+            <div>
+              <span class="text-[0.7rem] uppercase tracking-wider text-slate-400 font-bold block">{{ t('print.items') }}</span>
+              <span class="text-slate-700 font-medium text-[0.85rem]">{{ cartonToVerify?.items?.length || scannedItems.length }} pcs</span>
+            </div>
+            <div>
+              <span class="text-[0.7rem] uppercase tracking-wider text-slate-400 font-bold block">Status</span>
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[0.75rem] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60 mt-0.5">
+                <i class="fas fa-print"></i> PRINTED
+              </span>
+            </div>
+          </div>
+
+          <!-- Scan input field -->
+          <div class="relative">
+            <div class="border rounded-xl p-1 flex gap-2 bg-white transition-all duration-300" 
+                 :class="verificationError ? 'border-rose-500 shadow-[0_0_0_4px_rgba(239,68,68,0.1)]' : 'border-slate-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10'">
+              <div class="flex-1 flex items-center pl-3">
+                <i class="fas fa-barcode text-slate-400 text-[1.1rem]"></i>
+                <input 
+                  ref="verificationInputRef" 
+                  v-model="verificationScanBuffer" 
+                  @keydown.enter.prevent="handleVerificationScan" 
+                  :placeholder="t('packing.verification_placeholder')" 
+                  class="w-full border-none px-3.5 py-3 text-[1rem] text-slate-800 outline-none bg-transparent font-mono" 
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            
+            <!-- Wrong scan error popup -->
+            <div v-if="verificationError" class="absolute left-0 right-0 -bottom-10 text-center text-rose-600 text-[0.85rem] font-bold animate-in">
+              <i class="fas fa-exclamation-circle mr-1"></i> {{ t('packing.verification_error') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer with home button -->
+        <div class="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-3">
+          <button 
+            @click="resetSession" 
+            class="bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-xl text-[0.85rem] font-semibold cursor-pointer transition-all flex items-center gap-1.5 active:scale-95"
+          >
+            <i class="fas fa-home text-slate-500"></i>
+            <span>{{ t('packing.back_home') }}</span>
+          </button>
+          
+          <span class="text-slate-400 text-[0.85rem] flex items-center gap-1.5">
+            <i class="fas fa-keyboard animate-pulse"></i> {{ t('packing.waiting_scanner') }}
+          </span>
+        </div>
+
+      </div>
+    </div>
   </div>
 </template>
 
@@ -218,6 +310,13 @@ const isRescanMode = ref<boolean>(false);
 const rescanCartonSN = ref<string>('');
 const isSNManual = ref<boolean>(false);
 const snExists = ref<boolean>(false);
+
+const showVerificationModal = ref<boolean>(false);
+const cartonToVerify = ref<(Carton & { status?: string, items?: { item_sn: string }[] }) | null>(null);
+const verificationScanBuffer = ref<string>('');
+const verificationInputRef = ref<HTMLInputElement | null>(null);
+const verificationError = ref<boolean>(false);
+
 let snCheckTimer: ReturnType<typeof setTimeout> | null = null;
 let statusTimer: ReturnType<typeof setInterval> | null = null;
 let audioCtx: AudioContext | null = null;
@@ -290,13 +389,107 @@ const selectProduct = async (p: Product) => {
         backupScannedItems.value = res.data.items.map((i: any) => i.item_sn);
         if (!jobOrder.value) jobOrder.value = (res.data as any).job_order || '';
       }
+      if (res.data.status === 'PRINTED') {
+        showVerificationModal.value = true;
+        cartonToVerify.value = res.data;
+        if (res.data.items) {
+          scannedItems.value = res.data.items.map((i: any) => i.item_sn);
+        }
+      }
     }
   } catch (err) { console.warn('Error fetching last carton:', err); }
   nextTick(() => {
-    if (!jobOrder.value && sessionRef.value) sessionRef.value.focusJobOrder();
-    else focusScan();
+    if (showVerificationModal.value) {
+      if (verificationInputRef.value) verificationInputRef.value.focus();
+    } else if (!jobOrder.value && sessionRef.value) {
+      sessionRef.value.focusJobOrder();
+    } else {
+      focusScan();
+    }
   });
   await checkTemplateExists();
+};
+
+const playSuccessSound = () => {
+  try {
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(1200, audioCtx.currentTime);
+    g.gain.setValueAtTime(0, audioCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01);
+    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+    o.start(audioCtx.currentTime);
+    o.stop(audioCtx.currentTime + 0.15);
+  } catch (e) { console.warn('Audio success failed:', e); }
+};
+
+const confirmVerification = async () => {
+  if (!cartonToVerify.value) return;
+  try {
+    await printApi.updateCartonStatus(cartonToVerify.value.id, 'SUCCESS');
+    playSuccessSound();
+    
+    if (lastCarton.value && lastCarton.value.id === cartonToVerify.value.id) {
+      lastCarton.value.status = 'SUCCESS';
+    }
+    
+    const cartonSn = cartonToVerify.value.carton_sn;
+    if (cartonSn) {
+      const lastSeqMatch = cartonSn.match(/\d{5}$/);
+      if (lastSeqMatch) {
+        const lastSeq = parseInt(lastSeqMatch[0]);
+        suggestedSNValue.value = lastSeq + 1;
+        if (!isSNManual.value) {
+          customSN.value = (lastSeq + 1).toString();
+        }
+      }
+    }
+    
+    if (!isRescanMode.value) {
+      if (isSNManual.value && customSN.value && !isNaN(parseInt(customSN.value))) {
+        customSN.value = (parseInt(customSN.value) + 1).toString();
+      } else if (!isSNManual.value) {
+        customSN.value = '';
+      }
+    }
+    
+    awaitingNext.value = true;
+    showVerificationModal.value = false;
+    cartonToVerify.value = null;
+    verificationScanBuffer.value = '';
+    
+    system.showNotification(t('packing.verification_success', { sn: cartonSn }), 'success');
+    focusScan();
+  } catch (err: any) {
+    console.error(err);
+    system.showNotification(t('packing.update_status_failed'), 'error');
+  }
+};
+
+const handleVerificationScan = () => {
+  const scannedVal = verificationScanBuffer.value.trim();
+  if (!scannedVal) return;
+  
+  if (!cartonToVerify.value) return;
+  
+  const expectedVal = cartonToVerify.value.carton_sn.trim();
+  if (scannedVal.toLowerCase() === expectedVal.toLowerCase()) {
+    verificationError.value = false;
+    confirmVerification();
+  } else {
+    playScanAlert();
+    verificationError.value = true;
+    verificationScanBuffer.value = '';
+    system.showNotification(t('packing.verification_error'), 'error');
+    setTimeout(() => {
+      verificationError.value = false;
+    }, 1500);
+  }
 };
 
 const refreshNextSN = async () => {
@@ -431,30 +624,20 @@ const finalizeCarton = async (isRetry = false) => {
 
     const printResult = await handlePrintExecution(cartonId, cartonSn);
     if (printResult === 'Success') {
-      if (lastCarton.value) lastCarton.value.status = 'SUCCESS';
+      if (lastCarton.value) lastCarton.value.status = 'PRINTED';
+      
+      verificationScanBuffer.value = '';
+      verificationError.value = false;
+      cartonToVerify.value = lastCarton.value;
+      showVerificationModal.value = true;
+      
       system.showNotification(t('packing.carton_printed', { sn: cartonSn }), 'success');
-      if (cartonSn) {
-        const lastSeqMatch = cartonSn.match(/\d{5}$/);
-        if (lastSeqMatch) {
-            const lastSeq = parseInt(lastSeqMatch[0]);
-            suggestedSNValue.value = lastSeq + 1;
-            if (!isSNManual.value) {
-              customSN.value = (lastSeq + 1).toString();
-            }
-         }
-      }
-
-      if (!isRetry) { 
-        if (!isRescanMode.value) {
-          if (isSNManual.value && customSN.value && !isNaN(parseInt(customSN.value))) {
-            customSN.value = (parseInt(customSN.value) + 1).toString(); 
-          } else if (!isSNManual.value) {
-            customSN.value = '';
-          }
+      
+      nextTick(() => {
+        if (verificationInputRef.value) {
+          verificationInputRef.value.focus();
         }
-        awaitingNext.value = true; 
-        focusScan(); 
-      }
+      });
     } else { 
       if (lastCarton.value) lastCarton.value.status = 'FAILED'; 
       agentErrorMessage.value = printResult; 
@@ -469,7 +652,7 @@ const finalizeCarton = async (isRetry = false) => {
   } finally { isProcessing.value = false; }
 };
 
-const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promise<string> => {
+const handlePrintExecution = async (cartonId: number, _cartonSn: string, skipStatusUpdate = false): Promise<string> => {
   try {
     if (settings.printMode === 'local') {
       const resXml = await printApi.download_carton_btxml(cartonId, currentProduct.value?.template_path || '');
@@ -483,7 +666,9 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string): Promis
       );
       
       if (result.success) {
-        await printApi.updateCartonStatus(cartonId, 'SUCCESS');
+        if (!skipStatusUpdate) {
+          await printApi.updateCartonStatus(cartonId, 'PRINTED');
+        }
         return 'Success';
       } else {
         return result.message || 'Agent failed to print';
@@ -524,7 +709,7 @@ const handleEmergencyReprint = async (carton: Carton) => {
     const newCarton = res.data;
     if (!newCarton?.id) throw new Error('Failed to create reprint record');
     
-    const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn);
+    const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn, true);
     if (printResult === 'Success') { 
       system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
       showEmergencyModal.value = false; 
@@ -575,6 +760,8 @@ const resetSession = () => {
   isRescanMode.value = false;
   rescanCartonSN.value = '';
   scanBuffer.value = ''; 
+  showVerificationModal.value = false;
+  cartonToVerify.value = null;
   nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); 
 };
 
@@ -626,7 +813,17 @@ watch(snPreview, (newVal) => {
   }, 500);
 });
 
-watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN], () => {
+watch(showVerificationModal, (val) => {
+  if (val) {
+    nextTick(() => {
+      if (verificationInputRef.value) {
+        verificationInputRef.value.focus();
+      }
+    });
+  }
+});
+
+watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
   sessionStorage.setItem('packingState', JSON.stringify({ 
     jobOrder: jobOrder.value, 
     cartonOrigin: cartonOrigin.value, 
@@ -642,7 +839,9 @@ watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern
     isSNManual: isSNManual.value, 
     overflowScans: overflowScans.value,
     isRescanMode: isRescanMode.value,
-    rescanCartonSN: rescanCartonSN.value
+    rescanCartonSN: rescanCartonSN.value,
+    showVerificationModal: showVerificationModal.value,
+    cartonToVerify: cartonToVerify.value
   }));
 }, { deep: true });
 
@@ -665,19 +864,32 @@ onMounted(() => {
       if (s.overflowScans) overflowScans.value = s.overflowScans; 
       if (s.isRescanMode !== undefined) isRescanMode.value = s.isRescanMode;
       if (s.rescanCartonSN) rescanCartonSN.value = s.rescanCartonSN;
+      if (s.showVerificationModal !== undefined) showVerificationModal.value = s.showVerificationModal;
+      if (s.cartonToVerify) cartonToVerify.value = s.cartonToVerify;
     } catch (e) { console.error('Restore failed', e); } 
   }
   settings.loadSettings();
   checkSystem();
   checkAgentHealth();
-  nextTick(() => { if (!currentProduct.value && catalogRef.value) catalogRef.value.focusSearch(); });
+  nextTick(() => { 
+    if (showVerificationModal.value) {
+      if (verificationInputRef.value) verificationInputRef.value.focus();
+    } else if (!currentProduct.value && catalogRef.value) {
+      catalogRef.value.focusSearch(); 
+    }
+  });
   statusTimer = setInterval(() => { checkSystem(); refreshNextSN(); }, 3000);
   agentCheckInterval = setInterval(checkAgentHealth, 5000);
   window.addEventListener('click', (e) => { 
     if (showSettings.value || showEmergencyModal.value) return; 
     const target = e.target as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'SELECT') return; 
-    focusScan(); 
+    
+    if (showVerificationModal.value) {
+      if (verificationInputRef.value) verificationInputRef.value.focus();
+    } else {
+      focusScan(); 
+    }
   });
 });
 

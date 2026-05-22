@@ -59,7 +59,17 @@
     "clear": "Xóa",
     "invalid_scans_title": "Mã Quét Lỗi",
     "print_failed": "In thất bại: {error}",
-    "server_error": "Lỗi máy chủ."
+    "server_error": "Lỗi máy chủ.",
+    "verification_title": "XÁC NHẬN MÃ CARTON",
+    "verification_desc": "Quét mã vạch Carton SN trên tem vừa in để xác nhận và mở khóa trạm.",
+    "expected_sn": "Mã Thùng Dự Kiến",
+    "verification_placeholder": "Quét mã vạch Carton tại đây...",
+    "verification_error": "Mã thùng không khớp! Vui lòng kiểm tra và quét lại.",
+    "manual_verify": "Xác Nhận Thủ Công (Bypass)",
+    "bypass_confirm": "Bạn có chắc chắn muốn bỏ qua bước quét và xác nhận thủ công cho thùng này?",
+    "verification_success": "Thùng {sn} đã được xác nhận thành công!",
+    "update_status_failed": "Cập nhật trạng thái thùng thất bại.",
+    "back_home": "Quay về trang chủ"
   },
   "print": {
     "printing_carton": "Đang in Thùng",

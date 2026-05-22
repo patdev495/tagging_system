@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from src.core.database import get_db
+from src.features.history.schemas import CartonDetail
 from . import schemas, service
 
 router = APIRouter(tags=["Products"])
@@ -44,7 +45,7 @@ def get_next_sn(product_id: int, yymm: Optional[str] = None, db: Session = Depen
     """Lấy S/N tiếp theo cho sản phẩm"""
     return service.get_next_sn(product_id, db, yymm)
 
-@router.get("/products/{product_id}/last-carton")
+@router.get("/products/{product_id}/last-carton", response_model=Optional[CartonDetail])
 def get_last_carton(product_id: int, db: Session = Depends(get_db)):
     """Lấy thông tin thùng hàng cuối cùng của sản phẩm"""
     return service.get_last_carton(product_id, db)

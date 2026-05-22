@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException
@@ -6,7 +7,7 @@ from src.core import models, utils
 from src.features.box import schemas
 from src.features.print.service import generate_btxml
 
-def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int = None, custom_yymm: str = None) -> str:
+def get_next_carton_sn(db: Session, product: models.Product, custom_sn: Optional[int] = None, custom_yymm: Optional[str] = None) -> str:
     if custom_yymm:
         yymm = custom_yymm
     else:
@@ -90,7 +91,7 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
             path_to_use, 
             carton_in.printer_name
         )
-        new_carton.btxml = btxml_content
+        new_carton.btxml = btxml_content  # type: ignore
             
         db.commit()
         db.refresh(new_carton)
@@ -108,6 +109,8 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         raise HTTPException(status_code=404, detail="Carton not found")
         
     product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product associated with this carton was not found")
     
     if len(rescan_in.items) != len(set(rescan_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
@@ -133,8 +136,9 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         for item_sn in rescan_in.items:
             db.add(models.CartonItem(carton_id=carton.id, item_sn=item_sn))
             
-        carton.status = "FAILED" # Default to FAILED until proven SUCCESS by printer agent later
-        carton.btxml = None
+        # Default to FAILED until proven SUCCESS by printer agent later
+        carton.status = "FAILED"  # type: ignore
+        carton.btxml = None  # type: ignore
         carton.station_id = getattr(rescan_in, 'station_id', carton.station_id)
         
         # Priority logic inside resolve_template_path: DB -> Client -> Default
@@ -148,7 +152,7 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
             path_to_use, 
             rescan_in.printer_name
         )
-        carton.btxml = btxml_content
+        carton.btxml = btxml_content  # type: ignore
             
         db.commit()
         db.refresh(carton)

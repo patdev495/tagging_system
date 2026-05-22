@@ -42,6 +42,15 @@ def create_app() -> FastAPI:
     app.include_router(box_router, prefix="/api/v1")
     app.include_router(print_router, prefix="/api/v1")
 
+    @app.get("/api/v1/health", tags=["Health"])
+    def health_check():
+        from src.features.print.bartender_engine import bt_engine
+        return {
+            "status": "ok", 
+            "version": "v2.0",
+            "bartender": "ready" if bt_engine.is_initialized else "offline"
+        }
+
     # --- Serve Frontend Production Build ---
     # In Docker, we will copy frontend build to a 'static' folder inside backend_v2
     frontend_dist = os.path.join(os.path.dirname(__file__), "static")
@@ -89,15 +98,6 @@ def create_app() -> FastAPI:
             bt_engine.start()
         except Exception as e:
             logging.getLogger("main").error(f"BarTender init failed: {e}")
-
-    @app.get("/api/v1/health", tags=["Health"])
-    def health_check():
-        from src.features.print.bartender_engine import bt_engine
-        return {
-            "status": "ok", 
-            "version": "v2.0",
-            "bartender": "ready" if bt_engine.is_initialized else "offline"
-        }
 
     return app
 

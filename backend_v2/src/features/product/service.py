@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from src.core.models import Product, Carton
 from . import schemas
 
@@ -75,14 +75,12 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
     return {"next_seq": max_seq + 1}
 
 def get_last_carton(product_id: int, db: Session):
-    carton = db.query(Carton).filter(
+    carton = db.query(Carton).options(joinedload(Carton.items)).filter(
         Carton.product_id == product_id,
-        Carton.status == 'SUCCESS'
-    ).order_by(Carton.carton_sn.desc()).first()
+        Carton.status.in_(['SUCCESS', 'PRINTED'])
+    ).order_by(Carton.id.desc()).first()
     
     if carton:
-        # Count items in this carton
-        from src.core.models import CartonItem
-        carton.items_count = db.query(CartonItem).filter(CartonItem.carton_id == carton.id).count()
+        carton.items_count = len(carton.items) if carton.items is not None else 0
         
     return carton
