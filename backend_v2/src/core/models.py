@@ -35,7 +35,7 @@ class Carton(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), index=True)
     carton_sn = Column(String(100), index=True) # Removed unique=True to allow print attempt logs
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None), index=True)
     packed_by = Column(String(100), nullable=True)
     job_order = Column(String(100), nullable=True, index=True)
     status = Column(String(20), default="FAILED", index=True) # SUCCESS or FAILED
