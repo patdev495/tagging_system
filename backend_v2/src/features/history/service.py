@@ -44,7 +44,11 @@ def get_cartons(
     items = []
     for carton, print_count in results:
         carton.reprint_count = max((print_count or 1) - 1, 0)
-        carton.items_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton.id).count()
+        orig_id = db.query(models.Carton.id).filter(
+            models.Carton.carton_sn == carton.carton_sn,
+            models.Carton.is_reprint == 0
+        ).scalar()
+        carton.items_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == (orig_id or carton.id)).count()
         items.append(carton)
         
     return {"total": total, "items": items}
@@ -58,7 +62,20 @@ def get_carton_detail(db: Session, carton_id: int):
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
         
-    carton.items_count = len(typing_cast(list, carton.items))
+    # If this is a reprint, resolve items from the original carton
+    if typing_cast(int, carton.is_reprint) == 1:
+        original_carton = db.query(models.Carton).options(
+            joinedload(models.Carton.items)
+        ).filter(
+            models.Carton.carton_sn == carton.carton_sn,
+            models.Carton.is_reprint == 0
+        ).first()
+        items = original_carton.items if original_carton else []
+        carton.items = items
+    else:
+        items = carton.items
+
+    carton.items_count = len(typing_cast(list, items))
     
     # Query all other print attempts for this carton_sn as history
     print_history = db.query(models.Carton).filter(
@@ -66,8 +83,14 @@ def get_carton_detail(db: Session, carton_id: int):
         models.Carton.id != carton.id
     ).order_by(models.Carton.id.asc()).all()
     
+    orig_carton_id = db.query(models.Carton.id).filter(
+        models.Carton.carton_sn == carton.carton_sn,
+        models.Carton.is_reprint == 0
+    ).scalar()
+    orig_item_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == orig_carton_id).count() if orig_carton_id else 0
+    
     for h in print_history:
-        h.items_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == h.id).count()
+        h.items_count = orig_item_count
         h.reprint_count = 0  # Not applicable for history items
         
     carton.print_history = print_history
@@ -239,7 +262,11 @@ def get_job_order_statistics(db: Session, job_order: str):
 
     for carton, print_count in results:
         # Populate carton properties
-        item_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton.id).count()
+        orig_id = db.query(models.Carton.id).filter(
+            models.Carton.carton_sn == carton.carton_sn,
+            models.Carton.is_reprint == 0
+        ).scalar()
+        item_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == (orig_id or carton.id)).count()
         carton.items_count = item_count
         carton.reprint_count = max((print_count or 1) - 1, 0)
         items.append(carton)

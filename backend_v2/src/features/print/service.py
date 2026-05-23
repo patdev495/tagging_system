@@ -76,9 +76,6 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
     db.add(new_carton)
     db.flush()
     
-    for item in original.items:
-        db.add(models.CartonItem(carton_id=new_carton.id, item_sn=item.item_sn))
-    
     product = db.query(models.Product).filter(models.Product.id == original.product_id).first()
     item_sns = [item.item_sn for item in original.items]
     # Priority logic inside resolve_template_path: DB -> Client -> Default
