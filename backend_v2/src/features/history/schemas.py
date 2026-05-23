@@ -31,6 +31,7 @@ class CartonBase(BaseModel):
     station_id: Optional[str] = None
     items_count: Optional[int] = 0
     is_reprint: Optional[int] = 0
+    reprint_count: Optional[int] = 0
 
 class Carton(CartonBase):
     id: int
@@ -43,7 +44,50 @@ class Carton(CartonBase):
 
 class CartonDetail(Carton):
     items: List[CartonItem] = []
+    print_history: List[CartonBase] = []
 
 class CartonListResponse(BaseModel):
     total: int
     items: List[Carton]
+
+class DailyStat(BaseModel):
+    date: str
+    total: int
+    success: int
+    reprint: int
+
+class ProductStat(BaseModel):
+    item_name: str
+    total: int
+    reprint: int
+
+class PackagingStatisticsResponse(BaseModel):
+    total_cartons: int
+    success_cartons: int
+    failed_cartons: int
+    reprint_cartons: int
+    total_items: int
+    daily_breakdown: List[DailyStat]
+    product_breakdown: List[ProductStat]
+
+
+class JobOrderProductStat(BaseModel):
+    product_id: int
+    item_name: str
+    total_cartons: int
+    success_cartons: int
+    failed_cartons: int
+
+
+class JobOrderStatisticsResponse(BaseModel):
+    job_order: str
+    total_cartons: int
+    success_cartons: int
+    failed_cartons: int
+    total_attempts: int
+    reprint_attempts: int
+    total_items: int
+    product_breakdown: List[JobOrderProductStat]
+    cartons: List[Carton]
+
+

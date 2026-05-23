@@ -98,9 +98,18 @@ class TestGetCartons:
         mock_carton.product = models.Product(id=1, item_name="Test")
 
         db = MagicMock()
-        query = db.query.return_value.options.return_value
+        query = MagicMock()
+        query.join.return_value = query
+        query.outerjoin.return_value = query
+        query.options.return_value = query
+        query.order_by.return_value = query
+        query.offset.return_value = query
+        query.limit.return_value = query
+        
         query.count.return_value = 1
-        query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_carton]
+        query.all.return_value = [(mock_carton, 1)]
+
+        db.query.return_value = query
 
         result = service.get_cartons(db)
         assert result["total"] == 1
@@ -109,10 +118,19 @@ class TestGetCartons:
     def test_applies_search_filter(self):
         """Should apply LIKE filter when search is provided."""
         db = MagicMock()
-        query = db.query.return_value.options.return_value
-        filter_query = query.filter.return_value
-        filter_query.count.return_value = 0
-        filter_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        query = MagicMock()
+        query.join.return_value = query
+        query.outerjoin.return_value = query
+        query.options.return_value = query
+        query.filter.return_value = query
+        query.order_by.return_value = query
+        query.offset.return_value = query
+        query.limit.return_value = query
+        
+        query.count.return_value = 0
+        query.all.return_value = []
+
+        db.query.return_value = query
 
         result = service.get_cartons(db, search="VN2605")
         # Verify filter was called (search applied)
@@ -121,10 +139,56 @@ class TestGetCartons:
     def test_applies_status_filter(self):
         """Should filter by status when provided."""
         db = MagicMock()
-        query = db.query.return_value.options.return_value
-        filter_query = query.filter.return_value
-        filter_query.count.return_value = 0
-        filter_query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+        query = MagicMock()
+        query.join.return_value = query
+        query.outerjoin.return_value = query
+        query.options.return_value = query
+        query.filter.return_value = query
+        query.order_by.return_value = query
+        query.offset.return_value = query
+        query.limit.return_value = query
+        
+        query.count.return_value = 0
+        query.all.return_value = []
+
+        db.query.return_value = query
 
         result = service.get_cartons(db, status="SUCCESS")
         query.filter.assert_called()
+
+
+class TestGetJobOrderStatistics:
+    """Test job order statistics retrieval."""
+
+    def test_returns_job_order_metrics(self):
+        """Should return correct metrics for a job order."""
+        mock_product = models.Product(id=1, item_name="Test Product")
+        mock_carton = models.Carton(id=1, carton_sn="VN26051100001", status="SUCCESS")
+        mock_carton.product = mock_product
+
+        db = MagicMock()
+        query = MagicMock()
+        query.filter.return_value = query
+        query.join.return_value = query
+        query.outerjoin.return_value = query
+        query.options.return_value = query
+        
+        # count() is called for: total_attempts, reprint_attempts, and in-loop item_count
+        query.count.side_effect = [3, 1, 5]
+        query.all.return_value = [(mock_carton, 2)]
+
+        db.query.return_value = query
+
+        result = service.get_job_order_statistics(db, "JO-123")
+        
+        assert result["job_order"] == "JO-123"
+        assert result["total_cartons"] == 1
+        assert result["success_cartons"] == 1
+        assert result["failed_cartons"] == 0
+        assert result["total_attempts"] == 3
+        assert result["reprint_attempts"] == 1
+        assert result["total_items"] == 5
+        assert len(result["product_breakdown"]) == 1
+        assert result["product_breakdown"][0]["product_id"] == 1
+        assert result["product_breakdown"][0]["total_cartons"] == 1
+

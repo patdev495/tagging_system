@@ -28,6 +28,20 @@ def search_by_item(item_sn: str, db: Session = Depends(get_db)):
     """Tìm kiếm thùng theo Serial Number của sản phẩm bên trong"""
     return service.search_by_item_sn(item_sn, db)
 
+@router.get("/statistics", response_model=schemas.PackagingStatisticsResponse)
+def get_statistics(
+    start_date: str,
+    end_date: str,
+    db: Session = Depends(get_db)
+):
+    """Lấy thống kê sản lượng đóng gói và chi tiết theo ngày/sản phẩm"""
+    return service.get_packaging_statistics(db, start_date, end_date)
+
+@router.get("/job-order/{job_order}/statistics", response_model=schemas.JobOrderStatisticsResponse)
+def get_job_order_statistics(job_order: str, db: Session = Depends(get_db)):
+    """Lấy thống kê chi tiết của một lệnh sản xuất (Job Order)"""
+    return service.get_job_order_statistics(db, job_order)
+
 @router.get("/{carton_id}", response_model=schemas.CartonDetail)
 def get_carton_detail(carton_id: int, db: Session = Depends(get_db)):
     """Lấy chi tiết một thùng hàng bao gồm danh sách S/N sản phẩm"""
