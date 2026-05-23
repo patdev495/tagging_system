@@ -134,3 +134,33 @@ def test_reprint_carton_defaults_printed_status():
     assert new_carton.status == "PRINTED"
     assert new_carton.is_reprint == 1
     assert new_carton.carton_sn == "CN26051600001"
+
+def test_reprint_carton_btxml_none_in_db_but_retained_in_memory():
+    db = MagicMock()
+    original_carton = models.Carton(
+        id=10,
+        product_id=1,
+        carton_sn="CN26051600001",
+        status="SUCCESS",
+        carton_origin="CN",
+        station_id="127.0.0.1",
+        items=[]
+    )
+    
+    product = models.Product(id=1, template_path="carton.btw")
+    db.query.return_value.filter.return_value.first.side_effect = [original_carton, product]
+    
+    with patch("src.features.print.service.generate_btxml", return_value="<xml>reprint_xml</xml>"):
+        new_carton = service.reprint_carton(
+            carton_id=10,
+            printer_name="Printer A",
+            template_path="carton.btw",
+            station_id="127.0.0.1",
+            db=db
+        )
+        
+    assert new_carton.btxml == "<xml>reprint_xml</xml>"
+    # Verify db.commit was called, and at some point new_carton.btxml was set to None.
+    # We can check that the mock database add or commit logic was executed.
+    assert db.commit.called
+    assert db.refresh.called

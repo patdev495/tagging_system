@@ -65,12 +65,16 @@ def server_print_carton(carton_id: int, request: Request, printer_name: Optional
     # Cập nhật trạm thực hiện in nếu chưa có hoặc in từ máy khác
     carton.station_id = client_ip  # type: ignore
 
-    if not carton.btxml:  # type: ignore
-        return {"success": False, "message": "No BTXML data available for this carton"}
+    carton_btxml = carton.btxml
+    if not carton_btxml:  # type: ignore
+        _, regenerated_btxml = service.download_carton_btxml(carton_id=carton.id, template_path=fallback_template_path, db=db)
+        if not regenerated_btxml:
+            return {"success": False, "message": "No BTXML data available for this carton"}
+        carton_btxml = regenerated_btxml
 
     # Gọi BarTender trực tiếp — không qua HTTP nữa
     result = bt_engine.print_xml(
-        xml_content=carton.btxml,  # type: ignore
+        xml_content=carton_btxml,  # type: ignore
         printer_name_override=printer_name,
         fallback_path=fallback_template_path,
     )

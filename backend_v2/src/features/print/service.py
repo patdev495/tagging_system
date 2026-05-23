@@ -45,7 +45,15 @@ def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, d
     btxml_content = carton.btxml
     if not btxml_content and db:
         product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
-        item_sns = [item.item_sn for item in carton.items]
+        if carton.is_reprint == 1:
+            original = db.query(models.Carton).filter(
+                models.Carton.carton_sn == carton.carton_sn,
+                models.Carton.is_reprint == 0
+            ).first()
+            item_sns = [item.item_sn for item in original.items] if original else []
+        else:
+            item_sns = [item.item_sn for item in carton.items]
+            
         # Priority logic inside resolve_template_path: DB -> Client -> Default
         db_path = getattr(product, 'template_path', None)
         path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=template_path)
@@ -82,9 +90,12 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
     db_path = getattr(product, 'template_path', None)
     path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=template_path)
     btxml_content = generate_btxml(new_carton, product, item_sns, path_to_use, printer_name)
-    new_carton.btxml = btxml_content  # type: ignore
+    new_carton.btxml = None  # type: ignore
     
     db.commit()
     db.refresh(new_carton)
+    
+    # In-memory assignment so FastAPI/Pydantic serialization returns it to the client (e.g. for MCP server)
+    new_carton.btxml = btxml_content  # type: ignore
     
     return new_carton
