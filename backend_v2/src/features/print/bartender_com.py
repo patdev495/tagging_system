@@ -11,7 +11,7 @@ import threading
 import traceback
 import subprocess
 import xml.etree.ElementTree as ET
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 
 logger = logging.getLogger("BarTenderCOM")
 
@@ -116,6 +116,14 @@ class BarTenderCOMApp:
         if not HAS_WINDOWS_DEPS:
             return
 
+        if self.bt_app is None:
+            logger.warning("BarTender COM app is None. Attempting connection...")
+            if not self._create_dispatch_instance():
+                self._kill_bartender_process()
+                if not self._create_dispatch_instance():
+                    raise RuntimeError("Connection to BarTender COM failed (app is None).")
+            return
+
         try:
             # Check if the connection is alive by accessing a standard property
             _ = self.bt_app.Formats
@@ -126,7 +134,7 @@ class BarTenderCOMApp:
                 if not self._create_dispatch_instance():
                     raise RuntimeError("Reconnection to BarTender COM failed.")
 
-    def get_printers(self) -> List[Dict[str, any]]:
+    def get_printers(self) -> List[Dict[str, Any]]:
         """Fetch all available Windows physical/network printers, excluding typical virtual ones."""
         printers = [{"name": "PDF", "driver": "Virtual PDF Export", "port": "VIRTUAL", "status": 0}]
 
@@ -160,7 +168,7 @@ class BarTenderCOMApp:
 
         return printers
 
-    def _export_to_pdf(self, bt_format, substrings: Optional[Dict[str, str]] = None) -> Dict[str, any]:
+    def _export_to_pdf(self, bt_format, substrings: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
         Executes print-to-PDF and automatically intercepts & solves the Windows Save As dialog box.
         Returns a base64 encoded string of the generated PDF document.
@@ -168,8 +176,15 @@ class BarTenderCOMApp:
         import base64
         import uuid
 
-        # Check if we are running in the Print Agent context
-        is_agent = os.path.exists(os.path.join(os.getcwd(), "agent.py"))
+        # Check if we are running in the Print Agent context (handles both dev python and compiled exe)
+        is_agent = False
+        if getattr(sys, 'frozen', False):
+            is_agent = "NY_Print_Agent" in os.path.basename(sys.executable)
+        else:
+            is_argv_agent = len(sys.argv) > 0 and "agent.py" in os.path.basename(sys.argv[0])
+            this_dir = os.path.dirname(os.path.abspath(__file__))
+            is_src_agent = "print_agent_v2" in this_dir and os.path.exists(os.path.join(this_dir, "agent.py"))
+            is_agent = is_argv_agent or is_src_agent
         
         if is_agent:
             # Save permanently next to Print Agent so the user can easily find it!
@@ -295,7 +310,7 @@ class BarTenderCOMApp:
                     except Exception: pass
                 threading.Thread(target=cleanup, daemon=True).start()
 
-    def print_label(self, template_path: str, printer_name: str, substrings: Dict[str, str]) -> Dict[str, any]:
+    def print_label(self, template_path: str, printer_name: str, substrings: Dict[str, str]) -> Dict[str, Any]:
         """
         Prints a label using structured parameters (Template Path, Target Printer, Substring Dictionary).
         This is the preferred, robust, and deep interface.
@@ -304,8 +319,15 @@ class BarTenderCOMApp:
         if not self.is_initialized:
             self.start()
 
-        # Check if we are running in the Print Agent context
-        is_agent = os.path.exists(os.path.join(os.getcwd(), "agent.py"))
+        # Check if we are running in the Print Agent context (handles both dev python and compiled exe)
+        is_agent = False
+        if getattr(sys, 'frozen', False):
+            is_agent = "NY_Print_Agent" in os.path.basename(sys.executable)
+        else:
+            is_argv_agent = len(sys.argv) > 0 and "agent.py" in os.path.basename(sys.argv[0])
+            this_dir = os.path.dirname(os.path.abspath(__file__))
+            is_src_agent = "print_agent_v2" in this_dir and os.path.exists(os.path.join(this_dir, "agent.py"))
+            is_agent = is_argv_agent or is_src_agent
 
         # In Print Agent mode: map the virtual "PDF" printer name to the physical "Microsoft Print to PDF"
         # so that it naturally triggers the standard Windows Save Dialog box for the user!
@@ -326,6 +348,8 @@ class BarTenderCOMApp:
             bt_format = None
             try:
                 self._ensure_connected()
+                if self.bt_app is None:
+                    return {"success": False, "message": "BarTender COM application instance is None after connection check."}
 
                 # Open the btw template with up to 3 retries
                 for attempt in range(3):
@@ -336,6 +360,8 @@ class BarTenderCOMApp:
                     except Exception as e:
                         logger.warning(f"Opening template attempt {attempt + 1} failed: {e}")
                         self._ensure_connected()
+                        if self.bt_app is None:
+                            return {"success": False, "message": "BarTender COM application instance is None after reconnection check."}
                         time.sleep(1)
 
                 if not bt_format:
@@ -344,7 +370,7 @@ class BarTenderCOMApp:
                 # Feed values to the template's Named Substrings
                 for key, val in substrings.items():
                     try:
-                        bt_format.SetNamedSubStringValue(key, str(val))
+                        bt_format.SetNamedSubStringValue(key, val)
                     except Exception as e:
                         # Some templates might not have all keys, skip silently or log weakly
                         logger.debug(f"Failed to set template key '{key}': {e}")
@@ -375,7 +401,7 @@ class BarTenderCOMApp:
                     except Exception: pass
                 pythoncom.CoUninitialize()
 
-    def print_xml(self, xml_content: str, printer_name_override: Optional[str] = None, fallback_path: Optional[str] = None, local_template_dir: Optional[str] = None) -> Dict[str, any]:
+    def print_xml(self, xml_content: str, printer_name_override: Optional[str] = None, fallback_path: Optional[str] = None, local_template_dir: Optional[str] = None) -> Dict[str, Any]:
         """
         Fallback parser that accepts a raw BTXML string, parses it, and maps it to print_label.
         Ensures 100% backward compatibility with legacy routes.
