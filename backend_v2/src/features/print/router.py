@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, cast as typing_cast
 from src.core.database import get_db
 from src.features.history.schemas import Carton
 from . import schemas, service
@@ -67,7 +67,7 @@ def server_print_carton(carton_id: int, request: Request, printer_name: Optional
 
     carton_btxml = carton.btxml
     if not carton_btxml:  # type: ignore
-        _, regenerated_btxml = service.download_carton_btxml(carton_id=carton.id, template_path=fallback_template_path, db=db)
+        _, regenerated_btxml = service.download_carton_btxml(carton_id=typing_cast(int, carton.id), template_path=fallback_template_path, db=db)
         if not regenerated_btxml:
             return {"success": False, "message": "No BTXML data available for this carton"}
         carton_btxml = regenerated_btxml
