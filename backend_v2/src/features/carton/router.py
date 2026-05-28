@@ -4,7 +4,7 @@ from src.core.database import get_db
 from src.features.history.schemas import CartonDetail  # Import CartonDetail for Output
 from . import schemas, service
 
-router = APIRouter(prefix="/cartons", tags=["Box"])
+router = APIRouter(prefix="/cartons", tags=["Carton"])
 
 @router.post("", response_model=CartonDetail)
 def create_carton(carton_in: schemas.CartonCreate, request: Request, db: Session = Depends(get_db)):

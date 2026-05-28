@@ -35,32 +35,32 @@
         </select>
       </div>
 
-      <!-- Chọn Số Thùng (Box Number) -->
+      <!-- Chọn Số Thùng (Carton Number) -->
       <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[240px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">
-          {{ t('packing.enter_box_number', { range: boxNumberRange || '...' }) }}
+          {{ t('packing.enter_carton_number', { range: cartonNumberRange || '...' }) }}
         </label>
         <div class="relative flex items-center">
           <input 
-            :value="boxNumberStr"
-            @input="onBoxNumberInput"
-            @keydown.enter.prevent="onBoxNumberSubmit"
+            :value="cartonNumberStr"
+            @input="onCartonNumberInput"
+            @keydown.enter.prevent="onCartonNumberSubmit"
             type="text"
             inputmode="numeric"
             placeholder="Ví dụ: 20" 
             class="w-full px-3 py-2 bg-white border rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm"
-            :class="hasBoxNumberError 
+            :class="hasCartonNumberError 
               ? 'border-rose-500 text-rose-600 focus:border-rose-500 focus:ring-rose-500/10 shadow-[0_0_0_4px_rgba(239,68,68,0.1)] font-extrabold bg-rose-50/10' 
               : 'border-slate-200 text-slate-800 focus:border-blue-500 focus:ring-blue-500/8'"
-            ref="boxInput"
+            ref="cartonInput"
           />
         </div>
         <div 
-          v-if="hasBoxNumberError && boxNumberErrorText"
+          v-if="hasCartonNumberError && cartonNumberErrorText"
           class="text-[0.75rem] text-rose-600 mt-1 bg-rose-50 px-2.5 py-1.5 rounded-md border border-rose-100 font-bold flex items-center gap-1.5 animate-in"
         >
           <i class="fas fa-exclamation-circle text-rose-500"></i>
-          <span>{{ boxNumberErrorText }}</span>
+          <span>{{ cartonNumberErrorText }}</span>
         </div>
         <div 
           v-else-if="snPreview"
@@ -104,44 +104,44 @@ const props = defineProps<{
   product: Product;
   jobOrder: string;
   cartonOrigin: string;
-  boxNumberStr: string;
-  boxNumberRange: string;
+  cartonNumberStr: string;
+  cartonNumberRange: string;
   snPreview: string;
   snPattern: string;
   customYYMM: string;
-  hasBoxNumberError?: boolean;
-  boxNumberErrorText?: string;
+  hasCartonNumberError?: boolean;
+  cartonNumberErrorText?: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'back'): void;
   (e: 'focus-scan'): void;
   (e: 'update:cartonOrigin', val: string): void;
-  (e: 'update:boxNumberStr', val: string): void;
+  (e: 'update:cartonNumberStr', val: string): void;
   (e: 'update:snPattern', val: string): void;
-  (e: 'submit-box-number'): void;
-  (e: 'clear-box-error'): void;
+  (e: 'submit-carton-number'): void;
+  (e: 'clear-carton-error'): void;
 }>();
 
-const boxInput = ref<HTMLInputElement | null>(null);
+const cartonInput = ref<HTMLInputElement | null>(null);
 
 const onOriginChange = (e: Event) => {
   emit('update:cartonOrigin', (e.target as HTMLSelectElement).value);
   emit('focus-scan');
 };
-const onBoxNumberInput = (e: Event) => {
-  emit('update:boxNumberStr', (e.target as HTMLInputElement).value);
-  emit('clear-box-error');
+const onCartonNumberInput = (e: Event) => {
+  emit('update:cartonNumberStr', (e.target as HTMLInputElement).value);
+  emit('clear-carton-error');
 };
 const onPatternInput = (e: Event) => emit('update:snPattern', (e.target as HTMLInputElement).value);
 
-const onBoxNumberSubmit = () => {
-  emit('submit-box-number');
+const onCartonNumberSubmit = () => {
+  emit('submit-carton-number');
 };
 
-const focusBoxInput = () => {
-  if (boxInput.value) boxInput.value.focus();
+const focusCartonInput = () => {
+  if (cartonInput.value) cartonInput.value.focus();
 };
 
-defineExpose({ focusBoxInput });
+defineExpose({ focusCartonInput });
 </script>

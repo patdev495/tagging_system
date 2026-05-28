@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException
@@ -17,12 +18,31 @@ from src.core.exceptions import custom_http_exception_handler
 from src.features.customer.router import router as customer_router
 from src.features.product.router import router as product_router
 from src.features.history.router import router as history_router
-from src.features.box.router import router as box_router
+from src.features.carton.router import router as carton_router
 from src.features.print.router import router as print_router
 from src.features.job_order.router import router as job_order_router
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="NY Tagging System V2", version="2.0.0")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Khởi tạo các dịch vụ khi bắt đầu ứng dụng và dọn dẹp khi tắt."""
+        # 1. Khởi tạo Database
+        try:
+            from src.core.database import init_db
+            init_db()
+        except Exception as e:
+            logging.getLogger("main").error(f"Database init failed: {e}")
+
+        # 2. Khởi tạo BarTender Engine
+        try:
+            from src.features.print.bartender_engine import bt_engine
+            bt_engine.start()
+        except Exception as e:
+            logging.getLogger("main").error(f"BarTender init failed: {e}")
+            
+        yield
+
+    app = FastAPI(title="NY Tagging System V2", version="2.0.0", lifespan=lifespan)
 
     # Global exception handler
     app.add_exception_handler(HTTPException, custom_http_exception_handler)
@@ -40,7 +60,7 @@ def create_app() -> FastAPI:
     app.include_router(customer_router, prefix="/api/v1")
     app.include_router(product_router, prefix="/api/v1")
     app.include_router(history_router, prefix="/api/v1")
-    app.include_router(box_router, prefix="/api/v1")
+    app.include_router(carton_router, prefix="/api/v1")
     app.include_router(print_router, prefix="/api/v1")
     app.include_router(job_order_router, prefix="/api/v1")
 
@@ -85,23 +105,6 @@ def create_app() -> FastAPI:
     else:
         logging.getLogger("main").warning(f"Frontend dist not found at {frontend_dist}")
     
-    @app.on_event("startup")
-    def startup_event():
-        """Khởi tạo các dịch vụ khi Backend start."""
-        # 1. Khởi tạo Database
-        try:
-            from src.core.database import init_db
-            init_db()
-        except Exception as e:
-            logging.getLogger("main").error(f"Database init failed: {e}")
-
-        # 2. Khởi tạo BarTender Engine
-        try:
-            from src.features.print.bartender_engine import bt_engine
-            bt_engine.start()
-        except Exception as e:
-            logging.getLogger("main").error(f"BarTender init failed: {e}")
-
     return app
 
 app = create_app()

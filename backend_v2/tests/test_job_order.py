@@ -96,18 +96,18 @@ def test_get_or_create_job_order_slots(db_session):
     db_session.add(product)
     db_session.commit()
 
-    # Call service (mock ERP will return 15 * 50 = 750 qty => 15 boxes)
+    # Call service (mock ERP will return 15 * 50 = 750 qty => 15 cartons)
     res = service.get_or_create_job_order_slots(db_session, "1232225")
     
     assert res.job_order == "1232225"
-    assert res.total_boxes == 15
+    assert res.total_cartons == 15
     assert len(res.slots) == 15
     
     # Check slots saved in DB
     slots_in_db = db_session.query(models.JobOrderCartonSlot).filter_by(job_order="1232225").all()
     assert len(slots_in_db) == 15
-    assert slots_in_db[0].box_number == 1
-    assert slots_in_db[14].box_number == 15
+    assert slots_in_db[0].carton_number == 1
+    assert slots_in_db[14].carton_number == 15
     assert slots_in_db[0].status == "PENDING"
     
     # Check Carton SN generation sequentiality
@@ -151,7 +151,7 @@ def test_sequence_generator_collision_avoidance(db_session):
     # 2. Call service for new Job Order slots. It should start at ...00011
     res1 = service.get_or_create_job_order_slots(db_session, "JO-NEW-1")
     assert res1.slots[0].carton_sn == f"{prefix}00011"
-    assert res1.slots[14].carton_sn == f"{prefix}00025" # 15 boxes
+    assert res1.slots[14].carton_sn == f"{prefix}00025" # 15 cartons
     
     # 3. Call service for another new Job Order. It should start at ...00026 (based on slots table max)
     res2 = service.get_or_create_job_order_slots(db_session, "JO-NEW-2")
@@ -183,7 +183,7 @@ def test_update_status_updates_slot(db_session):
     slot = models.JobOrderCartonSlot(
         job_order="1232225",
         product_id=1,
-        box_number=1,
+        carton_number=1,
         carton_sn=carton_sn,
         status="PENDING"
     )
@@ -233,12 +233,12 @@ def test_multiple_job_orders_allocation_order(db_session):
     # 1. First Job Order (JO-1) is entered first. It should get slots starting at 00001
     res1 = service.get_or_create_job_order_slots(db_session, "JO-1")
     assert res1.slots[0].carton_sn == f"{prefix}00001"
-    assert res1.slots[-1].carton_sn == f"{prefix}00015"  # 15 boxes
-
+    assert res1.slots[-1].carton_sn == f"{prefix}00015"  # 15 cartons
+ 
     # 2. Second Job Order (JO-2) is entered second. It should get slots starting at 00016
     res2 = service.get_or_create_job_order_slots(db_session, "JO-2")
     assert res2.slots[0].carton_sn == f"{prefix}00016"
-    assert res2.slots[-1].carton_sn == f"{prefix}00030"  # 15 boxes
+    assert res2.slots[-1].carton_sn == f"{prefix}00030"  # 15 cartons
 
     # 3. Query JO-1 again. It should return its original slots (00001 -> 00015), not changing sequence
     res1_retry = service.get_or_create_job_order_slots(db_session, "JO-1")

@@ -35,11 +35,11 @@
       </button>
     </div>
     <p class="text-center text-slate-400 text-[0.85rem]" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
-    <p class="text-center text-[0.85rem] text-orange-600 font-bold" v-else-if="awaitingNext && !disabled">{{ t('packing.box_complete_hint') }}</p>
+    <p class="text-center text-[0.85rem] text-orange-600 font-bold" v-else-if="awaitingNext && !disabled">{{ t('packing.carton_complete_hint') }}</p>
     <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="!jobOrder && !disabled">{{ t('packing.fill_job_order_hint') }}</p>
     <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="disabled && placeholder.includes('AGENT')">{{ t('packing.agent_offline_hint') }}</p>
 
-    <!-- Overflow Scans Area (excess scans after box full) -->
+    <!-- Overflow Scans Area (excess scans after carton full) -->
     <div v-if="overflowScans.length > 0" class="mt-4 bg-orange-50 border-2 border-orange-400 rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(249,115,22,0.15)] transition-opacity animate-in">
       <div class="px-3.5 py-2.5 bg-linear-to-br from-orange-50 to-orange-100 border-b border-orange-400 flex justify-between items-center text-orange-800 text-[0.85rem] font-bold">
         <span><i class="fas fa-exclamation-triangle text-orange-600 mr-1.5"></i> {{ t('packing.overflow_title', { count: overflowScans.length }) }}</span>

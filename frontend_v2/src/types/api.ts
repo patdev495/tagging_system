@@ -48,7 +48,7 @@ export interface PrintJobStatus {
 
 export interface JobOrderSlot {
   id: number;
-  box_number: number;
+  carton_number: number;
   carton_sn: string;
   status: 'PENDING' | 'SCANNED';
   scanned_at?: string;
@@ -58,7 +58,7 @@ export interface JobOrderSlot {
 export interface JobOrderDetails {
   job_order: string;
   total_qty: number;
-  total_boxes: number;
+  total_cartons: number;
   product: Product;
   slots: JobOrderSlot[];
 }

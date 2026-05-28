@@ -1,11 +1,11 @@
 """
-Tests for Box Service — S/N generation logic.
+Tests for Carton Service — S/N generation logic.
 This is the most critical business logic in the system.
 """
 import pytest
 from unittest.mock import MagicMock, patch
 from src.core import models
-from src.features.box import service, schemas
+from src.features.carton import service, schemas
 from fastapi import HTTPException
 
 
@@ -30,8 +30,8 @@ class TestGetNextCartonSN:
         sn = service.get_next_carton_sn(db, product)
         
         assert sn.endswith("00001")
-        assert product.start_part in sn
-        assert product.middle_part in sn
+        assert str(product.start_part) in sn
+        assert str(product.middle_part) in sn
 
     def test_increment_from_existing(self):
         """Should increment from the highest existing S/N."""

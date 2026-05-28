@@ -4,7 +4,7 @@ import datetime
 
 class JobOrderSlotResponse(BaseModel):
     id: int
-    box_number: int
+    carton_number: int
     carton_sn: str
     status: str
     scanned_at: Optional[datetime.datetime] = None
@@ -30,7 +30,7 @@ class JobOrderProductResponse(BaseModel):
 class JobOrderDetailsResponse(BaseModel):
     job_order: str
     total_qty: int
-    total_boxes: int
+    total_cartons: int
     product: JobOrderProductResponse
     slots: List[JobOrderSlotResponse]
 

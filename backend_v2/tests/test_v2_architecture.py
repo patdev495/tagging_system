@@ -86,10 +86,10 @@ class TestBTXMLDocument:
 
     def test_remap_template_path(self):
         """Should correctly remap template path to a local directory."""
-        doc = BTXMLDocument(template_path="C:\\server\\labels\\box.btw")
+        doc = BTXMLDocument(template_path="C:\\server\\labels\\carton.btw")
         doc.remap_template_path("D:\\client\\labels")
         
-        assert doc.template_path == os.path.normpath("D:\\client\\labels\\box.btw")
+        assert doc.template_path == os.path.normpath("D:\\client\\labels\\carton.btw")
 
 
 # ==========================================

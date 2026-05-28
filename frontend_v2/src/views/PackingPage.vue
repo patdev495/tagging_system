@@ -105,8 +105,8 @@
                 <span class="text-[1.3rem] font-black text-emerald-400">{{ jobOrderDetails?.total_qty }} con</span>
               </div>
               <div class="text-right">
-                <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">{{ t('packing.total_boxes') }}</span>
-                <span class="text-[1.3rem] font-black text-blue-400">{{ jobOrderDetails?.total_boxes }} Thùng</span>
+                <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">{{ t('packing.total_cartons') }}</span>
+                <span class="text-[1.3rem] font-black text-blue-400">{{ jobOrderDetails?.total_cartons }} Thùng</span>
               </div>
             </div>
           </div>
@@ -125,17 +125,17 @@
               :product="currentProduct!"
               :jobOrder="jobOrder"
               v-model:cartonOrigin="cartonOrigin"
-              v-model:boxNumberStr="boxNumberStr"
-              :boxNumberRange="boxNumberRange"
+              v-model:cartonNumberStr="cartonNumberStr"
+              :cartonNumberRange="cartonNumberRange"
               :snPreview="snPreview"
               v-model:snPattern="snPattern"
               :customYYMM="customYYMM"
-              :hasBoxNumberError="hasBoxNumberError"
-              :boxNumberErrorText="boxNumberErrorText"
+              :hasCartonNumberError="hasCartonNumberError"
+              :cartonNumberErrorText="cartonNumberErrorText"
               @back="currentStep = 2"
               @focus-scan="focusScan"
-              @submit-box-number="handleBoxNumberSubmit"
-              @clear-box-error="hasBoxNumberError = false; boxNumberErrorText = '';"
+              @submit-carton-number="handleCartonNumberSubmit"
+              @clear-carton-error="hasCartonNumberError = false; cartonNumberErrorText = '';"
             />
 
             <!-- Thanh tóm tắt Công lệnh & Tiến độ thùng -->
@@ -147,7 +147,7 @@
                 <div>
                   <div class="text-[0.85rem] font-bold text-slate-500 uppercase tracking-wider leading-none mb-1">{{ t('packing.packing_progress', 'Tiến Độ Đóng Thùng') }}</div>
                   <div class="text-[0.95rem] font-extrabold text-slate-800">
-                    {{ t('packing.scanned') }}: <span class="text-blue-600 font-black">{{ scannedBoxesCount }}</span> / <span class="font-black">{{ jobOrderDetails?.total_boxes }}</span> {{ t('packing.boxes_unit', 'thùng') }}
+                    {{ t('packing.scanned') }}: <span class="text-blue-600 font-black">{{ scannedCartonsCount }}</span> / <span class="font-black">{{ jobOrderDetails?.total_cartons }}</span> {{ t('packing.cartons_unit', 'thùng') }}
                   </div>
                 </div>
               </div>
@@ -237,7 +237,7 @@
         <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
           <div class="flex items-center gap-2.5 text-slate-800">
             <i class="fas fa-boxes text-[1.2rem] text-blue-600"></i>
-            <h2 class="m-0 text-[1.2rem] font-black text-slate-900">{{ t('packing.carton_slots_title', 'Chi Tiết Vị Trí Thùng') }} ({{ jobOrderDetails?.total_boxes }} {{ t('packing.boxes_unit', 'thùng') }})</h2>
+            <h2 class="m-0 text-[1.2rem] font-black text-slate-900">{{ t('packing.carton_slots_title', 'Chi Tiết Vị Trí Thùng') }} ({{ jobOrderDetails?.total_cartons }} {{ t('packing.cartons_unit', 'thùng') }})</h2>
           </div>
           <button @click="showCartonSlotsModal = false" class="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 border-none cursor-pointer transition-colors">
             <i class="fas fa-times"></i>
@@ -252,7 +252,7 @@
               {{ t('packing.job_order') }}: <strong class="font-mono text-slate-900">{{ jobOrder }}</strong>
             </span>
             <span class="text-[0.9rem] font-bold text-slate-600">
-              {{ t('packing.scanned') }}: <strong class="text-blue-600">{{ scannedBoxesCount }}</strong> / <strong>{{ jobOrderDetails?.total_boxes }}</strong>
+              {{ t('packing.scanned') }}: <strong class="text-blue-600">{{ scannedCartonsCount }}</strong> / <strong>{{ jobOrderDetails?.total_cartons }}</strong>
             </span>
           </div>
 
@@ -271,7 +271,7 @@
               ]"
             >
               <span class="font-mono text-[0.9rem] sm:text-[0.95rem] font-black tracking-tight" :class="slot.status === 'SCANNED' ? 'text-slate-400/80' : 'text-slate-800'">{{ slot.carton_sn }}</span>
-              <span class="text-[0.7rem] sm:text-[0.75rem] leading-none mt-1.5 font-bold" :class="slot.status === 'SCANNED' ? 'text-slate-400/50' : 'text-slate-400'">{{ t('packing.carton', 'Thùng') }} {{ slot.box_number }}/{{ jobOrderDetails?.total_boxes }}</span>
+              <span class="text-[0.7rem] sm:text-[0.75rem] leading-none mt-1.5 font-bold" :class="slot.status === 'SCANNED' ? 'text-slate-400/50' : 'text-slate-400'">{{ t('packing.carton', 'Thùng') }} {{ slot.carton_number }}/{{ jobOrderDetails?.total_cartons }}</span>
               <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-emerald-500 text-[0.85rem] absolute top-1.5 right-1.5"></i>
             </div>
           </div>
@@ -467,15 +467,15 @@ const inputJobOrder = ref<string>('');
 const isLoadingJobOrder = ref<boolean>(false);
 const jobOrderDetails = ref<JobOrderDetails | null>(null);
 const jobOrderSlots = ref<JobOrderSlot[]>([]);
-const boxNumberStr = ref<string>('');
+const cartonNumberStr = ref<string>('');
 const selectedSlotId = ref<number | null>(null);
 const jobOrderInputRef = ref<HTMLInputElement | null>(null);
-const hasBoxNumberError = ref<boolean>(false);
-const boxNumberErrorText = ref<string>('');
+const hasCartonNumberError = ref<boolean>(false);
+const cartonNumberErrorText = ref<string>('');
 const hasJobOrderError = ref<boolean>(false);
 const jobOrderErrorText = ref<string>('');
 
-const scannedBoxesCount = computed(() => {
+const scannedCartonsCount = computed(() => {
   return jobOrderSlots.value.filter(s => s.status === 'SCANNED').length;
 });
 
@@ -524,16 +524,16 @@ watch(inputJobOrder, () => {
   jobOrderErrorText.value = '';
 });
 
-watch(boxNumberStr, (newVal) => {
+watch(cartonNumberStr, (newVal) => {
   if (!newVal.trim()) {
-    hasBoxNumberError.value = false;
-    boxNumberErrorText.value = '';
+    hasCartonNumberError.value = false;
+    cartonNumberErrorText.value = '';
     return;
   }
   const num = parseInt(newVal);
   if (isNaN(num)) {
-    hasBoxNumberError.value = true;
-    boxNumberErrorText.value = 'Số sê-ri không hợp lệ!';
+    hasCartonNumberError.value = true;
+    cartonNumberErrorText.value = 'Số sê-ri không hợp lệ!';
     selectedSlotId.value = null;
     return;
   }
@@ -545,7 +545,7 @@ watch(boxNumberStr, (newVal) => {
     });
     
     if (!matchedSlot) {
-      hasBoxNumberError.value = true;
+      hasCartonNumberError.value = true;
       
       // Construct expected full Carton SN for display
       let yymm = '';
@@ -562,15 +562,15 @@ watch(boxNumberStr, (newVal) => {
         : '';
       const fullSn = `${prefix}${String(num).padStart(5, '0')}`;
       
-      boxNumberErrorText.value = `Sê-ri thùng ${fullSn} không nằm trong công lệnh!`;
+      cartonNumberErrorText.value = `Sê-ri thùng ${fullSn} không nằm trong công lệnh!`;
       selectedSlotId.value = null;
     } else if (matchedSlot.status === 'SCANNED') {
-      hasBoxNumberError.value = true;
-      boxNumberErrorText.value = `Thùng sê-ri ${matchedSlot.carton_sn} đã đóng gói rồi!`;
+      hasCartonNumberError.value = true;
+      cartonNumberErrorText.value = `Thùng sê-ri ${matchedSlot.carton_sn} đã đóng gói rồi!`;
       selectedSlotId.value = null;
     } else {
-      hasBoxNumberError.value = false;
-      boxNumberErrorText.value = '';
+      hasCartonNumberError.value = false;
+      cartonNumberErrorText.value = '';
       selectedSlotId.value = matchedSlot.id;
       
       // Sync manual details
@@ -585,8 +585,8 @@ watch(boxNumberStr, (newVal) => {
       isSNManual.value = true;
     }
   } else {
-    hasBoxNumberError.value = false;
-    boxNumberErrorText.value = '';
+    hasCartonNumberError.value = false;
+    cartonNumberErrorText.value = '';
     selectedSlotId.value = null;
   }
 });
@@ -626,7 +626,7 @@ const snPreview = computed(() => {
   return `${prefix}${String(seq).padStart(5, '0')}`;
 });
 
-const boxNumberRange = computed(() => {
+const cartonNumberRange = computed(() => {
   if (jobOrderSlots.value.length === 0) return '';
   
   let minSeq = Infinity;
@@ -721,7 +721,7 @@ const changeJobOrder = () => {
   jobOrderDetails.value = null;
   jobOrderSlots.value = [];
   selectedSlotId.value = null;
-  boxNumberStr.value = '';
+  cartonNumberStr.value = '';
   currentProduct.value = null;
   scannedItems.value = [];
   lastCarton.value = null;
@@ -749,8 +749,8 @@ const enterScanning = () => {
 };
 
 const selectSlot = (slot: JobOrderSlot) => {
-  hasBoxNumberError.value = false;
-  boxNumberErrorText.value = '';
+  hasCartonNumberError.value = false;
+  cartonNumberErrorText.value = '';
   if (slot.status === 'SCANNED') {
     return;
   }
@@ -767,10 +767,10 @@ const selectSlot = (slot: JobOrderSlot) => {
   const seqMatch = sn.match(/\d{5}$/);
   if (seqMatch) {
     const seqNum = parseInt(seqMatch[0]);
-    boxNumberStr.value = seqNum.toString();
+    cartonNumberStr.value = seqNum.toString();
     customSN.value = seqNum.toString();
   } else {
-    boxNumberStr.value = '';
+    cartonNumberStr.value = '';
     customSN.value = '';
   }
   if (sn.length >= 6) {
@@ -790,11 +790,11 @@ const handleSlotClickInModal = (slot: JobOrderSlot) => {
   }
 };
 
-const handleBoxNumberSubmit = () => {
-  const num = parseInt(boxNumberStr.value);
+const handleCartonNumberSubmit = () => {
+  const num = parseInt(cartonNumberStr.value);
   if (isNaN(num)) {
-    hasBoxNumberError.value = true;
-    boxNumberErrorText.value = 'Vui lòng nhập số sê-ri thùng hợp lệ!';
+    hasCartonNumberError.value = true;
+    cartonNumberErrorText.value = 'Vui lòng nhập số sê-ri thùng hợp lệ!';
     system.showNotification('Vui lòng nhập số sê-ri thùng hợp lệ!', 'error');
     selectedSlotId.value = null;
     return;
@@ -806,7 +806,7 @@ const handleBoxNumberSubmit = () => {
   });
   
   if (!matchedSlot) {
-    hasBoxNumberError.value = true;
+    hasCartonNumberError.value = true;
     
     let yymm = '';
     if (customYYMM.value && customYYMM.value.length === 4) {
@@ -822,22 +822,22 @@ const handleBoxNumberSubmit = () => {
       : '';
     const fullSn = `${prefix}${String(num).padStart(5, '0')}`;
     
-    boxNumberErrorText.value = `Sê-ri thùng ${fullSn} không nằm trong công lệnh!`;
+    cartonNumberErrorText.value = `Sê-ri thùng ${fullSn} không nằm trong công lệnh!`;
     system.showNotification(`Sê-ri thùng ${fullSn} không nằm trong công lệnh!`, 'error');
     selectedSlotId.value = null;
     return;
   }
   
   if (matchedSlot.status === 'SCANNED') {
-    hasBoxNumberError.value = true;
-    boxNumberErrorText.value = `Thùng sê-ri ${matchedSlot.carton_sn} đã đóng gói rồi!`;
+    hasCartonNumberError.value = true;
+    cartonNumberErrorText.value = `Thùng sê-ri ${matchedSlot.carton_sn} đã đóng gói rồi!`;
     system.showNotification(`Thùng sê-ri ${matchedSlot.carton_sn} đã hoàn thành rồi!`, 'warning');
     selectedSlotId.value = null;
     return;
   }
   
-  hasBoxNumberError.value = false;
-  boxNumberErrorText.value = '';
+  hasCartonNumberError.value = false;
+  cartonNumberErrorText.value = '';
   selectSlot(matchedSlot);
 };
 
@@ -892,7 +892,7 @@ const confirmVerification = async () => {
       selectSlot(nextPending);
     } else {
       selectedSlotId.value = null;
-      boxNumberStr.value = '';
+      cartonNumberStr.value = '';
       customSN.value = '';
       customYYMM.value = '';
       isSNManual.value = false;
@@ -950,8 +950,8 @@ const processSingleScan = (sn: string) => {
   if (isProcessing.value || awaitingNext.value) {
     if (scannedItems.value.length >= currentProduct.value.packed_qty) {
       playScanAlert();
-      overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Box Full' });
-      system.showNotification(t('packing.box_full', { sn }), 'warning');
+      overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Carton Full' });
+      system.showNotification(t('packing.carton_full', { sn }), 'warning');
       return;
     }
     if (isProcessing.value) return;
@@ -983,8 +983,8 @@ const processSingleScan = (sn: string) => {
 
   if (scannedItems.value.length >= currentProduct.value.packed_qty) {
     playScanAlert();
-    overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Box Full' });
-    system.showNotification(t('packing.box_full'), 'error');
+    overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Carton Full' });
+    system.showNotification(t('packing.carton_full'), 'error');
     return;
   }
 
@@ -1199,7 +1199,7 @@ const resetSession = () => {
   jobOrderDetails.value = null;
   jobOrderSlots.value = [];
   selectedSlotId.value = null;
-  boxNumberStr.value = '';
+  cartonNumberStr.value = '';
   currentProduct.value = null; 
   scannedItems.value = []; 
   invalidScans.value = []; 
@@ -1272,13 +1272,13 @@ watch(showVerificationModal, (val) => {
   }
 });
 
-watch([currentStep, inputJobOrder, jobOrderDetails, jobOrderSlots, boxNumberStr, selectedSlotId, jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
+watch([currentStep, inputJobOrder, jobOrderDetails, jobOrderSlots, cartonNumberStr, selectedSlotId, jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
   sessionStorage.setItem('packingState', JSON.stringify({ 
     currentStep: currentStep.value,
     inputJobOrder: inputJobOrder.value,
     jobOrderDetails: jobOrderDetails.value,
     jobOrderSlots: jobOrderSlots.value,
-    boxNumberStr: boxNumberStr.value,
+    cartonNumberStr: cartonNumberStr.value,
     selectedSlotId: selectedSlotId.value,
     jobOrder: jobOrder.value, 
     cartonOrigin: cartonOrigin.value, 
@@ -1309,7 +1309,7 @@ onMounted(() => {
       if (s.inputJobOrder) inputJobOrder.value = s.inputJobOrder;
       if (s.jobOrderDetails) jobOrderDetails.value = s.jobOrderDetails;
       if (s.jobOrderSlots) jobOrderSlots.value = s.jobOrderSlots;
-      if (s.boxNumberStr) boxNumberStr.value = s.boxNumberStr;
+      if (s.cartonNumberStr) cartonNumberStr.value = s.cartonNumberStr;
       if (s.selectedSlotId !== undefined) selectedSlotId.value = s.selectedSlotId;
       if (s.jobOrder) jobOrder.value = s.jobOrder; 
       if (s.cartonOrigin) cartonOrigin.value = s.cartonOrigin; 

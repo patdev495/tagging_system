@@ -3,7 +3,7 @@ import threading
 from sqlalchemy import create_mock_engine
 from sqlalchemy.orm import sessionmaker
 from src.core import models
-from src.features.box import service, schemas
+from src.features.carton import service, schemas
 from src.features.print import service as print_service
 from fastapi import HTTPException
 from unittest.mock import MagicMock, patch
@@ -75,9 +75,9 @@ class TestPartialPacking:
         db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
         
         # Mock get_next_carton_sn
-        with patch("src.features.box.service.get_next_carton_sn", return_value="VN26051100001"):
+        with patch("src.features.carton.service.get_next_carton_sn", return_value="VN26051100001"):
             # Mock generate_btxml
-            with patch("src.features.box.service.generate_btxml", return_value="<XML>5PCS</XML>") as mock_gen:
+            with patch("src.features.carton.service.generate_btxml", return_value="<XML>5PCS</XML>") as mock_gen:
                 carton_in = schemas.CartonCreate(
                     product_id=1,
                     items=["SN1", "SN2", "SN3", "SN4", "SN5"],

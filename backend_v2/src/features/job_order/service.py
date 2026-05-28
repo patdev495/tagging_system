@@ -128,27 +128,27 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
             detail=f"Không tìm thấy con hàng '{erp_data['customer_ref']}' tương ứng trong cơ sở dữ liệu."
         )
         
-    # 3. Calculate total boxes
+    # 3. Calculate total cartons
     packed_qty = cast(int, product.packed_qty)
     if packed_qty <= 0:
         raise HTTPException(status_code=400, detail=f"Sản phẩm '{product.item_name}' có packed_qty không hợp lệ ({packed_qty}).")
         
     total_qty = cast(int, erp_data["quantity"])
-    total_boxes = math.ceil(total_qty / packed_qty)
+    total_cartons = math.ceil(total_qty / packed_qty)
 
-    if total_boxes <= 0:
+    if total_cartons <= 0:
         raise HTTPException(status_code=400, detail=f"Số lượng sản phẩm trong công lệnh ({total_qty}) không đủ để đóng thùng.")
         
     # 4. Check if slots already exist
     existing_slots = db.query(models.JobOrderCartonSlot).filter(
         models.JobOrderCartonSlot.job_order == job_order
-    ).order_by(models.JobOrderCartonSlot.box_number).all()
+    ).order_by(models.JobOrderCartonSlot.carton_number).all()
     
     if existing_slots:
         return schemas.JobOrderDetailsResponse(
             job_order=job_order,
             total_qty=total_qty,
-            total_boxes=total_boxes,
+            total_cartons=total_cartons,
             product=schemas.JobOrderProductResponse.model_validate(product),
             slots=[schemas.JobOrderSlotResponse.model_validate(s) for s in existing_slots]
         )
@@ -183,14 +183,14 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
     start_seq = max(seq_carton, seq_slot) + 1
     
     slots = []
-    for i in range(1, total_boxes + 1):
+    for i in range(1, total_cartons + 1):
         seq = start_seq + i - 1
         carton_sn = f"{prefix}{str(seq).zfill(5)}"
         
         slot = models.JobOrderCartonSlot(
             job_order=job_order,
             product_id=product.id,
-            box_number=i,
+            carton_number=i,
             carton_sn=carton_sn,
             status="PENDING"
         )
@@ -208,7 +208,7 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
     return schemas.JobOrderDetailsResponse(
         job_order=job_order,
         total_qty=total_qty,
-        total_boxes=total_boxes,
+        total_cartons=total_cartons,
         product=schemas.JobOrderProductResponse.model_validate(product),
         slots=[schemas.JobOrderSlotResponse.model_validate(s) for s in slots]
     )
@@ -216,6 +216,6 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
 def get_job_order_slots_list(db: Session, job_order: str):
     slots = db.query(models.JobOrderCartonSlot).filter(
         models.JobOrderCartonSlot.job_order == job_order
-    ).order_by(models.JobOrderCartonSlot.box_number).all()
+    ).order_by(models.JobOrderCartonSlot.carton_number).all()
     
     return [schemas.JobOrderSlotResponse.model_validate(s) for s in slots]

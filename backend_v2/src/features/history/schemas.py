@@ -17,6 +17,8 @@ class ProductInfo(BaseModel):
     allow_partial: Optional[int] = 0
     start_part: Optional[str] = ""
     middle_part: Optional[str] = ""
+    template_type: Optional[str] = "standard"
+    template_path: Optional[str] = None
     
     class Config:
         from_attributes = True

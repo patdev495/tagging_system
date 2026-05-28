@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException
 from src.core import models, utils
-from src.features.box import schemas
+from src.features.carton import schemas
 from src.features.print.service import generate_btxml
 
 def get_next_carton_sn(db: Session, product: models.Product, custom_sn: Optional[int] = None, custom_yymm: Optional[str] = None) -> str:
