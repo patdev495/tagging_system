@@ -38,7 +38,7 @@
       <!-- Chọn Số Thùng (Box Number) -->
       <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[240px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">
-          Nhập sê-ri thùng (số cuối, vd: 20)
+          {{ t('packing.enter_box_number', { range: `1 -> ${totalBoxes || 0}` }) }}
         </label>
         <div class="relative flex items-center">
           <input 

@@ -73,7 +73,8 @@
     "update_status_failed": "Cập nhật trạng thái thùng thất bại.",
     "back_home": "Quay về trang chủ",
     "view_details": "Xem chi tiết",
-    "carton_slots_title": "Chi Tiết Vị Trí Thùng"
+    "carton_slots_title": "Chi Tiết Vị Trí Thùng",
+    "enter_box_number": "Nhập STT thùng ({range})"
   },
   "print": {
     "printing_carton": "Đang in Thùng",

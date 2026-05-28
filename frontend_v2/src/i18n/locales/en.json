@@ -73,7 +73,8 @@
     "update_status_failed": "Failed to update carton status.",
     "back_home": "Back to Home",
     "view_details": "View Details",
-    "carton_slots_title": "Carton Slot Details"
+    "carton_slots_title": "Carton Slot Details",
+    "enter_box_number": "Enter Box No. ({range})"
   },
   "print": {
     "printing_carton": "Printing Carton",
