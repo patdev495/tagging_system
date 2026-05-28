@@ -16,8 +16,8 @@
             <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
               <i class="fas fa-file-invoice text-[2rem]"></i>
             </div>
-            <h2 class="text-[1.5rem] font-black text-slate-900 mb-2">Nhập Công Lệnh</h2>
-            <p class="text-slate-500 text-[0.9rem]">Vui lòng nhập số công lệnh để bắt đầu đóng gói</p>
+            <h2 class="text-[1.5rem] font-black text-slate-900 mb-2">{{ t('packing.enter_job_order_title') }}</h2>
+            <p class="text-slate-500 text-[0.9rem]">{{ t('packing.enter_job_order_desc') }}</p>
           </div>
 
           <form @submit.prevent="submitJobOrder" class="space-y-4">
@@ -25,11 +25,23 @@
               <input
                 ref="jobOrderInputRef"
                 v-model="inputJobOrder"
-                placeholder="Nhập mã lệnh..."
-                class="w-full border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl px-5 py-4 text-[1.1rem] text-slate-800 outline-none bg-white font-mono transition-all text-center tracking-wider"
+                :placeholder="t('packing.job_order_placeholder')"
+                class="w-full border rounded-2xl px-5 py-4 text-[1.1rem] outline-none bg-white font-mono transition-all text-center tracking-wider"
+                :class="hasJobOrderError
+                  ? 'border-rose-500 text-rose-600 focus:border-rose-500 focus:ring-rose-500/10 shadow-[0_0_0_4px_rgba(239,68,68,0.1)] bg-rose-50/10'
+                  : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 text-slate-800'"
                 autocomplete="off"
                 :disabled="isLoadingJobOrder"
               />
+            </div>
+
+            <!-- Job Order Error Alert -->
+            <div 
+              v-if="hasJobOrderError && jobOrderErrorText"
+              class="text-[0.85rem] text-rose-600 bg-rose-50 px-4 py-3 rounded-2xl border border-rose-100 font-bold flex items-center gap-2 animate-in"
+            >
+              <i class="fas fa-exclamation-circle text-rose-500"></i>
+              <span>{{ jobOrderErrorText }}</span>
             </div>
 
             <button
@@ -39,7 +51,7 @@
             >
               <i v-if="isLoadingJobOrder" class="fas fa-spinner fa-spin"></i>
               <i v-else class="fas fa-arrow-right"></i>
-              <span>Xác Nhận</span>
+              <span>{{ t('packing.confirm') }}</span>
             </button>
           </form>
         </div>
@@ -110,12 +122,11 @@
         <div class="flex flex-col lg:flex-row gap-4 xl:gap-6 items-stretch lg:items-start">
           <div class="flex-[1.4] min-w-0">
             <SessionHeader
-              ref="sessionRef"
               :product="currentProduct!"
               :jobOrder="jobOrder"
               v-model:cartonOrigin="cartonOrigin"
               v-model:boxNumberStr="boxNumberStr"
-              :totalBoxes="jobOrderDetails?.total_boxes || 0"
+              :boxNumberRange="boxNumberRange"
               :snPreview="snPreview"
               v-model:snPattern="snPattern"
               :customYYMM="customYYMM"
@@ -134,9 +145,9 @@
                   <i class="fas fa-boxes"></i>
                 </div>
                 <div>
-                  <div class="text-[0.85rem] font-bold text-slate-500 uppercase tracking-wider leading-none mb-1">Tiến Độ Đóng Thùng</div>
+                  <div class="text-[0.85rem] font-bold text-slate-500 uppercase tracking-wider leading-none mb-1">{{ t('packing.packing_progress', 'Tiến Độ Đóng Thùng') }}</div>
                   <div class="text-[0.95rem] font-extrabold text-slate-800">
-                    Đã quét: <span class="text-blue-600 font-black">{{ scannedBoxesCount }}</span> / <span class="font-black">{{ jobOrderDetails?.total_boxes }}</span> thùng
+                    {{ t('packing.scanned') }}: <span class="text-blue-600 font-black">{{ scannedBoxesCount }}</span> / <span class="font-black">{{ jobOrderDetails?.total_boxes }}</span> {{ t('packing.boxes_unit', 'thùng') }}
                   </div>
                 </div>
               </div>
@@ -226,7 +237,7 @@
         <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
           <div class="flex items-center gap-2.5 text-slate-800">
             <i class="fas fa-boxes text-[1.2rem] text-blue-600"></i>
-            <h2 class="m-0 text-[1.2rem] font-black text-slate-900">{{ t('packing.carton_slots_title', 'Chi Tiết Vị Trí Thùng') }} ({{ jobOrderDetails?.total_boxes }} thùng)</h2>
+            <h2 class="m-0 text-[1.2rem] font-black text-slate-900">{{ t('packing.carton_slots_title', 'Chi Tiết Vị Trí Thùng') }} ({{ jobOrderDetails?.total_boxes }} {{ t('packing.boxes_unit', 'thùng') }})</h2>
           </div>
           <button @click="showCartonSlotsModal = false" class="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 border-none cursor-pointer transition-colors">
             <i class="fas fa-times"></i>
@@ -259,9 +270,9 @@
                 selectedSlotId === slot.id ? 'ring-3 ring-blue-500 border-blue-500 bg-blue-500/5 font-extrabold scale-102' : ''
               ]"
             >
-              <span class="font-mono text-[0.7rem] md:text-[0.75rem] block tracking-tight text-slate-400">{{ slot.carton_sn }}</span>
-              <span class="text-[0.9rem] leading-none mt-2 font-extrabold">Thùng {{ slot.box_number }}/{{ jobOrderDetails?.total_boxes }}</span>
-              <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-slate-400 text-[0.8rem] absolute top-1.5 right-1.5"></i>
+              <span class="font-mono text-[0.9rem] sm:text-[0.95rem] font-black tracking-tight" :class="slot.status === 'SCANNED' ? 'text-slate-400/80' : 'text-slate-800'">{{ slot.carton_sn }}</span>
+              <span class="text-[0.7rem] sm:text-[0.75rem] leading-none mt-1.5 font-bold" :class="slot.status === 'SCANNED' ? 'text-slate-400/50' : 'text-slate-400'">{{ t('packing.carton', 'Thùng') }} {{ slot.box_number }}/{{ jobOrderDetails?.total_boxes }}</span>
+              <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-emerald-500 text-[0.85rem] absolute top-1.5 right-1.5"></i>
             </div>
           </div>
         </div>
@@ -461,6 +472,8 @@ const selectedSlotId = ref<number | null>(null);
 const jobOrderInputRef = ref<HTMLInputElement | null>(null);
 const hasBoxNumberError = ref<boolean>(false);
 const boxNumberErrorText = ref<string>('');
+const hasJobOrderError = ref<boolean>(false);
+const jobOrderErrorText = ref<string>('');
 
 const scannedBoxesCount = computed(() => {
   return jobOrderSlots.value.filter(s => s.status === 'SCANNED').length;
@@ -505,6 +518,11 @@ const cartonToVerify = ref<(Carton & { status?: string, items?: { item_sn: strin
 const verificationScanBuffer = ref<string>('');
 const verificationInputRef = ref<HTMLInputElement | null>(null);
 const verificationError = ref<boolean>(false);
+
+watch(inputJobOrder, () => {
+  hasJobOrderError.value = false;
+  jobOrderErrorText.value = '';
+});
 
 watch(boxNumberStr, (newVal) => {
   if (!newVal.trim()) {
@@ -608,6 +626,25 @@ const snPreview = computed(() => {
   return `${prefix}${String(seq).padStart(5, '0')}`;
 });
 
+const boxNumberRange = computed(() => {
+  if (jobOrderSlots.value.length === 0) return '';
+  
+  let minSeq = Infinity;
+  let maxSeq = -Infinity;
+  
+  for (const slot of jobOrderSlots.value) {
+    const seqMatch = slot.carton_sn.match(/\d{5}$/);
+    if (seqMatch) {
+      const seq = parseInt(seqMatch[0]);
+      if (seq < minSeq) minSeq = seq;
+      if (seq > maxSeq) maxSeq = seq;
+    }
+  }
+  
+  if (minSeq === Infinity || maxSeq === -Infinity) return '';
+  return `${minSeq} -> ${maxSeq}`;
+});
+
 const scanRef = ref<InstanceType<typeof ScanBuffer> | null>(null);
 
 const progressPercent = computed(() => {
@@ -628,6 +665,8 @@ const submitJobOrder = async () => {
   const jo = inputJobOrder.value.trim();
   if (!jo) return;
   isLoadingJobOrder.value = true;
+  hasJobOrderError.value = false;
+  jobOrderErrorText.value = '';
   try {
     const res = await jobOrderApi.getJobOrderDetails(jo);
     jobOrderDetails.value = res.data;
@@ -661,7 +700,9 @@ const submitJobOrder = async () => {
     }
   } catch (err: any) {
     console.error(err);
-    const detail = err.response?.data?.detail || err.message || 'Lỗi tải công lệnh';
+    const detail = t('packing.job_order_not_found', { jo: jo });
+    hasJobOrderError.value = true;
+    jobOrderErrorText.value = detail;
     system.showNotification(detail, 'error');
   } finally {
     isLoadingJobOrder.value = false;
@@ -670,7 +711,7 @@ const submitJobOrder = async () => {
 
 const changeJobOrder = () => {
   if (scannedItems.value.length > 0) {
-    if (!confirm('Bạn đang quét dở thùng này, đổi công lệnh sẽ mất các mã đã quét. Bạn có chắc chắn không?')) {
+    if (!confirm(t('packing.change_job_order_confirm'))) {
       return;
     }
   }
@@ -715,7 +756,7 @@ const selectSlot = (slot: JobOrderSlot) => {
   }
 
   if (scannedItems.value.length > 0 && selectedSlotId.value !== slot.id) {
-    if (!confirm('Bạn đang quét dở thùng này, nếu chuyển sang thùng khác sẽ mất dữ liệu đã quét. Bạn có chắc chắn muốn chuyển không?')) {
+    if (!confirm(t('packing.switch_slot_confirm'))) {
       return;
     }
   }
@@ -1148,7 +1189,7 @@ const startNextCarton = () => {
 
 const resetSession = () => { 
   if (scannedItems.value.length > 0) {
-    if (!confirm('Bạn đang quét dở thùng này, nếu tiếp tục sẽ mất các mã đã quét. Bạn có chắc chắn không?')) {
+    if (!confirm(t('packing.reset_session_confirm'))) {
       return;
     }
   }

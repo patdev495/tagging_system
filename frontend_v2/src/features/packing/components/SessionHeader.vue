@@ -38,7 +38,7 @@
       <!-- Chọn Số Thùng (Box Number) -->
       <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[240px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">
-          {{ t('packing.enter_box_number', { range: `1 -> ${totalBoxes || 0}` }) }}
+          {{ t('packing.enter_box_number', { range: boxNumberRange || '...' }) }}
         </label>
         <div class="relative flex items-center">
           <input 
@@ -105,7 +105,7 @@ const props = defineProps<{
   jobOrder: string;
   cartonOrigin: string;
   boxNumberStr: string;
-  totalBoxes: number;
+  boxNumberRange: string;
   snPreview: string;
   snPattern: string;
   customYYMM: string;

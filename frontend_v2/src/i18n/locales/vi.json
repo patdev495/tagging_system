@@ -74,7 +74,18 @@
     "back_home": "Quay về trang chủ",
     "view_details": "Xem chi tiết",
     "carton_slots_title": "Chi Tiết Vị Trí Thùng",
-    "enter_box_number": "Nhập STT thùng ({range})"
+    "enter_box_number": "Nhập STT thùng ({range})",
+    "packing_progress": "Tiến Độ Đóng Thùng",
+    "boxes_unit": "thùng",
+    "carton": "Thùng",
+    "change_job_order": "Đổi công lệnh",
+    "job_order_not_found": "Không tìm thấy công lệnh {jo}",
+    "change_job_order_confirm": "Bạn đang quét dở thùng này, đổi công lệnh sẽ mất các mã đã quét. Bạn có chắc chắn không?",
+    "reset_session_confirm": "Bạn đang quét dở thùng này, nếu tiếp tục sẽ mất các mã đã quét. Bạn có chắc chắn không?",
+    "switch_slot_confirm": "Bạn đang quét dở thùng này, nếu chuyển sang thùng khác sẽ mất dữ liệu đã quét. Bạn có chắc chắn muốn chuyển không?",
+    "enter_job_order_title": "Nhập Công Lệnh",
+    "enter_job_order_desc": "Vui lòng nhập số công lệnh để bắt đầu đóng gói",
+    "confirm": "Xác Nhận"
   },
   "print": {
     "printing_carton": "Đang in Thùng",
@@ -183,7 +194,6 @@
     "accurate_desc": "Đảm bảo truy xuất đúng nguồn gốc thùng hàng.",
     "linked": "Liên kết",
     "linked_desc": "Xem toàn bộ danh sách các S/N liên quan.",
-    "product": "Sản phẩm",
     "upc": "Mã UPC",
     "station_id_mac": "Mã trạm (MAC)",
     "welcome": "Chào mừng bạn đến với hệ thống quản lý dữ liệu.",

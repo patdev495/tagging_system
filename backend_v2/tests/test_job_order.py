@@ -206,3 +206,41 @@ def test_update_status_updates_slot(db_session):
     assert slot.status == "SCANNED"
     assert slot.carton_id == 10
     assert slot.scanned_at is not None
+
+def test_multiple_job_orders_allocation_order(db_session):
+    # Setup product
+    customer = models.Customer(id=1, code="UI", name="UI Customer")
+    db_session.add(customer)
+    
+    product = models.Product(
+        id=1,
+        customer_id=1,
+        item_name="UACC-Cable-Path-Outdoor-2M-BK",
+        upc="810010077400",
+        packed_qty=50,
+        start_part="CN",
+        middle_part="52",
+        template_type="standard",
+        allow_partial=0
+    )
+    db_session.add(product)
+    db_session.commit()
+
+    import datetime
+    yymm = datetime.datetime.now().strftime("%y%m")
+    prefix = f"CN{yymm}52"
+
+    # 1. First Job Order (JO-1) is entered first. It should get slots starting at 00001
+    res1 = service.get_or_create_job_order_slots(db_session, "JO-1")
+    assert res1.slots[0].carton_sn == f"{prefix}00001"
+    assert res1.slots[-1].carton_sn == f"{prefix}00015"  # 15 boxes
+
+    # 2. Second Job Order (JO-2) is entered second. It should get slots starting at 00016
+    res2 = service.get_or_create_job_order_slots(db_session, "JO-2")
+    assert res2.slots[0].carton_sn == f"{prefix}00016"
+    assert res2.slots[-1].carton_sn == f"{prefix}00030"  # 15 boxes
+
+    # 3. Query JO-1 again. It should return its original slots (00001 -> 00015), not changing sequence
+    res1_retry = service.get_or_create_job_order_slots(db_session, "JO-1")
+    assert res1_retry.slots[0].carton_sn == f"{prefix}00001"
+    assert res1_retry.slots[-1].carton_sn == f"{prefix}00015"

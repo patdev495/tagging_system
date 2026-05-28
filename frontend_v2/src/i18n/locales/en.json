@@ -74,7 +74,18 @@
     "back_home": "Back to Home",
     "view_details": "View Details",
     "carton_slots_title": "Carton Slot Details",
-    "enter_box_number": "Enter Box No. ({range})"
+    "enter_box_number": "Enter Box No. ({range})",
+    "packing_progress": "Packing Progress",
+    "boxes_unit": "boxes",
+    "carton": "Box",
+    "change_job_order": "Change Job Order",
+    "job_order_not_found": "Job Order {jo} not found",
+    "change_job_order_confirm": "You have unscanned items in this carton. Changing job order will lose scanned items. Are you sure?",
+    "reset_session_confirm": "You have unscanned items in this carton. Continuing will lose scanned items. Are you sure?",
+    "switch_slot_confirm": "You have unscanned items in this carton. Switching slots will clear current scanned items. Are you sure?",
+    "enter_job_order_title": "Enter Job Order",
+    "enter_job_order_desc": "Please enter the Job Order to start packing",
+    "confirm": "Confirm"
   },
   "print": {
     "printing_carton": "Printing Carton",
@@ -183,7 +194,6 @@
     "accurate_desc": "Ensure correct carton source retrieval.",
     "linked": "Linked",
     "linked_desc": "View full list of related S/Ns.",
-    "product": "Product",
     "upc": "UPC",
     "station_id_mac": "Station ID (MAC)",
     "welcome": "Welcome to the data management system.",
