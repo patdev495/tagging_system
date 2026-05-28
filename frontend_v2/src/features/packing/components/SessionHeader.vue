@@ -13,18 +13,16 @@
       </div>
     </div>
     
-    <div class="flex flex-wrap gap-2 md:gap-3 items-start w-full">
-      <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[300px]">
+    <div class="flex flex-wrap gap-2 md:gap-3 items-end w-full">
+      <!-- Công Lệnh (Readonly) -->
+      <div class="flex flex-col gap-1 flex-1 min-w-[150px] max-w-[200px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.job_order') }}</label>
-        <input 
-          :value="jobOrder" 
-          @input="onJobOrderInput"
-          :placeholder="t('packing.job_order_placeholder')" 
-          class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm"
-          ref="jobOrderInput"
-          @keyup.enter="$emit('focus-scan')"
-        />
+        <div class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-[0.95rem] font-mono font-bold text-slate-700 cursor-not-allowed select-all">
+          {{ jobOrder }}
+        </div>
       </div>
+
+      <!-- Xuất Xứ (Origin) -->
       <div class="flex flex-col gap-1 flex-none w-20">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.origin') }}</label>
         <select 
@@ -36,63 +34,67 @@
           <option value="CN">CN</option>
         </select>
       </div>
-      <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[250px]">
+
+      <!-- Chọn Số Thùng (Box Number) -->
+      <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[240px]">
+        <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">
+          Nhập sê-ri thùng (số cuối, vd: 20)
+        </label>
         <div class="relative flex items-center">
           <input 
-            :value="customSN"
-            @input="onCustomSNInput"
+            :value="boxNumberStr"
+            @input="onBoxNumberInput"
+            @keydown.enter.prevent="onBoxNumberSubmit"
             type="text"
             inputmode="numeric"
-            :placeholder="suggestedSNValue?.toString() || '1'" 
-            class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-[0.95rem] font-bold text-slate-800 outline-none transition-all duration-200 ease-out focus:border-blue-500 focus:ring-4 focus:ring-blue-500/8 focus:shadow-sm pr-[70px]!"
-            :class="{ 
-              'bg-emerald-50! border-emerald-500! text-emerald-600! cursor-default': !isSNManual, 
-              'border-rose-500! bg-rose-50! ring-rose-500/10!': isSNManual && snExists 
-            }"
-            :readonly="!isSNManual"
-            @keyup.enter="$emit('focus-scan')"
-            ref="snInput"
+            placeholder="Ví dụ: 20" 
+            class="w-full px-3 py-2 bg-white border rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm"
+            :class="hasBoxNumberError 
+              ? 'border-rose-500 text-rose-600 focus:border-rose-500 focus:ring-rose-500/10 shadow-[0_0_0_4px_rgba(239,68,68,0.1)] font-extrabold bg-rose-50/10' 
+              : 'border-slate-200 text-slate-800 focus:border-blue-500 focus:ring-blue-500/8'"
+            ref="boxInput"
           />
-          <button 
-            class="absolute right-1 top-1 bottom-1 border-none bg-slate-200 text-slate-500 text-[0.65rem] font-extrabold px-2 rounded-md cursor-pointer transition-all hover:scale-105" 
-            :class="{ 'bg-emerald-500! text-white!': !isSNManual }"
-            @click="toggleMode"
-            :title="!isSNManual ? t('packing.switch_manual') : t('packing.switch_auto')"
-          >
-            {{ !isSNManual ? t('packing.auto') : t('packing.manual') }}
-          </button>
         </div>
-        <div class="text-[0.7rem] text-emerald-500 mt-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100" v-if="snPreview">
-           {{ t('packing.preview') }}: <strong class="font-mono text-[0.8rem]" :class="{ 'text-rose-500!': snExists }">{{ snExists ? '⚠️ ' + t('packing.sn_exists_short') : snPreview }}</strong>
+        <div 
+          v-if="hasBoxNumberError && boxNumberErrorText"
+          class="text-[0.75rem] text-rose-600 mt-1 bg-rose-50 px-2.5 py-1.5 rounded-md border border-rose-100 font-bold flex items-center gap-1.5 animate-in"
+        >
+          <i class="fas fa-exclamation-circle text-rose-500"></i>
+          <span>{{ boxNumberErrorText }}</span>
+        </div>
+        <div 
+          v-else-if="snPreview"
+          class="text-[0.7rem] text-emerald-500 mt-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100"
+        >
+           Sê-ri Thùng: <strong class="font-mono text-[0.8rem]">{{ snPreview }}</strong>
         </div>
       </div>
+
+      <!-- Tiền tố quét (Pattern) -->
       <div class="flex flex-col gap-1 flex-none w-[90px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.sn_pattern') }}</label>
         <input 
           :value="snPattern"
           @input="onPatternInput"
-          placeholder="e.g. AS" 
+          placeholder="Ví dụ: AS" 
           class="w-full px-3 py-2 bg-white rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm border-blue-300 text-blue-800 focus:border-blue-500 focus:ring-blue-500/8 focus:bg-blue-50!"
           @keyup.enter="$emit('focus-scan')"
         />
       </div>
+
+      <!-- Tháng/Năm tem (YYMM) -->
       <div class="flex flex-col gap-1 flex-none w-[90px]">
         <label class="text-[0.7rem] text-slate-500 font-bold uppercase tracking-wider pl-0.5">{{ t('packing.manual_date') }}</label>
-        <input 
-          :value="customYYMM"
-          @input="onDateInput"
-          placeholder="e.g. 2604" 
-          maxlength="4"
-          class="w-full px-3 py-2 bg-white border rounded-lg text-[0.95rem] font-bold outline-none transition-all duration-200 ease-out focus:ring-4 focus:shadow-sm border-amber-500 text-amber-800 focus:border-amber-600 focus:bg-amber-50! focus:ring-amber-500/8"
-          @keyup.enter="$emit('focus-scan')"
-        />
+        <div class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-[0.95rem] font-mono font-bold text-slate-600 text-center cursor-not-allowed">
+          {{ customYYMM || '-' }}
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { Product } from '../../../types/api';
 
@@ -102,54 +104,44 @@ const props = defineProps<{
   product: Product;
   jobOrder: string;
   cartonOrigin: string;
-  customSN: string;
-  isSNManual: boolean;
+  boxNumberStr: string;
+  totalBoxes: number;
+  snPreview: string;
   snPattern: string;
   customYYMM: string;
-  suggestedSNValue: number;
-  snPreview: string;
-  snExists: boolean;
+  hasBoxNumberError?: boolean;
+  boxNumberErrorText?: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'back'): void;
   (e: 'focus-scan'): void;
-  (e: 'update:jobOrder', val: string): void;
   (e: 'update:cartonOrigin', val: string): void;
-  (e: 'update:customSN', val: string): void;
-  (e: 'update:isSNManual', val: boolean): void;
+  (e: 'update:boxNumberStr', val: string): void;
   (e: 'update:snPattern', val: string): void;
-  (e: 'update:customYYMM', val: string): void;
+  (e: 'submit-box-number'): void;
+  (e: 'clear-box-error'): void;
 }>();
 
-const jobOrderInput = ref<HTMLInputElement | null>(null);
-const snInput = ref<HTMLInputElement | null>(null);
+const boxInput = ref<HTMLInputElement | null>(null);
 
-const focusJobOrder = () => {
-  if (jobOrderInput.value) jobOrderInput.value.focus({ preventScroll: true });
-};
-
-const onJobOrderInput = (e: Event) => emit('update:jobOrder', (e.target as HTMLInputElement).value);
 const onOriginChange = (e: Event) => {
   emit('update:cartonOrigin', (e.target as HTMLSelectElement).value);
   emit('focus-scan');
 };
-const onCustomSNInput = (e: Event) => emit('update:customSN', (e.target as HTMLInputElement).value);
+const onBoxNumberInput = (e: Event) => {
+  emit('update:boxNumberStr', (e.target as HTMLInputElement).value);
+  emit('clear-box-error');
+};
 const onPatternInput = (e: Event) => emit('update:snPattern', (e.target as HTMLInputElement).value);
-const onDateInput = (e: Event) => emit('update:customYYMM', (e.target as HTMLInputElement).value);
 
-const toggleMode = () => {
-  if (!props.isSNManual) {
-    // Switch to manual
-    emit('update:isSNManual', true);
-    emit('update:customSN', props.suggestedSNValue.toString());
-    nextTick(() => { if (snInput.value) snInput.value.focus(); });
-  } else {
-    // Switch to auto
-    emit('update:isSNManual', false);
-    emit('update:customSN', '');
-  }
+const onBoxNumberSubmit = () => {
+  emit('submit-box-number');
 };
 
-defineExpose({ focusJobOrder });
+const focusBoxInput = () => {
+  if (boxInput.value) boxInput.value.focus();
+};
+
+defineExpose({ focusBoxInput });
 </script>

@@ -28,6 +28,10 @@ _Avoid_: Serial sản phẩm, sê-ri quét
 Mã lệnh sản xuất hoặc lệnh đóng gói dùng để nhóm nhiều Carton lại với nhau trong cùng một đợt chạy.
 _Avoid_: Lệnh sản xuất, mã lô, Work order
 
+**Job Order Carton Slot**:
+Một vị trí thùng được cấp phát trước cho một Job Order, tương ứng với số thứ tự thùng từ 1 đến N (trong đó N là tổng số thùng tính toán được từ tổng số lượng sản phẩm của Job Order chia cho số lượng đóng gói tối đa của Product). Mỗi vị trí thùng có trạng thái là chờ quét hoặc đã quét.
+_Avoid_: Số thùng thứ tự, slot thùng, vị trí hộp
+
 **Print Agent**:
 Ứng dụng chạy cục bộ trên máy tính client kết nối trực tiếp với động cơ BarTender COM để thực hiện lệnh in nhãn vật lý hoặc xuất PDF.
 _Avoid_: Client app, ứng dụng máy in, máy in dịch vụ

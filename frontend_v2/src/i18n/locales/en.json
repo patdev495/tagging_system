@@ -10,6 +10,8 @@
     "admin_dashboard": "Admin Dashboard"
   },
   "packing": {
+    "total_qty": "Total Quantity",
+    "total_boxes": "Total Boxes",
     "rescan_mode": "RESCAN MODE: Updating Carton {sn}",
     "cancel": "Cancel",
     "agent_offline": "AGENT OFFLINE: Please turn on agent.py to start scanning.",

@@ -55,3 +55,19 @@ class CartonItem(Base):
     item_sn = Column(String(100), index=True)
     
     carton = relationship("Carton", back_populates="items")
+
+class JobOrderCartonSlot(Base):
+    __tablename__ = "job_order_carton_slots"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    job_order = Column(String(100), index=True, nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), index=True, nullable=False)
+    box_number = Column(Integer, nullable=False)  # 1, 2, ..., N
+    carton_sn = Column(String(100), index=True, unique=True, nullable=False)
+    status = Column(String(20), default="PENDING", index=True)  # PENDING or SCANNED
+    scanned_at = Column(DateTime, nullable=True)
+    carton_id = Column(Integer, ForeignKey("cartons.id"), index=True, nullable=True)
+    
+    product = relationship("Product")
+    carton = relationship("Carton")
+

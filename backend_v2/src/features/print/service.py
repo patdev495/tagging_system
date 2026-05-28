@@ -33,9 +33,22 @@ def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db:
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     carton.status = status_update.status  # type: ignore
+    
+    if status_update.status == "SUCCESS" and carton.job_order:
+        slot = db.query(models.JobOrderCartonSlot).filter(
+            models.JobOrderCartonSlot.job_order == carton.job_order,
+            models.JobOrderCartonSlot.carton_sn == carton.carton_sn
+        ).first()
+        if slot:
+            slot.status = "SCANNED"
+            slot.carton_id = carton.id
+            import datetime
+            slot.scanned_at = datetime.datetime.now()
+            
     db.commit()
     db.refresh(carton)
     return carton
+
 
 def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, db: Optional[Session] = None):
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first() if db else None

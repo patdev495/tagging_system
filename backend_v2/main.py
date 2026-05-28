@@ -19,6 +19,7 @@ from src.features.product.router import router as product_router
 from src.features.history.router import router as history_router
 from src.features.box.router import router as box_router
 from src.features.print.router import router as print_router
+from src.features.job_order.router import router as job_order_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title="NY Tagging System V2", version="2.0.0")
@@ -41,6 +42,8 @@ def create_app() -> FastAPI:
     app.include_router(history_router, prefix="/api/v1")
     app.include_router(box_router, prefix="/api/v1")
     app.include_router(print_router, prefix="/api/v1")
+    app.include_router(job_order_router, prefix="/api/v1")
+
 
     @app.get("/api/v1/health", tags=["Health"])
     def health_check():

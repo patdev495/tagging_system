@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen p-3 md:p-4 text-slate-800 flex justify-center bg-radial-at-tr from-slate-50 to-slate-200">
-    <div class="w-full max-w-[1100px] transition-all duration-500 ease-out flex flex-col bg-white/95 backdrop-blur-2xl border border-white/80 rounded-[20px] p-2.5 md:p-4 shadow-2xl shadow-slate-900/5" :class="{ 'max-w-[1550px]': currentProduct }">
+    <div class="w-full max-w-[1100px] transition-all duration-500 ease-out flex flex-col bg-white/95 backdrop-blur-2xl border border-white/80 rounded-[20px] p-2.5 md:p-4 shadow-2xl shadow-slate-900/5" :class="{ 'max-w-[1550px]': currentStep === 3 }">
       <AppHeader
         :isAudioActive="isAudioActive"
         @toggle-audio="toggleAudio"
@@ -9,30 +9,163 @@
         @home="resetSession"
       />
 
-      <CatalogSelection
-        v-if="!currentProduct"
-        ref="catalogRef"
-        @select-product="selectProduct"
-      />
+      <!-- Bước 1: Nhập Công Lệnh -->
+      <div v-if="currentStep === 1" class="flex-1 flex flex-col justify-center items-center py-16 md:py-24">
+        <div class="w-full max-w-[480px] bg-slate-50 border border-slate-200/60 rounded-3xl p-6 md:p-8 shadow-xl">
+          <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
+              <i class="fas fa-file-invoice text-[2rem]"></i>
+            </div>
+            <h2 class="text-[1.5rem] font-black text-slate-900 mb-2">Nhập Công Lệnh</h2>
+            <p class="text-slate-500 text-[0.9rem]">Vui lòng nhập số công lệnh để bắt đầu đóng gói</p>
+          </div>
 
-      <section class="mt-2" v-else>
+          <form @submit.prevent="submitJobOrder" class="space-y-4">
+            <div class="relative">
+              <input
+                ref="jobOrderInputRef"
+                v-model="inputJobOrder"
+                placeholder="Nhập mã lệnh..."
+                class="w-full border border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl px-5 py-4 text-[1.1rem] text-slate-800 outline-none bg-white font-mono transition-all text-center tracking-wider"
+                autocomplete="off"
+                :disabled="isLoadingJobOrder"
+              />
+            </div>
+
+            <button
+              type="submit"
+              :disabled="!inputJobOrder.trim() || isLoadingJobOrder"
+              class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
+            >
+              <i v-if="isLoadingJobOrder" class="fas fa-spinner fa-spin"></i>
+              <i v-else class="fas fa-arrow-right"></i>
+              <span>Xác Nhận</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Bước 2: Thông tin đơn hàng (Product Card) -->
+      <div v-else-if="currentStep === 2" class="flex-1 flex flex-col justify-center items-center py-16 md:py-24 animate-in">
+        <div class="w-full max-w-[550px] space-y-6">
+          <div class="flex justify-between items-center px-2">
+            <span class="text-[0.9rem] text-slate-500 font-medium">
+              {{ t('packing.job_order') }}: <strong class="font-mono text-slate-800">{{ jobOrder }}</strong>
+            </span>
+            <button @click="changeJobOrder" class="text-blue-600 hover:text-blue-800 border-none bg-transparent font-bold cursor-pointer text-[0.9rem] flex items-center gap-1.5">
+              <i class="fas fa-exchange-alt"></i> {{ t('packing.change_job_order', 'Đổi công lệnh') }}
+            </button>
+          </div>
+
+          <!-- Product Card -->
+          <div 
+            @click="enterScanning"
+            class="bg-linear-to-br from-slate-900 to-slate-800 text-white rounded-[24px] p-8 shadow-2xl hover:scale-[1.02] cursor-pointer transition-all duration-300 relative overflow-hidden group border border-slate-700/30"
+          >
+            <div class="absolute -right-10 -bottom-10 opacity-5 text-[10rem] pointer-events-none group-hover:scale-110 transition-transform duration-500">
+              <i class="fas fa-box-open"></i>
+            </div>
+            
+            <div class="flex justify-between items-start mb-6">
+              <span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-xl px-3 py-1 text-[0.8rem] font-bold uppercase tracking-wider">
+                Product Info
+              </span>
+              <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white/80 group-hover:bg-white/20 transition-colors">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </div>
+
+            <h3 class="text-[1.8rem] font-black leading-tight mb-2 tracking-wide text-white group-hover:text-blue-200 transition-colors">
+              {{ jobOrderDetails?.product.item_name }}
+            </h3>
+            
+            <p class="text-slate-400 font-mono text-[1rem] mb-6">
+              UPC: {{ jobOrderDetails?.product.upc || 'N/A' }}
+            </p>
+
+            <div class="grid grid-cols-3 gap-2 border-t border-white/10 pt-6">
+              <div>
+                <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">Quy cách / Thùng</span>
+                <span class="text-[1.3rem] font-black text-white">QTY: {{ jobOrderDetails?.product.packed_qty }}</span>
+              </div>
+              <div class="border-x border-white/10 px-2 text-center">
+                <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">{{ t('packing.total_qty') }}</span>
+                <span class="text-[1.3rem] font-black text-emerald-400">{{ jobOrderDetails?.total_qty }} con</span>
+              </div>
+              <div class="text-right">
+                <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">{{ t('packing.total_boxes') }}</span>
+                <span class="text-[1.3rem] font-black text-blue-400">{{ jobOrderDetails?.total_boxes }} Thùng</span>
+              </div>
+            </div>
+          </div>
+          
+          <p class="text-center text-slate-400 text-[0.85rem] italic">
+            Bấm vào thẻ sản phẩm ở trên để vào giao diện quét mã
+          </p>
+        </div>
+      </div>
+
+      <!-- Bước 3: Giao diện quét mã -->
+      <section class="mt-2" v-else-if="currentStep === 3">
         <div class="flex flex-col lg:flex-row gap-4 xl:gap-6 items-stretch lg:items-start">
           <div class="flex-[1.4] min-w-0">
             <SessionHeader
               ref="sessionRef"
-              :product="currentProduct"
-              v-model:jobOrder="jobOrder"
+              :product="currentProduct!"
+              :jobOrder="jobOrder"
               v-model:cartonOrigin="cartonOrigin"
-              v-model:customSN="customSN"
-              v-model:isSNManual="isSNManual"
-              v-model:snPattern="snPattern"
-              v-model:customYYMM="customYYMM"
-              :suggestedSNValue="suggestedSNValue"
+              v-model:boxNumberStr="boxNumberStr"
+              :totalBoxes="jobOrderDetails?.total_boxes || 0"
               :snPreview="snPreview"
-              :snExists="snExists"
-              @back="resetSession"
+              v-model:snPattern="snPattern"
+              :customYYMM="customYYMM"
+              :hasBoxNumberError="hasBoxNumberError"
+              :boxNumberErrorText="boxNumberErrorText"
+              @back="currentStep = 2"
               @focus-scan="focusScan"
+              @submit-box-number="handleBoxNumberSubmit"
+              @clear-box-error="hasBoxNumberError = false; boxNumberErrorText = '';"
             />
+
+            <!-- Danh Sách Thùng Hàng (Scrollable Box Grid) -->
+            <div class="mb-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-xs">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-[0.95rem] font-extrabold text-slate-800 flex items-center gap-1.5">
+                  <i class="fas fa-boxes text-blue-600"></i>
+                  Danh Sách Thùng Hàng ({{ jobOrderDetails?.total_boxes }} thùng)
+                </span>
+                <div class="flex items-center gap-4">
+                  <span class="text-[0.8rem] text-slate-400 font-mono">
+                    Đã quét: {{ scannedBoxesCount }} / {{ jobOrderDetails?.total_boxes }}
+                  </span>
+                  <button @click="changeJobOrder" class="text-[0.8rem] text-blue-600 hover:text-blue-800 border-none bg-transparent font-bold cursor-pointer">
+                    <i class="fas fa-exchange-alt"></i> Đổi công lệnh
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Grid Container with Fixed Height & Scroll -->
+              <div class="max-h-[200px] overflow-y-auto pr-1 select-none border border-slate-100/80 rounded-xl p-2 bg-slate-50/50">
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                  <div
+                    v-for="slot in jobOrderSlots"
+                    :key="slot.id"
+                    @click="selectSlot(slot)"
+                    class="relative py-2 px-1 text-center rounded-xl cursor-pointer font-bold border transition-all flex flex-col justify-center items-center min-h-[58px] shadow-xs active:scale-95"
+                    :class="[
+                      slot.status === 'SCANNED'
+                        ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed pointer-events-none opacity-60'
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50/30',
+                      selectedSlotId === slot.id ? 'ring-3 ring-blue-500 border-blue-500 bg-blue-500/5 font-extrabold scale-102' : ''
+                    ]"
+                  >
+                    <span class="font-mono text-[0.68rem] md:text-[0.72rem] block tracking-tight text-slate-400">{{ slot.carton_sn }}</span>
+                    <span class="text-[0.85rem] leading-none mt-1.5 font-extrabold">Thùng {{ slot.box_number }}/{{ jobOrderDetails?.total_boxes }}</span>
+                    <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-slate-400 text-[0.65rem] absolute top-1 right-1"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div v-if="isRescanMode" class="bg-orange-50 border border-orange-100 rounded-xl p-2.5 md:p-4 mb-4 flex justify-between items-center text-orange-900 animate-in">
               <div class="flex items-center gap-3">
@@ -79,8 +212,8 @@
             <ScanBuffer
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
-              :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing))"
-              :placeholder="(settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder'))"
+              :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing)) || !selectedSlotId"
+              :placeholder="!selectedSlotId ? 'Vui lòng chọn hoặc nhập số thùng cần quét trước...' : ((settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder')))"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
@@ -204,19 +337,19 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
 import packingApi from '../features/packing/api';
 import printApi from '../features/print/api';
 import catalogApi from '../features/catalog/api';
-import type { Product, Carton } from '../types/api';
+import jobOrderApi from '../features/job_order/api';
+import type { Product, Carton, JobOrderSlot, JobOrderDetails } from '../types/api';
 
 import AppHeader from '../core/components/AppHeader.vue';
-import CatalogSelection from '../features/catalog/components/CatalogSelection.vue';
 import SessionHeader from '../features/packing/components/SessionHeader.vue';
 import ScanBuffer from '../features/packing/components/ScanBuffer.vue';
 import ScannedList from '../features/packing/components/ScannedList.vue';
@@ -278,6 +411,22 @@ const currentProduct = ref<Product | null>(null);
 const scannedItems = ref<string[]>([]);
 const scanBuffer = ref<string>('');
 
+// New Job Order steps & slots reactive state
+const currentStep = ref<number>(1);
+const inputJobOrder = ref<string>('');
+const isLoadingJobOrder = ref<boolean>(false);
+const jobOrderDetails = ref<JobOrderDetails | null>(null);
+const jobOrderSlots = ref<JobOrderSlot[]>([]);
+const boxNumberStr = ref<string>('');
+const selectedSlotId = ref<number | null>(null);
+const jobOrderInputRef = ref<HTMLInputElement | null>(null);
+const hasBoxNumberError = ref<boolean>(false);
+const boxNumberErrorText = ref<string>('');
+
+const scannedBoxesCount = computed(() => {
+  return jobOrderSlots.value.filter(s => s.status === 'SCANNED').length;
+});
+
 interface InvalidScan {
   sn: string;
   time: string;
@@ -316,6 +465,74 @@ const cartonToVerify = ref<(Carton & { status?: string, items?: { item_sn: strin
 const verificationScanBuffer = ref<string>('');
 const verificationInputRef = ref<HTMLInputElement | null>(null);
 const verificationError = ref<boolean>(false);
+
+watch(boxNumberStr, (newVal) => {
+  if (!newVal.trim()) {
+    hasBoxNumberError.value = false;
+    boxNumberErrorText.value = '';
+    return;
+  }
+  const num = parseInt(newVal);
+  if (isNaN(num)) {
+    hasBoxNumberError.value = true;
+    boxNumberErrorText.value = 'Số sê-ri không hợp lệ!';
+    selectedSlotId.value = null;
+    return;
+  }
+  
+  if (jobOrderSlots.value.length > 0) {
+    const matchedSlot = jobOrderSlots.value.find(s => {
+      const seqMatch = s.carton_sn.match(/\d{5}$/);
+      return seqMatch ? parseInt(seqMatch[0]) === num : false;
+    });
+    
+    if (!matchedSlot) {
+      hasBoxNumberError.value = true;
+      
+      // Construct expected full Carton SN for display
+      let yymm = '';
+      if (customYYMM.value && customYYMM.value.length === 4) {
+        yymm = customYYMM.value;
+      } else {
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(-2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        yymm = `${yy}${mm}`;
+      }
+      const prefix = currentProduct.value 
+        ? `${currentProduct.value.start_part || ''}${yymm}${currentProduct.value.middle_part || ''}`
+        : '';
+      const fullSn = `${prefix}${String(num).padStart(5, '0')}`;
+      
+      boxNumberErrorText.value = `Sê-ri thùng ${fullSn} không nằm trong công lệnh!`;
+      selectedSlotId.value = null;
+    } else if (matchedSlot.status === 'SCANNED') {
+      hasBoxNumberError.value = true;
+      boxNumberErrorText.value = `Thùng sê-ri ${matchedSlot.carton_sn} đã đóng gói rồi!`;
+      selectedSlotId.value = null;
+    } else {
+      hasBoxNumberError.value = false;
+      boxNumberErrorText.value = '';
+      selectedSlotId.value = matchedSlot.id;
+      
+      // Sync manual details
+      const sn = matchedSlot.carton_sn;
+      const seqMatch = sn.match(/\d{5}$/);
+      if (seqMatch) {
+        customSN.value = parseInt(seqMatch[0]).toString();
+      }
+      if (sn.length >= 6) {
+        customYYMM.value = sn.slice(2, 6);
+      }
+      isSNManual.value = true;
+    }
+  } else {
+    hasBoxNumberError.value = false;
+    boxNumberErrorText.value = '';
+    selectedSlotId.value = null;
+  }
+});
+
 
 let snCheckTimer: ReturnType<typeof setTimeout> | null = null;
 let statusTimer: ReturnType<typeof setInterval> | null = null;
@@ -401,13 +618,156 @@ const selectProduct = async (p: Product) => {
   nextTick(() => {
     if (showVerificationModal.value) {
       if (verificationInputRef.value) verificationInputRef.value.focus();
-    } else if (!jobOrder.value && sessionRef.value) {
-      sessionRef.value.focusJobOrder();
     } else {
       focusScan();
     }
   });
   await checkTemplateExists();
+};
+
+const submitJobOrder = async () => {
+  const jo = inputJobOrder.value.trim();
+  if (!jo) return;
+  isLoadingJobOrder.value = true;
+  try {
+    const res = await jobOrderApi.getJobOrderDetails(jo);
+    jobOrderDetails.value = res.data;
+    jobOrder.value = res.data.job_order;
+    jobOrderSlots.value = res.data.slots;
+    currentProduct.value = res.data.product;
+    currentStep.value = 2;
+    system.showNotification('Đã tải thông tin công lệnh thành công!', 'success');
+  } catch (err: any) {
+    console.error(err);
+    const detail = err.response?.data?.detail || err.message || 'Lỗi tải công lệnh';
+    system.showNotification(detail, 'error');
+  } finally {
+    isLoadingJobOrder.value = false;
+  }
+};
+
+const changeJobOrder = () => {
+  if (scannedItems.value.length > 0) {
+    if (!confirm('Bạn đang quét dở thùng này, đổi công lệnh sẽ mất các mã đã quét. Bạn có chắc chắn không?')) {
+      return;
+    }
+  }
+  currentStep.value = 1;
+  inputJobOrder.value = '';
+  jobOrder.value = '';
+  jobOrderDetails.value = null;
+  jobOrderSlots.value = [];
+  selectedSlotId.value = null;
+  boxNumberStr.value = '';
+  currentProduct.value = null;
+  scannedItems.value = [];
+  lastCarton.value = null;
+  customSN.value = '';
+  customYYMM.value = '';
+  isSNManual.value = false;
+  
+  nextTick(() => {
+    if (jobOrderInputRef.value) jobOrderInputRef.value.focus();
+  });
+};
+
+const enterScanning = () => {
+  currentStep.value = 3;
+  // Automatically select first pending slot
+  const firstPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
+  if (firstPending) {
+    selectSlot(firstPending);
+  } else if (jobOrderSlots.value.length > 0) {
+    selectSlot(jobOrderSlots.value[0]);
+  }
+  checkTemplateExists();
+  focusScan();
+};
+
+const selectSlot = (slot: JobOrderSlot) => {
+  hasBoxNumberError.value = false;
+  boxNumberErrorText.value = '';
+  if (slot.status === 'SCANNED') {
+    return;
+  }
+
+  if (scannedItems.value.length > 0 && selectedSlotId.value !== slot.id) {
+    if (!confirm('Bạn đang quét dở thùng này, nếu chuyển sang thùng khác sẽ mất dữ liệu đã quét. Bạn có chắc chắn muốn chuyển không?')) {
+      return;
+    }
+  }
+  
+  selectedSlotId.value = slot.id;
+  
+  const sn = slot.carton_sn;
+  const seqMatch = sn.match(/\d{5}$/);
+  if (seqMatch) {
+    const seqNum = parseInt(seqMatch[0]);
+    boxNumberStr.value = seqNum.toString();
+    customSN.value = seqNum.toString();
+  } else {
+    boxNumberStr.value = '';
+    customSN.value = '';
+  }
+  if (sn.length >= 6) {
+    customYYMM.value = sn.slice(2, 6);
+  }
+  
+  isSNManual.value = true;
+  scannedItems.value = [];
+  
+  focusScan();
+};
+
+const handleBoxNumberSubmit = () => {
+  const num = parseInt(boxNumberStr.value);
+  if (isNaN(num)) {
+    hasBoxNumberError.value = true;
+    boxNumberErrorText.value = 'Vui lòng nhập số sê-ri thùng hợp lệ!';
+    system.showNotification('Vui lòng nhập số sê-ri thùng hợp lệ!', 'error');
+    selectedSlotId.value = null;
+    return;
+  }
+  
+  const matchedSlot = jobOrderSlots.value.find(s => {
+    const seqMatch = s.carton_sn.match(/\d{5}$/);
+    return seqMatch ? parseInt(seqMatch[0]) === num : false;
+  });
+  
+  if (!matchedSlot) {
+    hasBoxNumberError.value = true;
+    
+    let yymm = '';
+    if (customYYMM.value && customYYMM.value.length === 4) {
+      yymm = customYYMM.value;
+    } else {
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      yymm = `${yy}${mm}`;
+    }
+    const prefix = currentProduct.value 
+      ? `${currentProduct.value.start_part || ''}${yymm}${currentProduct.value.middle_part || ''}`
+      : '';
+    const fullSn = `${prefix}${String(num).padStart(5, '0')}`;
+    
+    boxNumberErrorText.value = `Sê-ri thùng ${fullSn} không nằm trong công lệnh!`;
+    system.showNotification(`Sê-ri thùng ${fullSn} không nằm trong công lệnh!`, 'error');
+    selectedSlotId.value = null;
+    return;
+  }
+  
+  if (matchedSlot.status === 'SCANNED') {
+    hasBoxNumberError.value = true;
+    boxNumberErrorText.value = `Thùng sê-ri ${matchedSlot.carton_sn} đã đóng gói rồi!`;
+    system.showNotification(`Thùng sê-ri ${matchedSlot.carton_sn} đã hoàn thành rồi!`, 'warning');
+    selectedSlotId.value = null;
+    return;
+  }
+  
+  hasBoxNumberError.value = false;
+  boxNumberErrorText.value = '';
+  selectSlot(matchedSlot);
 };
 
 const playSuccessSound = () => {
@@ -439,23 +799,13 @@ const confirmVerification = async () => {
     }
     
     const cartonSn = cartonToVerify.value.carton_sn;
-    if (cartonSn) {
-      const lastSeqMatch = cartonSn.match(/\d{5}$/);
-      if (lastSeqMatch) {
-        const lastSeq = parseInt(lastSeqMatch[0]);
-        suggestedSNValue.value = lastSeq + 1;
-        if (!isSNManual.value) {
-          customSN.value = (lastSeq + 1).toString();
-        }
-      }
-    }
     
-    if (!isRescanMode.value) {
-      if (isSNManual.value && customSN.value && !isNaN(parseInt(customSN.value))) {
-        customSN.value = (parseInt(customSN.value) + 1).toString();
-      } else if (!isSNManual.value) {
-        customSN.value = '';
-      }
+    // Update local slot status
+    const matchedSlot = jobOrderSlots.value.find(s => s.carton_sn === cartonSn);
+    if (matchedSlot) {
+      matchedSlot.status = 'SCANNED';
+      matchedSlot.carton_id = cartonToVerify.value.id;
+      matchedSlot.scanned_at = new Date().toISOString();
     }
     
     awaitingNext.value = true;
@@ -464,12 +814,25 @@ const confirmVerification = async () => {
     verificationScanBuffer.value = '';
     
     system.showNotification(t('packing.verification_success', { sn: cartonSn }), 'success');
-    focusScan();
+    
+    // Automatically switch to next pending carton slot
+    const nextPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
+    if (nextPending) {
+      selectSlot(nextPending);
+    } else {
+      selectedSlotId.value = null;
+      boxNumberStr.value = '';
+      customSN.value = '';
+      customYYMM.value = '';
+      isSNManual.value = false;
+      system.showNotification('Đã quét xong toàn bộ số thùng của công lệnh!', 'success');
+    }
   } catch (err: any) {
     console.error(err);
     system.showNotification(t('packing.update_status_failed'), 'error');
   }
 };
+
 
 const handleVerificationScan = () => {
   const scannedVal = verificationScanBuffer.value.trim();
@@ -493,7 +856,9 @@ const handleVerificationScan = () => {
 };
 
 const refreshNextSN = async () => {
+  if (currentStep.value === 3) return;
   if (!currentProduct.value || isProcessing.value) return;
+
   try {
     const snRes = await packingApi.getNextSN(currentProduct.value.id, customYYMM.value);
     const data = snRes.data as any;
@@ -752,6 +1117,18 @@ const startNextCarton = () => {
 };
 
 const resetSession = () => { 
+  if (scannedItems.value.length > 0) {
+    if (!confirm('Bạn đang quét dở thùng này, nếu tiếp tục sẽ mất các mã đã quét. Bạn có chắc chắn không?')) {
+      return;
+    }
+  }
+  currentStep.value = 1;
+  inputJobOrder.value = '';
+  jobOrder.value = '';
+  jobOrderDetails.value = null;
+  jobOrderSlots.value = [];
+  selectedSlotId.value = null;
+  boxNumberStr.value = '';
   currentProduct.value = null; 
   scannedItems.value = []; 
   invalidScans.value = []; 
@@ -762,7 +1139,7 @@ const resetSession = () => {
   scanBuffer.value = ''; 
   showVerificationModal.value = false;
   cartonToVerify.value = null;
-  nextTick(() => { if (catalogRef.value) catalogRef.value.focusSearch(); }); 
+  nextTick(() => { if (jobOrderInputRef.value) jobOrderInputRef.value.focus(); }); 
 };
 
 const playScanAlert = () => {
@@ -823,8 +1200,14 @@ watch(showVerificationModal, (val) => {
   }
 });
 
-watch([jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
+watch([currentStep, inputJobOrder, jobOrderDetails, jobOrderSlots, boxNumberStr, selectedSlotId, jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
   sessionStorage.setItem('packingState', JSON.stringify({ 
+    currentStep: currentStep.value,
+    inputJobOrder: inputJobOrder.value,
+    jobOrderDetails: jobOrderDetails.value,
+    jobOrderSlots: jobOrderSlots.value,
+    boxNumberStr: boxNumberStr.value,
+    selectedSlotId: selectedSlotId.value,
     jobOrder: jobOrder.value, 
     cartonOrigin: cartonOrigin.value, 
     currentProduct: currentProduct.value, 
@@ -850,6 +1233,12 @@ onMounted(() => {
   if (saved) { 
     try { 
       const s = JSON.parse(saved); 
+      if (s.currentStep !== undefined) currentStep.value = s.currentStep;
+      if (s.inputJobOrder) inputJobOrder.value = s.inputJobOrder;
+      if (s.jobOrderDetails) jobOrderDetails.value = s.jobOrderDetails;
+      if (s.jobOrderSlots) jobOrderSlots.value = s.jobOrderSlots;
+      if (s.boxNumberStr) boxNumberStr.value = s.boxNumberStr;
+      if (s.selectedSlotId !== undefined) selectedSlotId.value = s.selectedSlotId;
       if (s.jobOrder) jobOrder.value = s.jobOrder; 
       if (s.cartonOrigin) cartonOrigin.value = s.cartonOrigin; 
       if (s.currentProduct) currentProduct.value = s.currentProduct; 
@@ -874,8 +1263,10 @@ onMounted(() => {
   nextTick(() => { 
     if (showVerificationModal.value) {
       if (verificationInputRef.value) verificationInputRef.value.focus();
-    } else if (!currentProduct.value && catalogRef.value) {
-      catalogRef.value.focusSearch(); 
+    } else if (currentStep.value === 1 && jobOrderInputRef.value) {
+      jobOrderInputRef.value.focus();
+    } else {
+      focusScan();
     }
   });
   statusTimer = setInterval(() => { checkSystem(); refreshNextSN(); }, 3000);
@@ -887,7 +1278,7 @@ onMounted(() => {
     
     if (showVerificationModal.value) {
       if (verificationInputRef.value) verificationInputRef.value.focus();
-    } else {
+    } else if (currentStep.value === 3) {
       focusScan(); 
     }
   });
@@ -897,4 +1288,5 @@ onUnmounted(() => {
   if (statusTimer) clearInterval(statusTimer); 
   if (agentCheckInterval) clearInterval(agentCheckInterval);
 });
+
 </script>

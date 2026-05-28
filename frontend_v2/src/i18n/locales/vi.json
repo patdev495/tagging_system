@@ -10,6 +10,8 @@
     "admin_dashboard": "Bảng điều khiển Admin"
   },
   "packing": {
+    "total_qty": "Tổng số lượng",
+    "total_boxes": "Số lượng thùng",
     "rescan_mode": "CHẾ ĐỘ QUÉT LẠI: Đang cập nhật Thùng {sn}",
     "cancel": "Hủy",
     "agent_offline": "AGENT NGOẠI TUYẾN: Vui lòng bật agent.py để bắt đầu quét hàng.",
