@@ -35,3 +35,7 @@ print_jobs/*.txt
 # OS
 .DS_Store
 Thumbs.db
+
+# Scratch directory
+backend_v2/scratch/
+
