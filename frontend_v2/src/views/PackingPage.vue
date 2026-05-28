@@ -201,7 +201,7 @@
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
               :overflowScans="overflowScans"
-              :allowPartial="currentProduct && currentProduct.allow_partial === 1"
+              :allowPartial="currentProduct?.allow_partial === 1"
               :scannedCount="scannedItems.length"
               @scan="handleScan"
               @next-carton="startNextCarton"
@@ -608,8 +608,6 @@ const snPreview = computed(() => {
   return `${prefix}${String(seq).padStart(5, '0')}`;
 });
 
-const catalogRef = ref<InstanceType<typeof CatalogSelection> | null>(null);
-const sessionRef = ref<InstanceType<typeof SessionHeader> | null>(null);
 const scanRef = ref<InstanceType<typeof ScanBuffer> | null>(null);
 
 const progressPercent = computed(() => {
@@ -626,45 +624,6 @@ const checkSystem = async () => {
   } catch (e) { system.isOnline = false; }
 };
 
-const selectProduct = async (p: Product) => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  currentProduct.value = p;
-  scannedItems.value = [];
-  lastCarton.value = null;
-  agentErrorMessage.value = '';
-  customSN.value = '';
-  isSNManual.value = false;
-  suggestedSNValue.value = 1;
-  isRescanMode.value = false;
-  rescanCartonSN.value = '';
-  await refreshNextSN();
-  try {
-    const res = await packingApi.getLastCarton(p.id);
-    if (res.data) {
-      lastCarton.value = res.data;
-      if (res.data.status === 'FAILED' && res.data.items) {
-        backupScannedItems.value = res.data.items.map((i: any) => i.item_sn);
-        if (!jobOrder.value) jobOrder.value = (res.data as any).job_order || '';
-      }
-      if (res.data.status === 'PRINTED') {
-        showVerificationModal.value = true;
-        cartonToVerify.value = res.data;
-        if (res.data.items) {
-          scannedItems.value = res.data.items.map((i: any) => i.item_sn);
-        }
-      }
-    }
-  } catch (err) { console.warn('Error fetching last carton:', err); }
-  nextTick(() => {
-    if (showVerificationModal.value) {
-      if (verificationInputRef.value) verificationInputRef.value.focus();
-    } else {
-      focusScan();
-    }
-  });
-  await checkTemplateExists();
-};
-
 const submitJobOrder = async () => {
   const jo = inputJobOrder.value.trim();
   if (!jo) return;
@@ -677,6 +636,29 @@ const submitJobOrder = async () => {
     currentProduct.value = res.data.product;
     currentStep.value = 2;
     system.showNotification('Đã tải thông tin công lệnh thành công!', 'success');
+    
+    // Fetch last carton details for verification / backup restoration
+    if (res.data.product) {
+      const p = res.data.product;
+      try {
+        const lastCartonRes = await packingApi.getLastCarton(p.id);
+        if (lastCartonRes.data) {
+          lastCarton.value = lastCartonRes.data;
+          if (lastCartonRes.data.status === 'FAILED' && lastCartonRes.data.items) {
+            backupScannedItems.value = lastCartonRes.data.items.map((i: any) => i.item_sn);
+          }
+          if (lastCartonRes.data.status === 'PRINTED') {
+            showVerificationModal.value = true;
+            cartonToVerify.value = lastCartonRes.data;
+            if (lastCartonRes.data.items) {
+              scannedItems.value = lastCartonRes.data.items.map((i: any) => i.item_sn);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching last carton:', err);
+      }
+    }
   } catch (err: any) {
     console.error(err);
     const detail = err.response?.data?.detail || err.message || 'Lỗi tải công lệnh';
