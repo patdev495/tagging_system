@@ -127,43 +127,26 @@
               @clear-box-error="hasBoxNumberError = false; boxNumberErrorText = '';"
             />
 
-            <!-- Danh Sách Thùng Hàng (Scrollable Box Grid) -->
-            <div class="mb-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-xs">
-              <div class="flex justify-between items-center mb-3">
-                <span class="text-[0.95rem] font-extrabold text-slate-800 flex items-center gap-1.5">
-                  <i class="fas fa-boxes text-blue-600"></i>
-                  Danh Sách Thùng Hàng ({{ jobOrderDetails?.total_boxes }} thùng)
-                </span>
-                <div class="flex items-center gap-4">
-                  <span class="text-[0.8rem] text-slate-400 font-mono">
-                    Đã quét: {{ scannedBoxesCount }} / {{ jobOrderDetails?.total_boxes }}
-                  </span>
-                  <button @click="changeJobOrder" class="text-[0.8rem] text-blue-600 hover:text-blue-800 border-none bg-transparent font-bold cursor-pointer">
-                    <i class="fas fa-exchange-alt"></i> Đổi công lệnh
-                  </button>
+            <!-- Thanh tóm tắt Công lệnh & Tiến độ thùng -->
+            <div class="mb-4 bg-linear-to-r from-slate-50 to-white p-3 px-4 rounded-2xl border border-slate-100 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-600">
+                  <i class="fas fa-boxes"></i>
                 </div>
-              </div>
-              
-              <!-- Grid Container with Fixed Height & Scroll -->
-              <div class="max-h-[200px] overflow-y-auto pr-1 select-none border border-slate-100/80 rounded-xl p-2 bg-slate-50/50">
-                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                  <div
-                    v-for="slot in jobOrderSlots"
-                    :key="slot.id"
-                    @click="selectSlot(slot)"
-                    class="relative py-2 px-1 text-center rounded-xl cursor-pointer font-bold border transition-all flex flex-col justify-center items-center min-h-[58px] shadow-xs active:scale-95"
-                    :class="[
-                      slot.status === 'SCANNED'
-                        ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed pointer-events-none opacity-60'
-                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50/30',
-                      selectedSlotId === slot.id ? 'ring-3 ring-blue-500 border-blue-500 bg-blue-500/5 font-extrabold scale-102' : ''
-                    ]"
-                  >
-                    <span class="font-mono text-[0.68rem] md:text-[0.72rem] block tracking-tight text-slate-400">{{ slot.carton_sn }}</span>
-                    <span class="text-[0.85rem] leading-none mt-1.5 font-extrabold">Thùng {{ slot.box_number }}/{{ jobOrderDetails?.total_boxes }}</span>
-                    <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-slate-400 text-[0.65rem] absolute top-1 right-1"></i>
+                <div>
+                  <div class="text-[0.85rem] font-bold text-slate-500 uppercase tracking-wider leading-none mb-1">Tiến Độ Đóng Thùng</div>
+                  <div class="text-[0.95rem] font-extrabold text-slate-800">
+                    Đã quét: <span class="text-blue-600 font-black">{{ scannedBoxesCount }}</span> / <span class="font-black">{{ jobOrderDetails?.total_boxes }}</span> thùng
                   </div>
                 </div>
+              </div>
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button @click="showCartonSlotsModal = true" class="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200/50 rounded-xl font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5 text-[0.85rem] active:scale-95">
+                  <i class="fas fa-list-check"></i> {{ t('packing.view_details', 'Xem chi tiết') }}
+                </button>
+                <button @click="changeJobOrder" class="flex-1 sm:flex-none px-4 py-2 bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5 text-[0.85rem] active:scale-95">
+                  <i class="fas fa-exchange-alt"></i> {{ t('packing.change_job_order', 'Đổi công lệnh') }}
+                </button>
               </div>
             </div>
 
@@ -234,6 +217,62 @@
           />
         </div>
       </section>
+    </div>
+
+    <!-- Modal Chi Tiết Vị Trí Thùng (Carton Slots Detail) -->
+    <div v-if="showCartonSlotsModal" class="fixed inset-0 bg-black/75 backdrop-blur-md flex justify-center items-center z-[2000] p-4">
+      <div class="w-full max-w-[800px] bg-white rounded-[24px] overflow-hidden shadow-2xl flex flex-col border border-slate-100 max-h-[90vh]">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
+          <div class="flex items-center gap-2.5 text-slate-800">
+            <i class="fas fa-boxes text-[1.2rem] text-blue-600"></i>
+            <h2 class="m-0 text-[1.2rem] font-black text-slate-900">{{ t('packing.carton_slots_title', 'Chi Tiết Vị Trí Thùng') }} ({{ jobOrderDetails?.total_boxes }} thùng)</h2>
+          </div>
+          <button @click="showCartonSlotsModal = false" class="w-8 h-8 rounded-full bg-slate-200/50 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 border-none cursor-pointer transition-colors">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto flex-1 bg-slate-50/30">
+          <!-- Summary card inside modal -->
+          <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-xl border border-slate-100">
+            <span class="text-[0.9rem] font-bold text-slate-600">
+              {{ t('packing.job_order') }}: <strong class="font-mono text-slate-900">{{ jobOrder }}</strong>
+            </span>
+            <span class="text-[0.9rem] font-bold text-slate-600">
+              {{ t('packing.scanned') }}: <strong class="text-blue-600">{{ scannedBoxesCount }}</strong> / <strong>{{ jobOrderDetails?.total_boxes }}</strong>
+            </span>
+          </div>
+
+          <!-- Slots Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div
+              v-for="slot in jobOrderSlots"
+              :key="slot.id"
+              @click="handleSlotClickInModal(slot)"
+              class="relative py-3.5 px-2 text-center rounded-xl cursor-pointer font-bold border transition-all flex flex-col justify-center items-center min-h-[68px] shadow-xs active:scale-95"
+              :class="[
+                slot.status === 'SCANNED'
+                  ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed pointer-events-none opacity-60'
+                  : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50/30',
+                selectedSlotId === slot.id ? 'ring-3 ring-blue-500 border-blue-500 bg-blue-500/5 font-extrabold scale-102' : ''
+              ]"
+            >
+              <span class="font-mono text-[0.7rem] md:text-[0.75rem] block tracking-tight text-slate-400">{{ slot.carton_sn }}</span>
+              <span class="text-[0.9rem] leading-none mt-2 font-extrabold">Thùng {{ slot.box_number }}/{{ jobOrderDetails?.total_boxes }}</span>
+              <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-slate-400 text-[0.8rem] absolute top-1.5 right-1.5"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+          <button @click="showCartonSlotsModal = false" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl transition-all shadow-lg shadow-blue-500/10 cursor-pointer text-[0.85rem]">
+            {{ t('settings.close', 'Đóng') }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <SettingsModal :show="showSettings" @close="showSettings = false" />
@@ -460,6 +499,7 @@ const rescanCartonSN = ref<string>('');
 const isSNManual = ref<boolean>(false);
 const snExists = ref<boolean>(false);
 
+const showCartonSlotsModal = ref<boolean>(false);
 const showVerificationModal = ref<boolean>(false);
 const cartonToVerify = ref<(Carton & { status?: string, items?: { item_sn: string }[] }) | null>(null);
 const verificationScanBuffer = ref<string>('');
@@ -665,6 +705,7 @@ const changeJobOrder = () => {
   customSN.value = '';
   customYYMM.value = '';
   isSNManual.value = false;
+  showCartonSlotsModal.value = false;
   
   nextTick(() => {
     if (jobOrderInputRef.value) jobOrderInputRef.value.focus();
@@ -717,6 +758,13 @@ const selectSlot = (slot: JobOrderSlot) => {
   scannedItems.value = [];
   
   focusScan();
+};
+
+const handleSlotClickInModal = (slot: JobOrderSlot) => {
+  selectSlot(slot);
+  if (selectedSlotId.value === slot.id) {
+    showCartonSlotsModal.value = false;
+  }
 };
 
 const handleBoxNumberSubmit = () => {
@@ -1139,6 +1187,7 @@ const resetSession = () => {
   scanBuffer.value = ''; 
   showVerificationModal.value = false;
   cartonToVerify.value = null;
+  showCartonSlotsModal.value = false;
   nextTick(() => { if (jobOrderInputRef.value) jobOrderInputRef.value.focus(); }); 
 };
 

@@ -71,7 +71,9 @@
     "bypass_confirm": "Are you sure you want to bypass verification for this carton?",
     "verification_success": "Carton {sn} verified successfully!",
     "update_status_failed": "Failed to update carton status.",
-    "back_home": "Back to Home"
+    "back_home": "Back to Home",
+    "view_details": "View Details",
+    "carton_slots_title": "Carton Slot Details"
   },
   "print": {
     "printing_carton": "Printing Carton",

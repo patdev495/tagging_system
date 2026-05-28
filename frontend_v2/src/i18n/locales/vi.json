@@ -71,7 +71,9 @@
     "bypass_confirm": "Bạn có chắc chắn muốn bỏ qua bước quét và xác nhận thủ công cho thùng này?",
     "verification_success": "Thùng {sn} đã được xác nhận thành công!",
     "update_status_failed": "Cập nhật trạng thái thùng thất bại.",
-    "back_home": "Quay về trang chủ"
+    "back_home": "Quay về trang chủ",
+    "view_details": "Xem chi tiết",
+    "carton_slots_title": "Chi Tiết Vị Trí Thùng"
   },
   "print": {
     "printing_carton": "Đang in Thùng",
