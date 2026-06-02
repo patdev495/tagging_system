@@ -4,7 +4,7 @@
       <AppHeader
         :isAudioActive="isAudioActive"
         @toggle-audio="toggleAudio"
-        @show-emergency="showEmergencyModal = true"
+        @show-emergency="openEmergencyModal"
         @show-settings="showSettings = true"
         @home="resetSession"
       />
@@ -166,7 +166,7 @@
                 <i class="fas fa-redo-alt fa-spin text-orange-500"></i>
                 <span><strong>{{ t('packing.rescan_mode', { sn: rescanCartonSN }) }}</strong></span>
               </div>
-              <button @click="isRescanMode = false; rescanCartonSN = '';" class="bg-orange-100 border-none px-3 py-1.5 rounded-lg text-orange-900 font-semibold cursor-pointer transition-colors hover:bg-orange-200 flex items-center gap-1.5 text-[0.85rem]">
+              <button @click="cancelRescan" class="bg-orange-100 border-none px-3 py-1.5 rounded-lg text-orange-900 font-semibold cursor-pointer transition-colors hover:bg-orange-200 flex items-center gap-1.5 text-[0.85rem]">
                 <i class="fas fa-times"></i> {{ t('packing.cancel') }}
               </button>
             </div>
@@ -206,8 +206,8 @@
             <ScanBuffer
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
-              :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing)) || !selectedSlotId"
-              :placeholder="!selectedSlotId ? 'Vui lòng chọn hoặc nhập số thùng cần quét trước...' : ((settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder')))"
+              :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing)) || (!selectedSlotId && !isRescanMode)"
+              :placeholder="(!selectedSlotId && !isRescanMode) ? 'Vui lòng chọn hoặc nhập số thùng cần quét trước...' : ((settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder')))"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"
@@ -289,7 +289,7 @@
     <SettingsModal :show="showSettings" @close="showSettings = false" />
     <EmergencyReprintModal 
       :show="showEmergencyModal" 
-      @close="showEmergencyModal = false" 
+      @close="closeEmergencyModal" 
       @reprint="handleEmergencyReprint" 
       @rescan="handleRescan"
     />
@@ -507,6 +507,13 @@ const overflowScans = ref<OverflowScan[]>([]);
 const isAudioActive = ref<boolean>(false);
 const showSettings = ref<boolean>(false);
 const showEmergencyModal = ref<boolean>(false);
+const hadJobOrder = ref<boolean>(false);
+const savedSessionState = ref<any>(null);
+
+const openEmergencyModal = () => {
+  hadJobOrder.value = !!jobOrder.value;
+  showEmergencyModal.value = true;
+};
 const isRescanMode = ref<boolean>(false);
 const rescanCartonSN = ref<string>('');
 const isSNManual = ref<boolean>(false);
@@ -886,6 +893,36 @@ const confirmVerification = async () => {
     
     system.showNotification(t('packing.verification_success', { sn: cartonSn }), 'success');
     
+    if (isRescanMode.value) {
+      isRescanMode.value = false;
+      rescanCartonSN.value = '';
+      if (agentCheckInterval) {
+        clearInterval(agentCheckInterval);
+        agentCheckInterval = null;
+      }
+      if (!hadJobOrder.value) {
+        resetSession();
+      } else {
+        if (savedSessionState.value) {
+          const s = savedSessionState.value;
+          currentStep.value = s.currentStep;
+          selectedSlotId.value = s.selectedSlotId;
+          cartonNumberStr.value = s.cartonNumberStr;
+          customSN.value = s.customSN;
+          customYYMM.value = s.customYYMM;
+          isSNManual.value = s.isSNManual;
+          scannedItems.value = s.scannedItems;
+          cartonOrigin.value = s.cartonOrigin;
+          jobOrder.value = s.jobOrder;
+          currentProduct.value = s.currentProduct;
+          savedSessionState.value = null;
+        }
+        awaitingNext.value = false;
+        focusScan();
+      }
+      return;
+    }
+    
     // Automatically switch to next pending carton slot
     const nextPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
     if (nextPending) {
@@ -1135,6 +1172,13 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string, skipSta
   }
 };
 
+const closeEmergencyModal = () => {
+  showEmergencyModal.value = false;
+  if (!hadJobOrder.value) {
+    resetSession();
+  }
+};
+
 const handleEmergencyReprint = async (carton: Carton) => {
   if (!carton.id) {
     system.showNotification('Invalid Carton ID', 'error');
@@ -1145,10 +1189,17 @@ const handleEmergencyReprint = async (carton: Carton) => {
     const newCarton = res.data;
     if (!newCarton?.id) throw new Error('Failed to create reprint record');
     
+    if (!currentProduct.value && carton.product) {
+      currentProduct.value = carton.product;
+    }
+
     const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn, true);
     if (printResult === 'Success') { 
       system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
-      showEmergencyModal.value = false; 
+      showEmergencyModal.value = false;
+      if (!hadJobOrder.value) {
+        resetSession();
+      }
     }
     else system.showNotification('Reprint failed: ' + printResult, 'error');
   } catch (err: any) { system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error'); }
@@ -1156,6 +1207,22 @@ const handleEmergencyReprint = async (carton: Carton) => {
 
 const handleRescan = (carton: Carton) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  if (hadJobOrder.value) {
+    savedSessionState.value = {
+      currentStep: currentStep.value,
+      selectedSlotId: selectedSlotId.value,
+      cartonNumberStr: cartonNumberStr.value,
+      customSN: customSN.value,
+      customYYMM: customYYMM.value,
+      isSNManual: isSNManual.value,
+      scannedItems: [...scannedItems.value],
+      cartonOrigin: cartonOrigin.value,
+      jobOrder: jobOrder.value,
+      currentProduct: currentProduct.value
+    };
+  }
+
   currentProduct.value = carton.product || null;
   scannedItems.value = [];
   invalidScans.value = [];
@@ -1166,15 +1233,45 @@ const handleRescan = (carton: Carton) => {
   customSN.value = '';
   snPattern.value = '';
   
-  jobOrder.value = carton.job_order || '';
+  jobOrder.value = carton.job_order || 'EMERGENCY_RESCAN';
   cartonOrigin.value = carton.carton_origin || 'VN';
   isRescanMode.value = true;
   rescanCartonSN.value = carton.carton_sn;
   showEmergencyModal.value = false;
+  currentStep.value = 3;
+  
   system.showNotification(`RESCAN MODE ACTIVE for ${carton.carton_sn}`, 'warning');
   checkAgentHealth();
   agentCheckInterval = setInterval(checkAgentHealth, 5000);
   focusScan();
+};
+
+const cancelRescan = () => {
+  isRescanMode.value = false;
+  rescanCartonSN.value = '';
+  if (agentCheckInterval) {
+    clearInterval(agentCheckInterval);
+    agentCheckInterval = null;
+  }
+  if (!hadJobOrder.value) {
+    resetSession();
+  } else {
+    if (savedSessionState.value) {
+      const s = savedSessionState.value;
+      currentStep.value = s.currentStep;
+      selectedSlotId.value = s.selectedSlotId;
+      cartonNumberStr.value = s.cartonNumberStr;
+      customSN.value = s.customSN;
+      customYYMM.value = s.customYYMM;
+      isSNManual.value = s.isSNManual;
+      scannedItems.value = s.scannedItems;
+      cartonOrigin.value = s.cartonOrigin;
+      jobOrder.value = s.jobOrder;
+      currentProduct.value = s.currentProduct;
+      savedSessionState.value = null;
+    }
+    focusScan();
+  }
 };
 
 const startNextCarton = () => { 
