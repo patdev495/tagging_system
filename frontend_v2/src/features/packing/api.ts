@@ -6,6 +6,7 @@ export default {
     product_id: number; 
     items: string[]; 
     job_order?: string; 
+    slot_id?: number;
     custom_sn?: number; 
     carton_origin?: string;
     custom_yymm?: string;

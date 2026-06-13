@@ -39,10 +39,24 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     product = db.query(models.Product).filter(models.Product.id == carton_in.product_id).with_for_update().first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    slot = None
+    if carton_in.job_order:
+        if carton_in.slot_id is None:
+            raise HTTPException(status_code=400, detail="A carton slot is required for a Job Order")
+        slot = db.query(models.JobOrderCartonSlot).filter(
+            models.JobOrderCartonSlot.id == carton_in.slot_id,
+            models.JobOrderCartonSlot.job_order == carton_in.job_order,
+            models.JobOrderCartonSlot.product_id == carton_in.product_id,
+        ).with_for_update().first()
+        if not slot:
+            raise HTTPException(status_code=400, detail="Carton slot does not belong to this Job Order and Product")
+        if slot.status != "PENDING" or slot.carton_id is not None:
+            raise HTTPException(status_code=409, detail="Carton slot has already been completed")
     
     if len(carton_in.items) != len(set(carton_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
-    
+
     # Validation: Check capacity and partial packing
     if len(carton_in.items) > product.packed_qty:
         raise HTTPException(
@@ -55,13 +69,13 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
             status_code=400, 
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(carton_in.items)}."
         )
+
+    new_sn = slot.carton_sn if slot else get_next_carton_sn(db, product, carton_in.custom_sn, carton_in.custom_yymm)
     
-    new_sn = get_next_carton_sn(db, product, carton_in.custom_sn, carton_in.custom_yymm)
-    
-    if carton_in.custom_sn is not None:
+    if carton_in.custom_sn is not None or slot is not None:
         existing = db.query(models.Carton).filter(models.Carton.carton_sn == new_sn).first()
         if existing:
-            raise HTTPException(status_code=400, detail=f"S/N (Seq: {carton_in.custom_sn}) is already in use (Status: {existing.status}).")
+            raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {existing.status}).")
 
     try:
         new_carton = models.Carton(
@@ -127,7 +141,7 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
             status_code=400, 
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(rescan_in.items)}."
         )
-        
+
     try:
         # Delete old items
         db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton.id).delete()
@@ -140,6 +154,14 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         carton.status = "FAILED"  # type: ignore
         carton.btxml = None  # type: ignore
         carton.station_id = getattr(rescan_in, 'station_id', carton.station_id)
+
+        slot = db.query(models.JobOrderCartonSlot).filter(
+            models.JobOrderCartonSlot.carton_id == carton.id
+        ).first()
+        if slot:
+            slot.status = "PENDING"
+            slot.scanned_at = None
+            slot.carton_id = None
         
         # Priority logic inside resolve_template_path: DB -> Client -> Default
         db_path = getattr(product, 'template_path', None)

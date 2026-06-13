@@ -755,14 +755,14 @@ const enterScanning = () => {
   focusScan();
 };
 
-const selectSlot = (slot: JobOrderSlot) => {
+const selectSlot = (slot: JobOrderSlot, confirmDiscard = true) => {
   hasCartonNumberError.value = false;
   cartonNumberErrorText.value = '';
   if (slot.status === 'SCANNED') {
     return;
   }
 
-  if (scannedItems.value.length > 0 && selectedSlotId.value !== slot.id) {
+  if (confirmDiscard && scannedItems.value.length > 0 && selectedSlotId.value !== slot.id) {
     if (!confirm(t('packing.switch_slot_confirm'))) {
       return;
     }
@@ -926,7 +926,7 @@ const confirmVerification = async () => {
     // Automatically switch to next pending carton slot
     const nextPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
     if (nextPending) {
-      selectSlot(nextPending);
+      selectSlot(nextPending, false);
     } else {
       selectedSlotId.value = null;
       cartonNumberStr.value = '';
@@ -1084,6 +1084,7 @@ const finalizeCarton = async (isRetry = false) => {
         product_id: currentProduct.value.id, 
         items: items,
         job_order: jobOrder.value || undefined,
+        slot_id: selectedSlotId.value || undefined,
         custom_sn: isSNManual.value ? parseInt(customSN.value) : undefined,
         carton_origin: cartonOrigin.value,
         custom_yymm: customYYMM.value || undefined

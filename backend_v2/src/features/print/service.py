@@ -29,6 +29,8 @@ def generate_btxml(carton: models.Carton, product: models.Product, items: List[s
 
 
 def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db: Session):
+    if status_update.status not in {"SUCCESS", "FAILED", "PRINTED"}:
+        raise HTTPException(status_code=400, detail="Invalid carton status")
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
@@ -44,6 +46,14 @@ def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db:
             slot.carton_id = carton.id
             import datetime
             slot.scanned_at = datetime.datetime.now()
+    elif status_update.status == "FAILED":
+        slot = db.query(models.JobOrderCartonSlot).filter(
+            models.JobOrderCartonSlot.carton_id == carton.id
+        ).first()
+        if slot:
+            slot.status = "PENDING"
+            slot.carton_id = None
+            slot.scanned_at = None
             
     db.commit()
     db.refresh(carton)

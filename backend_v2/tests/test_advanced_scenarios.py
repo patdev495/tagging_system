@@ -59,7 +59,7 @@ class TestPartialPacking:
         carton_in = schemas.CartonCreate(
             product_id=1,
             items=["SN1", "SN2", "SN3", "SN4", "SN5"], # Only 5 items
-            job_order="JO1"
+            job_order=None
         )
         
         with pytest.raises(HTTPException) as exc:
@@ -73,6 +73,7 @@ class TestPartialPacking:
         db = MagicMock()
         product = self._make_product(allow_partial=1, packed_qty=10)
         db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
+        db.query.return_value.filter.return_value.first.return_value = None
         
         # Mock get_next_carton_sn
         with patch("src.features.carton.service.get_next_carton_sn", return_value="VN26051100001"):
@@ -81,7 +82,7 @@ class TestPartialPacking:
                 carton_in = schemas.CartonCreate(
                     product_id=1,
                     items=["SN1", "SN2", "SN3", "SN4", "SN5"],
-                    job_order="JO1"
+                    job_order=None
                 )
                 
                 res_carton, res_xml = service.create_carton(carton_in, db)

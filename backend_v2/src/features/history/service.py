@@ -119,6 +119,14 @@ def delete_carton(db: Session, carton_id: int):
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     
+    slot = db.query(models.JobOrderCartonSlot).filter(
+        models.JobOrderCartonSlot.carton_id == carton_id
+    ).first()
+    if slot:
+        slot.status = "PENDING"
+        slot.scanned_at = None
+        slot.carton_id = None
+
     # Delete associated items first (if no cascade delete in models)
     db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton_id).delete()
     
@@ -309,4 +317,3 @@ def get_job_order_statistics(db: Session, job_order: str):
         "product_breakdown": list(product_stats.values()),
         "cartons": items
     }
-

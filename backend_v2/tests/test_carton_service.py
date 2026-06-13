@@ -125,7 +125,7 @@ class TestCreateCarton:
             items=["SN001", "SN002", "SN003"],
             template_path="dummy.btw",
             printer_name="Printer1",
-            job_order="JO-001",
+            job_order=None,
             carton_origin="VN",
         )
         defaults.update(kwargs)
@@ -161,10 +161,11 @@ class TestCreateCarton:
         product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=3)
         existing_carton = models.Carton(id=5, carton_sn="VN26051100042", status="SUCCESS")
         
-        # First query = product lookup
-        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
-        # Second query = existing carton check
-        db.query.return_value.filter.return_value.first.return_value = existing_carton
+        product_query = MagicMock()
+        product_query.filter.return_value.with_for_update.return_value.first.return_value = product
+        carton_query = MagicMock()
+        carton_query.filter.return_value.first.return_value = existing_carton
+        db.query.side_effect = [product_query, carton_query]
         
         carton_in = self._make_carton_input(custom_sn=42)
         
@@ -198,3 +199,40 @@ class TestCreateCarton:
             service.create_carton(carton_in, db)
         assert exc.value.status_code == 400
         assert "partial packing is not allowed" in exc.value.detail.lower()
+
+    def test_job_order_requires_a_carton_slot(self):
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=3)
+        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
+
+        with pytest.raises(HTTPException) as exc:
+            service.create_carton(self._make_carton_input(job_order="JO-001", slot_id=None), db)
+
+        assert exc.value.status_code == 400
+        assert "slot" in exc.value.detail.lower()
+
+    @patch("src.features.carton.service.generate_btxml", return_value="<xml />")
+    @patch("src.features.carton.service.utils.resolve_template_path", return_value="dummy.btw")
+    def test_job_order_uses_the_allocated_slot_sn(self, _resolve_path, _generate_xml):
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=3)
+        slot = models.JobOrderCartonSlot(
+            id=10,
+            job_order="JO-001",
+            product_id=1,
+            carton_number=1,
+            carton_sn="VN26051100042",
+            status="PENDING",
+        )
+        product_query = MagicMock()
+        product_query.filter.return_value.with_for_update.return_value.first.return_value = product
+        slot_query = MagicMock()
+        slot_query.filter.return_value.with_for_update.return_value.first.return_value = slot
+        carton_query = MagicMock()
+        carton_query.filter.return_value.first.return_value = None
+        db.query.side_effect = [product_query, slot_query, carton_query]
+
+        carton, _ = service.create_carton(self._make_carton_input(job_order="JO-001", slot_id=10), db)
+
+        assert carton.carton_sn == slot.carton_sn
+        assert carton.job_order == slot.job_order

@@ -8,6 +8,7 @@ class CartonCreate(BaseModel):
     printer_name: Optional[str] = None
     print_folder: Optional[str] = None
     job_order: Optional[str] = None
+    slot_id: Optional[int] = None
     custom_sn: Optional[int] = None
     carton_origin: str = "VN"
     station_id: Optional[str] = None
