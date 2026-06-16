@@ -3,8 +3,11 @@ Tests for History Service — carton search and lookup logic.
 """
 import pytest
 from unittest.mock import MagicMock, PropertyMock
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 # pyrefly: ignore [missing-import]
 from src.core import models
+from src.core.database import Base
 # pyrefly: ignore [missing-import]
 from src.features.history import service
 # pyrefly: ignore [missing-import]
@@ -68,16 +71,75 @@ class TestDeleteCarton:
     """Test carton deletion."""
 
     def test_deletes_carton_and_items(self):
-        """Should delete carton items first, then the carton itself."""
-        mock_carton = models.Carton(id=1, carton_sn="VN26051100001")
-        db = MagicMock()
-        db.query.return_value.filter.return_value.first.return_value = mock_carton
+        """Should delete all attempts and items belonging to the selected Carton."""
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = TestingSessionLocal()
 
-        result = service.delete_carton(db, 1)
+        try:
+            customer = models.Customer(code="CUST", name="Customer")
+            db.add(customer)
+            db.flush()
+            product = models.Product(
+                customer_id=customer.id,
+                item_name="Product",
+                packed_qty=1,
+                start_part="CN",
+                middle_part="52",
+                allow_partial=0,
+            )
+            db.add(product)
+            db.flush()
 
-        assert result["message"] == "Carton deleted successfully"
-        db.delete.assert_called_once_with(mock_carton)
-        db.commit.assert_called_once()
+            original = models.Carton(
+                product_id=product.id,
+                carton_sn="CN26065200001",
+                job_order="JO-DELETE",
+                status="SUCCESS",
+                is_reprint=0,
+            )
+            reprint = models.Carton(
+                product_id=product.id,
+                carton_sn="CN26065200001",
+                job_order="JO-DELETE",
+                status="PRINTED",
+                is_reprint=1,
+            )
+            failed = models.Carton(
+                product_id=product.id,
+                carton_sn="CN26065200001",
+                job_order="JO-DELETE",
+                status="FAILED",
+                is_reprint=1,
+            )
+            other_carton = models.Carton(
+                product_id=product.id,
+                carton_sn="CN26065299999",
+                job_order="JO-DELETE",
+                status="SUCCESS",
+                is_reprint=0,
+            )
+            db.add_all([original, reprint, failed, other_carton])
+            db.flush()
+            db.add_all([
+                models.CartonItem(carton_id=original.id, item_sn="ITEM-ORIGINAL"),
+                models.CartonItem(carton_id=reprint.id, item_sn="ITEM-REPRINT"),
+                models.CartonItem(carton_id=failed.id, item_sn="ITEM-FAILED"),
+                models.CartonItem(carton_id=other_carton.id, item_sn="ITEM-OTHER"),
+            ])
+            db.commit()
+
+            result = service.delete_carton(db, reprint.id)
+
+            assert result["message"] == "Carton deleted successfully"
+            assert result["deleted_count"] == 3
+            assert db.query(models.Carton).filter(models.Carton.carton_sn == "CN26065200001").count() == 0
+            assert db.query(models.CartonItem).filter(models.CartonItem.item_sn.like("ITEM-%")).count() == 1
+            assert db.query(models.Carton).filter(models.Carton.id == other_carton.id).first() is not None
+        finally:
+            db.close()
+            Base.metadata.drop_all(bind=engine)
 
     def test_raises_404_when_deleting_nonexistent(self):
         """Should raise 404 when trying to delete a carton that doesn't exist."""
@@ -87,6 +149,68 @@ class TestDeleteCarton:
         with pytest.raises(HTTPException) as exc:
             service.delete_carton(db, 999)
         assert exc.value.status_code == 404
+
+    def test_resets_job_order_slot_when_deleting_carton_group(self):
+        """Deleting a Carton group should release its Job Order Carton Slot."""
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = TestingSessionLocal()
+
+        try:
+            customer = models.Customer(code="CUST", name="Customer")
+            db.add(customer)
+            db.flush()
+            product = models.Product(
+                customer_id=customer.id,
+                item_name="Product",
+                packed_qty=1,
+                start_part="CN",
+                middle_part="52",
+                allow_partial=0,
+            )
+            db.add(product)
+            db.flush()
+
+            original = models.Carton(
+                product_id=product.id,
+                carton_sn="CN26065200001",
+                job_order="JO-DELETE",
+                status="SUCCESS",
+                is_reprint=0,
+            )
+            db.add(original)
+            db.flush()
+            latest_attempt = models.Carton(
+                product_id=product.id,
+                carton_sn=original.carton_sn,
+                job_order=original.job_order,
+                status="PRINTED",
+                is_reprint=1,
+            )
+            db.add(latest_attempt)
+            slot = models.JobOrderCartonSlot(
+                job_order=original.job_order,
+                product_id=product.id,
+                carton_number=1,
+                carton_sn=original.carton_sn,
+                status="SCANNED",
+                carton_id=original.id,
+            )
+            db.add(slot)
+            db.commit()
+
+            result = service.delete_carton(db, latest_attempt.id)
+
+            db.refresh(slot)
+            assert result["deleted_count"] == 2
+            assert slot.status == "PENDING"
+            assert slot.carton_id is None
+            assert slot.scanned_at is None
+            assert db.query(models.Carton).filter(models.Carton.carton_sn == original.carton_sn).count() == 0
+        finally:
+            db.close()
+            Base.metadata.drop_all(bind=engine)
 
 
 class TestGetCartons:
@@ -191,4 +315,3 @@ class TestGetJobOrderStatistics:
         assert len(result["product_breakdown"]) == 1
         assert result["product_breakdown"][0]["product_id"] == 1
         assert result["product_breakdown"][0]["total_cartons"] == 1
-

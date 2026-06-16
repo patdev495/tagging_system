@@ -1,38 +1,20 @@
-import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from fastapi import HTTPException
 from src.core import models, utils
 from src.features.carton import schemas
+from src.features.carton.sn_allocator import plan_next_carton_sn
 from src.features.print.service import generate_btxml
 
 def get_next_carton_sn(db: Session, product: models.Product, custom_sn: Optional[int] = None, custom_yymm: Optional[str] = None) -> str:
-    if custom_yymm:
-        yymm = custom_yymm
-    else:
-        now = datetime.datetime.now()
-        yymm = now.strftime("%y%m")
-    
-    prefix = f"{product.start_part}{yymm}{product.middle_part}"
-    
-    if custom_sn is not None:
-        return f"{prefix}{str(custom_sn).zfill(5)}"
-        
-    # Lock for update to prevent duplicate carton generation concurrently
-    max_sn = db.query(func.max(models.Carton.carton_sn)).filter(
-        models.Carton.carton_sn.like(f"{prefix}%"),
-        models.Carton.is_reprint == 0
-    ).with_for_update().scalar()
-    
-    if max_sn:
-        try:
-            next_seq = int(max_sn[-5:]) + 1
-        except:
-            next_seq = 1
-    else:
-        next_seq = 1
-    return f"{prefix}{str(next_seq).zfill(5)}"
+    return plan_next_carton_sn(
+        db,
+        product,
+        custom_sn=custom_sn,
+        custom_yymm=custom_yymm,
+        include_slots=True,
+        lock=True,
+    ).carton_sn
 
 def create_carton(carton_in: schemas.CartonCreate, db: Session):
     # Lock the product row to serialize carton creation for this product

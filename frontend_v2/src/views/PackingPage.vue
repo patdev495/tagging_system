@@ -395,6 +395,7 @@ import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
 import packingApi from '../features/packing/api';
 import printApi from '../features/print/api';
+import { resolveCartonTemplatePath } from '../features/print/utils/emergencyPrint';
 import catalogApi from '../features/catalog/api';
 import jobOrderApi from '../features/job_order/api';
 import type { Product, Carton, JobOrderSlot, JobOrderDetails } from '../types/api';
@@ -501,6 +502,7 @@ const snPattern = ref<string>('');
 const customYYMM = ref<string>('');
 const awaitingNext = ref<boolean>(false);
 const suggestedSNValue = ref<number>(1);
+const suggestedSNPreview = ref<string>('');
 const backupScannedItems = ref<string[]>([]);
 const isProcessing = ref<boolean>(false);
 const overflowScans = ref<OverflowScan[]>([]);
@@ -617,6 +619,7 @@ const initAudio = async () => {
 
 const snPreview = computed(() => {
   if (!currentProduct.value) return '';
+  if (!isSNManual.value && suggestedSNPreview.value) return suggestedSNPreview.value;
   
   let yymm = '';
   if (customYYMM.value && customYYMM.value.length === 4) {
@@ -733,6 +736,7 @@ const changeJobOrder = () => {
   scannedItems.value = [];
   lastCarton.value = null;
   customSN.value = '';
+  suggestedSNPreview.value = '';
   customYYMM.value = '';
   isSNManual.value = false;
   showCartonSlotsModal.value = false;
@@ -779,6 +783,7 @@ const selectSlot = (slot: JobOrderSlot, confirmDiscard = true) => {
   } else {
     cartonNumberStr.value = '';
     customSN.value = '';
+    suggestedSNPreview.value = '';
   }
   if (sn.length >= 6) {
     customYYMM.value = sn.slice(2, 6);
@@ -931,6 +936,7 @@ const confirmVerification = async () => {
       selectedSlotId.value = null;
       cartonNumberStr.value = '';
       customSN.value = '';
+      suggestedSNPreview.value = '';
       customYYMM.value = '';
       isSNManual.value = false;
       system.showNotification('Đã quét xong toàn bộ số thùng của công lệnh!', 'success');
@@ -974,6 +980,7 @@ const refreshNextSN = async () => {
     
     if (newSeq) {
       suggestedSNValue.value = newSeq;
+      suggestedSNPreview.value = data.next_sn || '';
       if (!isSNManual.value) {
         customSN.value = newSeq.toString();
       }
@@ -1126,10 +1133,16 @@ const finalizeCarton = async (isRetry = false) => {
   } finally { isProcessing.value = false; }
 };
 
-const handlePrintExecution = async (cartonId: number, _cartonSn: string, skipStatusUpdate = false): Promise<string> => {
+const handlePrintExecution = async (
+  cartonId: number,
+  _cartonSn: string,
+  skipStatusUpdate = false,
+  templatePathOverride = ''
+): Promise<string> => {
   try {
+    const templatePath = templatePathOverride || resolveCartonTemplatePath(null, currentProduct.value) || settings.templatePath || '';
     if (settings.printMode === 'local') {
-      const resXml = await printApi.download_carton_btxml(cartonId, currentProduct.value?.template_path || '');
+      const resXml = await printApi.download_carton_btxml(cartonId, templatePath);
       const xmlContent = resXml.data;
       
       const result = await printApi.agentPrint(
@@ -1151,7 +1164,7 @@ const handlePrintExecution = async (cartonId: number, _cartonSn: string, skipSta
       const res = await printApi.serverPrint(
         cartonId,
         settings.printerName || undefined,
-        settings.templatePath || undefined
+        templatePath || undefined
       );
       if (res.data?.success) {
         if ((res.data as any).type === 'pdf' && (res.data as any).data) {
@@ -1189,12 +1202,13 @@ const handleEmergencyReprint = async (carton: Carton) => {
     const res = await printApi.reprintCarton(carton.id, settings.templatePath || '', settings.printerName);
     const newCarton = res.data;
     if (!newCarton?.id) throw new Error('Failed to create reprint record');
-    
-    if (!currentProduct.value && carton.product) {
-      currentProduct.value = carton.product;
-    }
 
-    const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn, true);
+    const printResult = await handlePrintExecution(
+      newCarton.id,
+      newCarton.carton_sn,
+      true,
+      resolveCartonTemplatePath(carton)
+    );
     if (printResult === 'Success') { 
       system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
       showEmergencyModal.value = false;
@@ -1232,6 +1246,7 @@ const handleRescan = (carton: Carton) => {
   lastCarton.value = carton;
   agentErrorMessage.value = '';
   customSN.value = '';
+  suggestedSNPreview.value = '';
   snPattern.value = '';
   
   jobOrder.value = carton.job_order || 'EMERGENCY_RESCAN';
@@ -1280,6 +1295,8 @@ const startNextCarton = () => {
   invalidScans.value = []; 
   overflowScans.value = [];
   awaitingNext.value = false; 
+  customSN.value = '';
+  suggestedSNPreview.value = '';
   isRescanMode.value = false;
   rescanCartonSN.value = '';
   focusScan(); 
@@ -1370,7 +1387,7 @@ watch(showVerificationModal, (val) => {
   }
 });
 
-watch([currentStep, inputJobOrder, jobOrderDetails, jobOrderSlots, cartonNumberStr, selectedSlotId, jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
+watch([currentStep, inputJobOrder, jobOrderDetails, jobOrderSlots, cartonNumberStr, selectedSlotId, jobOrder, cartonOrigin, currentProduct, scannedItems, customSN, snPattern, awaitingNext, suggestedSNValue, suggestedSNPreview, backupScannedItems, lastCarton, invalidScans, isSNManual, overflowScans, isRescanMode, rescanCartonSN, showVerificationModal, cartonToVerify], () => {
   sessionStorage.setItem('packingState', JSON.stringify({ 
     currentStep: currentStep.value,
     inputJobOrder: inputJobOrder.value,
@@ -1386,6 +1403,7 @@ watch([currentStep, inputJobOrder, jobOrderDetails, jobOrderSlots, cartonNumberS
     snPattern: snPattern.value, 
     awaitingNext: awaitingNext.value, 
     suggestedSNValue: suggestedSNValue.value, 
+    suggestedSNPreview: suggestedSNPreview.value, 
     backupScannedItems: backupScannedItems.value, 
     lastCarton: lastCarton.value, 
     invalidScans: invalidScans.value, 
@@ -1417,6 +1435,7 @@ onMounted(() => {
       if (s.snPattern) snPattern.value = s.snPattern; 
       if (s.awaitingNext !== undefined) awaitingNext.value = s.awaitingNext; 
       if (s.suggestedSNValue !== undefined) suggestedSNValue.value = s.suggestedSNValue; 
+      if (s.suggestedSNPreview !== undefined) suggestedSNPreview.value = s.suggestedSNPreview; 
       if (s.backupScannedItems) backupScannedItems.value = s.backupScannedItems; 
       if (s.lastCarton) lastCarton.value = s.lastCarton; 
       if (s.invalidScans) invalidScans.value = s.invalidScans; 

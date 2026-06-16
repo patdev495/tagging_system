@@ -1,11 +1,11 @@
 import math
-import datetime
 import logging
 from typing import cast
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
 from fastapi import HTTPException
 from src.core import models
+from src.features.carton.sn_allocator import plan_job_order_slots
 from src.features.job_order import schemas
 
 logger = logging.getLogger("JobOrderService")
@@ -154,44 +154,14 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
         )
         
     # 5. Allocate new slots
-    now = datetime.datetime.now()
-    yymm = now.strftime("%y%m")
-    prefix = f"{product.start_part}{yymm}{product.middle_part}"
-    
-    # Get max seq from cartons
-    max_sn_carton = db.query(func.max(models.Carton.carton_sn)).filter(
-        models.Carton.carton_sn.like(f"{prefix}%"),
-        models.Carton.is_reprint == 0
-    ).scalar()
-    
-    # Get max seq from slots
-    max_sn_slot = db.query(func.max(models.JobOrderCartonSlot.carton_sn)).filter(
-        models.JobOrderCartonSlot.carton_sn.like(f"{prefix}%")
-    ).scalar()
-    
-    def parse_seq(sn):
-        if not sn:
-            return 0
-        try:
-            return int(sn[-5:])
-        except Exception:
-            return 0
-            
-    seq_carton = parse_seq(max_sn_carton)
-    seq_slot = parse_seq(max_sn_slot)
-    
-    start_seq = max(seq_carton, seq_slot) + 1
-    
+    sn_plans = plan_job_order_slots(db, product, total_cartons)
     slots = []
-    for i in range(1, total_cartons + 1):
-        seq = start_seq + i - 1
-        carton_sn = f"{prefix}{str(seq).zfill(5)}"
-        
+    for i, sn_plan in enumerate(sn_plans, start=1):
         slot = models.JobOrderCartonSlot(
             job_order=job_order,
             product_id=product.id,
             carton_number=i,
-            carton_sn=carton_sn,
+            carton_sn=sn_plan.carton_sn,
             status="PENDING"
         )
         db.add(slot)

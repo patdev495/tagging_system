@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from src.core import models
 from typing import Optional, cast as typing_cast
 import datetime
-from sqlalchemy import cast, Date, func, case
+from sqlalchemy import cast, Date, func, case, or_
 
 def get_cartons(
     db: Session, 
@@ -118,22 +118,41 @@ def delete_carton(db: Session, carton_id: int):
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
+
+    carton_group_filters = [
+        models.Carton.product_id == carton.product_id,
+        models.Carton.carton_sn == carton.carton_sn,
+    ]
+    if carton.job_order:
+        carton_group_filters.append(models.Carton.job_order == carton.job_order)
+    else:
+        carton_group_filters.append(models.Carton.job_order.is_(None))
+
+    carton_attempts = db.query(models.Carton).filter(*carton_group_filters).all()
+    carton_attempt_ids = [typing_cast(int, attempt.id) for attempt in carton_attempts]
     
-    slot = db.query(models.JobOrderCartonSlot).filter(
-        models.JobOrderCartonSlot.carton_id == carton_id
-    ).first()
-    if slot:
+    slots = db.query(models.JobOrderCartonSlot).filter(
+        or_(
+            models.JobOrderCartonSlot.carton_id.in_(carton_attempt_ids),
+            (
+                (models.JobOrderCartonSlot.job_order == carton.job_order)
+                & (models.JobOrderCartonSlot.carton_sn == carton.carton_sn)
+            ),
+        )
+    ).all()
+    for slot in slots:
         slot.status = "PENDING"
         slot.scanned_at = None
         slot.carton_id = None
 
-    # Delete associated items first (if no cascade delete in models)
-    db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton_id).delete()
+    if carton_attempt_ids:
+        db.query(models.CartonItem).filter(models.CartonItem.carton_id.in_(carton_attempt_ids)).delete(synchronize_session=False)
     
-    # Delete the carton
-    db.delete(carton)
+    for attempt in carton_attempts:
+        db.delete(attempt)
+
     db.commit()
-    return {"message": "Carton deleted successfully"}
+    return {"message": "Carton deleted successfully", "deleted_count": len(carton_attempts)}
 
 def get_packaging_statistics(db: Session, start_date: str, end_date: str):
     # Parse dates
