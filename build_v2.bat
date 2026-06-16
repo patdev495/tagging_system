@@ -59,8 +59,9 @@ cd ..
 :: 4. Finalize
 echo [4/4] Finalizing build...
 if not exist "release" mkdir release
+if exist "release\NY_Tagging_System" rmdir /S /Q "release\NY_Tagging_System"
 xcopy /E /I /Y "backend_v2\dist\NY_Tagging_System" "release\NY_Tagging_System"
-xcopy /E /I /Y "frontend_v2\dist" "release\frontend_v2\dist"
+xcopy /E /I /Y "frontend_v2\dist" "release\NY_Tagging_System\static"
 copy /Y "print_agent_v2\dist\NY_Print_Agent.exe" "release\NY_Print_Agent.exe"
 xcopy /E /I /Y "backend_v2\resources" "release\NY_Tagging_System\resources"
 copy "backend_v2\.env" "release\NY_Tagging_System\.env"

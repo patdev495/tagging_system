@@ -75,13 +75,20 @@ def create_app() -> FastAPI:
         }
 
     # --- Serve Frontend Production Build ---
-    # In Docker, we will copy frontend build to a 'static' folder inside backend_v2
-    frontend_dist = os.path.join(os.path.dirname(__file__), "static")
-    
-    # If not in Docker (local dev with production build), check the old path
-    if not os.path.exists(frontend_dist):
-        base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        frontend_dist = os.path.join(base_path, "frontend_v2", "dist")
+    # In a PyInstaller onedir build, __file__ points inside _internal. Resolve
+    # deploy-time files from the directory containing the executable instead.
+    if getattr(sys, "frozen", False):
+        frontend_dist = os.path.join(os.path.dirname(sys.executable), "static")
+    else:
+        frontend_dist = os.path.join(os.path.dirname(__file__), "static")
+        if not os.path.exists(frontend_dist):
+            frontend_dist = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                "frontend_v2",
+                "dist",
+            )
+
+    logging.getLogger("main").info(f"Frontend directory: {frontend_dist}")
 
     if os.path.exists(frontend_dist):
         from fastapi.staticfiles import StaticFiles
