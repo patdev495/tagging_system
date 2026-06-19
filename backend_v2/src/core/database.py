@@ -57,7 +57,7 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables initialized successfully (if not existed).")
         
-        # Auto-migration: rename box_number to carton_number if it exists
+        # Lightweight migrations for existing installations.
         from sqlalchemy import inspect, text
         inspector = inspect(engine)
         if inspector.has_table('job_order_carton_slots'):
@@ -69,6 +69,23 @@ def init_db():
                         conn.execute(text("ALTER TABLE job_order_carton_slots RENAME COLUMN box_number TO carton_number"))
                     else:
                         conn.execute(text("EXEC sp_rename 'job_order_carton_slots.box_number', 'carton_number', 'COLUMN'"))
+                    conn.commit()
+                logger.info("Database migration completed successfully.")
+
+            if 'shipped' not in columns:
+                logger.info("Migrating database: adding job_order_carton_slots.shipped")
+                with engine.connect() as conn:
+                    if "sqlite" in str(engine.url).lower():
+                        conn.execute(text(
+                            "ALTER TABLE job_order_carton_slots "
+                            "ADD COLUMN shipped INTEGER NOT NULL DEFAULT 0"
+                        ))
+                    else:
+                        conn.execute(text(
+                            "ALTER TABLE job_order_carton_slots "
+                            "ADD shipped INT NOT NULL "
+                            "CONSTRAINT DF_job_order_carton_slots_shipped DEFAULT 0 WITH VALUES"
+                        ))
                     conn.commit()
                 logger.info("Database migration completed successfully.")
     except Exception as e:

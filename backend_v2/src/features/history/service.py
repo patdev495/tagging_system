@@ -140,6 +140,13 @@ def delete_carton(db: Session, carton_id: int):
             ),
         )
     ).all()
+
+    if any(slot.shipped == 1 for slot in slots):
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete a carton that has already been shipped",
+        )
+
     for slot in slots:
         slot.status = "PENDING"
         slot.scanned_at = None

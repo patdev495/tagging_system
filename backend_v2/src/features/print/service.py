@@ -43,10 +43,19 @@ def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db:
         ).first()
         if slot:
             slot.status = "SCANNED"
-            slot.carton_id = carton.id
+            if carton.is_reprint == 1:
+                original_carton_id = db.query(models.Carton.id).filter(
+                    models.Carton.product_id == carton.product_id,
+                    models.Carton.carton_sn == carton.carton_sn,
+                    models.Carton.is_reprint == 0,
+                ).scalar()
+                if original_carton_id is not None:
+                    slot.carton_id = original_carton_id
+            else:
+                slot.carton_id = carton.id
             import datetime
             slot.scanned_at = datetime.datetime.now()
-    elif status_update.status == "FAILED":
+    elif status_update.status == "FAILED" and carton.is_reprint != 1:
         slot = db.query(models.JobOrderCartonSlot).filter(
             models.JobOrderCartonSlot.carton_id == carton.id
         ).first()

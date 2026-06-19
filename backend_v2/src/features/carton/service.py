@@ -52,6 +52,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(carton_in.items)}."
         )
 
+    if not carton_in.job_order:
+        raise HTTPException(status_code=400, detail="Job Order is required for carton creation")
+
     new_sn = slot.carton_sn if slot else get_next_carton_sn(db, product, carton_in.custom_sn, carton_in.custom_yymm)
     
     if carton_in.custom_sn is not None or slot is not None:

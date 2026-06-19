@@ -5,8 +5,8 @@ export default {
   createCarton(data: { 
     product_id: number; 
     items: string[]; 
-    job_order?: string; 
-    slot_id?: number;
+    job_order: string; 
+    slot_id: number;
     custom_sn?: number; 
     carton_origin?: string;
     custom_yymm?: string;

@@ -61,12 +61,18 @@ Mã vạch sản phẩm tiêu chuẩn (Universal Product Code) tương ứng v�
 _Avoid_: Mã vạch thùng, barcode sản phẩm
 
 
+**Shipped Job Order Carton Slot**:
+Một **Job Order Carton Slot** đã được hệ thống xuất hàng bên ngoài xác nhận là đã xuất. NY Tagging chỉ sử dụng trạng thái này để áp dụng các quy tắc nghiệp vụ, không quyết định việc xác nhận xuất hàng. Một Carton gắn với Job Order Carton Slot đã xuất hàng không được phép xóa.
+_Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
+
+
 ## Relationships
 
 - Một **Customer** có thể có nhiều **Products** khác nhau.
 - Một **Product** xác định số lượng đóng gói tối đa (`packed_qty`) và được đóng thành nhiều **Cartons**.
 - Một **Carton** chứa nhiều **Carton Items** với số lượng bằng đúng `packed_qty` của Product (hoặc ít hơn nếu sản phẩm đó cho phép đóng thiếu `allow_partial`). Số lượng items trong một **Carton** tuyệt đối không được vượt quá `packed_qty`.
-- Một **Carton** có thể thuộc về một **Job Order**.
+- Một **Carton** được đóng mới trong hệ thống thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước.
+- Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 
 ## Example dialogue
 

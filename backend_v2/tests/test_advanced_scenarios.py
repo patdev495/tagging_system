@@ -72,27 +72,39 @@ class TestPartialPacking:
         """Sản phẩm B cho phép in dở, gửi 5 cái -> Thành công"""
         db = MagicMock()
         product = self._make_product(allow_partial=1, packed_qty=10)
-        db.query.return_value.filter.return_value.with_for_update.return_value.first.return_value = product
-        db.query.return_value.filter.return_value.first.return_value = None
+        slot = models.JobOrderCartonSlot(
+            id=10,
+            job_order="JO-PARTIAL",
+            product_id=1,
+            carton_number=1,
+            carton_sn="VN26051100001",
+            status="PENDING",
+        )
+        product_query = MagicMock()
+        product_query.filter.return_value.with_for_update.return_value.first.return_value = product
+        slot_query = MagicMock()
+        slot_query.filter.return_value.with_for_update.return_value.first.return_value = slot
+        carton_query = MagicMock()
+        carton_query.filter.return_value.first.return_value = None
+        db.query.side_effect = [product_query, slot_query, carton_query]
         
-        # Mock get_next_carton_sn
-        with patch("src.features.carton.service.get_next_carton_sn", return_value="VN26051100001"):
-            # Mock generate_btxml
-            with patch("src.features.carton.service.generate_btxml", return_value="<XML>5PCS</XML>") as mock_gen:
-                carton_in = schemas.CartonCreate(
-                    product_id=1,
-                    items=["SN1", "SN2", "SN3", "SN4", "SN5"],
-                    job_order=None
-                )
-                
-                res_carton, res_xml = service.create_carton(carton_in, db)
-                
-                assert res_carton.carton_sn == "VN26051100001"
-                # Ensure the generated XML reflects actual count (this is handled by generate_btxml)
-                mock_gen.assert_called_once()
-                # Check that items list passed to generate_btxml has length 5
-                args, _ = mock_gen.call_args
-                assert len(args[2]) == 5 
+        # Mock generate_btxml
+        with patch("src.features.carton.service.generate_btxml", return_value="<XML>5PCS</XML>") as mock_gen:
+            carton_in = schemas.CartonCreate(
+                product_id=1,
+                items=["SN1", "SN2", "SN3", "SN4", "SN5"],
+                job_order="JO-PARTIAL",
+                slot_id=10,
+            )
+            
+            res_carton, res_xml = service.create_carton(carton_in, db)
+            
+            assert res_carton.carton_sn == "VN26051100001"
+            # Ensure the generated XML reflects actual count (this is handled by generate_btxml)
+            mock_gen.assert_called_once()
+            # Check that items list passed to generate_btxml has length 5
+            args, _ = mock_gen.call_args
+            assert len(args[2]) == 5 
 
     def test_xml_content_for_partial(self):
         """Kiểm tra XML hiển thị đúng số lượng thực tế khi in dở"""

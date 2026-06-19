@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UnicodeText
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UnicodeText, text
 from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
@@ -67,6 +67,7 @@ class JobOrderCartonSlot(Base):
     status = Column(String(20), default="PENDING", index=True)  # PENDING or SCANNED
     scanned_at = Column(DateTime, nullable=True)
     carton_id = Column(Integer, ForeignKey("cartons.id"), index=True, nullable=True)
+    shipped = Column(Integer, nullable=False, default=0, server_default=text("0"))
     
     product = relationship("Product")
     carton = relationship("Carton")

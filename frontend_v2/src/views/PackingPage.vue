@@ -1084,14 +1084,19 @@ const finalizeCarton = async (isRetry = false) => {
       }
       const items = [...scannedItems.value];
       if (items.length === 0) { system.showNotification(t('packing.no_items'), 'error'); isProcessing.value = false; return; }
+      if (!jobOrder.value || !selectedSlotId.value) {
+        system.showNotification(t('packing.enter_job_order'), 'error');
+        isProcessing.value = false;
+        return;
+      }
       
       lastCarton.value = { status: 'PRINTING', carton_sn: snPreview.value } as any;
 
       const res = await packingApi.createCarton({ 
         product_id: currentProduct.value.id, 
         items: items,
-        job_order: jobOrder.value || undefined,
-        slot_id: selectedSlotId.value || undefined,
+        job_order: jobOrder.value,
+        slot_id: selectedSlotId.value,
         custom_sn: isSNManual.value ? parseInt(customSN.value) : undefined,
         carton_origin: cartonOrigin.value,
         custom_yymm: customYYMM.value || undefined

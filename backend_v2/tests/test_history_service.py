@@ -212,6 +212,98 @@ class TestDeleteCarton:
             db.close()
             Base.metadata.drop_all(bind=engine)
 
+    def test_rejects_deleting_a_shipped_carton_group(self):
+        """A shipped Job Order Carton Slot must protect its Carton from deletion."""
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = TestingSessionLocal()
+
+        try:
+            customer = models.Customer(code="CUST", name="Customer")
+            db.add(customer)
+            db.flush()
+            product = models.Product(
+                customer_id=customer.id,
+                item_name="Product",
+                packed_qty=1,
+                start_part="CN",
+                middle_part="52",
+                allow_partial=0,
+            )
+            db.add(product)
+            db.flush()
+
+            carton = models.Carton(
+                product_id=product.id,
+                carton_sn="CN26065200002",
+                job_order="JO-SHIPPED",
+                status="SUCCESS",
+                is_reprint=0,
+            )
+            db.add(carton)
+            db.flush()
+            slot = models.JobOrderCartonSlot(
+                job_order=carton.job_order,
+                product_id=product.id,
+                carton_number=1,
+                carton_sn=carton.carton_sn,
+                status="SCANNED",
+                carton_id=carton.id,
+                shipped=1,
+            )
+            db.add(slot)
+            db.commit()
+
+            with pytest.raises(HTTPException) as exc:
+                service.delete_carton(db, carton.id)
+
+            assert exc.value.status_code == 409
+            assert db.query(models.Carton).filter(models.Carton.id == carton.id).first() is not None
+            db.refresh(slot)
+            assert slot.status == "SCANNED"
+            assert slot.carton_id == carton.id
+        finally:
+            db.close()
+            Base.metadata.drop_all(bind=engine)
+
+    def test_new_slot_defaults_to_not_shipped(self):
+        """New slots should be persisted with shipped=0 without caller changes."""
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = TestingSessionLocal()
+
+        try:
+            customer = models.Customer(code="CUST", name="Customer")
+            db.add(customer)
+            db.flush()
+            product = models.Product(
+                customer_id=customer.id,
+                item_name="Product",
+                packed_qty=1,
+                start_part="CN",
+                middle_part="52",
+                allow_partial=0,
+            )
+            db.add(product)
+            db.flush()
+            slot = models.JobOrderCartonSlot(
+                job_order="JO-DEFAULT",
+                product_id=product.id,
+                carton_number=1,
+                carton_sn="CN26065200003",
+                status="PENDING",
+            )
+            db.add(slot)
+            db.commit()
+            db.refresh(slot)
+
+            assert slot.shipped == 0
+        finally:
+            db.close()
+            Base.metadata.drop_all(bind=engine)
+
 
 class TestGetCartons:
     """Test carton listing with filters."""

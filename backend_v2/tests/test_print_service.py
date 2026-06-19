@@ -1,7 +1,23 @@
 import pytest
 from unittest.mock import MagicMock, patch
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from src.features.print import service
+from src.features.print import schemas
 from src.core import models
+from src.core.database import Base
+
+
+@pytest.fixture
+def db_session():
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    session = sessionmaker(autocommit=False, autoflush=False, bind=engine)()
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)
 
 def test_generate_btxml_standard():
     # Mock data
@@ -164,3 +180,89 @@ def test_reprint_carton_btxml_none_in_db_but_retained_in_memory():
     # We can check that the mock database add or commit logic was executed.
     assert db.commit.called
     assert db.refresh.called
+
+
+def test_reprint_success_keeps_slot_linked_to_original_carton(db_session):
+    product = models.Product(
+        id=1,
+        item_name="Test Product",
+        packed_qty=1,
+        start_part="CN",
+        middle_part="48",
+    )
+    original = models.Carton(
+        id=1745,
+        product_id=1,
+        carton_sn="CN26064800001",
+        job_order="1243195",
+        status="SUCCESS",
+        is_reprint=0,
+    )
+    reprint = models.Carton(
+        id=1748,
+        product_id=1,
+        carton_sn="CN26064800001",
+        job_order="1243195",
+        status="PRINTED",
+        is_reprint=1,
+    )
+    slot = models.JobOrderCartonSlot(
+        id=1129,
+        job_order="1243195",
+        product_id=1,
+        carton_number=1,
+        carton_sn="CN26064800001",
+        status="SCANNED",
+        carton_id=1745,
+    )
+    db_session.add_all([product, original, reprint, slot])
+    db_session.commit()
+
+    service.update_status(1748, schemas.CartonStatusUpdate(status="SUCCESS"), db_session)
+
+    db_session.refresh(slot)
+    assert slot.status == "SCANNED"
+    assert slot.carton_id == 1745
+
+
+def test_reprint_failure_does_not_reopen_original_slot(db_session):
+    product = models.Product(
+        id=1,
+        item_name="Test Product",
+        packed_qty=1,
+        start_part="CN",
+        middle_part="48",
+    )
+    original = models.Carton(
+        id=1745,
+        product_id=1,
+        carton_sn="CN26064800001",
+        job_order="1243195",
+        status="SUCCESS",
+        is_reprint=0,
+    )
+    reprint = models.Carton(
+        id=1748,
+        product_id=1,
+        carton_sn="CN26064800001",
+        job_order="1243195",
+        status="PRINTED",
+        is_reprint=1,
+    )
+    slot = models.JobOrderCartonSlot(
+        id=1129,
+        job_order="1243195",
+        product_id=1,
+        carton_number=1,
+        carton_sn="CN26064800001",
+        status="SCANNED",
+        carton_id=1745,
+    )
+    db_session.add_all([product, original, reprint, slot])
+    db_session.commit()
+
+    service.update_status(1748, schemas.CartonStatusUpdate(status="FAILED"), db_session)
+
+    db_session.refresh(slot)
+    assert slot.status == "SCANNED"
+    assert slot.carton_id == 1745
