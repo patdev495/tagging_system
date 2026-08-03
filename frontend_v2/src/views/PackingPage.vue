@@ -746,8 +746,27 @@ const changeJobOrder = () => {
   });
 };
 
-const enterScanning = () => {
+const refreshJobOrderDetails = async () => {
+  if (!jobOrder.value) return;
+  try {
+    const res = await jobOrderApi.getJobOrderDetails(jobOrder.value);
+    if (res.data) {
+      jobOrderDetails.value = res.data;
+      if (res.data.product) {
+        currentProduct.value = res.data.product;
+      }
+      if (res.data.slots) {
+        jobOrderSlots.value = res.data.slots;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to refresh job order details:', err);
+  }
+};
+
+const enterScanning = async () => {
   currentStep.value = 3;
+  await refreshJobOrderDetails();
   // Automatically select first pending slot
   const firstPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
   if (firstPending) {
@@ -1476,11 +1495,16 @@ onMounted(() => {
       focusScan(); 
     }
   });
+  if (jobOrder.value) {
+    refreshJobOrderDetails();
+  }
+  window.addEventListener('focus', refreshJobOrderDetails);
 });
 
 onUnmounted(() => { 
   if (statusTimer) clearInterval(statusTimer); 
   if (agentCheckInterval) clearInterval(agentCheckInterval);
+  window.removeEventListener('focus', refreshJobOrderDetails);
 });
 
 </script>

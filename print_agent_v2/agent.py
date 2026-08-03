@@ -5,6 +5,7 @@ import subprocess
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel
 import xml.etree.ElementTree as ET
 
@@ -79,7 +80,9 @@ async def process_print(req: PrintRequest):
         content = req.xml_content
         
         # In qua Unified COM module với hỗ trợ phân giải đường dẫn tem tự động
-        result = bt_com_app.print_xml(
+        # BarTender COM work is blocking; keep the event loop free for /status health checks.
+        result = await run_in_threadpool(
+            bt_com_app.print_xml,
             xml_content=content, 
             printer_name_override=req.printer_name,
             local_template_dir=req.local_template_dir

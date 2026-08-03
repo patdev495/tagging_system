@@ -8,6 +8,7 @@ from src.core import models, utils
 from src.features.print import schemas
 
 from src.features.print.domain import BTXMLDocument
+from src.features.carton import print_attempts, slot_lifecycle
 
 logger = logging.getLogger("PrintService")
 
@@ -36,33 +37,10 @@ def update_status(carton_id: int, status_update: schemas.CartonStatusUpdate, db:
         raise HTTPException(status_code=404, detail="Carton not found")
     carton.status = status_update.status  # type: ignore
     
-    if status_update.status == "SUCCESS" and carton.job_order:
-        slot = db.query(models.JobOrderCartonSlot).filter(
-            models.JobOrderCartonSlot.job_order == carton.job_order,
-            models.JobOrderCartonSlot.carton_sn == carton.carton_sn
-        ).first()
-        if slot:
-            slot.status = "SCANNED"
-            if carton.is_reprint == 1:
-                original_carton_id = db.query(models.Carton.id).filter(
-                    models.Carton.product_id == carton.product_id,
-                    models.Carton.carton_sn == carton.carton_sn,
-                    models.Carton.is_reprint == 0,
-                ).scalar()
-                if original_carton_id is not None:
-                    slot.carton_id = original_carton_id
-            else:
-                slot.carton_id = carton.id
-            import datetime
-            slot.scanned_at = datetime.datetime.now()
-    elif status_update.status == "FAILED" and carton.is_reprint != 1:
-        slot = db.query(models.JobOrderCartonSlot).filter(
-            models.JobOrderCartonSlot.carton_id == carton.id
-        ).first()
-        if slot:
-            slot.status = "PENDING"
-            slot.carton_id = None
-            slot.scanned_at = None
+    if status_update.status == "SUCCESS":
+        slot_lifecycle.complete_slot_for_success(db, carton)
+    elif status_update.status == "FAILED":
+        slot_lifecycle.release_slot_for_failed_original(db, carton)
             
     db.commit()
     db.refresh(carton)
@@ -77,14 +55,7 @@ def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, d
     btxml_content = carton.btxml
     if not btxml_content and db:
         product = db.query(models.Product).filter(models.Product.id == carton.product_id).first()
-        if carton.is_reprint == 1:
-            original = db.query(models.Carton).filter(
-                models.Carton.carton_sn == carton.carton_sn,
-                models.Carton.is_reprint == 0
-            ).first()
-            item_sns = [item.item_sn for item in original.items] if original else []
-        else:
-            item_sns = [item.item_sn for item in carton.items]
+        item_sns = print_attempts.item_sns_for_attempt(db, carton)
             
         # Priority logic inside resolve_template_path: DB -> Client -> Default
         db_path = getattr(product, 'template_path', None)
@@ -117,7 +88,7 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
     db.flush()
     
     product = db.query(models.Product).filter(models.Product.id == original.product_id).first()
-    item_sns = [item.item_sn for item in original.items]
+    item_sns = print_attempts.item_sns_for_attempt(db, original)
     # Priority logic inside resolve_template_path: DB -> Client -> Default
     db_path = getattr(product, 'template_path', None)
     path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=template_path)

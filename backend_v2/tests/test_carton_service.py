@@ -183,6 +183,36 @@ class TestCreateCarton:
             service.create_carton(carton_in, db)
         assert exc.value.status_code == 400
         assert "already in use" in exc.value.detail
+
+    def test_allows_reusing_failed_carton_attempt(self):
+        """Should reuse and update existing FAILED carton attempt when creating carton for the same slot."""
+        db = MagicMock()
+        product = models.Product(id=1, start_part="VN", middle_part="11", packed_qty=3)
+        slot = models.JobOrderCartonSlot(
+            id=10,
+            job_order="JO-001",
+            product_id=1,
+            carton_number=1,
+            carton_sn="VN26051100042",
+            status="PENDING",
+        )
+        existing_carton = models.Carton(id=5, carton_sn="VN26051100042", job_order="JO-001", product_id=1, status="FAILED")
+        
+        product_query = MagicMock()
+        product_query.filter.return_value.with_for_update.return_value.first.return_value = product
+        slot_query = MagicMock()
+        slot_query.filter.return_value.with_for_update.return_value.first.return_value = slot
+        carton_query = MagicMock()
+        carton_query.filter.return_value.first.return_value = existing_carton
+        item_delete_query = MagicMock()
+        
+        db.query.side_effect = [product_query, slot_query, carton_query, item_delete_query]
+        
+        carton_in = self._make_carton_input(job_order="JO-001", slot_id=10, items=["SN1", "SN2", "SN3"])
+        
+        res_carton, btxml = service.create_carton(carton_in, db)
+        assert res_carton.id == 5
+        assert res_carton.carton_sn == "VN26051100042"
         
     def test_rejects_exceeded_capacity(self):
         """Should reject if scanned items exceed product packed_qty."""

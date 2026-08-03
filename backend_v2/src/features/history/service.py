@@ -3,7 +3,8 @@ from fastapi import HTTPException
 from src.core import models
 from typing import Optional, cast as typing_cast
 import datetime
-from sqlalchemy import cast, Date, func, case, or_
+from sqlalchemy import cast, Date, func, case
+from src.features.carton import print_attempts, slot_lifecycle
 
 def get_cartons(
     db: Session, 
@@ -44,11 +45,7 @@ def get_cartons(
     items = []
     for carton, print_count in results:
         carton.reprint_count = max((print_count or 1) - 1, 0)
-        orig_id = db.query(models.Carton.id).filter(
-            models.Carton.carton_sn == carton.carton_sn,
-            models.Carton.is_reprint == 0
-        ).scalar()
-        carton.items_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == (orig_id or carton.id)).count()
+        carton.items_count = print_attempts.item_count_for_group(db, carton)
         items.append(carton)
         
     return {"total": total, "items": items}
@@ -62,32 +59,15 @@ def get_carton_detail(db: Session, carton_id: int):
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
         
-    # If this is a reprint, resolve items from the original carton
+    original_carton = print_attempts.get_original_carton(db, carton)
+    items = original_carton.items if original_carton else []
     if typing_cast(int, carton.is_reprint) == 1:
-        original_carton = db.query(models.Carton).options(
-            joinedload(models.Carton.items)
-        ).filter(
-            models.Carton.carton_sn == carton.carton_sn,
-            models.Carton.is_reprint == 0
-        ).first()
-        items = original_carton.items if original_carton else []
         carton.items = items
-    else:
-        items = carton.items
 
     carton.items_count = len(typing_cast(list, items))
     
-    # Query all other print attempts for this carton_sn as history
-    print_history = db.query(models.Carton).filter(
-        models.Carton.carton_sn == carton.carton_sn,
-        models.Carton.id != carton.id
-    ).order_by(models.Carton.id.asc()).all()
-    
-    orig_carton_id = db.query(models.Carton.id).filter(
-        models.Carton.carton_sn == carton.carton_sn,
-        models.Carton.is_reprint == 0
-    ).scalar()
-    orig_item_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == orig_carton_id).count() if orig_carton_id else 0
+    print_history = print_attempts.print_history_for_carton(db, carton)
+    orig_item_count = print_attempts.item_count_for_group(db, carton)
     
     for h in print_history:
         h.items_count = orig_item_count
@@ -119,38 +99,12 @@ def delete_carton(db: Session, carton_id: int):
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
 
-    carton_group_filters = [
-        models.Carton.product_id == carton.product_id,
-        models.Carton.carton_sn == carton.carton_sn,
-    ]
-    if carton.job_order:
-        carton_group_filters.append(models.Carton.job_order == carton.job_order)
-    else:
-        carton_group_filters.append(models.Carton.job_order.is_(None))
-
-    carton_attempts = db.query(models.Carton).filter(*carton_group_filters).all()
+    carton_attempts = print_attempts.get_carton_attempts(db, carton)
     carton_attempt_ids = [typing_cast(int, attempt.id) for attempt in carton_attempts]
     
-    slots = db.query(models.JobOrderCartonSlot).filter(
-        or_(
-            models.JobOrderCartonSlot.carton_id.in_(carton_attempt_ids),
-            (
-                (models.JobOrderCartonSlot.job_order == carton.job_order)
-                & (models.JobOrderCartonSlot.carton_sn == carton.carton_sn)
-            ),
-        )
-    ).all()
-
-    if any(slot.shipped == 1 for slot in slots):
-        raise HTTPException(
-            status_code=409,
-            detail="Cannot delete a carton that has already been shipped",
-        )
-
-    for slot in slots:
-        slot.status = "PENDING"
-        slot.scanned_at = None
-        slot.carton_id = None
+    slots = slot_lifecycle.slots_for_carton_attempt_group(db, carton, carton_attempt_ids)
+    slot_lifecycle.ensure_slots_not_shipped(slots)
+    slot_lifecycle.release_slots(slots)
 
     if carton_attempt_ids:
         db.query(models.CartonItem).filter(models.CartonItem.carton_id.in_(carton_attempt_ids)).delete(synchronize_session=False)
@@ -296,11 +250,7 @@ def get_job_order_statistics(db: Session, job_order: str):
 
     for carton, print_count in results:
         # Populate carton properties
-        orig_id = db.query(models.Carton.id).filter(
-            models.Carton.carton_sn == carton.carton_sn,
-            models.Carton.is_reprint == 0
-        ).scalar()
-        item_count = db.query(models.CartonItem).filter(models.CartonItem.carton_id == (orig_id or carton.id)).count()
+        item_count = print_attempts.item_count_for_group(db, carton)
         carton.items_count = item_count
         carton.reprint_count = max((print_count or 1) - 1, 0)
         items.append(carton)

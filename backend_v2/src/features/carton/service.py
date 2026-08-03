@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from src.core import models, utils
 from src.features.carton import schemas
 from src.features.carton.sn_allocator import plan_next_carton_sn
+from src.features.carton import slot_lifecycle
 from src.features.print.service import generate_btxml
 
 def get_next_carton_sn(db: Session, product: models.Product, custom_sn: Optional[int] = None, custom_yymm: Optional[str] = None) -> str:
@@ -22,20 +23,6 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    slot = None
-    if carton_in.job_order:
-        if carton_in.slot_id is None:
-            raise HTTPException(status_code=400, detail="A carton slot is required for a Job Order")
-        slot = db.query(models.JobOrderCartonSlot).filter(
-            models.JobOrderCartonSlot.id == carton_in.slot_id,
-            models.JobOrderCartonSlot.job_order == carton_in.job_order,
-            models.JobOrderCartonSlot.product_id == carton_in.product_id,
-        ).with_for_update().first()
-        if not slot:
-            raise HTTPException(status_code=400, detail="Carton slot does not belong to this Job Order and Product")
-        if slot.status != "PENDING" or slot.carton_id is not None:
-            raise HTTPException(status_code=409, detail="Carton slot has already been completed")
-    
     if len(carton_in.items) != len(set(carton_in.items)):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
 
@@ -52,15 +39,45 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(carton_in.items)}."
         )
 
-    if not carton_in.job_order:
-        raise HTTPException(status_code=400, detail="Job Order is required for carton creation")
+    slot = slot_lifecycle.get_pending_slot_for_carton_creation(
+        db,
+        slot_id=carton_in.slot_id,
+        job_order=carton_in.job_order,
+        product_id=carton_in.product_id,
+    )
 
-    new_sn = slot.carton_sn if slot else get_next_carton_sn(db, product, carton_in.custom_sn, carton_in.custom_yymm)
+    new_sn = slot.carton_sn
     
     if carton_in.custom_sn is not None or slot is not None:
         existing = db.query(models.Carton).filter(models.Carton.carton_sn == new_sn).first()
         if existing:
-            raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {existing.status}).")
+            if existing.status in ("PRINTED", "SUCCESS", "SHIPPED"):
+                raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {existing.status}).")
+            elif existing.status == "FAILED" and existing.job_order == carton_in.job_order and existing.product_id == carton_in.product_id:
+                # Reuse and update existing failed carton attempt
+                existing.packed_by = carton_in.printer_name or "System"
+                existing.carton_origin = carton_in.carton_origin
+                existing.station_id = carton_in.station_id
+                
+                db.query(models.CartonItem).filter(models.CartonItem.carton_id == existing.id).delete()
+                for item_sn in carton_in.items:
+                    db.add(models.CartonItem(carton_id=existing.id, item_sn=item_sn))
+                
+                db_path = getattr(product, 'template_path', None)
+                path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=carton_in.template_path)
+                btxml_content = generate_btxml(
+                    existing, 
+                    product, 
+                    carton_in.items, 
+                    path_to_use, 
+                    carton_in.printer_name
+                )
+                existing.btxml = btxml_content  # type: ignore
+                db.commit()
+                db.refresh(existing)
+                return existing, btxml_content
+            else:
+                raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {existing.status}).")
 
     try:
         new_carton = models.Carton(
@@ -138,15 +155,9 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         # Default to FAILED until proven SUCCESS by printer agent later
         carton.status = "FAILED"  # type: ignore
         carton.btxml = None  # type: ignore
-        carton.station_id = getattr(rescan_in, 'station_id', carton.station_id)
+        carton.station_id = getattr(rescan_in, 'station_id', carton.station_id)  # type: ignore
 
-        slot = db.query(models.JobOrderCartonSlot).filter(
-            models.JobOrderCartonSlot.carton_id == carton.id
-        ).first()
-        if slot:
-            slot.status = "PENDING"
-            slot.scanned_at = None
-            slot.carton_id = None
+        slot_lifecycle.release_original_slot_for_carton(db, carton)
         
         # Priority logic inside resolve_template_path: DB -> Client -> Default
         db_path = getattr(product, 'template_path', None)

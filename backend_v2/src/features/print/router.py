@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, cast as typing_cast
 from src.core.database import get_db
 from src.features.history.schemas import Carton
+from src.features.carton import print_attempts
 from . import schemas, service
 from .bartender_engine import bt_engine
 
@@ -81,18 +82,7 @@ def server_print_carton(carton_id: int, request: Request, printer_name: Optional
 
     # Cập nhật trạng thái
     if result["success"]:
-        # If this is a reprint, check if the original carton was verified (status == SUCCESS)
-        if carton.is_reprint == 1:  # type: ignore
-            original = db.query(service.models.Carton).filter(
-                service.models.Carton.carton_sn == carton.carton_sn,
-                service.models.Carton.is_reprint == 0
-            ).first()
-            if original and original.status == "SUCCESS":  # type: ignore
-                carton.status = "SUCCESS"  # type: ignore
-            else:
-                carton.status = "PRINTED"  # type: ignore
-        else:
-            carton.status = "PRINTED"  # type: ignore
+        carton.status = print_attempts.successful_print_status(db, carton)  # type: ignore
     else:
         carton.status = "FAILED"  # type: ignore
     db.commit()
