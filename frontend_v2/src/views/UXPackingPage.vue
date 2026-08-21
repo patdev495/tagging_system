@@ -1264,14 +1264,15 @@ const resetSessionCount = () => {
 // Global Hotkey (F9) Listener
 const handleKeyDown = (event: KeyboardEvent) => {
   if (showToleranceErrorModal.value) {
-    if (event.key === 'Enter' || event.key === 'Escape' || event.key === ' ') {
+    if (event.key === 'Enter' || event.key === 'Escape' || event.key === ' ' || event.code === 'Enter' || event.code === 'Escape' || event.code === 'Space') {
       event.preventDefault();
       showToleranceErrorModal.value = false;
       return;
     }
   }
 
-  if (event.key === 'F9') {
+  // Support event.key, event.code, and legacy keyCode 120 for F9
+  if (event.key === 'F9' || event.code === 'F9' || event.keyCode === 120 || event.which === 120) {
     event.preventDefault();
     triggerWeighAndPrint();
   }
@@ -1302,13 +1303,14 @@ onMounted(async () => {
   scalePollInterval = setInterval(pollScale, 100);
   statusPollInterval = setInterval(pollScaleStatus, 2000);
 
-  // Register F9 hotkey
-  window.addEventListener('keydown', handleKeyDown);
+  // Register F9 hotkey with capture
+  window.addEventListener('keydown', handleKeyDown, true);
 });
 
 onUnmounted(() => {
   if (scalePollInterval) clearInterval(scalePollInterval);
   if (statusPollInterval) clearInterval(statusPollInterval);
-  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('keydown', handleKeyDown, true);
 });
 </script>
+

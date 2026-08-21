@@ -30,9 +30,8 @@ class ScaleManager:
             return
         self._port = "AUTO"
         self._baudrate = 9600
-        self._hotkey = "F9"
+        self._hotkey = "NONE"
         self._auto_connect = True
-
 
         self._serial_engine: Optional[SerialEngine] = None
         self._hotkey_listener: Optional[GlobalHotkeyListener] = None
@@ -75,7 +74,6 @@ class ScaleManager:
         except Exception as e:
             logger.error(f"Error saving scale config: {e}")
 
-
     def auto_detect_port(self) -> Optional[str]:
         """Auto-detect connected USB serial scale port."""
         ports = list_com_ports()
@@ -117,11 +115,13 @@ class ScaleManager:
         if self._auto_connect:
             self._serial_engine.start()
 
-        self._hotkey_listener = GlobalHotkeyListener(
-            hotkey=self._hotkey,
-            on_trigger=self._on_hotkey_triggered,
-        )
-        self._hotkey_listener.start()
+        if self._hotkey and self._hotkey.upper() not in ("NONE", "OFF", ""):
+            self._hotkey_listener = GlobalHotkeyListener(
+                hotkey=self._hotkey,
+                on_trigger=self._on_hotkey_triggered,
+            )
+            self._hotkey_listener.start()
+
 
     def stop(self) -> None:
         if self._serial_engine:
