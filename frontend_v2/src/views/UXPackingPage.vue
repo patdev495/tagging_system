@@ -24,7 +24,7 @@
           <div 
             :class="[
               'px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0',
-              scaleStatus.connected && scaleStatus.is_streaming !== false
+              scaleStatus.connected
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs'
                 : 'bg-rose-50 text-rose-700 border-rose-200'
             ]"
@@ -35,6 +35,7 @@
             </span>
             <span>{{ scaleStatus.connected ? `Cân Online (${scaleStatus.port || 'COM'})` : 'Cân Mất Kết Nối' }}</span>
           </div>
+
 
           <!-- Quick Action Buttons -->
           <button
@@ -994,10 +995,16 @@ const pollScale = async () => {
     const reading = await scaleApi.getScaleCurrent(agentUrl);
     if (reading) {
       scaleReading.value = reading;
-      scaleStatus.value.connected = true;
+      if (reading.connected !== undefined) {
+        scaleStatus.value.connected = reading.connected;
+      }
+      if (reading.is_streaming !== undefined) {
+        scaleStatus.value.is_streaming = reading.is_streaming;
+      }
     }
   } catch (err) {
     scaleStatus.value.connected = false;
+    scaleStatus.value.is_streaming = false;
   }
 };
 
@@ -1010,8 +1017,10 @@ const pollScaleStatus = async () => {
     }
   } catch (err) {
     scaleStatus.value.connected = false;
+    scaleStatus.value.is_streaming = false;
   }
 };
+
 
 // Main Print Execution Flow (Weigh & Pack)
 const triggerWeighAndPrint = async () => {

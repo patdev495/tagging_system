@@ -50,12 +50,18 @@ export interface Carton {
 
 export interface ScaleReading {
   weight: number;
+  weight_str?: string;
   unit: string;
   is_stable: boolean;
   is_tare?: boolean;
   is_net?: boolean;
+  is_zero?: boolean;
+  is_hold?: boolean;
+  connected?: boolean;
+  is_streaming?: boolean;
   timestamp?: number;
 }
+
 
 export interface ScaleStatus {
   connected: boolean;

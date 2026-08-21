@@ -148,11 +148,12 @@ class ScaleManager:
 
     def get_status(self) -> dict:
         ports = list_com_ports()
-        engine_status = self._serial_engine.status.value if self._serial_engine else "disconnected"
-        is_streaming = self._serial_engine.is_streaming() if self._serial_engine else False
+        engine_status = self._serial_engine.status.value if self._serial_engine else ("connected" if self._is_connected else "disconnected")
+        is_streaming = self._serial_engine.is_streaming(threshold_seconds=1.5) if self._serial_engine else self._is_connected
+        is_connected = self._is_connected and is_streaming
         return {
-            "connected": self._is_connected or is_streaming,
-            "status": engine_status,
+            "connected": is_connected,
+            "status": engine_status if is_connected else "disconnected",
             "port": self._port,
             "baudrate": self._baudrate,
             "hotkey": self._hotkey,
@@ -161,7 +162,11 @@ class ScaleManager:
         }
 
     def get_current_reading(self) -> dict:
-        info = self._latest_packet_info
+        is_streaming = self._serial_engine.is_streaming(threshold_seconds=1.5) if self._serial_engine else self._is_connected
+        is_connected = self._is_connected and is_streaming
+        info = self._latest_packet_info if is_streaming else None
+
+
         if info is None:
             return {
                 "weight": 0.0,
@@ -172,6 +177,8 @@ class ScaleManager:
                 "is_tare": False,
                 "is_zero": True,
                 "is_hold": False,
+                "connected": is_connected,
+                "is_streaming": is_streaming,
                 "timestamp": time.time(),
             }
 
@@ -189,8 +196,11 @@ class ScaleManager:
             "is_tare": info.is_tare,
             "is_zero": info.is_zero,
             "is_hold": info.is_hold,
+            "connected": is_connected,
+            "is_streaming": is_streaming,
             "timestamp": time.time(),
         }
+
 
     def tare(self) -> bool:
         return self._serial_engine.tare() if self._serial_engine else False
