@@ -193,6 +193,14 @@ if __name__ == "__main__":
                     default_port = int(config_data["port"])
         except Exception as e:
             logger.warning(f"Failed to read config.json: {e}")
+    else:
+        # Auto-generate default config.json
+        try:
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump({"port": 8080}, f, indent=2)
+            logger.info(f"Auto-generated default {config_path}")
+        except Exception as e:
+            logger.warning(f"Failed to auto-generate config.json: {e}")
     
     parser = argparse.ArgumentParser(description="NY Print Agent")
     parser.add_argument("--port", type=int, default=default_port, help=f"Port to run the agent on (default: {default_port})")
@@ -200,3 +208,4 @@ if __name__ == "__main__":
     
     logger.info(f"Starting Print Agent on port {args.port}...")
     uvicorn.run(app, host="0.0.0.0", port=args.port)
+

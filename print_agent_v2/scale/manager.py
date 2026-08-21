@@ -58,6 +58,11 @@ class ScaleManager:
                     self._auto_connect = bool(data.get("auto_connect", self._auto_connect))
             except Exception as e:
                 logger.warning(f"Error loading scale config: {e}")
+        else:
+            # Auto-generate default configuration JSON file on first run
+            logger.info(f"scale_config.json not found at {config_path}. Auto-generating default configuration...")
+            self.save_config(config_path)
+
 
     def save_config(self, config_path: Optional[str] = None) -> None:
         if not config_path:
