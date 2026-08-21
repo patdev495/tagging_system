@@ -37,7 +37,14 @@ else:
     print(f"DEBUG: Using non-SQLite engine (URL starts with {DATABASE_URL[:10]}...)")
     try:
         import pyodbc 
-        engine = create_engine(DATABASE_URL)
+        engine = create_engine(
+            DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=1800,
+            pool_size=10,
+            max_overflow=20,
+            fast_executemany=True,
+        )
     except ImportError:
         print("ERROR: pyodbc not found but DATABASE_URL is not SQLite. Falling back to dummy engine to prevent crash.")
         engine = create_engine("sqlite:///:memory:") 

@@ -20,22 +20,41 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Agent Connection Status Indicator -->
+          <div 
+            :class="[
+              'px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 cursor-help',
+              isAgentOnline
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs'
+                : 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
+            ]"
+            :title="isAgentOnline ? `Print Agent đang chạy (${settings.agentUrl || 'http://127.0.0.1:8080'})` : 'Chưa bật phần mềm NY Print Agent trên máy tính'"
+          >
+            <span class="relative flex h-2 w-2">
+              <span v-if="isAgentOnline" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span :class="['relative inline-flex rounded-full h-2 w-2', isAgentOnline ? 'bg-emerald-500' : 'bg-rose-500']"></span>
+            </span>
+            <i class="fas fa-print text-xs"></i>
+            <span>{{ isAgentOnline ? 'Agent Online' : 'Agent Offline' }}</span>
+          </div>
+
           <!-- Scale Connection Status Indicator -->
           <div 
             :class="[
               'px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0',
-              scaleStatus.connected
+              (isAgentOnline && scaleStatus.connected)
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs'
                 : 'bg-rose-50 text-rose-700 border-rose-200'
             ]"
+            :title="(isAgentOnline && scaleStatus.connected) ? `Cân đang kết nối cổng ${scaleStatus.port}` : 'Cân chưa kết nối hoặc mất tín hiệu COM'"
           >
             <span class="relative flex h-2 w-2">
-              <span v-if="scaleStatus.connected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span :class="['relative inline-flex rounded-full h-2 w-2', scaleStatus.connected ? 'bg-emerald-500' : 'bg-rose-500']"></span>
+              <span v-if="isAgentOnline && scaleStatus.connected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span :class="['relative inline-flex rounded-full h-2 w-2', (isAgentOnline && scaleStatus.connected) ? 'bg-emerald-500' : 'bg-rose-500']"></span>
             </span>
-            <span>{{ scaleStatus.connected ? `Cân Online (${scaleStatus.port || 'COM'})` : 'Cân Mất Kết Nối' }}</span>
+            <i class="fas fa-weight-scale text-xs"></i>
+            <span>{{ (isAgentOnline && scaleStatus.connected) ? `Cân Online (${scaleStatus.port || 'COM'})` : 'Cân Mất Kết Nối' }}</span>
           </div>
-
 
           <!-- Quick Action Buttons -->
           <button
@@ -115,6 +134,31 @@
 
       </section>
 
+      <!-- Agent Offline Warning Banner -->
+      <div 
+        v-if="!isAgentOnline" 
+        class="mb-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in"
+      >
+        <div class="flex items-center gap-2.5">
+          <div class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0">
+            <i class="fas fa-exclamation-triangle text-xs"></i>
+          </div>
+          <div>
+            <span class="font-black text-rose-900">Chưa kết nối phần mềm Print Agent!</span>
+            <span class="text-rose-700 ml-1.5 text-[11px]">
+              Vui lòng bật phần mềm <strong>NY Print Agent</strong> trên máy tính hoặc kiểm tra cấu hình cổng <code>{{ settings.agentUrl || 'http://127.0.0.1:8080' }}</code> trong Cài Đặt.
+            </span>
+          </div>
+        </div>
+        <button 
+          @click="pollScaleStatus" 
+          class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1"
+        >
+          <i class="fas fa-rotate-right text-[10px]"></i>
+          <span>Thử Lại</span>
+        </button>
+      </div>
+
       <!-- Main Packing Station Cockpit Grid -->
       <main class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
         
@@ -127,6 +171,7 @@
             <div 
               :class="[
                 'absolute -right-20 -top-20 w-72 h-72 rounded-full blur-3xl opacity-20 transition-all duration-500 pointer-events-none',
+                (!isAgentOnline || !scaleStatus.connected) ? 'bg-slate-700' :
                 toleranceResult.status === 'READY' ? 'bg-emerald-400' :
                 toleranceResult.status === 'UNSTABLE' ? 'bg-amber-400' :
                 toleranceResult.status === 'UNDERWEIGHT' || toleranceResult.status === 'OVERWEIGHT' ? 'bg-rose-500' : 'bg-slate-600'
@@ -135,16 +180,23 @@
 
             <!-- Top Row: Scale Pulse & Tare/Zero -->
             <div class="flex items-center justify-between mb-1 z-10 shrink-0">
-              <div class="flex items-center gap-1.5 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-                <i class="fas fa-satellite-dish text-emerald-400 animate-pulse"></i>
-                <span>Tín Hiệu Cân Thời Gian Thực</span>
+              <div class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider">
+                <i 
+                  :class="[
+                    'fas fa-satellite-dish',
+                    (isAgentOnline && scaleStatus.connected) ? 'text-emerald-400 animate-pulse' : 'text-slate-500'
+                  ]"
+                ></i>
+                <span :class="(isAgentOnline && scaleStatus.connected) ? 'text-slate-400' : 'text-slate-400'">
+                  {{ (isAgentOnline && scaleStatus.connected) ? 'Tín Hiệu Cân Thời Gian Thực' : (!isAgentOnline ? 'Mất Kết Nối Print Agent' : 'Mất Kết Nối Cổng Cân') }}
+                </span>
               </div>
 
               <!-- Tare & Zero Controls -->
               <div class="flex items-center gap-1.5">
                 <button
                   @click="handleTare"
-                  :disabled="!scaleStatus.connected || isPrinting"
+                  :disabled="!isAgentOnline || !scaleStatus.connected || isPrinting"
                   class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer border border-slate-700 shadow-xs"
                 >
                   <i class="fas fa-balance-scale-left text-xs"></i>
@@ -153,7 +205,7 @@
 
                 <button
                   @click="handleZero"
-                  :disabled="!scaleStatus.connected || isPrinting"
+                  :disabled="!isAgentOnline || !scaleStatus.connected || isPrinting"
                   class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer border border-slate-700 shadow-xs"
                 >
                   <i class="fas fa-crosshairs text-xs"></i>
@@ -168,12 +220,13 @@
                 <span 
                   :class="[
                     'text-6xl md:text-7xl lg:text-8xl font-black font-mono tracking-tight transition-colors duration-200 leading-none',
+                    (!isAgentOnline || !scaleStatus.connected) ? 'text-slate-600' :
                     toleranceResult.status === 'READY' ? 'text-emerald-400' :
                     toleranceResult.status === 'UNSTABLE' ? 'text-amber-400' :
                     toleranceResult.status === 'UNDERWEIGHT' || toleranceResult.status === 'OVERWEIGHT' ? 'text-rose-400' : 'text-slate-500'
                   ]"
                 >
-                  {{ formatWeight(scaleReading.weight) }}
+                  {{ (!isAgentOnline || !scaleStatus.connected) ? '--.---' : formatWeight(scaleReading.weight) }}
                 </span>
                 <span class="text-xl md:text-2xl font-bold text-slate-400 font-mono">{{ scaleReading.unit || 'kg' }}</span>
               </div>
@@ -183,16 +236,36 @@
                 <span 
                   :class="[
                     'px-2.5 py-0.5 rounded-full text-[11px] font-bold flex items-center gap-1',
-                    scaleReading.is_stable
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse'
+                    !isAgentOnline
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                      : (!scaleStatus.connected
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : (scaleReading.is_stable
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse'))
                   ]"
                 >
-                  <i :class="scaleReading.is_stable ? 'fas fa-check-circle' : 'fas fa-spinner fa-spin'"></i>
-                  <span>{{ scaleReading.is_stable ? 'ỔN ĐỊNH' : 'ĐANG DAO ĐỘNG' }}</span>
+                  <i 
+                    :class="[
+                      !isAgentOnline 
+                        ? 'fas fa-power-off' 
+                        : (!scaleStatus.connected 
+                          ? 'fas fa-plug-circle-xmark' 
+                          : (scaleReading.is_stable ? 'fas fa-check-circle' : 'fas fa-spinner fa-spin'))
+                    ]"
+                  ></i>
+                  <span>
+                    {{ 
+                      !isAgentOnline 
+                        ? 'AGENT OFFLINE' 
+                        : (!scaleStatus.connected 
+                          ? 'CHƯA KẾT NỐI CÂN' 
+                          : (scaleReading.is_stable ? 'ỔN ĐỊNH' : 'ĐANG DAO ĐỘNG')) 
+                    }}
+                  </span>
                 </span>
 
-                <span v-if="scaleReading.is_tare" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span v-if="isAgentOnline && scaleStatus.connected && scaleReading.is_tare" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                   TARE (ĐÃ TRỪ BÌ)
                 </span>
               </div>
@@ -751,7 +824,8 @@ const activePO = ref<string>(localStorage.getItem('ux_active_po') || 'B432-22156
 const activeLot = ref<string>(localStorage.getItem('ux_active_lot') || '92608521');
 const batchForm = ref({ po: activePO.value, lot: activeLot.value });
 
-// Scale State
+// Scale & Agent State
+const isAgentOnline = ref<boolean>(false);
 const scaleReading = ref<ScaleReading>({
   weight: 0.0,
   unit: 'kg',
@@ -852,7 +926,7 @@ const checkManualSN = () => {
 // Evaluate Tolerance Reactively
 const toleranceResult = computed<ScaleToleranceResult>(() => {
   return evaluateScaleTolerance({
-    isConnected: scaleStatus.value.connected,
+    isConnected: isAgentOnline.value && scaleStatus.value.connected,
     currentWeight: scaleReading.value.weight,
     isStable: scaleReading.value.is_stable,
     product: selectedProduct.value ? {
@@ -865,6 +939,7 @@ const toleranceResult = computed<ScaleToleranceResult>(() => {
 
 // Scale Gauge Needle Calculation (0% - 100%)
 const calculateGaugePercent = (currentWeight: number): number => {
+  if (!isAgentOnline.value || !scaleStatus.value.connected) return 50;
   const min = selectedProduct.value?.min_weight ?? 0.150;
   const max = selectedProduct.value?.max_weight ?? 0.200;
   const range = max - min;
@@ -905,6 +980,7 @@ const getToleranceTitle = (status: string) => {
     case 'UNSTABLE': return 'CÂN CHƯA ỔN ĐỊNH';
     case 'UNDERWEIGHT': return 'THIẾU TRỌNG LƯỢNG';
     case 'OVERWEIGHT': return 'THỪA TRỌNG LƯỢNG';
+    case 'DISCONNECTED': return !isAgentOnline.value ? 'CHƯA BẬT PRINT AGENT' : 'CHƯA KẾT NỐI CÂN';
     default: return 'CHƯA KẾT NỐI CÂN';
   }
 };
@@ -994,6 +1070,7 @@ const pollScale = async () => {
   try {
     const reading = await scaleApi.getScaleCurrent(agentUrl);
     if (reading) {
+      isAgentOnline.value = true;
       scaleReading.value = reading;
       if (reading.connected !== undefined) {
         scaleStatus.value.connected = reading.connected;
@@ -1003,6 +1080,7 @@ const pollScale = async () => {
       }
     }
   } catch (err) {
+    isAgentOnline.value = false;
     scaleStatus.value.connected = false;
     scaleStatus.value.is_streaming = false;
   }
@@ -1013,9 +1091,11 @@ const pollScaleStatus = async () => {
   try {
     const status = await scaleApi.getScaleStatus(agentUrl);
     if (status) {
+      isAgentOnline.value = true;
       scaleStatus.value = status;
     }
   } catch (err) {
+    isAgentOnline.value = false;
     scaleStatus.value.connected = false;
     scaleStatus.value.is_streaming = false;
   }
