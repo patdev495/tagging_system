@@ -56,6 +56,24 @@ _Avoid_: MAC ID (trừ phi nói về phần cứng), IP máy, Terminal ID
 Kiểu định dạng nhãn in được cấu hình cho Product. Hệ thống hỗ trợ hai loại chính: `standard` (chỉ hiển thị thông tin Carton và mã vạch chung) và `detailed` (hiển thị lưới sê-ri chi tiết của từng Carton Item bên trong, tối đa 40 dòng).
 _Avoid_: Cấu hình tem, kiểu mẫu
 
+**Packing Mode**:
+Chế độ xác thực và đóng gói của Product để kích hoạt in tem Carton:
+- `item_scan`: Quét từng mã sê-ri con (Carton Item) cho đến khi đủ số lượng `packed_qty`.
+- `weight_scale`: Đóng gói theo trọng lượng, đọc giá trị cân từ Scale; khi trọng lượng thực tế nằm trong dải `Weight Tolerance` và công nhân kích hoạt lệnh in, hệ thống sẽ sinh mã Carton SN và in tem.
+_Avoid_: Kiểu đóng gói, loại scan, scan method
+
+**Scale**:
+Thiết bị cân điện tử kết nối với trạm đóng gói qua cổng truyền thông nối tiếp RS-232 / USB-to-Serial.
+_Avoid_: Cân bàn, máy cân, bộ cảm biến
+
+**Weight Reading**:
+Giá trị trọng lượng thực tế đo được từ Scale tại thời điểm cân và in tem cho Carton.
+_Avoid_: Số cân, trọng lượng đọc, scale value
+
+**Weight Tolerance**:
+Dải trọng lượng hợp lệ của Product (gồm trọng lượng chuẩn `target_weight` kèm sai số `min_weight` và `max_weight`), là điều kiện tiên quyết để hệ thống chấp thuận in tem cho Carton ở chế độ `weight_scale`.
+_Avoid_: Biên độ cân, khoảng cân cho phép, dải sai số
+
 **UPC**:
 Mã vạch sản phẩm tiêu chuẩn (Universal Product Code) tương ứng với từng Product, được in trực tiếp lên nhãn Carton để nhận diện sản phẩm ở cấp độ bán lẻ.
 _Avoid_: Mã vạch thùng, barcode sản phẩm
@@ -69,8 +87,9 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 ## Relationships
 
 - Một **Customer** có thể có nhiều **Products** khác nhau.
-- Một **Product** xác định số lượng đóng gói tối đa (`packed_qty`) và được đóng thành nhiều **Cartons**.
-- Một **Carton** chứa nhiều **Carton Items** với số lượng bằng đúng `packed_qty` của Product (hoặc ít hơn nếu sản phẩm đó cho phép đóng thiếu `allow_partial`). Số lượng items trong một **Carton** tuyệt đối không được vượt quá `packed_qty`.
+- Một **Product** xác định chế độ đóng gói (**Packing Mode**), số lượng đóng gói quy chuẩn (`packed_qty`), mẫu tem nhãn, và quy tắc sinh sê-ri (**Carton SN**).
+- Với Product ở chế độ `item_scan`, một **Carton** chứa nhiều **Carton Items** với số lượng bằng đúng `packed_qty` (hoặc ít hơn nếu `allow_partial`).
+- Với Product ở chế độ `weight_scale`, một **Carton** không lưu **Carton Items** riêng lẻ (số lượng items = 0) mà lưu trữ giá trị **Weight Reading** và thời gian in. Lệnh in chỉ được thực thi khi **Weight Reading** thỏa mãn **Weight Tolerance**.
 - Một **Carton** được đóng mới trong hệ thống thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 
@@ -78,6 +97,9 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 
 > **Developer:** "Khi quét sản phẩm con vào **Carton**, nếu chưa đủ số lượng `packed_qty` quy định của **Product** thì hệ thống có cho phép xuất mã **Carton SN** để in nhãn không?"
 > **Domain expert:** "Mặc định là không. Tuy nhiên, nếu cấu hình của **Product** đó cho phép `allow_partial`, chúng ta vẫn cho đóng thùng thiếu và in nhãn **Carton** bình thường."
+> 
+> **Developer:** "Với sản phẩm đóng gói theo cân (**weight_scale**), nếu số cân không nằm trong dải **Weight Tolerance** thì hệ thống xử lý thế nào?"
+> **Domain expert:** "Hệ thống phải chặn lệnh in, cảnh báo lỗi trọng lượng trên màn hình và không cấp phát số **Carton SN**."
 
 ## Flagged ambiguities
 
