@@ -39,7 +39,14 @@ class ScaleManager:
         self._trigger_count = 0
         self._initialized = True
 
-    def load_config(self, config_path: str = "scale_config.json") -> None:
+    def _resolve_config_path(self, filename: str = "scale_config.json") -> str:
+        if getattr(sys, 'frozen', False):
+            return os.path.join(os.path.dirname(sys.executable), filename)
+        return filename
+
+    def load_config(self, config_path: Optional[str] = None) -> None:
+        if not config_path:
+            config_path = self._resolve_config_path("scale_config.json")
         if os.path.exists(config_path):
             try:
                 with open(config_path, "r", encoding="utf-8") as f:
@@ -51,7 +58,9 @@ class ScaleManager:
             except Exception as e:
                 logger.warning(f"Error loading scale config: {e}")
 
-    def save_config(self, config_path: str = "scale_config.json") -> None:
+    def save_config(self, config_path: Optional[str] = None) -> None:
+        if not config_path:
+            config_path = self._resolve_config_path("scale_config.json")
         try:
             data = {
                 "port": self._port,
@@ -63,6 +72,7 @@ class ScaleManager:
                 json.dump(data, f, indent=2)
         except Exception as e:
             logger.error(f"Error saving scale config: {e}")
+
 
     def auto_detect_port(self) -> Optional[str]:
         """Auto-detect connected USB serial scale port."""
