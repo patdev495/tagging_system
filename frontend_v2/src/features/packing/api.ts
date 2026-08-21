@@ -21,5 +21,8 @@ export default {
   },
   rescanCarton(data: { carton_sn: string; items: string[] }) {
     return api.put<Carton>('/cartons/rescan', data);
+  },
+  weighPackCarton(data: import('../../types/api').CartonWeighPackPayload) {
+    return api.post<Carton>('/cartons/weigh-pack', data);
   }
 };

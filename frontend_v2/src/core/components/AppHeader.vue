@@ -54,6 +54,15 @@
         <i class="fas fa-cog"></i>
       </button>
 
+      <button
+        @click="switchCustomer"
+        class="px-2.5 py-1.5 rounded-[10px] cursor-pointer flex items-center gap-1.5 text-[0.75rem] font-bold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition-all"
+        title="Đổi khách hàng đóng gói"
+      >
+        <i class="fas fa-exchange-alt text-xs text-blue-600"></i>
+        <span class="hidden sm:inline">Đổi Khách Hàng</span>
+      </button>
+
       <router-link 
         to="/admin" 
         class="w-9 h-9 rounded-[10px] cursor-pointer flex items-center justify-center transition-all duration-200 text-[0.9rem] border bg-slate-50 text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-800 hover:-translate-y-[2px]" 
@@ -66,9 +75,12 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useSystemStore } from '../stores/system';
 import { useSettingsStore } from '../stores/settings';
+
+const router = useRouter();
 
 defineProps<{
   isAudioActive?: boolean
@@ -88,5 +100,10 @@ const settings = useSettingsStore();
 const toggleLanguage = () => {
   settings.language = settings.language === 'vi' ? 'en' : 'vi';
   settings.saveSettings();
+};
+
+const switchCustomer = () => {
+  localStorage.removeItem('selected_customer');
+  router.push('/');
 };
 </script>

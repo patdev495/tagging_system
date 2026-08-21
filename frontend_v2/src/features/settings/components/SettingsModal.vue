@@ -137,6 +137,32 @@
           </div>
         </div>
 
+        <!-- Scale COM Port Selection -->
+        <div class="mb-4">
+          <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600">
+            <i class="fas fa-weight-scale mr-1.5 text-emerald-600"></i>Cổng COM Cân Điện Tử (Scale Port)
+          </label>
+          <div class="input-with-hint">
+            <div class="flex gap-2 items-center">
+              <select v-model="formData.scalePort" class="flex-1 px-3.5 py-2.5 border border-slate-200 rounded-lg text-[0.95rem] bg-slate-50 text-slate-800 outline-none transition-all focus:border-blue-500 focus:bg-white">
+                <option value="">-- Mặc định / Tự động --</option>
+                <option v-if="formData.scalePort && !availableScalePorts.some(p => p.device === formData.scalePort)" :value="formData.scalePort">
+                  ⚖️ {{ formData.scalePort }} (Đang chọn)
+                </option>
+                <option v-for="p in availableScalePorts" :key="p.device" :value="p.device">
+                  ⚖️ {{ p.device }} ({{ p.description || 'Cổng COM' }})
+                </option>
+              </select>
+              <button @click="loadScaleStatus" type="button" class="w-10 h-10 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center cursor-pointer text-slate-500 transition-all hover:bg-slate-100 hover:text-emerald-600" title="Quét lại cổng COM">
+                <i class="fas fa-sync-alt" :class="{'fa-spin': loadingScale}"></i>
+              </button>
+            </div>
+            <small class="block mt-1 text-[0.75rem] text-slate-500">
+              Chọn cổng COM thực tế của cân (VD: COM4). Lưu cài đặt để tự động kết nối lại.
+            </small>
+          </div>
+        </div>
+
         <div class="mb-4">
           <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600">{{ t('settings.audio_output') }}</label>
           <div class="input-with-hint">
@@ -159,6 +185,7 @@ import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../core/stores/settings';
 import { useSystemStore } from '../../../core/stores/system';
 import printApi from '../../print/api';
+import scaleApi from '../../packing/scaleApi';
 
 const props = defineProps<{
   show: boolean
@@ -182,9 +209,16 @@ interface Printer {
   port?: string;
 }
 
+interface ScalePortItem {
+  device: string;
+  description: string;
+}
+
 const audioDevices = ref<AudioDevice[]>([]);
 const availablePrinters = ref<(string | Printer)[]>([]);
+const availableScalePorts = ref<ScalePortItem[]>([]);
 const loadingPrinters = ref<boolean>(false);
+const loadingScale = ref<boolean>(false);
 const detectingAgent = ref<boolean>(false);
 
 const formData = ref({
@@ -194,8 +228,28 @@ const formData = ref({
   localTemplateDir: store.localTemplateDir,
   printerName: store.printerName,
   templatePath: store.templatePath,
-  audioDeviceId: store.audioDeviceId
+  audioDeviceId: store.audioDeviceId,
+  scalePort: '',
 });
+
+const loadScaleStatus = async () => {
+  loadingScale.value = true;
+  try {
+    const status = await scaleApi.getScaleStatus(formData.value.agentUrl || 'http://127.0.0.1:8080');
+    if (status) {
+      if (status.port && !formData.value.scalePort) {
+        formData.value.scalePort = status.port;
+      }
+      if (Array.isArray(status.available_ports)) {
+        availableScalePorts.value = status.available_ports;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not load scale status from agent:', e);
+  } finally {
+    loadingScale.value = false;
+  }
+};
 
 const discoverAgent = async () => {
   if (formData.value.printMode !== 'local') return;
@@ -228,6 +282,7 @@ const discoverAgent = async () => {
     formData.value.agentUrl = foundUrl;
     system.showNotification(`Found Agent on port ${foundUrl.split(':').pop()}`, 'success');
     loadPrinters();
+    loadScaleStatus();
     validateDir(formData.value.localTemplateDir);
   } else {
     system.showNotification('Could not detect Agent. Is it running?', 'error');
@@ -277,7 +332,7 @@ const loadPrinters = async () => {
   }
 };
 
-const handleSave = () => {
+const handleSave = async () => {
   store.printMode = formData.value.printMode;
   store.language = formData.value.language;
   store.agentUrl = formData.value.agentUrl;
@@ -286,9 +341,20 @@ const handleSave = () => {
   store.templatePath = formData.value.templatePath;
   store.audioDeviceId = formData.value.audioDeviceId;
   
+  if (formData.value.scalePort) {
+    try {
+      await scaleApi.updateScaleConfig(
+        { port: formData.value.scalePort },
+        formData.value.agentUrl || 'http://127.0.0.1:8080'
+      );
+    } catch (err: any) {
+      console.warn('Could not update scale port on agent:', err);
+    }
+  }
+
   store.saveSettings();
   emit('close');
-  system.showNotification('Settings saved locally', 'success');
+  system.showNotification('Cài đặt đã được lưu thành công', 'success');
 };
 
 const dirError = ref<string>('');
@@ -341,10 +407,12 @@ watch(() => props.show, async (val) => {
       localTemplateDir: store.localTemplateDir,
       printerName: store.printerName,
       templatePath: store.templatePath,
-      audioDeviceId: store.audioDeviceId
+      audioDeviceId: store.audioDeviceId,
+      scalePort: formData.value.scalePort || '',
     };
     
     loadAudioDevices(); 
+    loadScaleStatus();
     if (formData.value.printMode === 'local') {
       await discoverAgent();
     } else {
@@ -352,5 +420,8 @@ watch(() => props.show, async (val) => {
     }
   } 
 });
-onMounted(() => { loadAudioDevices(); });
+onMounted(() => { 
+  loadAudioDevices(); 
+  loadScaleStatus();
+});
 </script>

@@ -170,7 +170,7 @@ class BarTenderCOMApp:
 
     def _export_to_pdf(self, bt_format, substrings: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
-        Executes print-to-PDF and automatically intercepts & solves the Windows Save As dialog box.
+        Executes print-to-PDF using native BarTender ExportToFile or Windows print interception.
         Returns a base64 encoded string of the generated PDF document.
         """
         import base64
@@ -186,21 +186,47 @@ class BarTenderCOMApp:
             is_src_agent = "print_agent_v2" in this_dir and os.path.exists(os.path.join(this_dir, "agent.py"))
             is_agent = is_argv_agent or is_src_agent
         
+        carton_sn = substrings.get("CartonSN", f"label_{str(uuid.uuid4())[:8]}") if substrings else f"label_{str(uuid.uuid4())[:8]}"
+        # Sanitize filename
+        carton_sn = "".join(c for c in carton_sn if c.isalnum() or c in ('-', '_', '.'))
+
         if is_agent:
             # Save permanently next to Print Agent so the user can easily find it!
             pdf_dir = os.path.normpath(os.path.join(os.getcwd(), "pdf_output"))
             os.makedirs(pdf_dir, exist_ok=True)
-            carton_sn = substrings.get("CartonSN", f"label_{str(uuid.uuid4())[:8]}") if substrings else f"label_{str(uuid.uuid4())[:8]}"
-            # Sanitize filename
-            carton_sn = "".join(c for c in carton_sn if c.isalnum() or c in ('-', '_', '.'))
             pdf_path = os.path.normpath(os.path.join(pdf_dir, f"{carton_sn}.pdf"))
             logger.info(f"[PDF] Permanent save path configured: {pdf_path}")
         else:
             # Central backend mode: temporary location, will clean up after encoding
             temp_dir = os.path.join(os.environ.get('TEMP', 'C:\\temp'), 'ny_labels')
             os.makedirs(temp_dir, exist_ok=True)
-            pdf_path = os.path.normpath(os.path.join(temp_dir, f"label_{str(uuid.uuid4())[:8]}.pdf"))
+            pdf_path = os.path.normpath(os.path.join(temp_dir, f"{carton_sn}_{str(uuid.uuid4())[:8]}.pdf"))
 
+        # Strategy 1: Ultra-fast Native BarTender COM ExportToFile (takes ~0.2s)
+        try:
+            logger.info(f"Attempting native BarTender ExportToFile to {pdf_path}...")
+            if os.path.exists(pdf_path):
+                try: os.remove(pdf_path)
+                except Exception: pass
+
+            bt_format.ExportToFile(pdf_path, 'PDF', 1, 300, 0)
+            time.sleep(0.3)
+
+            if os.path.exists(pdf_path) and os.path.getsize(pdf_path) > 100:
+                with open(pdf_path, "rb") as f:
+                    pdf_base64 = base64.b64encode(f.read()).decode('utf-8')
+                logger.info(f"Native PDF export successful: {os.path.getsize(pdf_path)} bytes")
+                return {
+                    "success": True, 
+                    "message": "PDF export completed successfully", 
+                    "type": "pdf", 
+                    "data": pdf_base64,
+                    "file_path": pdf_path
+                }
+        except Exception as e:
+            logger.warning(f"Native ExportToFile was not available or failed: {e}. Falling back to dialog interception.")
+
+        # Strategy 2: Fallback to Print Setup + Windows Dialog Auto-Interceptor
         def handle_save_dialog_asynchronously(target_pdf, timeout=15):
             """Runs on a background thread to wait for, fill, and click the Windows Save dialog box."""
             import win32gui
@@ -239,7 +265,6 @@ class BarTenderCOMApp:
                                     win32gui.SendMessage(edit_hwnd, win32con.WM_SETTEXT, 0, target_pdf)
                                     break
                                 elif cls == 'ComboBoxEx32':
-                                    # Combo boxes might have an inner edit control
                                     inner = win32gui.FindWindowEx(edit_hwnd, 0, 'ComboBox', None)
                                     inner_edit = win32gui.FindWindowEx(inner or edit_hwnd, 0, 'Edit', None)
                                     if inner_edit:
@@ -276,7 +301,7 @@ class BarTenderCOMApp:
             dialog_thread.start()
 
             bt_format.PrintOut(False, False)
-            dialog_thread.join(timeout=20)
+            dialog_thread.join(timeout=15)
 
             # Wait for the PDF to write fully to disk
             write_start = time.time()
@@ -291,8 +316,8 @@ class BarTenderCOMApp:
             if success:
                 with open(pdf_path, "rb") as f:
                     pdf_base64 = base64.b64encode(f.read()).decode('utf-8')
-                logger.info(f"PDF exported successfully: {os.path.getsize(pdf_path)} bytes")
-                return {"success": True, "message": "PDF export completed successfully", "type": "pdf", "data": pdf_base64}
+                logger.info(f"PDF exported successfully via PrintOut: {os.path.getsize(pdf_path)} bytes")
+                return {"success": True, "message": "PDF export completed successfully", "type": "pdf", "data": pdf_base64, "file_path": pdf_path}
             else:
                 return {"success": False, "message": "Failed to generate PDF document (Save dialog timeout/failure)."}
 
@@ -301,7 +326,6 @@ class BarTenderCOMApp:
             return {"success": False, "message": f"PDF export crashed: {str(e)}"}
         finally:
             if not is_agent:
-                # Clean up the physical temp file asynchronously to release memory and lock
                 def cleanup():
                     time.sleep(2)
                     try:
@@ -327,19 +351,13 @@ class BarTenderCOMApp:
             is_argv_agent = len(sys.argv) > 0 and "agent.py" in os.path.basename(sys.argv[0])
             this_dir = os.path.dirname(os.path.abspath(__file__))
             is_src_agent = "print_agent_v2" in this_dir and os.path.exists(os.path.join(this_dir, "agent.py"))
-            is_agent = is_argv_agent or is_src_agent
-
-        # In Print Agent mode: map the virtual "PDF" printer name to the physical "Microsoft Print to PDF"
-        # so that it naturally triggers the standard Windows Save Dialog box for the user!
-        mapped_printer = printer_name
-        if is_agent and printer_name and printer_name.upper() == "PDF":
-            mapped_printer = "Microsoft Print to PDF"
+        mapped_printer = printer_name or ""
 
         # Handle Mock Mode on Dev/Non-Windows OS
         if not HAS_WINDOWS_DEPS:
             logger.info(f"[MOCK PRINT] Template: {template_path}, Printer: {mapped_printer}")
             logger.info(f"[MOCK DATA] Substrings: {substrings}")
-            if mapped_printer.upper() == "PDF" or "PDF" in mapped_printer.upper():
+            if not mapped_printer or mapped_printer.upper() == "PDF" or "PDF" in mapped_printer.upper():
                 return {"success": True, "message": "Mock PDF Export completed", "type": "pdf", "data": "bW9ja19wZGZfYmFzZTY0X2NvbnRlbnQ="}
             return {"success": True, "message": "Mock Print Job processed successfully", "type": "print"}
 
@@ -376,15 +394,12 @@ class BarTenderCOMApp:
                         logger.debug(f"Failed to set template key '{key}': {e}")
 
                 # Check if it's a PDF export or a physical print job
-                is_pdf_export = mapped_printer and (
-                    mapped_printer.upper() == "PDF" or 
-                    ("PDF" in mapped_printer.upper() and "MICROSOFT" not in mapped_printer.upper())
-                )
+                is_pdf_export = not mapped_printer or mapped_printer.upper() == "PDF" or "PDF" in mapped_printer.upper()
 
                 if is_pdf_export:
                     return self._export_to_pdf(bt_format, substrings)
 
-                # Set Printer and Print Out
+                # Set Printer and Print Out for physical printer
                 if mapped_printer:
                     bt_format.PrintSetup.Printer = mapped_printer
 

@@ -126,20 +126,36 @@
         
         <!-- Scrollable Content Container -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-          <div class="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
             <div class="space-y-1">
               <p class="text-[10px] font-bold text-slate-400 uppercase">{{ t('admin.product') }}</p>
               <p class="font-bold text-slate-900 text-sm">{{ selectedCarton.product?.item_name }}</p>
             </div>
-            <div class="space-y-1 text-right">
+            <div class="space-y-1">
               <p class="text-[10px] font-bold text-slate-400 uppercase">{{ t('admin.upc') }}</p>
               <p class="font-mono text-slate-900 text-sm">{{ selectedCarton.product?.upc || '-' }}</p>
             </div>
-            <div class="space-y-1">
+            <div v-if="selectedCarton.job_order" class="space-y-1">
               <p class="text-[10px] font-bold text-slate-400 uppercase">{{ t('packing.job_order') }}</p>
-              <p class="font-bold text-indigo-600 text-sm">{{ selectedCarton.job_order || 'None' }}</p>
+              <p class="font-bold text-indigo-600 text-sm">{{ selectedCarton.job_order }}</p>
             </div>
-            <div class="space-y-1 text-right">
+            <div v-if="selectedCarton.po_number" class="space-y-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">PO Number</p>
+              <p class="font-bold text-indigo-600 text-sm">{{ selectedCarton.po_number }}</p>
+            </div>
+            <div v-if="selectedCarton.lot_number" class="space-y-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Lot Number</p>
+              <p class="font-bold text-indigo-600 text-sm">{{ selectedCarton.lot_number }}</p>
+            </div>
+            <div v-if="selectedCarton.weight !== undefined && selectedCarton.weight !== null" class="space-y-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Trọng Lượng</p>
+              <p class="font-bold text-emerald-700 text-sm">{{ selectedCarton.weight.toFixed(3) }} kg</p>
+            </div>
+            <div v-if="selectedCarton.date_code" class="space-y-1">
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Date Code</p>
+              <p class="font-mono text-slate-900 text-sm">{{ selectedCarton.date_code }}</p>
+            </div>
+            <div class="space-y-1">
               <p class="text-[10px] font-bold text-slate-400 uppercase">{{ t('admin.station_id_mac') }}</p>
               <p class="font-mono text-indigo-900 text-[10px]">{{ selectedCarton.station_id || '-' }}</p>
             </div>

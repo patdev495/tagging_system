@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UnicodeText, text
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, UnicodeText, text
 from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
@@ -22,9 +22,19 @@ class Product(Base):
     packed_qty = Column(Integer)
     start_part = Column(String(10)) # E.g., CN (Carton Number)
     middle_part = Column(String(20)) # e.g. 11, 16, A, B
-    template_type = Column(String(50), default="standard") # "standard" | "detailed"
+    template_type = Column(String(50), default="standard") # "standard" | "detailed" | "a11"
     template_path = Column(String(500), nullable=True) # E.g. D:\PAT\Template\carton.btw
     allow_partial = Column(Integer, default=0) # 0 = must be full | 1 = can be partial
+    
+    # UX Customer & Weight-scale additions
+    packing_mode = Column(String(50), default="item_scan") # "item_scan" | "weight_scale"
+    target_weight = Column(Float, nullable=True)
+    min_weight = Column(Float, nullable=True)
+    max_weight = Column(Float, nullable=True)
+    weight_unit = Column(String(10), default="kg")
+    mfr_pn = Column(String(50), nullable=True) # e.g. NYS5998
+    pkg_prefix = Column(String(20), nullable=True) # e.g. VHK0010237
+    revision = Column(String(10), default="B")
     
     customer = relationship("Customer", back_populates="products")
     cartons = relationship("Carton", back_populates="product")
@@ -43,6 +53,12 @@ class Carton(Base):
     is_reprint = Column(Integer, default=0) # 0 for Original, 1 for Reprint
     carton_origin = Column(String(50), default="VN") # Origin country, e.g. CN (China) or VN (Vietnam)
     station_id = Column(String(50), nullable=True) # Station ID derived from MAC address
+    
+    # UX Weight-scale additions
+    weight = Column(Float, nullable=True)
+    po_number = Column(String(100), nullable=True)
+    lot_number = Column(String(100), nullable=True)
+    date_code = Column(String(20), nullable=True)
     
     product = relationship("Product", back_populates="cartons")
     items = relationship("CartonItem", back_populates="carton")
@@ -71,4 +87,3 @@ class JobOrderCartonSlot(Base):
     
     product = relationship("Product")
     carton = relationship("Carton")
-

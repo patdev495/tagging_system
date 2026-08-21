@@ -15,12 +15,25 @@ def get_products_by_customer(customer_id: int, db: Session = Depends(get_db)):
 from src.core.models import Product
 
 @router.get("/products", response_model=List[schemas.Product])
-def get_all_products(db: Session = Depends(get_db)):
-    """Lấy tất cả sản phẩm (cho trang Admin)"""
-    return db.query(Product).all()
+def get_all_products(customer_code: Optional[str] = None, db: Session = Depends(get_db)):
+    """Lấy tất cả sản phẩm (cho trang Admin hoặc lọc theo customer_code)"""
+    query = db.query(Product)
+    if customer_code:
+        from src.core.models import Customer
+        query = query.join(Customer).filter(Customer.code == customer_code)
+    return query.all()
+
+@router.get("/products/{product_id}", response_model=schemas.Product)
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    """Lấy thông tin chi tiết một sản phẩm"""
+    db_product = service.get_product_by_id(product_id, db)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return db_product
 
 @router.post("/products", response_model=schemas.Product)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+
     """Tạo sản phẩm mới"""
     return service.create_product(db, product)
 

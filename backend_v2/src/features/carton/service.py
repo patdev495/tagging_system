@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from src.core import models, utils
 from src.features.carton import schemas
 from src.features.carton.sn_allocator import plan_next_carton_sn
+from src.features.carton.ux_sn_allocator import plan_next_ux_carton_sn
 from src.features.carton import slot_lifecycle
 from src.features.print.service import generate_btxml
 
@@ -176,6 +177,80 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         db.refresh(carton)
         return carton, btxml_content
         
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+
+def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
+    product = db.query(models.Product).filter(models.Product.id == weigh_in.product_id).with_for_update().first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Weight tolerance checks
+    if product.min_weight is not None and weigh_in.weight < product.min_weight:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Weight {weigh_in.weight}kg is below minimum tolerance {product.min_weight}kg."
+        )
+    if product.max_weight is not None and weigh_in.weight > product.max_weight:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Weight {weigh_in.weight}kg is above maximum tolerance {product.max_weight}kg."
+        )
+
+    # Allocate UX yearly SN
+    plan = plan_next_ux_carton_sn(
+        db,
+        product,
+        custom_yymm=weigh_in.custom_yymm,
+        custom_sequence=weigh_in.custom_sn,
+        lock=True,
+    )
+
+    if weigh_in.custom_sn:
+        existing = db.query(models.Carton).filter(
+            models.Carton.carton_sn == plan.carton_sn,
+            models.Carton.is_reprint == 0,
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Sê-ri thùng {plan.carton_sn} đã tồn tại trong hệ thống!"
+            )
+
+    try:
+        new_carton = models.Carton(
+            product_id=product.id,
+            carton_sn=plan.carton_sn,
+            packed_by=weigh_in.printer_name or "System",
+            status="FAILED",
+            carton_origin=weigh_in.carton_origin,
+            station_id=weigh_in.station_id,
+            weight=weigh_in.weight,
+            po_number=weigh_in.po_number,
+            lot_number=weigh_in.lot_number,
+            date_code=plan.date_code,
+            is_reprint=0,
+        )
+        db.add(new_carton)
+        db.flush()
+
+        db_path = getattr(product, 'template_path', None)
+        path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=weigh_in.template_path)
+
+        btxml_content = generate_btxml(
+            new_carton,
+            product,
+            [],
+            path_to_use,
+            weigh_in.printer_name
+        )
+        new_carton.btxml = btxml_content
+
+        db.commit()
+        db.refresh(new_carton)
+        return new_carton, btxml_content
+
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")

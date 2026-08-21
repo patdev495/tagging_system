@@ -34,6 +34,10 @@ class CartonBase(BaseModel):
     items_count: Optional[int] = 0
     is_reprint: Optional[int] = 0
     reprint_count: Optional[int] = 0
+    weight: Optional[float] = None
+    po_number: Optional[str] = None
+    lot_number: Optional[str] = None
+    date_code: Optional[str] = None
 
 class Carton(CartonBase):
     id: int

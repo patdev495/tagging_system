@@ -1,0 +1,202 @@
+"""Scale Manager Singleton coordinating serial engine and hotkeys."""
+
+import json
+import logging
+import os
+import time
+from typing import Optional
+
+from .serial_engine import SerialEngine, ConnectionStatus, list_com_ports
+from .hotkey import GlobalHotkeyListener
+from .parser import ScalePacketInfo
+
+logger = logging.getLogger("ScaleManager")
+
+
+class ScaleManager:
+    """Coordinates serial connection, hotkey triggers, and scale state."""
+
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(ScaleManager, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._port = "COM3"
+        self._baudrate = 9600
+        self._hotkey = "F9"
+        self._auto_connect = True
+
+        self._serial_engine: Optional[SerialEngine] = None
+        self._hotkey_listener: Optional[GlobalHotkeyListener] = None
+        self._latest_packet_info: Optional[ScalePacketInfo] = None
+        self._is_connected = False
+        self._trigger_count = 0
+        self._initialized = True
+
+    def load_config(self, config_path: str = "scale_config.json") -> None:
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self._port = data.get("port", self._port)
+                    self._baudrate = int(data.get("baudrate", self._baudrate))
+                    self._hotkey = data.get("hotkey", self._hotkey)
+                    self._auto_connect = bool(data.get("auto_connect", self._auto_connect))
+            except Exception as e:
+                logger.warning(f"Error loading scale config: {e}")
+
+    def save_config(self, config_path: str = "scale_config.json") -> None:
+        try:
+            data = {
+                "port": self._port,
+                "baudrate": self._baudrate,
+                "hotkey": self._hotkey,
+                "auto_connect": self._auto_connect,
+            }
+            with open(config_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            logger.error(f"Error saving scale config: {e}")
+
+    def auto_detect_port(self) -> Optional[str]:
+        """Auto-detect connected USB serial scale port."""
+        ports = list_com_ports()
+        if not ports:
+            return None
+        
+        # 1. Prefer USB Serial / CH340 / CP210x / FTDI / Prolific ports
+        for p in ports:
+            desc = (p.description or "").lower()
+            hwid = (p.hwid or "").lower()
+            if any(k in desc or k in hwid for k in ["usb", "ch340", "cp210", "ftdi", "prolific", "uart"]):
+                logger.info(f"Auto-detected USB Scale COM Port: {p.device} ({p.description})")
+                return p.device
+        
+        # 2. Fallback to first available port if only 1 exists
+        if len(ports) == 1:
+            logger.info(f"Auto-selected single available COM Port: {ports[0].device}")
+            return ports[0].device
+
+        return ports[0].device if ports else None
+
+    def start(self) -> None:
+        available_ports = [p.device for p in list_com_ports()]
+        if not self._port or self._port == "AUTO" or (available_ports and self._port not in available_ports):
+            detected = self.auto_detect_port()
+            if detected:
+                logger.info(f"Using auto-detected port: {detected} instead of {self._port}")
+                self._port = detected
+
+        logger.info(f"Starting Scale Manager (port={self._port}, baudrate={self._baudrate}, hotkey={self._hotkey})")
+        self._serial_engine = SerialEngine(
+            port=self._port,
+            baudrate=self._baudrate,
+            auto_reconnect=True,
+        )
+        self._serial_engine.on_scale_info_received = self._on_scale_info
+        self._serial_engine.on_status_changed = self._on_status_changed
+
+        if self._auto_connect:
+            self._serial_engine.start()
+
+        self._hotkey_listener = GlobalHotkeyListener(
+            hotkey=self._hotkey,
+            on_trigger=self._on_hotkey_triggered,
+        )
+        self._hotkey_listener.start()
+
+    def stop(self) -> None:
+        if self._serial_engine:
+            self._serial_engine.stop()
+        if self._hotkey_listener:
+            self._hotkey_listener.stop()
+
+    def reconnect(self, port: Optional[str] = None, baudrate: Optional[int] = None) -> None:
+        """Reconnect serial engine with updated port or baudrate."""
+        if port:
+            self._port = port
+        if baudrate:
+            self._baudrate = baudrate
+        logger.info(f"Reconnecting Scale Engine to {self._port} (baudrate={self._baudrate})...")
+        if self._serial_engine:
+            self._serial_engine.stop()
+        self._serial_engine = SerialEngine(
+            port=self._port,
+            baudrate=self._baudrate,
+            auto_reconnect=True,
+        )
+        self._serial_engine.on_scale_info_received = self._on_scale_info
+        self._serial_engine.on_status_changed = self._on_status_changed
+        if self._auto_connect:
+            self._serial_engine.start()
+
+    def _on_scale_info(self, info: ScalePacketInfo, raw: bytes) -> None:
+        self._latest_packet_info = info
+
+    def _on_status_changed(self, status: ConnectionStatus, msg: str) -> None:
+        self._is_connected = (status == ConnectionStatus.CONNECTED)
+
+    def _on_hotkey_triggered(self) -> None:
+        self._trigger_count += 1
+        logger.info(f"Hotkey triggered (total triggers={self._trigger_count})")
+
+    def get_status(self) -> dict:
+        ports = list_com_ports()
+        engine_status = self._serial_engine.status.value if self._serial_engine else "disconnected"
+        is_streaming = self._serial_engine.is_streaming() if self._serial_engine else False
+        return {
+            "connected": self._is_connected or is_streaming,
+            "status": engine_status,
+            "port": self._port,
+            "baudrate": self._baudrate,
+            "hotkey": self._hotkey,
+            "is_streaming": is_streaming,
+            "available_ports": [{"device": p.device, "description": p.description} for p in ports],
+        }
+
+    def get_current_reading(self) -> dict:
+        info = self._latest_packet_info
+        if info is None:
+            return {
+                "weight": 0.0,
+                "weight_str": "0.000",
+                "unit": "kg",
+                "is_stable": False,
+                "is_net": False,
+                "is_tare": False,
+                "is_zero": True,
+                "is_hold": False,
+                "timestamp": time.time(),
+            }
+
+        try:
+            val_float = float(info.weight.replace(",", "."))
+        except ValueError:
+            val_float = 0.0
+
+        return {
+            "weight": val_float,
+            "weight_str": info.weight,
+            "unit": info.unit,
+            "is_stable": info.is_stable,
+            "is_net": info.is_net,
+            "is_tare": info.is_tare,
+            "is_zero": info.is_zero,
+            "is_hold": info.is_hold,
+            "timestamp": time.time(),
+        }
+
+    def tare(self) -> bool:
+        return self._serial_engine.tare() if self._serial_engine else False
+
+    def zero(self) -> bool:
+        return self._serial_engine.zero() if self._serial_engine else False
+
+
+scale_manager = ScaleManager()

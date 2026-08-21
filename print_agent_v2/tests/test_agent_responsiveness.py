@@ -4,7 +4,7 @@ import sys
 import time
 
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 
 PRINT_AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,7 +22,7 @@ async def test_status_responds_while_print_job_is_blocked(monkeypatch):
 
     monkeypatch.setattr(agent.bt_com_app, "print_xml", slow_print_xml)
 
-    async with AsyncClient(app=agent.app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=agent.app), base_url="http://test") as client:
         print_task = asyncio.create_task(
             client.post("/print", json={"xml_content": "<xml />"})
         )

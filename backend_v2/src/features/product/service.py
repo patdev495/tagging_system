@@ -53,8 +53,14 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
     if not product:
         return {"next_seq": 1, "next_sn": None, "prefix": ""}
 
+    if product.packing_mode == "weight_scale" or product.template_type == "a11":
+        from src.features.carton.ux_sn_allocator import plan_next_ux_carton_sn
+        plan = plan_next_ux_carton_sn(db, product, custom_yymm=yymm)
+        return {"next_seq": plan.sequence, "next_sn": plan.carton_sn, "prefix": plan.prefix, "yymm": plan.yymm}
+
     plan = plan_next_carton_sn(db, product, custom_yymm=yymm, include_slots=True)
     return {"next_seq": plan.sequence, "next_sn": plan.carton_sn, "prefix": plan.prefix}
+
 
 
 def get_last_carton(product_id: int, db: Session):

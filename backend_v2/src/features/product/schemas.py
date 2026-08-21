@@ -11,6 +11,14 @@ class ProductBase(BaseModel):
     template_path: Optional[str] = None
     allow_partial: Optional[int] = 0
     customer_id: int
+    packing_mode: Optional[str] = "item_scan"
+    target_weight: Optional[float] = None
+    min_weight: Optional[float] = None
+    max_weight: Optional[float] = None
+    weight_unit: Optional[str] = "kg"
+    mfr_pn: Optional[str] = None
+    pkg_prefix: Optional[str] = None
+    revision: Optional[str] = "B"
 
 class ProductCreate(ProductBase):
     pass
@@ -25,9 +33,18 @@ class ProductUpdate(BaseModel):
     template_path: Optional[str] = None
     allow_partial: Optional[int] = None
     customer_id: Optional[int] = None
+    packing_mode: Optional[str] = None
+    target_weight: Optional[float] = None
+    min_weight: Optional[float] = None
+    max_weight: Optional[float] = None
+    weight_unit: Optional[str] = None
+    mfr_pn: Optional[str] = None
+    pkg_prefix: Optional[str] = None
+    revision: Optional[str] = None
 
 class Product(ProductBase):
     id: int
 
     class Config:
         from_attributes = True
+

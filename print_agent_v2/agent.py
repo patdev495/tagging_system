@@ -12,11 +12,17 @@ import xml.etree.ElementTree as ET
 # Import the unified COM app singleton
 from bartender_com import bt_com_app
 
+# Import Scale Manager
+try:
+    from scale.manager import scale_manager
+except ImportError:
+    from .scale.manager import scale_manager
+
 # Logging Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("PrintAgent")
 
-app = FastAPI(title="NY Print Agent V2 (Unified COM)")
+app = FastAPI(title="NY Print Agent V2 (Unified COM & Scale Engine)")
 
 # CORS Setup
 app.add_middleware(
@@ -26,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize BarTender on startup
+# Initialize BarTender and Scale on startup
 @app.on_event("startup")
 def startup_event():
     logger.info("Starting up Print Agent...")
@@ -35,12 +41,33 @@ def startup_event():
         logger.info("BarTender COM Engine successfully started on agent.")
     else:
         logger.warning("BarTender COM Engine failed to start on agent. Will retry lazily on print jobs.")
+    
+    try:
+        scale_manager.load_config()
+        scale_manager.start()
+        logger.info("Scale Manager successfully initialized.")
+    except Exception as e:
+        logger.warning(f"Scale Manager initialization notice: {e}")
+
+@app.on_event("shutdown")
+def shutdown_event():
+    logger.info("Shutting down Print Agent...")
+    try:
+        scale_manager.stop()
+    except Exception:
+        pass
 
 # === Schemas ===
 class PrintRequest(BaseModel):
     xml_content: str
     printer_name: Optional[str] = None
     local_template_dir: Optional[str] = None
+
+class ScaleConfigRequest(BaseModel):
+    port: Optional[str] = None
+    baudrate: Optional[int] = None
+    hotkey: Optional[str] = None
+    auto_connect: Optional[bool] = None
 
 # === Endpoints ===
 
@@ -49,16 +76,15 @@ def get_status():
     return {
         "status": "online", 
         "mode": "COM", 
-        "version": "2.2.0",
-        "bartender_ready": bt_com_app.is_initialized
+        "version": "2.3.0",
+        "bartender_ready": bt_com_app.is_initialized,
+        "scale_status": scale_manager.get_status()
     }
 
 @app.get("/printers")
 def get_printers():
     """Lấy danh sách máy in từ hệ thống"""
-    # Use the unified native Win32 printer enumeration
     printers_list = bt_com_app.get_printers()
-    # Return flat list of names for compatibility with frontend expectations
     return [p["name"] for p in printers_list]
 
 @app.get("/check-dir")
@@ -74,13 +100,55 @@ def check_file(folder: str, filename: str):
     exists = os.path.exists(full_path) and os.path.isfile(full_path)
     return {"exists": exists, "path": full_path}
 
+# === Scale Endpoints ===
+
+@app.get("/scale/status")
+def get_scale_status():
+    """Lấy trạng thái kết nối cổng COM cân điện tử"""
+    return scale_manager.get_status()
+
+@app.get("/scale/current")
+def get_scale_current():
+    """Lấy trọng lượng và cờ ổn định thời gian thực từ cân"""
+    return scale_manager.get_current_reading()
+
+@app.post("/scale/tare")
+def trigger_scale_tare():
+    """Gửi lệnh trừ bì tới cân"""
+    success = scale_manager.tare()
+    return {"success": success}
+
+@app.post("/scale/zero")
+def trigger_scale_zero():
+    """Gửi lệnh zero tới cân"""
+    success = scale_manager.zero()
+    return {"success": success}
+
+@app.post("/scale/config")
+def update_scale_config(cfg: ScaleConfigRequest):
+    """Cập nhật cấu hình cổng COM, baudrate, và hotkey của cân"""
+    port_changed = False
+    if cfg.port and cfg.port != scale_manager._port:
+        scale_manager._port = cfg.port
+        port_changed = True
+    if cfg.baudrate and cfg.baudrate != scale_manager._baudrate:
+        scale_manager._baudrate = cfg.baudrate
+        port_changed = True
+    if cfg.hotkey:
+        scale_manager._hotkey = cfg.hotkey
+    if cfg.auto_connect is not None:
+        scale_manager._auto_connect = cfg.auto_connect
+    
+    scale_manager.save_config()
+    if port_changed:
+        scale_manager.reconnect()
+    return {"success": True, "config": scale_manager.get_status()}
+
 @app.post("/print")
 async def process_print(req: PrintRequest):
     try:
         content = req.xml_content
         
-        # In qua Unified COM module với hỗ trợ phân giải đường dẫn tem tự động
-        # BarTender COM work is blocking; keep the event loop free for /status health checks.
         result = await run_in_threadpool(
             bt_com_app.print_xml,
             xml_content=content, 

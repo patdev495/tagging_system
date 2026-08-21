@@ -1,0 +1,6 @@
+{
+  "port": "COM4",
+  "baudrate": 9600,
+  "hotkey": "F9",
+  "auto_connect": true
+}

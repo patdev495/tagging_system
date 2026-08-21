@@ -1,12 +1,24 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import CustomerSelectPage from '../../views/CustomerSelectPage.vue';
 import PackingPage from '../../views/PackingPage.vue';
+import UXPackingPage from '../../views/UXPackingPage.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'Packing',
+    name: 'CustomerSelect',
+    component: CustomerSelectPage,
+  },
+  {
+    path: '/packing/ui',
+    name: 'UIPacking',
     component: PackingPage,
+  },
+  {
+    path: '/packing/ux',
+    name: 'UXPacking',
+    component: UXPackingPage,
   },
   {
     path: '/admin',
@@ -54,7 +66,6 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   // Check for admin routes
   if (to.path.startsWith('/admin')) {
-    // Allow access to login page
     if (to.name === 'AdminLogin') {
       next();
       return;
@@ -64,16 +75,13 @@ router.beforeEach((to, _from, next) => {
     if (isAuthenticated) {
       next();
     } else {
-      // Redirect to login with the original target path
       next({ name: 'AdminLogin', query: { redirect: to.fullPath } });
     }
-  } else {
-    // If navigating back to packing (root), clear admin session
-    if (to.path === '/') {
-      sessionStorage.removeItem('admin_session');
-    }
-    next();
+    return;
   }
+
+  next();
 });
+
 
 export default router;

@@ -82,7 +82,11 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
         status=initial_status,
         is_reprint=1,
         carton_origin=original.carton_origin,
-        station_id=station_id or original.station_id
+        station_id=station_id or original.station_id,
+        weight=original.weight,
+        po_number=original.po_number,
+        lot_number=original.lot_number,
+        date_code=original.date_code,
     )
     db.add(new_carton)
     db.flush()

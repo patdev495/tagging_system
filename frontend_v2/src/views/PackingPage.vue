@@ -1177,6 +1177,12 @@ const handlePrintExecution = async (
       );
       
       if (result.success) {
+        if (result.type === 'pdf' && result.data) {
+          const link = document.createElement('a');
+          link.href = `data:application/pdf;base64,${result.data}`;
+          link.download = `Label_${_cartonSn}.pdf`;
+          link.click();
+        }
         if (!skipStatusUpdate) {
           await printApi.updateCartonStatus(cartonId, 'PRINTED');
         }

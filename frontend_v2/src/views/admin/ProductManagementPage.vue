@@ -39,11 +39,11 @@
             <tr class="bg-slate-50 border-b border-slate-200">
               <th class="p-4 font-semibold text-slate-700 whitespace-nowrap">Product Name</th>
               <th class="p-4 font-semibold text-slate-700">Customer</th>
-              <th class="p-4 font-semibold text-slate-700">UPC</th>
+              <th class="p-4 font-semibold text-slate-700">Packing Mode / Spec</th>
               <th class="p-4 font-semibold text-slate-700">Packed QTY</th>
-              <th class="p-4 font-semibold text-slate-700">Prefix (SN)</th>
+              <th class="p-4 font-semibold text-slate-700">Prefix / Info</th>
               <th class="p-4 font-semibold text-slate-700">Template</th>
-              <th class="p-4 font-semibold text-slate-700">Template Path (Client PC)</th>
+              <th class="p-4 font-semibold text-slate-700">Template Path</th>
               <th class="p-4 font-semibold text-slate-700 text-right">Actions</th>
             </tr>
           </thead>
@@ -51,18 +51,36 @@
             <tr v-for="product in filteredProducts" :key="product.id" class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
               <td class="p-4 font-bold text-indigo-900">{{ product.item_name }}</td>
               <td class="p-4 text-slate-600 text-sm">{{ getCustomerName(product.customer_id) }}</td>
-              <td class="p-4 text-slate-500 font-mono text-xs">{{ product.upc || '-' }}</td>
+              <td class="p-4">
+                <div v-if="product.packing_mode === 'weight_scale'" class="flex flex-col">
+                  <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 w-fit">
+                    ⚖️ {{ product.min_weight?.toFixed(3) || '0.000' }} - {{ product.max_weight?.toFixed(3) || '0.000' }} kg
+                  </span>
+                  <span class="text-[10px] text-slate-400 mt-0.5">Target: {{ product.target_weight?.toFixed(3) || '0.000' }} kg</span>
+                </div>
+                <div v-else class="text-xs text-slate-500 font-medium">
+                  📦 Barcode Scan ({{ product.upc || 'No UPC' }})
+                </div>
+              </td>
               <td class="p-4 text-slate-700">
                 <span class="bg-slate-100 px-2 py-1 rounded font-bold">{{ product.packed_qty }}</span>
               </td>
               <td class="p-4">
-                <div class="flex flex-col text-xs">
-                  <span class="text-indigo-600 font-bold">{{ product.start_part }}</span>
+                <div v-if="product.packing_mode === 'weight_scale'" class="flex flex-col text-xs font-mono">
+                  <span class="text-indigo-600 font-bold">{{ product.pkg_prefix || '-' }}</span>
+                  <span class="text-slate-400">MFR: {{ product.mfr_pn || '-' }}</span>
+                </div>
+                <div v-else class="flex flex-col text-xs font-mono">
+                  <span class="text-indigo-600 font-bold">{{ product.start_part || '-' }}</span>
                   <span class="text-slate-400">{{ product.middle_part }}</span>
                 </div>
               </td>
               <td class="p-4">
-                <span :class="['px-2 py-1 rounded-full text-[10px] font-bold uppercase', (product.template_type || 'standard') === 'detailed' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700']">
+                <span :class="[
+                  'px-2 py-1 rounded-full text-[10px] font-bold uppercase', 
+                  product.template_type === 'a11' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                  product.template_type === 'detailed' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                ]">
                   {{ product.template_type || 'standard' }}
                 </span>
               </td>
@@ -91,8 +109,8 @@
     </div>
 
     <!-- Modal Form -->
-    <div v-if="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div v-if="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 my-8">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-900 text-white">
           <h2 class="text-xl font-bold">{{ isEdit ? 'Update Product' : 'Add New Product' }}</h2>
           <button @click="showModal = false" class="hover:bg-white/20 p-1 rounded-lg transition-colors">
@@ -100,36 +118,45 @@
           </button>
         </div>
         
-        <form @submit.prevent="saveProduct" class="p-6">
+        <form @submit.prevent="saveProduct" class="p-6 space-y-6">
           <div class="grid md:grid-cols-2 gap-6">
             <!-- Left Col -->
             <div class="space-y-4">
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Customer</label>
+                <label class="text-sm font-semibold text-slate-700">Customer *</label>
                 <select v-model="form.customer_id" required class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                  <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
+                  <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
                 </select>
               </div>
 
               <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Item Name</label>
-                <input v-model="form.item_name" type="text" required class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <label class="text-sm font-semibold text-slate-700">Product Name / CPN *</label>
+                <input v-model="form.item_name" type="text" required placeholder="e.g. 840-00083" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
               </div>
 
               <div class="space-y-1">
+                <label class="text-sm font-semibold text-slate-700">Packing Mode</label>
+                <select v-model="form.packing_mode" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium">
+                  <option value="item_scan">📦 Quét từng sản phẩm (Barcode Scan)</option>
+                  <option value="weight_scale">⚖️ Đóng gói cân trọng lượng (Weight Scale)</option>
+                </select>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-sm font-semibold text-slate-700">Packed QTY *</label>
+                <input v-model.number="form.packed_qty" type="number" required min="1" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+              </div>
+
+              <div class="space-y-1" v-if="form.packing_mode === 'item_scan'">
                 <label class="text-sm font-semibold text-slate-700">UPC / GTIN</label>
                 <input v-model="form.upc" type="text" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
-              </div>
-
-              <div class="space-y-1">
-                <label class="text-sm font-semibold text-slate-700">Packed QTY</label>
-                <input v-model.number="form.packed_qty" type="number" required min="1" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
               </div>
             </div>
 
             <!-- Right Col -->
             <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
+              <!-- Item scan mode prefix -->
+              <div class="grid grid-cols-2 gap-4" v-if="form.packing_mode === 'item_scan'">
                 <div class="space-y-1">
                   <label class="text-sm font-semibold text-slate-700">S/N Start Part</label>
                   <input v-model="form.start_part" type="text" placeholder="CN/VN" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -140,36 +167,95 @@
                 </div>
               </div>
 
+              <!-- UX Weight Scale mode prefix -->
+              <div class="grid grid-cols-2 gap-4" v-else>
+                <div class="space-y-1">
+                  <label class="text-sm font-semibold text-slate-700">PKG Prefix (Carton SN)</label>
+                  <input v-model="form.pkg_prefix" type="text" placeholder="VHK0010237" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                </div>
+                <div class="space-y-1">
+                  <label class="text-sm font-semibold text-slate-700">MFR P/N (Spec No)</label>
+                  <input v-model="form.mfr_pn" type="text" placeholder="NYS5998" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                </div>
+              </div>
+
               <div class="space-y-1">
                 <label class="text-sm font-semibold text-slate-700">Template Type</label>
                 <select v-model="form.template_type" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                   <option value="standard">Standard</option>
-                  <option value="detailed">Detailed</option>
+                  <option value="detailed">Detailed (32 S/N Grid)</option>
+                  <option value="a11">A11 (Khách hàng UX)</option>
                 </select>
               </div>
 
               <div class="space-y-1">
                 <label class="text-sm font-semibold text-slate-700">Template File Path (.btw)</label>
-                <input v-model="form.template_path" type="text" placeholder="D:\PAT\Templates\carton.ui.btw" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-mono">
-                <p class="text-[10px] text-slate-400 italic">* Leave empty to use system default path.</p>
+                <input v-model="form.template_path" type="text" placeholder="D:\PAT\Templates\a11.btw" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-mono">
+                <p class="text-[10px] text-slate-400 italic">* Đường dẫn file .btw trên máy client.</p>
               </div>
 
-              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div class="p-4 bg-slate-50 rounded-xl border border-slate-200" v-if="form.packing_mode === 'item_scan'">
                 <label class="flex items-center gap-3 cursor-pointer">
                   <input v-model="form.allow_partial" type="checkbox" :true-value="1" :false-value="0" class="w-5 h-5 rounded text-indigo-600">
                   <span class="text-sm font-semibold text-slate-700">Allow Partial Packing</span>
                 </label>
-                <p class="text-xs text-slate-400 mt-2">If enabled, users can click "Pack Now" even if target QTY is not met.</p>
               </div>
             </div>
           </div>
 
-          <div class="pt-8 flex gap-3">
+          <!-- Weight Tolerance Gatekeeper Settings (When Weight Scale Mode) -->
+          <div v-if="form.packing_mode === 'weight_scale'" class="p-5 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3 animate-in fade-in duration-200">
+            <div class="flex items-center gap-2 text-emerald-900 font-bold text-sm">
+              <i class="fas fa-weight-scale text-emerald-600"></i>
+              <span>Cài Đặt Khoảng Cân Cho Phép (Dung Sai Trọng Lượng)</span>
+            </div>
+            <p class="text-xs text-emerald-700">Chỉ cho phép in tem khi trọng lượng thực tế nằm trong khoảng [Min, Max] và ổn định.</p>
+            
+            <div class="grid grid-cols-3 gap-4 pt-1">
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase">Min Weight (kg) *</label>
+                <input 
+                  v-model.number="form.min_weight" 
+                  type="number" 
+                  step="0.001" 
+                  required 
+                  placeholder="12.300"
+                  class="w-full p-2.5 rounded-lg border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase">Target Weight (kg) *</label>
+                <input 
+                  v-model.number="form.target_weight" 
+                  type="number" 
+                  step="0.001" 
+                  required 
+                  placeholder="12.500"
+                  class="w-full p-2.5 rounded-lg border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm"
+                />
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-bold text-slate-700 uppercase">Max Weight (kg) *</label>
+                <input 
+                  v-model.number="form.max_weight" 
+                  type="number" 
+                  step="0.001" 
+                  required 
+                  placeholder="12.700"
+                  class="w-full p-2.5 rounded-lg border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 flex gap-3">
             <button type="button" @click="showModal = false" class="flex-1 px-4 py-3 rounded-lg border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-              Cancel
+              Hủy
             </button>
             <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors shadow-md disabled:opacity-50">
-              {{ isSubmitting ? 'Saving...' : 'Save Product' }}
+              {{ isSubmitting ? 'Đang lưu...' : 'Lưu Sản Phẩm' }}
             </button>
           </div>
         </form>
@@ -205,6 +291,14 @@ const form = ref<{
   template_path: string;
   allow_partial: number;
   customer_id: number | null;
+  packing_mode: string;
+  target_weight: number | null;
+  min_weight: number | null;
+  max_weight: number | null;
+  weight_unit: string;
+  mfr_pn: string;
+  pkg_prefix: string;
+  revision: string;
 }>({
   item_name: '',
   upc: '',
@@ -214,7 +308,15 @@ const form = ref<{
   template_type: 'standard',
   template_path: '',
   allow_partial: 0,
-  customer_id: null
+  customer_id: null,
+  packing_mode: 'item_scan',
+  target_weight: 12.500,
+  min_weight: 12.300,
+  max_weight: 12.700,
+  weight_unit: 'kg',
+  mfr_pn: 'NYS5998',
+  pkg_prefix: 'VHK0010237',
+  revision: 'B',
 });
 
 const filteredProducts = computed(() => {
@@ -262,7 +364,15 @@ const openCreateModal = () => {
     template_type: 'standard',
     template_path: '',
     allow_partial: 0,
-    customer_id: customers.value.length > 0 ? customers.value[0].id : null
+    customer_id: customers.value.length > 0 ? customers.value[0].id : null,
+    packing_mode: 'item_scan',
+    target_weight: 12.500,
+    min_weight: 12.300,
+    max_weight: 12.700,
+    weight_unit: 'kg',
+    mfr_pn: 'NYS5998',
+    pkg_prefix: 'VHK0010237',
+    revision: 'B',
   };
   showModal.value = true;
 };
@@ -279,7 +389,15 @@ const openEditModal = (product: Product) => {
     template_type: product.template_type || 'standard',
     template_path: product.template_path || '',
     allow_partial: product.allow_partial || 0,
-    customer_id: product.customer_id
+    customer_id: product.customer_id,
+    packing_mode: product.packing_mode || 'item_scan',
+    target_weight: product.target_weight ?? 12.500,
+    min_weight: product.min_weight ?? 12.300,
+    max_weight: product.max_weight ?? 12.700,
+    weight_unit: product.weight_unit || 'kg',
+    mfr_pn: product.mfr_pn || 'NYS5998',
+    pkg_prefix: product.pkg_prefix || 'VHK0010237',
+    revision: product.revision || 'B',
   };
   showModal.value = true;
 };

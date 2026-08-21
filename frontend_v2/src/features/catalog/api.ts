@@ -16,10 +16,16 @@ export default {
     return api.delete(`/customers/${id}`);
   },
 
-  // Products
   getAllProducts() {
     return api.get<Product[]>('/products');
   },
+  getProductsByCustomerCode(code: string) {
+    return api.get<Product[]>('/products', { params: { customer_code: code } });
+  },
+  getProduct(id: number) {
+    return api.get<Product>(`/products/${id}`);
+  },
+
   getCustomerProducts(customerId: number) {
     return api.get<Product[]>(`/customers/${customerId}/products`);
   },
@@ -31,5 +37,11 @@ export default {
   },
   deleteProduct(id: number) {
     return api.delete(`/products/${id}`);
+  },
+  getNextSN(productId: number, yymm?: string) {
+    return api.get<{ next_seq: number; next_sn: string; prefix: string; yymm?: string }>(`/products/${productId}/next-sn`, {
+      params: { yymm: yymm || undefined }
+    });
   }
 };
+

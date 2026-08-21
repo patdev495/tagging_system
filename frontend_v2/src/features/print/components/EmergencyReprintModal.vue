@@ -19,17 +19,20 @@
           <div class="px-5 py-4 bg-white border-b border-slate-200 flex items-center gap-3"><div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"></div><h3 class="m-0 text-[1.2rem] text-slate-900 font-mono">{{ result.carton_sn }}</h3></div>
           <div class="p-5">
             <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.product') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.product?.item_name || 'N/A' }}</span></div>
-            <div class="flex gap-6 mt-4">
-              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('packing.job_order') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.job_order || 'N/A' }}</span></div>
-              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('print.items') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.items?.length || 0 }} pcs</span></div>
-              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.date') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result ? new Date(result.created_at).toLocaleDateString() : '-' }}</span></div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+              <div v-if="result?.job_order" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('packing.job_order') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.job_order }}</span></div>
+              <div v-if="result?.po_number" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">PO Number</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.po_number }}</span></div>
+              <div v-if="result?.lot_number" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">Lot Number</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.lot_number }}</span></div>
+              <div v-if="result?.weight !== undefined && result?.weight !== null" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">Trọng Lượng</span><span class="text-emerald-700 font-bold text-[0.95rem]">{{ result.weight.toFixed(3) }} kg</span></div>
+              <div v-if="result?.date_code" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">Date Code</span><span class="text-slate-800 font-mono text-[0.95rem]">{{ result?.date_code }}</span></div>
+              <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.date') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result ? new Date(result.created_at).toLocaleString() : '-' }}</span></div>
             </div>
           </div>
           <div class="px-5 py-4 bg-white border-t border-slate-200 flex justify-end gap-3">
-            <button @click="$emit('rescan', result)" class="bg-slate-100 text-slate-600 border border-slate-200 px-5 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2 mr-auto transition-colors hover:bg-slate-200 hover:text-slate-900">
+            <button v-if="result?.product?.packing_mode !== 'weight_scale'" @click="$emit('rescan', result)" class="bg-slate-100 text-slate-600 border border-slate-200 px-5 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2 mr-auto transition-colors hover:bg-slate-200 hover:text-slate-900">
               <i class="fas fa-redo"></i><span>{{ t('print.rescan_items') }}</span>
             </button>
-            <button @click="$emit('reprint', result)" :disabled="loading" class="bg-slate-900 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2.5 transition-all hover:bg-black hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed">
+            <button @click="$emit('reprint', result)" :disabled="loading" class="bg-slate-900 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2.5 transition-all hover:bg-black hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed ml-auto">
               <i class="fas fa-spinner fa-spin" v-if="loading"></i><i class="fas fa-print" v-else></i><span>{{ t('print.print_label') }}</span>
             </button>
           </div>

@@ -90,7 +90,7 @@ class BTXMLDocument:
             "Origin": origin_text
         }
 
-        # Apply specific detailed template rules (such as ItemName repetition and MAC_ID)
+        # Apply specific template rules
         template_type = getattr(product, 'template_type', 'standard') or 'standard'
         if template_type == "detailed":
             substrings["ItemName2"] = product.item_name
@@ -101,6 +101,27 @@ class BTXMLDocument:
             for i in range(MAX_SN_GRID):
                 sn_value = items[i] if i < len(items) else " "
                 substrings[f"SN_{i+1}"] = sn_value
+        elif template_type == "a11":
+            cpn = product.item_name or ""
+            qty = str(product.packed_qty or actual_qty or 190)
+            mfr_pn = getattr(product, 'mfr_pn', '') or ""
+            date_code = getattr(carton, 'date_code', '') or ""
+            lot_no = getattr(carton, 'lot_number', '') or ""
+            po_no = getattr(carton, 'po_number', '') or ""
+            carton_sn = carton.carton_sn or ""
+            rev = getattr(product, 'revision', 'B') or 'B'
+            qr_content = f"P{cpn},Q{qty},M{mfr_pn},D{date_code},L{lot_no},K{po_no},S{carton_sn}"
+
+            substrings["CPN"] = cpn
+            substrings["QTY"] = qty
+            substrings["MfrPN"] = mfr_pn
+            substrings["DateCode"] = date_code
+            substrings["LotNo"] = lot_no
+            substrings["PONo"] = po_no
+            substrings["CartonSN"] = carton_sn
+            substrings["QR_Content"] = qr_content
+            substrings["Rev"] = rev
+            substrings["Origin"] = origin_text
 
         return cls(template_path=template_path, printer_name=printer_name, substrings=substrings)
 
@@ -137,7 +158,13 @@ class BTXMLDocument:
             "upc": self.substrings.get("UPC", ""),
             "qr_content": self.substrings.get("QR_Content", ""),
             "origin_text": self.substrings.get("Origin", ""),
-            "mac_id": self.substrings.get("MAC_ID", "")
+            "mac_id": self.substrings.get("MAC_ID", ""),
+            "cpn": self.substrings.get("CPN", ""),
+            "mfr_pn": self.substrings.get("MfrPN", ""),
+            "date_code": self.substrings.get("DateCode", ""),
+            "lot_no": self.substrings.get("LotNo", ""),
+            "po_no": self.substrings.get("PONo", ""),
+            "rev": self.substrings.get("Rev", ""),
         }
 
         # Build dynamic detailed grid tags if needed

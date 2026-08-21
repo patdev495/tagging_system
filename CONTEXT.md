@@ -17,8 +17,26 @@ Một thùng hàng vật lý chứa các sản phẩm (Product), được đại
 _Avoid_: Hộp, thùng chứa, kiện hàng
 
 **Carton SN**:
-Mã số sê-ri duy nhất của Carton, thường bắt đầu bằng tiền tố `CN` (viết tắt của Carton Number), theo sau là ngày tháng (YYMM), ký tự phân biệt sản phẩm và số thứ tự tự tăng năm chữ số.
-_Avoid_: Box SN, mã vạch thùng
+Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hình của từng Customer/Product:
+- Với khách hàng UI: Tiền tố `start_part` (mặc định `CN` - Carton Number), theo sau là ngày tháng (`YYMM`), ký tự phân biệt sản phẩm và số thứ tự 5 chữ số reset hàng tháng.
+- Với khách hàng UX (tiêu chuẩn tem A11): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm.
+_Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem A11)
+
+**Date Code**:
+Mã thời gian sản xuất gồm 2 chữ số cuối của năm và 2 chữ số của tuần trong năm theo chuẩn ISO (`YYWW`, ví dụ tuần 34 năm 2026 là `2634`).
+_Avoid_: Tuần sản xuất, mã tuần, date text
+
+**Lot Number**:
+Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô.
+_Avoid_: Mã mẻ, mã batch, số lô con
+
+**PO Number**:
+Mã đơn đặt hàng của khách hàng (Purchase Order / 訂單號) tương ứng với đợt sản xuất, được cấu hình hoặc nhập khi mở ca đóng hàng.
+_Avoid_: Mã PO, order ref, mã hợp đồng
+
+**Mfr P/N**:
+Mã số chứng nhận sản xuất hoặc tiêu chuẩn nội bộ (承认书编号 / NYS Spec No, ví dụ: `NYS5998`), được cấu hình cố định cho từng Product.
+_Avoid_: Mã chứng nhận, mã spec, internal part number
 
 **Carton Item**:
 Một sản phẩm con riêng lẻ được quét bằng máy quét sê-ri để xếp vào thùng (Carton), được định danh bởi một mã sê-ri sản phẩm (Item SN).
@@ -88,9 +106,8 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 
 - Một **Customer** có thể có nhiều **Products** khác nhau.
 - Một **Product** xác định chế độ đóng gói (**Packing Mode**), số lượng đóng gói quy chuẩn (`packed_qty`), mẫu tem nhãn, và quy tắc sinh sê-ri (**Carton SN**).
-- Với Product ở chế độ `item_scan`, một **Carton** chứa nhiều **Carton Items** với số lượng bằng đúng `packed_qty` (hoặc ít hơn nếu `allow_partial`).
-- Với Product ở chế độ `weight_scale`, một **Carton** không lưu **Carton Items** riêng lẻ (số lượng items = 0) mà lưu trữ giá trị **Weight Reading** và thời gian in. Lệnh in chỉ được thực thi khi **Weight Reading** thỏa mãn **Weight Tolerance**.
-- Một **Carton** được đóng mới trong hệ thống thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước.
+- Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước.
+- Với Product ở chế độ `weight_scale` (khách hàng UX), một **Carton** được đóng liên tục trong phiên làm việc gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 
 ## Example dialogue
