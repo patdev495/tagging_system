@@ -27,10 +27,11 @@ class ScaleManager:
     def __init__(self):
         if self._initialized:
             return
-        self._port = "COM3"
+        self._port = "AUTO"
         self._baudrate = 9600
         self._hotkey = "F9"
         self._auto_connect = True
+
 
         self._serial_engine: Optional[SerialEngine] = None
         self._hotkey_listener: Optional[GlobalHotkeyListener] = None
