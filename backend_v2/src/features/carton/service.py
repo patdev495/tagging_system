@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from src.core import models, utils
 from src.features.carton import schemas
 from src.features.carton.sn_allocator import plan_next_carton_sn
-from src.features.carton.ux_sn_allocator import plan_next_ux_carton_sn
+from src.features.carton.a11_sn_allocator import plan_next_a11_carton_sn
 from src.features.carton import slot_lifecycle
 from src.features.print.service import generate_btxml
 
@@ -198,8 +198,8 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             detail=f"Weight {weigh_in.weight}kg is above maximum tolerance {product.max_weight}kg."
         )
 
-    # Allocate UX yearly SN
-    plan = plan_next_ux_carton_sn(
+    # Allocate A11 yearly SN
+    plan = plan_next_a11_carton_sn(
         db,
         product,
         custom_yymm=weigh_in.custom_yymm,

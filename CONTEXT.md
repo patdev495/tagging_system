@@ -5,7 +5,7 @@ Hệ thống quản lý đóng gói và in ấn nhãn thùng hàng (Carton) tíc
 ## Language
 
 **Customer**:
-Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đóng gói và dán nhãn. Mỗi Customer có mã định danh kỹ thuật (`code`, ví dụ: `UI`, `UX`) và tên hiển thị chính thức (`name`, ví dụ: `Universal Instruments`, `Customer UX`).
+Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đóng gói và dán nhãn. Mỗi Customer có mã định danh kỹ thuật (`code`, ví dụ: `UI`, `A11`) và tên hiển thị chính thức (`name`, ví dụ: `Universal Instruments`, `Customer A11`).
 _Avoid_: Client, đối tác, đối tác mua hàng
 
 **Product**:
@@ -19,7 +19,7 @@ _Avoid_: Hộp, thùng chứa, kiện hàng
 **Carton SN**:
 Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hình của từng Customer/Product:
 - Với khách hàng UI: Tiền tố `start_part` (mặc định `CN` - Carton Number), theo sau là ngày tháng (`YYMM`), ký tự phân biệt sản phẩm và số thứ tự 5 chữ số reset hàng tháng.
-- Với khách hàng UX (tiêu chuẩn tem A11): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm.
+- Với khách hàng A11 (tiêu chuẩn tem A11): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm.
 _Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem A11)
 
 **Date Code**:
@@ -107,7 +107,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 - Một **Customer** có thể có nhiều **Products** khác nhau.
 - Một **Product** xác định chế độ đóng gói (**Packing Mode**), số lượng đóng gói quy chuẩn (`packed_qty`), mẫu tem nhãn, và quy tắc sinh sê-ri (**Carton SN**).
 - Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước.
-- Với Product ở chế độ `weight_scale` (khách hàng UX), một **Carton** được đóng liên tục trong phiên làm việc gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước.
+- Với Product ở chế độ `weight_scale` (khách hàng A11), một **Carton** được đóng liên tục trong phiên làm việc gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 
 ## Example dialogue

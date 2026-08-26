@@ -29,6 +29,15 @@
         <component :is="item.icon" class="w-6 h-6 flex-shrink-0" />
         <span v-if="!isCollapsed" class="font-medium whitespace-nowrap">{{ item.label }}</span>
       </router-link>
+
+      <button
+        @click="showSettings = true"
+        class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/10 group text-white text-left cursor-pointer border-none bg-transparent"
+        :title="isCollapsed ? 'Settings' : ''"
+      >
+        <Settings class="w-6 h-6 flex-shrink-0" />
+        <span v-if="!isCollapsed" class="font-medium whitespace-nowrap">Settings</span>
+      </button>
     </nav>
 
     <!-- Footer / Toggle -->
@@ -41,10 +50,14 @@
         <ChevronRight v-else class="w-6 h-6" />
       </button>
     </div>
+
+    <!-- Settings Modal -->
+    <SettingsModal :show="showSettings" @close="showSettings = false" />
   </aside>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import { 
   Package, 
   LayoutDashboard, 
@@ -59,9 +72,11 @@ import {
 import { useSystemStore } from '../stores/system';
 import { storeToRefs } from 'pinia';
 import type { Component } from 'vue';
+import SettingsModal from '../../features/settings/components/SettingsModal.vue';
 
 const systemStore = useSystemStore();
 const { isSidebarCollapsed: isCollapsed } = storeToRefs(systemStore);
+const showSettings = ref(false);
 
 interface MenuItem {
   label: string;
@@ -76,6 +91,5 @@ const menuItems: MenuItem[] = [
   { label: 'Products', path: '/admin/products', icon: Package },
   { label: 'Carton History', path: '/admin/history', icon: ClipboardList },
   { label: 'S/N Lookup', path: '/admin/stats', icon: BarChart3 },
-  { label: 'Settings', path: '/admin/settings', icon: Settings },
 ];
 </script>

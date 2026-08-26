@@ -1,6 +1,6 @@
 /**
  * Core scan validation logic — extracted for testability.
- * These pure functions mirror the validation in PackingPage.vue.
+ * These pure functions mirror the validation in UIPackingPage.vue.
  */
 
 export interface InvalidScan {

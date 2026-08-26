@@ -167,7 +167,7 @@
                 </div>
               </div>
 
-              <!-- UX Weight Scale mode prefix -->
+              <!-- A11 Weight Scale mode prefix -->
               <div class="grid grid-cols-2 gap-4" v-else>
                 <div class="space-y-1">
                   <label class="text-sm font-semibold text-slate-700">PKG Prefix (Carton SN)</label>
@@ -179,7 +179,7 @@
                 </div>
               </div>
 
-              <!-- Revision (A11 label) — only for UX weight_scale products -->
+              <!-- Revision (A11 label) — only for A11 weight_scale products -->
               <div class="space-y-1" v-if="form.packing_mode === 'weight_scale'">
                 <label class="text-sm font-semibold text-slate-700">
                   Revision <span class="text-slate-400 font-normal text-xs">(tem A11 — để trống nếu không có Rev)</span>
@@ -199,7 +199,7 @@
                 <select v-model="form.template_type" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                   <option value="standard">Standard</option>
                   <option value="detailed">Detailed (32 S/N Grid)</option>
-                  <option value="a11">A11 (Khách hàng UX)</option>
+                  <option value="a11">A11 (Khách hàng A11)</option>
                 </select>
               </div>
 

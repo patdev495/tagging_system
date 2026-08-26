@@ -21,11 +21,18 @@ describe('Router Customer Isolation and Navigation', () => {
     expect(router.currentRoute.value.name).toBe('UIPacking');
   });
 
-  it('routes to /packing/ux for UX customer weight-scale flow', async () => {
-    localStorage.setItem('selected_customer', 'UX');
+  it('routes to /packing/a11 for A11 customer weight-scale flow', async () => {
+    localStorage.setItem('selected_customer', 'A11');
+    await router.push('/packing/a11');
+    expect(router.currentRoute.value.path).toBe('/packing/a11');
+    expect(router.currentRoute.value.name).toBe('A11Packing');
+  });
+
+  it('redirects /packing/ux to /packing/a11 for backward compatibility', async () => {
+    localStorage.setItem('selected_customer', 'A11');
     await router.push('/packing/ux');
-    expect(router.currentRoute.value.path).toBe('/packing/ux');
-    expect(router.currentRoute.value.name).toBe('UXPacking');
+    expect(router.currentRoute.value.path).toBe('/packing/a11');
+    expect(router.currentRoute.value.name).toBe('A11Packing');
   });
 
   it('always lands on / (CustomerSelect) on root path', async () => {

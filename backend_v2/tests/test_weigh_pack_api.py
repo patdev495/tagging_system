@@ -28,9 +28,9 @@ def client():
 
     app.dependency_overrides[get_db] = override_get_db
 
-    # Seed UX Product
+    # Seed A11 Product
     db = TestingSessionLocal()
-    customer = Customer(code="UX", name="Customer UX")
+    customer = Customer(code="A11", name="Customer A11")
     db.add(customer)
     db.flush()
 

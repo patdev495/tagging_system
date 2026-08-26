@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.core.models import Base, Customer, Product, Carton
 from src.features.print.service import reprint_carton
-from src.features.carton.ux_sn_allocator import plan_next_ux_carton_sn
+from src.features.carton.a11_sn_allocator import plan_next_a11_carton_sn
 
 
 @pytest.fixture
@@ -17,8 +17,8 @@ def db_session():
 
 
 @pytest.fixture
-def ux_product(db_session):
-    customer = Customer(code="UX", name="Customer UX")
+def a11_product(db_session):
+    customer = Customer(code="A11", name="Customer A11")
     db_session.add(customer)
     db_session.flush()
 
@@ -42,10 +42,10 @@ def ux_product(db_session):
     return product
 
 
-def test_reprint_ux_carton_preserves_all_metadata(db_session, ux_product):
-    # 1. Create original UX carton
+def test_reprint_a11_carton_preserves_all_metadata(db_session, a11_product):
+    # 1. Create original A11 carton
     orig = Carton(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         carton_sn="VHK00102372608000081",
         weight=12.480,
         po_number="PO-ORIG-100",
@@ -82,6 +82,6 @@ def test_reprint_ux_carton_preserves_all_metadata(db_session, ux_product):
     assert "<NamedSubString Name=\"CartonSN\"><Value>VHK00102372608000081</Value></NamedSubString>" in reprinted.btxml
 
     # 3. Verify sequence allocator was NOT incremented by the reprint
-    next_plan = plan_next_ux_carton_sn(db_session, ux_product, custom_yymm="2608")
+    next_plan = plan_next_a11_carton_sn(db_session, a11_product, custom_yymm="2608")
     assert next_plan.sequence == 82
     assert next_plan.carton_sn == "VHK00102372608000082"

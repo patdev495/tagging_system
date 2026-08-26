@@ -18,8 +18,8 @@ def db_session():
 
 
 @pytest.fixture
-def ux_product(db_session):
-    customer = Customer(code="UX", name="Customer UX")
+def a11_product(db_session):
+    customer = Customer(code="A11", name="Customer A11")
     db_session.add(customer)
     db_session.flush()
 
@@ -43,9 +43,9 @@ def ux_product(db_session):
     return product
 
 
-def test_weigh_pack_rejects_underweight(db_session, ux_product):
+def test_weigh_pack_rejects_underweight(db_session, a11_product):
     payload = CartonWeighPackCreate(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         weight=12.100,  # Below min_weight 12.300
         po_number="PO12345",
         lot_number="LOT67890",
@@ -58,9 +58,9 @@ def test_weigh_pack_rejects_underweight(db_session, ux_product):
     assert "below minimum tolerance" in exc_info.value.detail
 
 
-def test_weigh_pack_rejects_overweight(db_session, ux_product):
+def test_weigh_pack_rejects_overweight(db_session, a11_product):
     payload = CartonWeighPackCreate(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         weight=12.900,  # Above max_weight 12.700
         po_number="PO12345",
         lot_number="LOT67890",
@@ -73,9 +73,9 @@ def test_weigh_pack_rejects_overweight(db_session, ux_product):
     assert "above maximum tolerance" in exc_info.value.detail
 
 
-def test_weigh_pack_success(db_session, ux_product):
+def test_weigh_pack_success(db_session, a11_product):
     payload = CartonWeighPackCreate(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         weight=12.500,
         po_number="PO-9999",
         lot_number="LOT-8888",
@@ -97,15 +97,15 @@ def test_weigh_pack_success(db_session, ux_product):
     assert "<NamedSubString Name=\"LotNo\"><Value>LOT-8888</Value></NamedSubString>" in btxml
 
 
-def test_weigh_pack_sequential_sn(db_session, ux_product):
+def test_weigh_pack_sequential_sn(db_session, a11_product):
     p1 = CartonWeighPackCreate(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         weight=12.450,
         po_number="PO-1",
         lot_number="LOT-1",
     )
     p2 = CartonWeighPackCreate(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         weight=12.550,
         po_number="PO-1",
         lot_number="LOT-1",

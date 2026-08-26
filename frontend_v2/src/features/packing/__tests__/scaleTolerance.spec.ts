@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   evaluateScaleTolerance,
+  generateA11SNPreview,
   generateUXSNPreview,
 } from '../utils/scaleTolerance';
 
@@ -86,6 +87,14 @@ describe('evaluateScaleTolerance', () => {
     });
     expect(res.status).toBe('READY');
     expect(res.canPrint).toBe(true);
+  });
+});
+
+describe('generateA11SNPreview', () => {
+  it('formats prefix, yymm, and 6-digit sequence', () => {
+    expect(generateA11SNPreview('VHK0010237', '2608', 81)).toBe('VHK00102372608000081');
+    expect(generateA11SNPreview('VHK0010237', '2608', 1)).toBe('VHK00102372608000001');
+    expect(generateA11SNPreview('VHK0010237', '2608', '123456')).toBe('VHK00102372608123456');
   });
 });
 

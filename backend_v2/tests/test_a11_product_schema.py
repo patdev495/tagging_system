@@ -12,8 +12,8 @@ def db_session():
     yield session
     session.close()
 
-def test_product_model_has_ux_fields(db_session):
-    customer = Customer(code="UX", name="Customer UX")
+def test_product_model_has_a11_fields(db_session):
+    customer = Customer(code="A11", name="Customer A11")
     db_session.add(customer)
     db_session.flush()
 
@@ -45,8 +45,8 @@ def test_product_model_has_ux_fields(db_session):
     assert saved.pkg_prefix == "VHK0010237"
     assert saved.revision == "B"
 
-def test_carton_model_has_ux_weight_fields(db_session):
-    customer = Customer(code="UX", name="Customer UX")
+def test_carton_model_has_a11_weight_fields(db_session):
+    customer = Customer(code="A11", name="Customer A11")
     db_session.add(customer)
     db_session.flush()
 
@@ -101,14 +101,14 @@ def test_ui_customer_backward_compatibility(db_session):
     assert saved_ui.packing_mode == "item_scan"
     assert saved_ui.target_weight is None
 
-def test_seed_ux_data(db_session):
-    from src.core.database import seed_ux_data
-    seed_ux_data(db_session)
+def test_seed_a11_data(db_session):
+    from src.core.database import seed_a11_data
+    seed_a11_data(db_session)
 
-    ux = db_session.query(Customer).filter(Customer.code == "UX").first()
-    assert ux is not None
+    a11 = db_session.query(Customer).filter(Customer.code == "A11").first()
+    assert a11 is not None
 
-    prods = db_session.query(Product).filter(Product.customer_id == ux.id).all()
+    prods = db_session.query(Product).filter(Product.customer_id == a11.id).all()
     assert len(prods) == 3
     names = {p.item_name for p in prods}
     assert names == {"840-00083", "840-00091", "840-00092"}
@@ -118,4 +118,3 @@ def test_seed_ux_data(db_session):
         assert p.mfr_pn == "NYS5998"
         assert p.template_type == "a11"
         assert p.packing_mode == "weight_scale"
-

@@ -149,6 +149,7 @@
     "customers": "Customer Management",
     "products": "Product Management",
     "date": "Date",
+    "status": "Status",
     "carton_sn": "Carton SN",
     "product": "Product",
     "customer": "Customer",

@@ -70,9 +70,9 @@
           </div>
         </div>
 
-        <!-- Card 2: Khách hàng UX (weight_scale) -->
+        <!-- Card 2: Khách hàng A11 (weight_scale) -->
         <div
-          @click="selectCustomer('UX')"
+          @click="selectCustomer('A11')"
           class="group relative bg-white hover:bg-slate-50/80 border-2 border-slate-200/90 hover:border-emerald-500 rounded-3xl p-6 md:p-8 cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1.5 flex flex-col justify-between min-h-[290px] overflow-hidden"
         >
           <!-- Subtle watermark icon -->
@@ -91,7 +91,7 @@
             </div>
 
             <h2 class="text-2xl font-black text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-              {{ uxCustomerName }}
+              {{ a11CustomerName }}
             </h2>
             <p class="text-slate-600 text-sm leading-relaxed mb-4">
               Quy trình đóng gói theo cân điện tử (RS-232), kiểm soát dung sai trọng lượng, nhập PO/LOT và in tem tiêu chuẩn A11.
@@ -140,17 +140,20 @@ const uiCustomerName = computed(() => {
   return found?.name || 'Khách Hàng UI';
 });
 
-const uxCustomerName = computed(() => {
-  const found = customers.value.find(c => c.code?.trim().toUpperCase() === 'UX');
-  return found?.name || 'Khách Hàng UX';
+const a11CustomerName = computed(() => {
+  const found = customers.value.find(c => {
+    const code = c.code?.trim().toUpperCase();
+    return code === 'A11' || code === 'UX';
+  });
+  return found?.name || 'Khách Hàng A11';
 });
 
-const selectCustomer = (code: 'UI' | 'UX') => {
-  localStorage.setItem('selected_customer', code);
+const selectCustomer = (code: 'UI' | 'A11' | 'UX') => {
+  localStorage.setItem('selected_customer', code === 'UX' ? 'A11' : code);
   if (code === 'UI') {
     router.push('/packing/ui');
   } else {
-    router.push('/packing/ux');
+    router.push('/packing/a11');
   }
 };
 </script>

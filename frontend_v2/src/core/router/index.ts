@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import CustomerSelectPage from '../../views/CustomerSelectPage.vue';
-import PackingPage from '../../views/PackingPage.vue';
-import UXPackingPage from '../../views/UXPackingPage.vue';
+import UIPackingPage from '../../views/UIPackingPage.vue';
+import A11PackingPage from '../../views/A11PackingPage.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 
 const routes: RouteRecordRaw[] = [
@@ -13,12 +13,16 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/packing/ui',
     name: 'UIPacking',
-    component: PackingPage,
+    component: UIPackingPage,
+  },
+  {
+    path: '/packing/a11',
+    name: 'A11Packing',
+    component: A11PackingPage,
   },
   {
     path: '/packing/ux',
-    name: 'UXPacking',
-    component: UXPackingPage,
+    redirect: '/packing/a11',
   },
   {
     path: '/admin',

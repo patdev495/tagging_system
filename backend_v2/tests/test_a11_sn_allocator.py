@@ -3,11 +3,11 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.core.models import Base, Customer, Product, Carton
-from src.features.carton.ux_sn_allocator import (
+from src.features.carton.a11_sn_allocator import (
     current_iso_date_code,
-    plan_next_ux_carton_sn,
-    format_ux_carton_sn,
-    UX_SEQUENCE_WIDTH,
+    plan_next_a11_carton_sn,
+    format_a11_carton_sn,
+    A11_SEQUENCE_WIDTH,
 )
 
 
@@ -22,8 +22,8 @@ def db_session():
 
 
 @pytest.fixture
-def ux_product(db_session):
-    customer = Customer(code="UX", name="Customer UX")
+def a11_product(db_session):
+    customer = Customer(code="A11", name="Customer A11")
     db_session.add(customer)
     db_session.flush()
 
@@ -57,23 +57,23 @@ def test_current_iso_date_code():
     assert len(current_iso_date_code()) == 4
 
 
-def test_format_ux_carton_sn():
-    sn = format_ux_carton_sn("VHK0010237", "2608", 81)
+def test_format_a11_carton_sn():
+    sn = format_a11_carton_sn("VHK0010237", "2608", 81)
     assert sn == "VHK00102372608000081"
     assert len(sn) == len("VHK0010237") + 4 + 6
 
 
-def test_plan_next_ux_carton_sn_first_in_year(db_session, ux_product):
-    plan = plan_next_ux_carton_sn(db_session, ux_product, custom_yymm="2608")
+def test_plan_next_a11_carton_sn_first_in_year(db_session, a11_product):
+    plan = plan_next_a11_carton_sn(db_session, a11_product, custom_yymm="2608")
     assert plan.sequence == 1
     assert plan.carton_sn == "VHK00102372608000001"
     assert plan.date_code == current_iso_date_code()
 
 
-def test_plan_next_ux_carton_sn_sequential_increment_across_months(db_session, ux_product):
+def test_plan_next_a11_carton_sn_sequential_increment_across_months(db_session, a11_product):
     # Existing carton in month 08
     c1 = Carton(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         carton_sn="VHK00102372608000080",
         weight=12.45,
         status="SUCCESS",
@@ -83,15 +83,15 @@ def test_plan_next_ux_carton_sn_sequential_increment_across_months(db_session, u
     db_session.commit()
 
     # Next carton in month 09 of the same year 26 should be sequence 81
-    plan = plan_next_ux_carton_sn(db_session, ux_product, custom_yymm="2609")
+    plan = plan_next_a11_carton_sn(db_session, a11_product, custom_yymm="2609")
     assert plan.sequence == 81
     assert plan.carton_sn == "VHK00102372609000081"
 
 
-def test_plan_next_ux_carton_sn_resets_on_new_year(db_session, ux_product):
+def test_plan_next_a11_carton_sn_resets_on_new_year(db_session, a11_product):
     # Existing carton in year 25
     c_prev_year = Carton(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         carton_sn="VHK00102372512000999",
         weight=12.45,
         status="SUCCESS",
@@ -101,20 +101,20 @@ def test_plan_next_ux_carton_sn_resets_on_new_year(db_session, ux_product):
     db_session.commit()
 
     # In year 26, sequence should reset to 1
-    plan = plan_next_ux_carton_sn(db_session, ux_product, custom_yymm="2601")
+    plan = plan_next_a11_carton_sn(db_session, a11_product, custom_yymm="2601")
     assert plan.sequence == 1
     assert plan.carton_sn == "VHK00102372601000001"
 
 
-def test_plan_next_ux_carton_sn_ignores_reprints(db_session, ux_product):
+def test_plan_next_a11_carton_sn_ignores_reprints(db_session, a11_product):
     c_orig = Carton(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         carton_sn="VHK00102372608000005",
         status="SUCCESS",
         is_reprint=0,
     )
     c_reprint = Carton(
-        product_id=ux_product.id,
+        product_id=a11_product.id,
         carton_sn="VHK00102372608000005",
         status="SUCCESS",
         is_reprint=1,
@@ -122,6 +122,6 @@ def test_plan_next_ux_carton_sn_ignores_reprints(db_session, ux_product):
     db_session.add_all([c_orig, c_reprint])
     db_session.commit()
 
-    plan = plan_next_ux_carton_sn(db_session, ux_product, custom_yymm="2608")
+    plan = plan_next_a11_carton_sn(db_session, a11_product, custom_yymm="2608")
     assert plan.sequence == 6
     assert plan.carton_sn == "VHK00102372608000006"

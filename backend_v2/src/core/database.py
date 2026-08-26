@@ -59,31 +59,40 @@ def get_db():
     finally:
         db.close()
 
-def seed_ux_data(db):
-    """Seed Customer UX and 3 initial products if not already present."""
+def seed_a11_data(db):
+    """Seed Customer A11 and 3 initial products if not already present."""
     from src.core import models
     try:
-        ux_customer = db.query(models.Customer).filter(models.Customer.code == "UX").first()
-        if not ux_customer:
-            ux_customer = models.Customer(code="UX", name="Customer UX")
-            db.add(ux_customer)
-            db.flush()
-            logger.info("Seeded Customer UX")
+        a11_customer = db.query(models.Customer).filter(models.Customer.code == "A11").first()
+        if not a11_customer:
+            # Check if UX exists and migrate inline
+            ux_customer = db.query(models.Customer).filter(models.Customer.code == "UX").first()
+            if ux_customer:
+                ux_customer.code = "A11"
+                ux_customer.name = "Customer A11"
+                a11_customer = ux_customer
+                db.flush()
+                logger.info("Migrated Customer UX to Customer A11")
+            else:
+                a11_customer = models.Customer(code="A11", name="Customer A11")
+                db.add(a11_customer)
+                db.flush()
+                logger.info("Seeded Customer A11")
 
-        ux_products = [
+        a11_products = [
             ("840-00083", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700),
             ("840-00091", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700),
             ("840-00092", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700),
         ]
 
-        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w in ux_products:
+        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w in a11_products:
             prod = db.query(models.Product).filter(
-                models.Product.customer_id == ux_customer.id,
+                models.Product.customer_id == a11_customer.id,
                 models.Product.item_name == item_name
             ).first()
             if not prod:
                 prod = models.Product(
-                    customer_id=ux_customer.id,
+                    customer_id=a11_customer.id,
                     item_name=item_name,
                     packed_qty=qty,
                     pkg_prefix=prefix,
@@ -98,12 +107,14 @@ def seed_ux_data(db):
                     max_weight=max_w,
                 )
                 db.add(prod)
-                logger.info(f"Seeded UX Product: {item_name}")
+                logger.info(f"Seeded A11 Product: {item_name}")
 
         db.commit()
     except Exception as e:
         db.rollback()
-        logger.warning(f"Seed UX data notice: {e}")
+        logger.warning(f"Seed A11 data notice: {e}")
+
+seed_ux_data = seed_a11_data
 
 def init_db():
     try:
@@ -135,7 +146,7 @@ def init_db():
                         conn.execute(text("ALTER TABLE job_order_carton_slots ADD shipped INT NOT NULL CONSTRAINT DF_job_order_carton_slots_shipped DEFAULT 0 WITH VALUES"))
                     conn.commit()
 
-            # 2. Migrate products table for UX & weight_scale columns
+            # 2. Migrate products table for A11 / UX & weight_scale columns
             if inspector.has_table('products'):
                 prod_cols = [c['name'] for c in inspector.get_columns('products')]
                 new_prod_cols = [
@@ -171,9 +182,14 @@ def init_db():
                         conn.execute(text(f"ALTER TABLE cartons ADD COLUMN {col_name} {col_type}" if is_sqlite else f"ALTER TABLE cartons ADD {col_name} {col_type}"))
                         conn.commit()
 
+            # 4. Migrate Customer UX -> A11
+            if inspector.has_table('customers'):
+                conn.execute(text("UPDATE customers SET code = 'A11', name = 'Customer A11' WHERE code = 'UX'"))
+                conn.commit()
+
         # Run seed data
         with SessionLocal() as db:
-            seed_ux_data(db)
+            seed_a11_data(db)
 
     except Exception as e:
         logger.error(f"Failed to initialize or migrate database tables: {e}")
