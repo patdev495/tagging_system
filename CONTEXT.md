@@ -5,7 +5,7 @@ Hệ thống quản lý đóng gói và in ấn nhãn thùng hàng (Carton) tíc
 ## Language
 
 **Customer**:
-Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đóng gói và dán nhãn.
+Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đóng gói và dán nhãn. Mỗi Customer có mã định danh kỹ thuật (`code`, ví dụ: `UI`, `UX`) và tên hiển thị chính thức (`name`, ví dụ: `Universal Instruments`, `Customer UX`).
 _Avoid_: Client, đối tác, đối tác mua hàng
 
 **Product**:

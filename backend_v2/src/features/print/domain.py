@@ -109,7 +109,7 @@ class BTXMLDocument:
             lot_no = getattr(carton, 'lot_number', '') or ""
             po_no = getattr(carton, 'po_number', '') or ""
             carton_sn = carton.carton_sn or ""
-            rev = getattr(product, 'revision', 'B') or 'B'
+            rev = getattr(product, 'revision', '') or ''
             qr_content = f"P{cpn},Q{qty},M{mfr_pn},D{date_code},L{lot_no},K{po_no},S{carton_sn}"
 
             substrings["CPN"] = cpn

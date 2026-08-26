@@ -179,6 +179,21 @@
                 </div>
               </div>
 
+              <!-- Revision (A11 label) — only for UX weight_scale products -->
+              <div class="space-y-1" v-if="form.packing_mode === 'weight_scale'">
+                <label class="text-sm font-semibold text-slate-700">
+                  Revision <span class="text-slate-400 font-normal text-xs">(tem A11 — để trống nếu không có Rev)</span>
+                </label>
+                <input
+                  v-model="form.revision"
+                  type="text"
+                  maxlength="10"
+                  placeholder="B  (để trống = không hiển thị Rev)"
+                  class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono uppercase"
+                >
+                <p class="text-[10px] text-slate-400 italic">Giá trị rỗng sẽ ẩn hoàn toàn ô Rev trên tem A11.</p>
+              </div>
+
               <div class="space-y-1">
                 <label class="text-sm font-semibold text-slate-700">Template Type</label>
                 <select v-model="form.template_type" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
@@ -397,7 +412,7 @@ const openEditModal = (product: Product) => {
     weight_unit: product.weight_unit || 'kg',
     mfr_pn: product.mfr_pn || 'NYS5998',
     pkg_prefix: product.pkg_prefix || 'VHK0010237',
-    revision: product.revision || 'B',
+    revision: product.revision ?? '',
   };
   showModal.value = true;
 };

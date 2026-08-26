@@ -1,5 +1,20 @@
 <template>
-  <div class="min-h-screen w-full p-4 md:p-8 flex items-center justify-center bg-slate-100 text-slate-900 selection:bg-indigo-600 selection:text-white">
+  <div class="min-h-screen w-full p-4 md:p-8 flex items-center justify-center bg-slate-100 text-slate-900 selection:bg-indigo-600 selection:text-white relative">
+    
+    <!-- Top-Right Admin Button -->
+    <div class="absolute top-4 right-4 md:top-6 md:right-8 z-10">
+      <router-link
+        to="/admin"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 text-slate-700 hover:text-indigo-600 hover:border-indigo-300 font-bold text-xs shadow-xs hover:shadow-md transition-all duration-200 group"
+        title="Truy cập Trang Quản Trị Hệ Thống"
+      >
+        <div class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+          <i class="fas fa-shield-alt text-xs"></i>
+        </div>
+        <span>Quản Trị Hệ Thống</span>
+      </router-link>
+    </div>
+
     <div class="w-full max-w-[960px] flex flex-col items-center">
       
       <!-- Top Header -->
@@ -21,7 +36,7 @@
       <!-- Customer Selection Cards Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-[840px]">
         
-        <!-- Card 1: Khách hàng UI -->
+        <!-- Card 1: Khách hàng UI (item_scan) -->
         <div
           @click="selectCustomer('UI')"
           class="group relative bg-white hover:bg-slate-50/80 border-2 border-slate-200/90 hover:border-blue-500 rounded-3xl p-6 md:p-8 cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 flex flex-col justify-between min-h-[290px] overflow-hidden"
@@ -42,7 +57,7 @@
             </div>
 
             <h2 class="text-2xl font-black text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
-              Khách Hàng UI
+              {{ uiCustomerName }}
             </h2>
             <p class="text-slate-600 text-sm leading-relaxed mb-4">
               Quy trình đóng gói quét từng mã sê-ri sản phẩm con vào thùng theo Job Order ERP. Mẫu tem Standard / Detailed.
@@ -50,12 +65,12 @@
           </div>
 
           <div class="flex items-center text-blue-600 font-black text-sm gap-2 group-hover:gap-3 transition-all pt-4 border-t border-slate-100">
-            <span>Mở Trạm Đóng Hàng UI</span>
+            <span>Mở Trạm Đóng Hàng</span>
             <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
           </div>
         </div>
 
-        <!-- Card 2: Khách hàng UX -->
+        <!-- Card 2: Khách hàng UX (weight_scale) -->
         <div
           @click="selectCustomer('UX')"
           class="group relative bg-white hover:bg-slate-50/80 border-2 border-slate-200/90 hover:border-emerald-500 rounded-3xl p-6 md:p-8 cursor-pointer transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1.5 flex flex-col justify-between min-h-[290px] overflow-hidden"
@@ -76,7 +91,7 @@
             </div>
 
             <h2 class="text-2xl font-black text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-              Khách Hàng UX
+              {{ uxCustomerName }}
             </h2>
             <p class="text-slate-600 text-sm leading-relaxed mb-4">
               Quy trình đóng gói theo cân điện tử (RS-232), kiểm soát dung sai trọng lượng, nhập PO/LOT và in tem tiêu chuẩn A11.
@@ -84,32 +99,51 @@
           </div>
 
           <div class="flex items-center text-emerald-600 font-black text-sm gap-2 group-hover:gap-3 transition-all pt-4 border-t border-slate-100">
-            <span>Mở Trạm Cân Đóng Hàng UX</span>
+            <span>Mở Trạm Cân Đóng Hàng</span>
             <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
           </div>
         </div>
-      </div>
-
-      <!-- Admin Access Link -->
-      <div class="mt-10 text-center">
-        <router-link
-          to="/admin"
-          class="text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 justify-center py-1.5 px-3 rounded-lg hover:bg-slate-200/60"
-        >
-          <i class="fas fa-shield-alt text-[0.85rem] text-slate-400"></i>
-          <span>Trang Quản Trị Hệ Thống (Admin)</span>
-        </router-link>
       </div>
 
     </div>
   </div>
 </template>
 
-
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import catalogApi from '../features/catalog/api';
+import type { Customer } from '../types/api';
 
 const router = useRouter();
+const customers = ref<Customer[]>([]);
+const isLoading = ref(true);
+
+const fetchCustomers = async () => {
+  try {
+    isLoading.value = true;
+    const res = await catalogApi.getCustomers();
+    customers.value = res.data || [];
+  } catch (error) {
+    console.error('Failed to load customers:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchCustomers();
+});
+
+const uiCustomerName = computed(() => {
+  const found = customers.value.find(c => c.code?.trim().toUpperCase() === 'UI');
+  return found?.name || 'Khách Hàng UI';
+});
+
+const uxCustomerName = computed(() => {
+  const found = customers.value.find(c => c.code?.trim().toUpperCase() === 'UX');
+  return found?.name || 'Khách Hàng UX';
+});
 
 const selectCustomer = (code: 'UI' | 'UX') => {
   localStorage.setItem('selected_customer', code);

@@ -28,7 +28,7 @@ def test_a11_btxml_document_from_carton_data():
         carton=carton,
         product=product,
         items=[],
-        template_path=product.template_path,
+        template_path=str(product.template_path or ""),
         printer_name="TSC_TTP_244_Pro",
     )
 
@@ -53,3 +53,40 @@ def test_a11_btxml_document_from_carton_data():
     assert '<NamedSubString Name="CPN"><Value>840-00083</Value></NamedSubString>' in xml
     assert '<NamedSubString Name="CartonSN"><Value>VHK00102372608000081</Value></NamedSubString>' in xml
     assert f'<NamedSubString Name="QR_Content"><Value>{expected_qr}</Value></NamedSubString>' in xml
+
+
+def test_a11_btxml_revision_empty_when_no_rev():
+    """Khi product.revision = "" (sản phẩm đặc biệt không có Rev),
+    substrings['Rev'] phải là "" — không được fallback thành 'B'."""
+    product = Product(
+        id=2,
+        item_name="840-00091",
+        packed_qty=190,
+        mfr_pn="NYS5998",
+        revision="",       # Sản phẩm không có Rev
+        template_type="a11",
+        template_path=r"D:\PAT\Template\第1.btw",
+    )
+    carton = Carton(
+        id=11,
+        product_id=2,
+        carton_sn="VHK00102372608000082",
+        po_number="B432-22156381",
+        lot_number="92608521",
+        date_code="2634",
+        carton_origin="VN",
+    )
+
+    doc = BTXMLDocument.from_carton_data(
+        carton=carton,
+        product=product,
+        items=[],
+        template_path=str(product.template_path or ""),
+    )
+
+    # Rev phải là "" — không fallback về "B"
+    assert doc.substrings["Rev"] == "", \
+        f"Expected Rev='', got '{doc.substrings['Rev']}' — fallback 'B' bị áp dụng sai"
+
+    xml = doc.to_xml(template_type="a11")
+    assert '<NamedSubString Name="Rev"><Value></Value></NamedSubString>' in xml

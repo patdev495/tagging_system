@@ -81,35 +81,44 @@
             <i class="fas fa-exchange-alt"></i>
             <span>Đổi Khách</span>
           </button>
+
+          <router-link
+            to="/admin"
+            class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Trang quản trị hệ thống (Admin)"
+          >
+            <i class="fas fa-user-shield text-indigo-600"></i>
+            <span>Admin</span>
+          </router-link>
         </div>
       </header>
 
       <!-- Compact Active Product & Batch Bar -->
-      <section class="my-2 px-3.5 py-2 rounded-xl bg-slate-50/90 border border-slate-200/90 shadow-xs flex items-center justify-between gap-3 shrink-0">
+      <section class="my-2 px-4 py-2.5 rounded-xl bg-slate-50/90 border border-slate-200/90 shadow-xs flex items-center justify-between gap-3 shrink-0">
         <!-- Specs Details -->
-        <div class="flex items-center gap-4 md:gap-6 flex-wrap">
+        <div class="flex items-center gap-5 md:gap-7 flex-wrap">
           <div @click="openProductModal" class="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" title="Bấm để đổi sản phẩm">
-            <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">CPN:</span>
-            <span class="font-black text-sm md:text-base text-slate-900 font-mono group-hover:text-indigo-600 transition-colors">
+            <span class="text-xs uppercase tracking-wider font-bold text-slate-400">CPN:</span>
+            <span class="font-black text-base md:text-lg text-slate-900 font-mono group-hover:text-indigo-600 transition-colors">
               {{ selectedProduct?.item_name || 'Chưa chọn' }}
             </span>
-            <span v-if="selectedProduct" class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-[10px]">
+            <span v-if="selectedProduct" class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-xs">
               {{ selectedProduct.packed_qty }} PCS
             </span>
           </div>
 
-          <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-4 text-xs font-mono">
-            <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">Mfr/Prefix:</span>
-            <span class="font-bold text-slate-700">{{ selectedProduct.mfr_pn || 'NYS5998' }}</span>
+          <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
+            <span class="text-xs uppercase font-bold text-slate-400 font-sans">Mfr/Prefix:</span>
+            <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || 'NYS5998' }}</span>
             <span class="text-slate-300">|</span>
-            <span class="font-bold text-slate-700">{{ selectedProduct.pkg_prefix || 'VHK0010237' }}</span>
+            <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || 'VHK0010237' }}</span>
           </div>
 
-          <div class="flex items-center gap-2 border-l border-slate-200 pl-4 text-xs font-mono">
-            <span class="text-[10px] uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <span class="font-bold text-indigo-900">PO: {{ activePO || 'Chưa nhập' }}</span>
+          <div class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
+            <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
+            <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || 'Chưa nhập' }}</span>
             <span class="text-slate-300">|</span>
-            <span class="font-bold text-indigo-900">LOT: {{ activeLot || 'Chưa nhập' }}</span>
+            <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || 'Chưa nhập' }}</span>
           </div>
         </div>
 
@@ -133,6 +142,7 @@
         </div>
 
       </section>
+
 
       <!-- Agent Offline Warning Banner -->
       <div 
@@ -336,100 +346,59 @@
           </div>
 
 
-          <!-- Bottom Cockpit: Combined Status & S/N Control -->
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-2 shrink-0">
-            <!-- Tolerance Gatekeeper Status Chip (Col 6) -->
-            <div 
-              :class="[
-                'md:col-span-6 px-3 py-2 rounded-xl border flex items-center justify-between gap-2 transition-all duration-200',
-                toleranceResult.status === 'READY'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900' :
-                toleranceResult.status === 'UNSTABLE'
-                  ? 'bg-amber-50 border-amber-200 text-amber-900' :
-                toleranceResult.status === 'UNDERWEIGHT' || toleranceResult.status === 'OVERWEIGHT'
-                  ? 'bg-rose-50 border-rose-200 text-rose-900' :
-                  'bg-slate-100 border-slate-200 text-slate-600'
-              ]"
-            >
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div 
-                  :class="[
-                    'w-7 h-7 rounded-lg flex items-center justify-center text-xs shrink-0',
-                    toleranceResult.status === 'READY' ? 'bg-emerald-500 text-white shadow-xs' :
-                    toleranceResult.status === 'UNSTABLE' ? 'bg-amber-500 text-white' :
-                    toleranceResult.status === 'UNDERWEIGHT' || toleranceResult.status === 'OVERWEIGHT' ? 'bg-rose-500 text-white' : 'bg-slate-400 text-white'
-                  ]"
-                >
-                  <i :class="getToleranceIcon(toleranceResult.status)"></i>
+          <!-- Bottom Cockpit: S/N Panel Full Width -->
+          <div class="shrink-0">
+
+            <!-- ★ LARGE S/N Preview Panel — Prominent, Operator-Critical Info -->
+            <div class="rounded-xl border-2 border-indigo-300/70 bg-gradient-to-br from-indigo-950 to-slate-900 shadow-lg shadow-indigo-950/40 flex items-center justify-between px-4 py-2.5 gap-3 relative overflow-hidden">
+              <!-- Subtle glow -->
+              <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-indigo-500/20 blur-2xl pointer-events-none"></div>
+
+              <!-- Label + SN Preview -->
+              <div class="flex flex-col min-w-0 z-10">
+                <div class="flex items-center gap-2 mb-0.5">
+                  <div class="w-5 h-5 rounded bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 text-[10px] font-black shrink-0">#</div>
+                  <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300">Sê-ri Thùng Tiếp Theo</span>
+                  <span :class="['px-1.5 py-px rounded text-[9px] font-black uppercase shrink-0', isAutoSN ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30']">
+                    {{ isAutoSN ? 'Tự Động' : 'Thủ Công' }}
+                  </span>
+                  <span v-if="snCheckError" class="text-amber-400 text-[10px] font-bold flex items-center gap-0.5" :title="snCheckError">
+                    <i class="fas fa-exclamation-triangle text-[9px]"></i> Trùng SN
+                  </span>
                 </div>
-                <div class="truncate">
-                  <h3 class="font-bold text-xs leading-tight truncate">{{ getToleranceTitle(toleranceResult.status) }}</h3>
-                  <p class="text-[10px] opacity-80 truncate">{{ toleranceResult.message }}</p>
-                </div>
+                <!-- Big SN Text -->
+                <span class="font-mono font-black text-xl md:text-2xl text-white tracking-tight leading-none select-all truncate" :title="currentSNPreview">
+                  {{ currentSNPreview }}
+                </span>
               </div>
 
-              <span 
-                :class="[
-                  'px-2 py-0.5 rounded text-[10px] font-black tracking-wide uppercase shrink-0',
-                  toleranceResult.status === 'READY' ? 'bg-emerald-200 text-emerald-900' :
-                  toleranceResult.status === 'UNSTABLE' ? 'bg-amber-200 text-amber-900' :
-                  toleranceResult.status === 'UNDERWEIGHT' || toleranceResult.status === 'OVERWEIGHT' ? 'bg-rose-200 text-rose-900' : 'bg-slate-200 text-slate-800'
-                ]"
-              >
-                {{ toleranceResult.status }}
-              </span>
-            </div>
-
-            <!-- S/N Sequence Configuration Chip (Col 6) -->
-            <div class="md:col-span-6 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/90 shadow-xs flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black text-xs shrink-0">
-                  #
-                </div>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-[10px] font-bold uppercase text-slate-500">Sê-ri:</span>
-                    <span :class="['px-1.5 py-0.2 rounded text-[9px] font-black uppercase', isAutoSN ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800']">
-                      {{ isAutoSN ? 'Tự Động' : 'Thủ Công' }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-1">
-                    <span class="font-mono font-black text-xs md:text-sm text-indigo-950 tracking-tight truncate select-all">
-                      {{ currentSNPreview }}
-                    </span>
-                    <span v-if="snCheckError" class="text-[10px] text-rose-600 font-bold" :title="snCheckError">
-                      <i class="fas fa-exclamation-triangle"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-1.5 shrink-0">
+              <!-- Controls: Manual input + toggle -->
+              <div class="flex items-center gap-2 shrink-0 z-10">
                 <input
                   v-if="!isAutoSN"
                   v-model.number="manualSequence"
                   type="number"
                   min="1"
                   placeholder="85"
-                  class="w-16 px-2 py-1 rounded border border-slate-300 font-mono font-bold text-xs text-slate-800 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  class="w-20 px-2.5 py-1.5 rounded-lg border border-indigo-400/50 bg-slate-800 font-mono font-black text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 outline-none text-center"
                   @input="checkManualSN"
                 />
-
                 <button
                   @click="toggleSNMode"
                   type="button"
                   :class="[
-                    'px-2 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer shadow-xs',
+                    'px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-sm',
                     isAutoSN 
-                      ? 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200' 
-                      : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+                      ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600' 
+                      : 'bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-200 border border-indigo-400/50'
                   ]"
                 >
-                  <i :class="isAutoSN ? 'fas fa-pen' : 'fas fa-rotate-right'"></i>
-                  <span>{{ isAutoSN ? 'Sửa' : 'Auto' }}</span>
+                  <i :class="isAutoSN ? 'fas fa-pen text-[10px]' : 'fas fa-rotate-right text-[10px]'"></i>
+                  <span>{{ isAutoSN ? 'Sửa Thủ Công' : 'Về Auto' }}</span>
                 </button>
               </div>
             </div>
+
           </div>
 
           <!-- Giant Primary Print Action Button -->
