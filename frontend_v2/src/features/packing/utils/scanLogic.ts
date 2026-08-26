@@ -36,12 +36,17 @@ export type ScanResult =
 export function validateScan(sn: string, ctx: ScanValidationContext): ScanResult {
   if (!sn) return { ok: false, reason: 'Empty scan', type: 'pattern' };
 
-  // If processing or awaiting and box is full → overflow
-  if (ctx.isProcessing || ctx.awaitingNext) {
+  // If awaiting next carton, reject all scans until next carton is activated
+  if (ctx.awaitingNext) {
+    return { ok: false, reason: 'Awaiting next carton', type: 'lockdown' };
+  }
+
+  // If processing
+  if (ctx.isProcessing) {
     if (ctx.scannedItems.length >= ctx.packedQty) {
       return { ok: false, reason: 'Box Full', type: 'overflow' };
     }
-    if (ctx.isProcessing) return { ok: false, reason: 'Processing', type: 'busy' };
+    return { ok: false, reason: 'Processing', type: 'busy' };
   }
 
   // Must have job order

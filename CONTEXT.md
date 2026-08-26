@@ -106,7 +106,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 
 - Một **Customer** có thể có nhiều **Products** khác nhau.
 - Một **Product** xác định chế độ đóng gói (**Packing Mode**), số lượng đóng gói quy chuẩn (`packed_qty`), mẫu tem nhãn, và quy tắc sinh sê-ri (**Carton SN**).
-- Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước.
+- Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước. Sau khi một Carton hoàn tất in tem và xác thực, hệ thống phải dừng ở trạng thái chờ mở thùng mới. Công nhân bắt buộc phải xác nhận chuyển sang Job Order Carton Slot tiếp theo (bấm nút "Thùng tiếp theo" hoặc nhấn phím Space) mới được quét hàng tiếp; nếu trạm đang tồn tại lỗi quét thì không được phép chuyển thùng cho đến khi lỗi được xóa.
 - Với Product ở chế độ `weight_scale` (khách hàng A11), một **Carton** được đóng liên tục trong phiên làm việc gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 
@@ -117,8 +117,13 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 > 
 > **Developer:** "Với sản phẩm đóng gói theo cân (**weight_scale**), nếu số cân không nằm trong dải **Weight Tolerance** thì hệ thống xử lý thế nào?"
 > **Domain expert:** "Hệ thống phải chặn lệnh in, cảnh báo lỗi trọng lượng trên màn hình và không cấp phát số **Carton SN**."
+> 
+> **Developer:** "Khi một **Carton** trong chế độ `item_scan` đã đóng đủ và in tem xong, công nhân có thể quét ngay sản phẩm của thùng tiếp theo không?"
+> **Domain expert:** "Không, hệ thống phải yêu cầu bấm xác nhận sang thùng tiếp theo (qua nút trên màn hình hoặc phím tắt Space) để tránh quét nhầm vào thùng cũ hoặc chưa kịp chuẩn bị thùng mới. Đặc biệt, nếu trạm đang có lỗi quét chưa được xóa thì không cho phép chuyển thùng."
+
 
 ## Flagged ambiguities
 
 - **packed_by**: Trường `packed_by` trong bảng cartons thực chất đang lưu tên của **Printer** (Thiết bị in) chứ không phải thông tin của người đóng gói (Packer/Operator).
 - **CN**: Ký tự `CN` ở tiền tố số sê-ri (`start_part`) là viết tắt của **Carton Number**, hoàn toàn độc lập với ký tự `CN` đại diện cho Trung Quốc (China) trong trường quốc gia sản xuất (`Origin Country` / `carton_origin`).
+

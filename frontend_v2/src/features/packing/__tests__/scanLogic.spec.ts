@@ -69,6 +69,12 @@ describe('validateScan', () => {
     if (!result.ok) expect(result.type).toBe('busy');
   });
 
+  it('rejects scan when awaiting next carton', () => {
+    const result = validateScan('SN001', makeCtx({ awaitingNext: true }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.type).toBe('lockdown');
+  });
+
   it('returns overflow when processing and box is full', () => {
     const result = validateScan('SN001', makeCtx({
       isProcessing: true,

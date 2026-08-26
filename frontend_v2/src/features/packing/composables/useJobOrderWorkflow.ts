@@ -188,9 +188,15 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
 
   const processSingleScan = (sn: string) => {
     if (!sn || !options.currentProduct.value) return;
-    if (awaitingNext.value && scannedItems.value.length >= options.currentProduct.value.packed_qty) {
+
+    if (awaitingNext.value) {
       options.playScanAlert();
-      overflowScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Carton Full' });
+      invalidScans.value.push({
+        sn,
+        time: new Date().toLocaleTimeString(),
+        reason: 'Thùng đã đóng — Bấm "Thùng tiếp theo" hoặc phím Space',
+        type: 'lockdown'
+      });
       options.system.showNotification(t('packing.carton_full', { sn }), 'warning');
       return;
     }
@@ -298,14 +304,29 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
   };
 
   const startNextCarton = () => { 
+    const hasErrors = invalidScans.value.length > 0 || overflowScans.value.length > 0;
+    if (hasErrors) {
+      options.playScanAlert();
+      options.system.showNotification('Vui lòng xóa các lỗi quét trước khi chuyển sang thùng tiếp theo!', 'error');
+      return;
+    }
+
+    awaitingNext.value = false; 
     scannedItems.value = []; 
     invalidScans.value = []; 
     overflowScans.value = [];
-    awaitingNext.value = false; 
     customSN.value = '';
     suggestedSNPreview.value = '';
     isRescanMode.value = false;
     rescanCartonSN.value = '';
+
+    const nextPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
+    if (nextPending) {
+      selectSlot(nextPending, false);
+    } else {
+      selectedSlotId.value = null;
+      cartonNumberStr.value = '';
+    }
     options.focusScan(); 
   };
 

@@ -24,6 +24,8 @@ describe('useA11SerialNumber Composable', () => {
     item_name: 'A11-Product-01',
     packed_qty: 190,
     pkg_prefix: 'VHK0010237',
+    template_type: 'a11',
+    allow_partial: 0,
   });
 
   beforeEach(() => {
@@ -63,7 +65,7 @@ describe('useA11SerialNumber Composable', () => {
   });
 
   it('advances sequence correctly in auto and manual mode', () => {
-    const { isAutoSN, autoSequence, manualSequence, advanceSequence, toggleSNMode } = useA11SerialNumber(mockProduct);
+    const { autoSequence, manualSequence, advanceSequence, toggleSNMode } = useA11SerialNumber(mockProduct);
 
     autoSequence.value = 10;
     advanceSequence();

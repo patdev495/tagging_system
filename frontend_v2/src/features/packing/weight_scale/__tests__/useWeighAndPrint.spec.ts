@@ -26,6 +26,8 @@ describe('useWeighAndPrint Composable', () => {
     item_name: 'A11-Standard',
     packed_qty: 190,
     pkg_prefix: 'VHK0010237',
+    template_type: 'a11',
+    allow_partial: 0,
     min_weight: 12.3,
     target_weight: 12.5,
     max_weight: 12.7,

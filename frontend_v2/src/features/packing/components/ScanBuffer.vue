@@ -5,6 +5,7 @@
         :value="scanBuffer"
         @input="handleInput"
         @keydown.enter.prevent="$emit('scan')"
+        @keydown.space="handleSpace"
         :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : t('packing.scan_prompt_default')))"
         ref="scanInput"
         :disabled="disabled"
@@ -17,12 +18,15 @@
       ></textarea>
       <button 
         v-if="awaitingNext" 
-        @click="$emit('next-carton')" 
-        class="px-4 md:px-6 h-[48px] md:h-[58px] bg-linear-to-br from-emerald-500 to-emerald-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(16,185,129,0.4)] hover:bg-linear-to-br hover:from-emerald-600 hover:to-emerald-700 animate-pulse-gentle"
-        :disabled="disabled"
-        :title="t('packing.next_carton_title')"
+        @click="handleNextCartonClick" 
+        class="px-4 md:px-6 h-[48px] md:h-[58px] bg-linear-to-br from-emerald-500 to-emerald-600 text-white border-none rounded-xl font-bold flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all animate-pulse-gentle"
+        :class="hasErrors ? 'opacity-50 cursor-not-allowed grayscale-[40%]' : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(16,185,129,0.4)] hover:bg-linear-to-br hover:from-emerald-600 hover:to-emerald-700'"
+        :disabled="disabled || hasErrors"
+        :title="hasErrors ? 'Vui lòng xóa các lỗi quét trước khi chuyển thùng' : t('packing.next_carton_title')"
       >
-        <i class="fas fa-plus-circle text-[0.85rem] md:text-[1rem]"></i> {{ t('packing.next_carton') }}
+        <i class="fas fa-plus-circle text-[0.85rem] md:text-[1rem]"></i>
+        <span>{{ t('packing.next_carton') }}</span>
+        <span class="text-[0.7rem] font-mono font-black opacity-90 px-1.5 py-0.5 bg-black/25 rounded-md tracking-wider">Space</span>
       </button>
       <button 
         v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
@@ -35,6 +39,7 @@
       </button>
     </div>
     <p class="text-center text-slate-400 text-[0.85rem]" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
+    <p class="text-center text-[0.85rem] text-rose-600 font-bold" v-else-if="awaitingNext && hasErrors && !disabled"><i class="fas fa-exclamation-triangle mr-1"></i> Vui lòng xóa các lỗi quét bên dưới trước khi mở thùng mới</p>
     <p class="text-center text-[0.85rem] text-orange-600 font-bold" v-else-if="awaitingNext && !disabled">{{ t('packing.carton_complete_hint') }}</p>
     <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="!jobOrder && !disabled">{{ t('packing.fill_job_order_hint') }}</p>
     <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="disabled && placeholder.includes('AGENT')">{{ t('packing.agent_offline_hint') }}</p>
@@ -88,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -105,7 +110,7 @@ interface OverflowScan {
   time: string;
 }
 
-defineProps<{
+const props = defineProps<{
   scanBuffer: string;
   jobOrder: string;
   awaitingNext: boolean;
@@ -128,7 +133,24 @@ const emit = defineEmits<{
 
 const scanInput = ref<HTMLTextAreaElement | null>(null);
 
+const hasErrors = computed(() => (props.invalidScans?.length > 0) || (props.overflowScans?.length > 0));
+
 const handleInput = (e: Event) => emit('update:scanBuffer', (e.target as HTMLTextAreaElement).value);
+
+const handleSpace = (e: KeyboardEvent) => {
+  if (props.awaitingNext) {
+    e.preventDefault();
+    if (!hasErrors.value && !props.disabled) {
+      emit('next-carton');
+    }
+  }
+};
+
+const handleNextCartonClick = () => {
+  if (!hasErrors.value && !props.disabled) {
+    emit('next-carton');
+  }
+};
 
 const focusScan = () => {
   if (scanInput.value) scanInput.value.focus({ preventScroll: true });
