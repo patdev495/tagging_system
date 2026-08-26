@@ -81,7 +81,7 @@ Chế độ xác thực và đóng gói của Product để kích hoạt in tem 
 _Avoid_: Kiểu đóng gói, loại scan, scan method
 
 **Scale**:
-Thiết bị cân điện tử kết nối với trạm đóng gói qua cổng truyền thông nối tiếp RS-232 / USB-to-Serial.
+Thiết bị cân điện tử kết nối với trạm đóng gói qua cổng truyền thông nối tiếp RS-232 / USB-to-Serial ở chế độ phát luồng liên tục (Continuous Streaming). Các thao tác định chuẩn điểm không (Zero) và trừ bì (Tare) được thực hiện trực tiếp trên bàn phím vật lý của đầu cân.
 _Avoid_: Cân bàn, máy cân, bộ cảm biến
 
 **Weight Reading**:

@@ -142,8 +142,6 @@
             :toleranceResult="toleranceResult"
             :selectedProduct="selectedProduct"
             :isPrinting="isPrinting"
-            @tare="handleTare"
-            @zero="handleZero"
           />
 
           <A11SerialControl
@@ -271,13 +269,9 @@ const {
   scaleReading,
   scaleStatus,
   pollScaleStatus,
-  handleTare,
-  handleZero,
   startPolling,
   stopPolling,
-} = useScaleStream(() => settings.agentUrl || 'http://127.0.0.1:8080', {
-  onNotification: (msg, type) => system.showNotification(msg, type),
-});
+} = useScaleStream(() => settings.agentUrl || 'http://127.0.0.1:8080');
 
 // 2. S/N Sequence Composable
 const {

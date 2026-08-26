@@ -6,8 +6,6 @@ vi.mock('../../scaleApi', () => ({
   default: {
     getScaleCurrent: vi.fn(),
     getScaleStatus: vi.fn(),
-    tareScale: vi.fn(),
-    zeroScale: vi.fn(),
   },
 }));
 
@@ -59,18 +57,5 @@ describe('useScaleStream Composable', () => {
 
     expect(isAgentOnline.value).toBe(false);
     expect(scaleStatus.value.connected).toBe(false);
-  });
-
-  it('calls tareScale and zeroScale correctly', async () => {
-    vi.mocked(scaleApi.tareScale).mockResolvedValueOnce({ success: true });
-    vi.mocked(scaleApi.zeroScale).mockResolvedValueOnce({ success: true });
-
-    const { handleTare, handleZero } = useScaleStream(() => 'http://127.0.0.1:8080');
-
-    await handleTare();
-    expect(scaleApi.tareScale).toHaveBeenCalledWith('http://127.0.0.1:8080');
-
-    await handleZero();
-    expect(scaleApi.zeroScale).toHaveBeenCalledWith('http://127.0.0.1:8080');
   });
 });

@@ -14,20 +14,16 @@ export function useScaleStream(
 ) {
   let getAgentUrl: () => string;
   let autoStart = false;
-  let notify: ((msg: string, type: 'info' | 'success' | 'warning' | 'error') => void) | undefined;
 
   if (typeof agentUrlSource === 'function') {
     getAgentUrl = agentUrlSource;
     if (options?.autoStart !== undefined) autoStart = options.autoStart;
-    if (options?.onNotification) notify = options.onNotification;
   } else if (typeof agentUrlSource === 'string') {
     getAgentUrl = () => agentUrlSource;
     if (options?.autoStart !== undefined) autoStart = options.autoStart;
-    if (options?.onNotification) notify = options.onNotification;
   } else if (typeof agentUrlSource === 'object' && agentUrlSource !== null) {
     getAgentUrl = agentUrlSource.getAgentUrl || (() => 'http://127.0.0.1:8080');
     autoStart = !!agentUrlSource.autoStart;
-    notify = agentUrlSource.onNotification;
   } else {
     getAgentUrl = () => 'http://127.0.0.1:8080';
   }
@@ -90,26 +86,6 @@ export function useScaleStream(
     }
   };
 
-  const handleTare = async () => {
-    try {
-      const agentUrl = getAgentUrl();
-      await scaleApi.tareScale(agentUrl);
-      notify?.('Đã gửi lệnh trừ bì (Tare) tới cân', 'info');
-    } catch (err: any) {
-      notify?.('Lỗi trừ bì: ' + err.message, 'error');
-    }
-  };
-
-  const handleZero = async () => {
-    try {
-      const agentUrl = getAgentUrl();
-      await scaleApi.zeroScale(agentUrl);
-      notify?.('Đã gửi lệnh Zero tới cân', 'info');
-    } catch (err: any) {
-      notify?.('Lỗi Zero: ' + err.message, 'error');
-    }
-  };
-
   const startPolling = () => {
     stopPolling();
     pollScale();
@@ -144,8 +120,6 @@ export function useScaleStream(
     scaleStatus,
     pollScale,
     pollScaleStatus,
-    handleTare,
-    handleZero,
     startPolling,
     stopPolling,
   };

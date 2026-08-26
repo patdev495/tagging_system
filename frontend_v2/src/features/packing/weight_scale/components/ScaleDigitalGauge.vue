@@ -11,7 +11,7 @@
       ]"
     ></div>
 
-    <!-- Top Row: Scale Pulse & Tare/Zero -->
+    <!-- Top Row: Scale Pulse & Status -->
     <div class="flex items-center justify-between mb-1 z-10 shrink-0">
       <div class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider">
         <i 
@@ -23,27 +23,6 @@
         <span class="text-slate-400">
           {{ (isAgentOnline && scaleStatus.connected) ? 'Tín Hiệu Cân Thời Gian Thực' : (!isAgentOnline ? 'Mất Kết Nối Print Agent' : 'Mất Kết Nối Cổng Cân') }}
         </span>
-      </div>
-
-      <!-- Tare & Zero Controls -->
-      <div class="flex items-center gap-1.5">
-        <button
-          @click="$emit('tare')"
-          :disabled="!isAgentOnline || !scaleStatus.connected || isPrinting"
-          class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer border border-slate-700 shadow-xs"
-        >
-          <i class="fas fa-balance-scale-left text-xs"></i>
-          <span>Trừ Bì (Tare)</span>
-        </button>
-
-        <button
-          @click="$emit('zero')"
-          :disabled="!isAgentOnline || !scaleStatus.connected || isPrinting"
-          class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer border border-slate-700 shadow-xs"
-        >
-          <i class="fas fa-crosshairs text-xs"></i>
-          <span>Zero</span>
-        </button>
       </div>
     </div>
 
@@ -181,11 +160,6 @@ const props = defineProps<{
   toleranceResult: ScaleToleranceResult;
   selectedProduct: Product | null;
   isPrinting?: boolean;
-}>();
-
-defineEmits<{
-  (e: 'tare'): void;
-  (e: 'zero'): void;
 }>();
 
 const formatWeight = (val?: number) => {

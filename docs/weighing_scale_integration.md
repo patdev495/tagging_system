@@ -88,18 +88,17 @@ class ScalePacketInfo:
 
 ---
 
-## 4. Tập lệnh Điều khiển Cân (Scale ASCII Commands)
+## 4. Cơ Chế Điều Khiển Cân & Định Chuẩn Điểm Không (Scale Calibration & Tare/Zero)
 
-Hệ thống có thể chủ động gửi lệnh điều khiển từ máy tính xuống cân qua chân TX của cổng COM:
+Trong thực tế vận hành tại xưởng:
+* Đầu cân điện tử (OKS, Yaohua XK3190, CAS,...) được cấu hình ở chế độ **Continuous Streaming Mode** (Phát luồng dữ liệu liên tục 10-20 gói/giây qua chân `TX -> PC RX`).
+* Cáp truyền thông USB-to-RS232 đa số là cáp 1 chiều (Simplex: Scale TX -> PC RX + GND).
+* **Quy tắc vận hành**: Các thao tác định chuẩn điểm không (**Zero**) và **Trừ bì (Tare)** được công nhân thực hiện trực tiếp bằng **phím bấm vật lý trên bàn phím màng của đầu cân**. Giao diện Web tự động đọc và hiển thị cờ `TARE` (`is_tare = true`) hoặc `ZERO` (`is_zero = true`) từ chuỗi dữ liệu phản hồi của cân mà không can thiệp lệnh gửi xuống.
 
-| Tên Lệnh | Chuỗi Byte ASCII | Chức Năng |
+| Tên Thao Tác | Vị Trí Thực Hiện | Chức Năng |
 | :--- | :--- | :--- |
-| **`CMD_PRINT`** | `b"P\r\n"` | Kích hoạt cân gửi gói tin trọng lượng tức thời |
-| **`CMD_READ`** | `b"R\r\n"` | Yêu cầu đọc liên tục |
-| **`CMD_TARE`** | `b"T\r\n"` | Trừ bì (Tare) - đưa số cân hiện tại của bao bì về 0 |
-| **`CMD_ZERO`** | `b"Z\r\n"` | Thiết lập điểm không tuyệt đối (Zero calibration) |
-| **`CMD_HOLD`** | `b"H\r\n"` | Khóa/giữ hiển thị giá trị cân trên màn hình |
-| **`CMD_ACCUMULATE`** | `b"A\r\n"` | Cộng dồn trọng lượng |
+| **Tare (Trừ bì)** | Phím bấm vật lý `[TARE]` trên đầu cân | Đưa số cân hiện tại của bao bì/khay về 0.000, đầu cân phát cờ `PT` / `NT` / `TARE` lên Web |
+| **Zero (Về 0)** | Phím bấm vật lý `[ZERO]` trên đầu cân | Định chuẩn lại điểm không tuyệt đối khi bàn cân trống |
 
 ---
 
