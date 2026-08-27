@@ -4,6 +4,14 @@ import printApi from '../../../print/api';
 import { evaluateScaleTolerance, type ScaleToleranceResult } from '../../utils/scaleTolerance';
 import type { Product, Carton, ScaleReading, ScaleStatus } from '../../../../types/api';
 
+export interface WeighAndPrintSettings {
+  agentUrl?: string;
+  printerName?: string;
+  templatePath?: string;
+  stationId?: string;
+  localTemplateDir?: string;
+}
+
 export interface UseWeighAndPrintOptions {
   selectedProduct: Ref<Product | null>;
   activePO: Ref<string>;
@@ -16,13 +24,7 @@ export interface UseWeighAndPrintOptions {
   snCheckError: Ref<string>;
   advanceSequence: () => void;
   notify?: (message: string, type: 'info' | 'success' | 'warning' | 'error') => void;
-  getSettings?: () => {
-    agentUrl?: string;
-    printerName?: string;
-    templatePath?: string;
-    stationId?: string;
-    localTemplateDir?: string;
-  };
+  getSettings?: () => WeighAndPrintSettings;
   openProductModal?: () => void;
   openBatchModal?: () => void;
 }
@@ -40,7 +42,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     snCheckError,
     advanceSequence,
     notify,
-    getSettings = () => ({}),
+    getSettings = (): WeighAndPrintSettings => ({}),
     openProductModal,
     openBatchModal,
   } = options;

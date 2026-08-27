@@ -109,6 +109,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 - Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước. Sau khi một Carton hoàn tất in tem và xác thực, hệ thống phải dừng ở trạng thái chờ mở thùng mới. Công nhân bắt buộc phải xác nhận chuyển sang Job Order Carton Slot tiếp theo (bấm nút "Thùng tiếp theo" hoặc nhấn phím Space) mới được quét hàng tiếp; nếu trạm đang tồn tại lỗi quét thì không được phép chuyển thùng cho đến khi lỗi được xóa.
 - Với Product ở chế độ `weight_scale` (khách hàng A11), một **Carton** được đóng liên tục trong phiên làm việc gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
+- Mọi mốc thời gian đóng gói (**Carton** `created_at`, **Job Order Carton Slot** `scanned_at`, **Date Code** `YYWW`, sê-ri `YYMM`) đều được ghi nhận theo **Giờ Cục bộ (Local Server Time)** của máy chủ nhà máy để đảm bảo tính nhất quán giữa màn hình vận hành, báo cáo thống kê ca sản xuất và nhãn in BarTender.
 
 ## Example dialogue
 

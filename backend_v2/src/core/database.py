@@ -187,6 +187,26 @@ def init_db():
                 conn.execute(text("UPDATE customers SET code = 'A11', name = 'Customer A11' WHERE code = 'UX'"))
                 conn.commit()
 
+            # 5. Migrate historical UTC timestamps in cartons to Local Time (+7 hours)
+            if inspector.has_table('cartons'):
+                conn.execute(text(
+                    "CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(100) PRIMARY KEY, applied_at DATETIME)"
+                    if is_sqlite else
+                    "IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='schema_migrations' AND xtype='U') CREATE TABLE schema_migrations (version VARCHAR(100) PRIMARY KEY, applied_at DATETIME)"
+                ))
+                conn.commit()
+
+                res = conn.execute(text("SELECT version FROM schema_migrations WHERE version = 'cartons_timezone_utc_to_local_v1'")).first()
+                if not res:
+                    logger.info("Migrating: adjusting historical cartons.created_at (+7 hours to local time)")
+                    if is_sqlite:
+                        conn.execute(text("UPDATE cartons SET created_at = datetime(created_at, '+7 hours') WHERE created_at IS NOT NULL"))
+                        conn.execute(text("INSERT INTO schema_migrations (version, applied_at) VALUES ('cartons_timezone_utc_to_local_v1', datetime('now'))"))
+                    else:
+                        conn.execute(text("UPDATE cartons SET created_at = DATEADD(hour, 7, created_at) WHERE created_at IS NOT NULL"))
+                        conn.execute(text("INSERT INTO schema_migrations (version, applied_at) VALUES ('cartons_timezone_utc_to_local_v1', GETDATE())"))
+                    conn.commit()
+
         # Run seed data
         with SessionLocal() as db:
             seed_a11_data(db)
