@@ -47,7 +47,7 @@ export function evaluateScaleTolerance(params: ScaleToleranceParams): ScaleToler
     return {
       status: 'UNDERWEIGHT',
       canPrint: false,
-      message: `Thiếu trọng lượng (Hiện tại: ${weight.toFixed(3)}kg < Chuẩn tối thiểu: ${min_weight.toFixed(3)}kg)`,
+      message: `Thiếu trọng lượng (Hiện tại: ${weight.toFixed(3)}kg < Tối thiểu: ${min_weight.toFixed(3)}kg)`,
       diffFromTarget: target_weight ? weight - target_weight : undefined,
     };
   }
@@ -56,7 +56,7 @@ export function evaluateScaleTolerance(params: ScaleToleranceParams): ScaleToler
     return {
       status: 'OVERWEIGHT',
       canPrint: false,
-      message: `Thừa trọng lượng (Hiện tại: ${weight.toFixed(3)}kg > Chuẩn tối đa: ${max_weight.toFixed(3)}kg)`,
+      message: `Thừa trọng lượng (Hiện tại: ${weight.toFixed(3)}kg > Tối đa: ${max_weight.toFixed(3)}kg)`,
       diffFromTarget: target_weight ? weight - target_weight : undefined,
     };
   }

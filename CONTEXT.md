@@ -89,7 +89,7 @@ Giá trị trọng lượng thực tế đo được từ Scale tại thời đi
 _Avoid_: Số cân, trọng lượng đọc, scale value
 
 **Weight Tolerance**:
-Dải trọng lượng hợp lệ của Product (gồm trọng lượng chuẩn `target_weight` kèm sai số `min_weight` và `max_weight`), là điều kiện tiên quyết để hệ thống chấp thuận in tem cho Carton ở chế độ `weight_scale`.
+Dải trọng lượng hợp lệ của Product (xác định bởi ngưỡng tối thiểu `min_weight` và tối đa `max_weight`), là điều kiện tiên quyết để hệ thống chấp thuận in tem cho Carton ở chế độ `weight_scale`.
 _Avoid_: Biên độ cân, khoảng cân cho phép, dải sai số
 
 **UPC**:

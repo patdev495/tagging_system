@@ -48,14 +48,10 @@
         <!-- Standard Product Target Range -->
         <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
           <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Dải Tiêu Chuẩn Cho Phép</span>
-          <div class="space-y-1 my-1 text-xs">
+          <div class="space-y-1.5 my-1 text-xs">
             <div class="flex justify-between font-mono">
               <span class="text-slate-500">Tối thiểu:</span>
               <strong class="text-slate-800">{{ formatWeight(details?.minWeight) }} kg</strong>
-            </div>
-            <div class="flex justify-between font-mono">
-              <span class="text-emerald-700 font-bold">Chuẩn:</span>
-              <strong class="text-emerald-700 font-black">{{ formatWeight(details?.targetWeight) }} kg</strong>
             </div>
             <div class="flex justify-between font-mono">
               <span class="text-slate-500">Tối đa:</span>
@@ -94,7 +90,6 @@ defineProps<{
     message?: string;
     currentWeight?: number;
     minWeight?: number;
-    targetWeight?: number;
     maxWeight?: number;
   } | null;
 }>();

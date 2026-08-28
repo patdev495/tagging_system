@@ -60,7 +60,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     message: string;
     currentWeight: number;
     minWeight: number;
-    targetWeight: number;
     maxWeight: number;
   } | null>(null);
 
@@ -82,7 +81,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       isStable: scaleReading.value.is_stable,
       product: selectedProduct.value ? {
         min_weight: selectedProduct.value.min_weight ?? 12.300,
-        target_weight: selectedProduct.value.target_weight ?? 12.500,
         max_weight: selectedProduct.value.max_weight ?? 12.700,
       } : null,
     });
@@ -121,7 +119,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
         message: toleranceResult.value.message,
         currentWeight: scaleReading.value.weight,
         minWeight: selectedProduct.value?.min_weight ?? 0.150,
-        targetWeight: selectedProduct.value?.target_weight ?? 0.180,
         maxWeight: selectedProduct.value?.max_weight ?? 0.200,
       };
       showToleranceErrorModal.value = true;

@@ -87,7 +87,6 @@
                     <i class="fas fa-weight-scale text-[11px] text-emerald-600"></i>
                     <span>Cân: {{ product.min_weight?.toFixed(3) }} - {{ product.max_weight?.toFixed(3) }} kg</span>
                   </span>
-                  <div class="text-[11px] text-slate-500 font-medium">Chuẩn: {{ product.target_weight?.toFixed(3) }} kg</div>
                 </div>
                 <div v-else class="space-y-1">
                   <span class="inline-flex items-center gap-1 text-xs font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">

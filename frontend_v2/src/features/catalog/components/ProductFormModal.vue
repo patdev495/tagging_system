@@ -161,40 +161,28 @@
               <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded">Đơn vị: kg</span>
             </div>
 
-            <div class="grid grid-cols-3 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Min Weight (kg) *</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase">Min Weight (kg) *</label>
                 <input 
                   v-model.number="formData.min_weight" 
                   type="number" 
                   step="0.001" 
                   required 
                   placeholder="12.300" 
-                  class="w-full p-2.5 rounded-xl border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm text-slate-900"
+                  class="w-full p-3 rounded-xl border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm text-slate-900"
                 />
               </div>
 
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Target Weight (kg) *</label>
-                <input 
-                  v-model.number="formData.target_weight" 
-                  type="number" 
-                  step="0.001" 
-                  required 
-                  placeholder="12.500" 
-                  class="w-full p-2.5 rounded-xl border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm text-slate-900"
-                />
-              </div>
-
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Max Weight (kg) *</label>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-700 uppercase">Max Weight (kg) *</label>
                 <input 
                   v-model.number="formData.max_weight" 
                   type="number" 
                   step="0.001" 
                   required 
                   placeholder="12.700" 
-                  class="w-full p-2.5 rounded-xl border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm text-slate-900"
+                  class="w-full p-3 rounded-xl border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-mono font-bold text-sm text-slate-900"
                 />
               </div>
             </div>
@@ -308,6 +296,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { X } from 'lucide-vue-next';
+import { useSystemStore } from '../../../core/stores/system';
 import type { Customer, Product } from '../../../types/api';
 
 export interface ProductFormData {
@@ -321,7 +310,7 @@ export interface ProductFormData {
   allow_partial: number;
   customer_id: number | null;
   packing_mode: 'item_scan' | 'weight_scale';
-  target_weight: number | null;
+  target_weight?: number | null;
   min_weight: number | null;
   max_weight: number | null;
   weight_unit: string;
@@ -343,6 +332,8 @@ const emit = defineEmits<{
   (e: 'submit', data: ProductFormData): void;
 }>();
 
+const system = useSystemStore();
+
 const formData = ref<ProductFormData>({
   item_name: '',
   upc: '',
@@ -354,7 +345,7 @@ const formData = ref<ProductFormData>({
   allow_partial: 0,
   customer_id: null,
   packing_mode: 'item_scan',
-  target_weight: 12.500,
+  target_weight: null,
   min_weight: 12.300,
   max_weight: 12.700,
   weight_unit: 'kg',
@@ -380,7 +371,7 @@ watch(
         allow_partial: p.allow_partial || 0,
         customer_id: p.customer_id,
         packing_mode: p.packing_mode || 'item_scan',
-        target_weight: p.target_weight ?? 12.500,
+        target_weight: p.target_weight ?? null,
         min_weight: p.min_weight ?? 12.300,
         max_weight: p.max_weight ?? 12.700,
         weight_unit: p.weight_unit || 'kg',
@@ -401,7 +392,7 @@ watch(
         allow_partial: 0,
         customer_id: defaultCustomerId,
         packing_mode: 'item_scan',
-        target_weight: 12.500,
+        target_weight: null,
         min_weight: 12.300,
         max_weight: 12.700,
         weight_unit: 'kg',
@@ -443,7 +434,7 @@ const onCustomerChange = () => {
     formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
     formData.value.mfr_pn = formData.value.mfr_pn || 'NYS5998';
     formData.value.revision = formData.value.revision || 'B';
-    formData.value.target_weight = 12.500;
+    formData.value.target_weight = null;
     formData.value.min_weight = 12.300;
     formData.value.max_weight = 12.700;
     formData.value.weight_unit = 'kg';
@@ -457,6 +448,17 @@ const onCustomerChange = () => {
 };
 
 const handleSubmit = () => {
+  if (formData.value.packing_mode === 'weight_scale') {
+    if (formData.value.min_weight === null || formData.value.min_weight === undefined ||
+        formData.value.max_weight === null || formData.value.max_weight === undefined) {
+      system.showNotification('Vui lòng nhập đầy đủ Min Weight và Max Weight', 'warning');
+      return;
+    }
+    if (formData.value.min_weight > formData.value.max_weight) {
+      system.showNotification('Trọng lượng Tối thiểu (Min) không được lớn hơn Tối đa (Max)', 'error');
+      return;
+    }
+  }
   emit('submit', { ...formData.value });
 };
 </script>

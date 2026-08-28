@@ -85,37 +85,26 @@
 
     <!-- Visual Tolerance Bar & Targets -->
     <div class="pt-2.5 border-t border-slate-800/90 z-10 shrink-0">
-      <!-- Prominent 3-Pillar Weight Badges -->
-      <div class="grid grid-cols-3 gap-2 mb-2">
+      <!-- Prominent 2-Pillar Weight Badges (Min & Max) -->
+      <div class="grid grid-cols-2 gap-3 mb-2">
         <!-- Min Limit Badge -->
-        <div class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 flex flex-col items-start shadow-xs">
-          <div class="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-400">
-            <i class="fas fa-arrow-down-short-wide text-[9px]"></i>
+        <div class="px-3 py-2 rounded-xl bg-slate-800/90 border border-amber-500/30 flex items-center justify-between shadow-xs">
+          <div class="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
+            <i class="fas fa-arrow-down-short-wide text-[10px]"></i>
             <span>Tối Thiểu (Min)</span>
           </div>
-          <span class="font-mono font-black text-sm md:text-base text-slate-100 mt-0.5">
+          <span class="font-mono font-black text-sm md:text-base text-slate-100">
             {{ selectedProduct?.min_weight?.toFixed(3) || '0.150' }} <span class="text-[11px] font-normal text-slate-400">kg</span>
           </span>
         </div>
 
-        <!-- Target Weight Badge (Highlighted Centerpiece) -->
-        <div class="px-2.5 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 flex flex-col items-center shadow-md shadow-emerald-950/60 ring-1 ring-emerald-500/20">
-          <div class="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-400">
-            <i class="fas fa-bullseye text-[10px]"></i>
-            <span>Mục Tiêu Chuẩn</span>
-          </div>
-          <span class="font-mono font-black text-base md:text-lg text-emerald-300 mt-0.5 leading-tight">
-            {{ selectedProduct?.target_weight?.toFixed(3) || '0.180' }} <span class="text-xs font-bold text-emerald-400">kg</span>
-          </span>
-        </div>
-
         <!-- Max Limit Badge -->
-        <div class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 flex flex-col items-end shadow-xs">
-          <div class="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-rose-400">
+        <div class="px-3 py-2 rounded-xl bg-slate-800/90 border border-rose-500/30 flex items-center justify-between shadow-xs">
+          <div class="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-rose-400">
+            <i class="fas fa-arrow-up-wide-short text-[10px]"></i>
             <span>Tối Đa (Max)</span>
-            <i class="fas fa-arrow-up-wide-short text-[9px]"></i>
           </div>
-          <span class="font-mono font-black text-sm md:text-base text-slate-100 mt-0.5">
+          <span class="font-mono font-black text-sm md:text-base text-slate-100">
             {{ selectedProduct?.max_weight?.toFixed(3) || '0.200' }} <span class="text-[11px] font-normal text-slate-400">kg</span>
           </span>
         </div>
@@ -126,10 +115,7 @@
         <!-- Underweight Left Zone -->
         <div class="absolute left-0 w-[16.6%] h-full bg-amber-500/15"></div>
         <!-- Acceptable Green Safe Zone -->
-        <div class="absolute left-[16.6%] right-[16.6%] h-full bg-gradient-to-r from-emerald-500/30 via-emerald-400/50 to-emerald-500/30 border-x border-emerald-400/60 flex items-center justify-center">
-          <!-- Center Target Line -->
-          <div class="w-0.5 h-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,1)]"></div>
-        </div>
+        <div class="absolute left-[16.6%] right-[16.6%] h-full bg-gradient-to-r from-emerald-500/30 via-emerald-400/50 to-emerald-500/30 border-x border-emerald-400/60"></div>
         <!-- Overweight Right Zone -->
         <div class="absolute right-0 w-[16.6%] h-full bg-rose-500/15"></div>
 
