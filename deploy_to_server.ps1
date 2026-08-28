@@ -42,7 +42,7 @@ if ($hasChanges) {
 
 # 4. Gui lenh qua SSH de Server tu update va restart
 Write-Host "[4/4] Kich hoat Server cap nhat qua SSH ($ServerUser@$ServerHost)..." -ForegroundColor Yellow
-$remoteCommand = "cd /d $ServerAppPath && git pull origin main && cd backend_v2 && C:\Users\Admin\.local\bin\uv sync && nssm restart NY_Tagging_Backend"
+$remoteCommand = "cd /d $ServerAppPath && git reset --hard origin/main && git pull origin main && cd backend_v2 && C:\Users\Admin\.local\bin\uv sync && nssm restart ny-tagging-8002"
 ssh "$ServerUser@$ServerHost" $remoteCommand
 
 Write-Host ""
