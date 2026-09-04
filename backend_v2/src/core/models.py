@@ -87,3 +87,15 @@ class JobOrderCartonSlot(Base):
     
     product = relationship("Product")
     carton = relationship("Carton")
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False, default="qa")  # "admin" | "qa"
+    full_name = Column(String(100), nullable=True)
+    is_active = Column(Integer, default=1)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+

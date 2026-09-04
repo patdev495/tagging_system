@@ -76,7 +76,7 @@
                 <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="View Details">
                   <ExternalLink class="w-5 h-5" />
                 </button>
-                <button @click="handleDelete(carton)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Carton">
+                <button v-if="authStore.isAdmin" @click="handleDelete(carton)" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Carton">
                   <Trash2 class="w-5 h-5" />
                 </button>
               </div>
@@ -187,10 +187,11 @@
 
         <!-- Sticky Footer -->
         <div class="p-6 border-t border-slate-100 flex justify-between shrink-0 bg-white">
-          <button @click="handleDelete(selectedCarton)" class="px-6 py-3 rounded-xl bg-red-50 font-bold text-red-600 hover:bg-red-100 transition-colors flex items-center gap-2">
+          <button v-if="authStore.isAdmin" @click="handleDelete(selectedCarton)" class="px-6 py-3 rounded-xl bg-red-50 font-bold text-red-600 hover:bg-red-100 transition-colors flex items-center gap-2">
             <Trash2 class="w-5 h-5" />
             Delete Carton
           </button>
+          <div v-else></div>
           <button @click="selectedCarton = null" class="px-8 py-3 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200 transition-colors">
             {{ t('admin.close_window') }}
           </button>
@@ -207,11 +208,14 @@ import { Search, Filter, ExternalLink, X, Box, CheckCircle2, Trash2 } from 'luci
 import historyApi from '../../features/history/api';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
+import { useAuthStore } from '../../core/stores/auth';
 import type { Carton, Product } from '../../types/api';
 
 const { t } = useI18n();
 const system = useSystemStore();
+const authStore = useAuthStore();
 const history = ref<Carton[]>([]);
+
 const products = ref<Product[]>([]);
 const totalCount = ref<number>(0);
 const currentPage = ref<number>(0);

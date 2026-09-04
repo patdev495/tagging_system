@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException
-import uvicorn
 
 # Configure logging to show debug info in console
 logging.basicConfig(
@@ -21,6 +20,7 @@ from src.features.history.router import router as history_router
 from src.features.carton.router import router as carton_router
 from src.features.print.router import router as print_router
 from src.features.job_order.router import router as job_order_router
+from src.features.auth.router import router as auth_router
 
 def create_app() -> FastAPI:
     @asynccontextmanager
@@ -63,6 +63,8 @@ def create_app() -> FastAPI:
     app.include_router(carton_router, prefix="/api/v1")
     app.include_router(print_router, prefix="/api/v1")
     app.include_router(job_order_router, prefix="/api/v1")
+    app.include_router(auth_router, prefix="/api/v1")
+    app.include_router(auth_router)  # Also allow /auth/login directly
 
 
     @app.get("/api/v1/health", tags=["Health"])

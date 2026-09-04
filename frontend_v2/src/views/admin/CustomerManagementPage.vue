@@ -5,7 +5,7 @@
         <h1 class="text-3xl font-bold text-slate-900">Customer Management</h1>
         <p class="text-slate-500">Add, edit, or remove customer information in the system.</p>
       </div>
-      <button @click="openCreateModal" class="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-md">
+      <button v-if="authStore.isAdmin" @click="openCreateModal" class="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700 transition-colors shadow-md">
         <Plus class="w-5 h-5" />
         Add Customer
       </button>
@@ -30,7 +30,7 @@
             <th class="p-4 font-semibold text-slate-700">ID</th>
             <th class="p-4 font-semibold text-slate-700">Customer Code</th>
             <th class="p-4 font-semibold text-slate-700">Customer Name</th>
-            <th class="p-4 font-semibold text-slate-700 text-right">Actions</th>
+            <th v-if="authStore.isAdmin" class="p-4 font-semibold text-slate-700 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -38,7 +38,7 @@
             <td class="p-4 text-slate-500 text-sm">#{{ customer.id }}</td>
             <td class="p-4 font-bold text-indigo-900">{{ customer.code }}</td>
             <td class="p-4 text-slate-700">{{ customer.name }}</td>
-            <td class="p-4 text-right">
+            <td v-if="authStore.isAdmin" class="p-4 text-right">
               <div class="flex justify-end gap-2">
                 <button @click="openEditModal(customer)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Edit">
                   <Edit2 class="w-5 h-5" />
@@ -49,6 +49,7 @@
               </div>
             </td>
           </tr>
+
           <tr v-if="filteredCustomers.length === 0">
             <td colspan="4" class="p-12 text-center text-slate-400 italic">No customers found.</td>
           </tr>
@@ -110,10 +111,13 @@ import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2, X } from 'lucide-vue-next';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
+import { useAuthStore } from '../../core/stores/auth';
 import type { Customer } from '../../types/api';
 
 const system = useSystemStore();
+const authStore = useAuthStore();
 const customers = ref<Customer[]>([]);
+
 const searchQuery = ref<string>('');
 const showModal = ref<boolean>(false);
 const isEdit = ref<boolean>(false);

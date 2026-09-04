@@ -75,7 +75,7 @@ router.beforeEach((to, _from, next) => {
       return;
     }
 
-    const isAuthenticated = sessionStorage.getItem('admin_session') === 'true';
+    const isAuthenticated = !!sessionStorage.getItem('auth_token') || sessionStorage.getItem('admin_session') === 'true';
     if (isAuthenticated) {
       next();
     } else {

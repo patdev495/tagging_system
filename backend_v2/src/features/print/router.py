@@ -5,8 +5,10 @@ from typing import Optional, cast as typing_cast
 from src.core.database import get_db
 from src.features.history.schemas import Carton
 from src.features.carton import print_attempts
+from src.features.auth.dependencies import require_admin
 from . import schemas, service
 from .bartender_engine import bt_engine
+
 
 router = APIRouter(prefix="/print", tags=["Print"])
 
@@ -48,15 +50,16 @@ def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, d
         headers={"Content-Disposition": f"attachment; filename=print_job_{carton_sn}.xml"}
     )
 
-@router.post("/carton/{carton_id}/reprint", response_model=Carton)
+@router.post("/carton/{carton_id}/reprint", response_model=Carton, dependencies=[Depends(require_admin)])
 def reprint_carton(carton_id: int, request: Request, template_path: Optional[str] = None, printer_name: Optional[str] = None, db: Session = Depends(get_db)):
-    """In lại thùng đã đóng gói (Tạo bản ghi mới với is_reprint=1)"""
+    """In lại thùng đã đóng gói (Chỉ dành cho Admin)"""
     client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
     return service.reprint_carton(carton_id, printer_name, template_path, client_ip, db)
 
-@router.post("/carton/{carton_id}/server-print")
+@router.post("/carton/{carton_id}/server-print", dependencies=[Depends(require_admin)])
 def server_print_carton(carton_id: int, request: Request, printer_name: Optional[str] = None, fallback_template_path: Optional[str] = None, db: Session = Depends(get_db)):
-    """In tem trực tiếp qua BarTender Engine (không cần Agent riêng)."""
+    """In tem trực tiếp qua BarTender Engine (Chỉ dành cho Admin)"""
+
     client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
 
     carton = db.query(service.models.Carton).filter(service.models.Carton.id == carton_id).first()

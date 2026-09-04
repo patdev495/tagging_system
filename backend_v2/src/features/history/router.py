@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from src.core.database import get_db
+from src.features.auth.dependencies import require_admin
 from . import schemas, service
 from typing import Optional
 
@@ -47,7 +48,8 @@ def get_carton_detail(carton_id: int, db: Session = Depends(get_db)):
     """Lấy chi tiết một thùng hàng bao gồm danh sách S/N sản phẩm"""
     return service.get_carton_detail(db, carton_id)
 
-@router.delete("/{carton_id}")
+@router.delete("/{carton_id}", dependencies=[Depends(require_admin)])
 def delete_carton(carton_id: int, db: Session = Depends(get_db)):
-    """Xóa một thùng hàng và toàn bộ S/N bên trong nó"""
+    """Xóa một thùng hàng và toàn bộ S/N bên trong nó (Chỉ dành cho Admin)"""
     return service.delete_carton(db, carton_id)
+

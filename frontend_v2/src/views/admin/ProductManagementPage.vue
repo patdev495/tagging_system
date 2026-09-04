@@ -10,6 +10,7 @@
         <p class="text-slate-500 text-sm mt-1">Cấu hình thông số đóng gói, quy chuẩn cân dung sai và file tem nhãn BarTender.</p>
       </div>
       <button 
+        v-if="authStore.isAdmin"
         @click="openCreateModal" 
         class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all hover:scale-102 cursor-pointer w-fit"
       >
@@ -64,8 +65,9 @@
               <th class="p-4 text-center">Số Lượng / Thùng</th>
               <th class="p-4">Quy Tắc S/N & Mã In</th>
               <th class="p-4">Mẫu Tem (.btw)</th>
-              <th class="p-4 text-right">Thao Tác</th>
+              <th v-if="authStore.isAdmin" class="p-4 text-right">Thao Tác</th>
             </tr>
+
           </thead>
           <tbody class="divide-y divide-slate-100 text-sm">
             <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-indigo-50/30 transition-colors">
@@ -131,7 +133,7 @@
                 </div>
               </td>
 
-              <td class="p-4 text-right">
+              <td v-if="authStore.isAdmin" class="p-4 text-right">
                 <div class="flex justify-end gap-1.5">
                   <button 
                     @click="openEditModal(product)" 
@@ -181,9 +183,11 @@ import { Plus, Search, Edit2, Trash2 } from 'lucide-vue-next';
 import catalogApi from '../../features/catalog/api';
 import ProductFormModal, { type ProductFormData } from '../../features/catalog/components/ProductFormModal.vue';
 import { useSystemStore } from '../../core/stores/system';
+import { useAuthStore } from '../../core/stores/auth';
 import type { Product, Customer } from '../../types/api';
 
 const system = useSystemStore();
+const authStore = useAuthStore();
 const products = ref<Product[]>([]);
 const customers = ref<Customer[]>([]);
 const searchQuery = ref<string>('');

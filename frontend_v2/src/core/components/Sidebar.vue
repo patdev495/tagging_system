@@ -40,14 +40,36 @@
       </button>
     </nav>
 
+    <!-- User Profile & Logout -->
+    <div class="p-3 border-t border-indigo-800/60 flex items-center justify-between gap-2 bg-black/20">
+      <div v-if="!isCollapsed" class="flex items-center gap-2.5 overflow-hidden">
+        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+          {{ authStore.user?.username?.charAt(0).toUpperCase() || 'U' }}
+        </div>
+        <div class="overflow-hidden">
+          <p class="m-0 text-xs font-bold truncate leading-tight">{{ authStore.user?.username || 'User' }}</p>
+          <span :class="['text-[9px] font-black uppercase px-1.5 py-0.5 rounded inline-block', authStore.isAdmin ? 'bg-indigo-500 text-white' : 'bg-emerald-500 text-white']">
+            {{ authStore.roleName || 'GUEST' }}
+          </span>
+        </div>
+      </div>
+      <button 
+        @click="handleLogout"
+        class="p-2 rounded-lg hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 transition-colors cursor-pointer border-none bg-transparent flex-shrink-0"
+        title="Đăng xuất"
+      >
+        <LogOut class="w-5 h-5" />
+      </button>
+    </div>
+
     <!-- Footer / Toggle -->
-    <div class="p-4 border-t border-indigo-800">
+    <div class="p-3 border-t border-indigo-800/40">
       <button 
         @click="isCollapsed = !isCollapsed"
-        class="w-full flex items-center justify-center p-2 rounded-lg hover:bg-indigo-800 transition-colors cursor-pointer"
+        class="w-full flex items-center justify-center p-2 rounded-lg hover:bg-indigo-800 transition-colors cursor-pointer border-none bg-transparent text-white"
       >
-        <ChevronLeft v-if="!isCollapsed" class="w-6 h-6" />
-        <ChevronRight v-else class="w-6 h-6" />
+        <ChevronLeft v-if="!isCollapsed" class="w-5 h-5" />
+        <ChevronRight v-else class="w-5 h-5" />
       </button>
     </div>
 
@@ -67,16 +89,27 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  LogOut
 } from 'lucide-vue-next';
 import { useSystemStore } from '../stores/system';
+import { useAuthStore } from '../stores/auth';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import type { Component } from 'vue';
 import SettingsModal from '../../features/settings/components/SettingsModal.vue';
 
 const systemStore = useSystemStore();
+const authStore = useAuthStore();
+const router = useRouter();
+
 const { isSidebarCollapsed: isCollapsed } = storeToRefs(systemStore);
 const showSettings = ref(false);
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/admin/login');
+};
 
 interface MenuItem {
   label: string;

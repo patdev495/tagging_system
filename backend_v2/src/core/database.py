@@ -210,6 +210,11 @@ def init_db():
         # Run seed data
         with SessionLocal() as db:
             seed_a11_data(db)
+            try:
+                from src.features.auth.service import seed_default_users
+                seed_default_users(db)
+            except Exception as e:
+                logger.warning(f"Seed default users notice: {e}")
 
     except Exception as e:
         logger.error(f"Failed to initialize or migrate database tables: {e}")
