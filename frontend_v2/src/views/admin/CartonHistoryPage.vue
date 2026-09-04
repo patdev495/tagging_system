@@ -13,7 +13,7 @@
       <!-- Export to Excel Button with Dropdown Menu -->
       <div class="relative">
         <button 
-          @click="showExportMenu = !showExportMenu" 
+          @click="toggleExportMenu" 
           :disabled="isExporting"
           class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2.5 shadow-lg shadow-emerald-200 transition-all cursor-pointer"
         >
@@ -24,32 +24,17 @@
         </button>
 
         <!-- Dropdown Menu -->
-        <div 
-          v-if="showExportMenu && !isExporting" 
-          class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in duration-150"
-        >
-          <button 
-            @click="handleExport('summary')" 
-            class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent"
-          >
-            <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600 mt-0.5">
-              <FileSpreadsheet class="w-4 h-4" />
-            </div>
+        <div v-if="showExportMenu && !isExporting" class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in duration-150">
+          <button @click="handleExport('summary')" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent">
+            <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600 mt-0.5"><FileSpreadsheet class="w-4 h-4" /></div>
             <div>
               <p class="font-bold text-slate-800 text-sm m-0">1. Xuất Tổng Hợp (Summary)</p>
               <span class="text-xs text-slate-400 block mt-0.5">Báo cáo cấp thùng: STT, Mã thùng, Khách hàng, Cân nặng, Lô</span>
             </div>
           </button>
-
           <div class="border-t border-slate-100 my-1"></div>
-
-          <button 
-            @click="handleExport('detailed')" 
-            class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent"
-          >
-            <div class="p-2 rounded-lg bg-indigo-50 text-indigo-600 mt-0.5">
-              <Download class="w-4 h-4" />
-            </div>
+          <button @click="handleExport('detailed')" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent">
+            <div class="p-2 rounded-lg bg-indigo-50 text-indigo-600 mt-0.5"><Download class="w-4 h-4" /></div>
             <div>
               <p class="font-bold text-slate-800 text-sm m-0">2. Bảng Kê Chi Tiết (Traceability)</p>
               <span class="text-xs text-slate-400 block mt-0.5">File 2 Sheet: Tổng hợp & Toàn bộ sê-ri con đối soát giao hàng</span>
@@ -84,9 +69,12 @@
           <div class="relative">
             <Calendar class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
             <input 
+              ref="startDateInputRef"
               v-model="filters.start_date" 
               type="date" 
-              class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white font-medium"
+              @change="dateError = false"
+              :class="dateError && !filters.start_date ? 'border-rose-400 bg-rose-50/40 focus:ring-rose-400' : 'border-slate-200 focus:ring-indigo-500'"
+              class="w-full pl-9 pr-3 py-2.5 rounded-xl border focus:ring-2 outline-none text-sm bg-white font-medium transition-colors"
             >
           </div>
         </div>
@@ -99,7 +87,9 @@
             <input 
               v-model="filters.end_date" 
               type="date" 
-              class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white font-medium"
+              @change="dateError = false"
+              :class="dateError && !filters.end_date ? 'border-rose-400 bg-rose-50/40 focus:ring-rose-400' : 'border-slate-200 focus:ring-indigo-500'"
+              class="w-full pl-9 pr-3 py-2.5 rounded-xl border focus:ring-2 outline-none text-sm bg-white font-medium transition-colors"
             >
           </div>
         </div>
@@ -242,20 +232,8 @@
       <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
         <span class="text-xs text-slate-500 font-medium">{{ t('admin.showing_records', { current: history.length, total: totalCount }) }}</span>
         <div class="flex gap-2">
-          <button 
-            @click="fetchHistory(currentPage - 1)" 
-            :disabled="currentPage === 0"
-            class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
-          >
-            {{ t('admin.previous') }}
-          </button>
-          <button 
-            @click="fetchHistory(currentPage + 1)" 
-            :disabled="(currentPage + 1) * 50 >= totalCount"
-            class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
-          >
-            {{ t('admin.next') }}
-          </button>
+          <button @click="fetchHistory(currentPage - 1)" :disabled="currentPage === 0" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer">{{ t('admin.previous') }}</button>
+          <button @click="fetchHistory(currentPage + 1)" :disabled="(currentPage + 1) * 50 >= totalCount" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer">{{ t('admin.next') }}</button>
         </div>
       </div>
     </div>
@@ -308,6 +286,8 @@ const isLoadingItems = ref<boolean>(false);
 
 const isExporting = ref<boolean>(false);
 const showExportMenu = ref<boolean>(false);
+const startDateInputRef = ref<HTMLInputElement | null>(null);
+const dateError = ref<boolean>(false);
 
 const filters = ref<{
   search: string;
@@ -390,10 +370,33 @@ const fetchCatalogData = async () => {
   }
 };
 
+const validateDateRangeForExport = (): boolean => {
+  if (!filters.value.start_date || !filters.value.end_date) {
+    dateError.value = true;
+    startDateInputRef.value?.focus();
+    system.showNotification('Vui lòng chọn khoảng thời gian (Từ ngày - Đến ngày) trước khi xuất báo cáo!', 'warning');
+    return false;
+  }
+  if (filters.value.start_date > filters.value.end_date) {
+    dateError.value = true;
+    startDateInputRef.value?.focus();
+    system.showNotification('Khoảng ngày không hợp lệ: Từ ngày không được lớn hơn Đến ngày!', 'warning');
+    return false;
+  }
+  return true;
+};
+
+const toggleExportMenu = () => {
+  if (!validateDateRangeForExport()) return;
+  showExportMenu.value = !showExportMenu.value;
+};
+
 const handleExport = async (mode: 'summary' | 'detailed') => {
+  showExportMenu.value = false;
+  if (!validateDateRangeForExport()) return;
+
   try {
     isExporting.value = true;
-    showExportMenu.value = false;
     system.showNotification('Đang khởi tạo file báo cáo Excel...', 'info');
 
     const params: Record<string, any> = {
