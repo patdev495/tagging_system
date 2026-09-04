@@ -22,6 +22,7 @@ from src.features.print.router import router as print_router
 from src.features.job_order.router import router as job_order_router
 from src.features.auth.router import router as auth_router
 from src.features.dashboard.router import router as dashboard_router
+from src.features.production_run.router import router as production_run_router
 
 def create_app() -> FastAPI:
     @asynccontextmanager
@@ -67,6 +68,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(auth_router)  # Also allow /auth/login directly
     app.include_router(dashboard_router, prefix="/api/v1")
+    app.include_router(production_run_router, prefix="/api/v1")
+
 
 
 

@@ -90,7 +90,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  LogOut
+  LogOut,
+  Layers
 } from 'lucide-vue-next';
 import { useSystemStore } from '../stores/system';
 import { useAuthStore } from '../stores/auth';
@@ -120,9 +121,11 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { label: 'Packing Station', path: '/', icon: Box },
   { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
+  { label: 'Production Runs', path: '/admin/production-runs', icon: Layers },
   { label: 'Customers', path: '/admin/customers', icon: Users },
   { label: 'Products', path: '/admin/products', icon: Package },
   { label: 'Carton History', path: '/admin/history', icon: ClipboardList },
   { label: 'S/N Lookup', path: '/admin/stats', icon: BarChart3 },
 ];
 </script>
+

@@ -1,6 +1,6 @@
 # 03. Production Runs & Job Order Progress Tracking
 
-Status: ready-for-agent
+Status: closed
 
 ## Parent
 .scratch/admin-portal-enhancement/PRD.md
@@ -21,11 +21,12 @@ Xây dựng phân hệ Quản lý Đợt Sản Xuất mới (`/admin/production-
       - Bảng thống kê các đợt đóng hàng theo PO & Lot, hiển thị tổng thùng, tổng cân nặng và thời điểm đóng gần nhất.
 
 ## Acceptance criteria
-- [ ] Bổ sung route `/admin/production-runs` và mục điều hướng tương ứng trên thanh Sidebar.
-- [ ] Tab Job Orders hiển thị đầy đủ danh sách các công lệnh đang hoặc đã chạy, tính toán chính xác số lượng slot đã quét so với tổng slot.
-- [ ] Nhấp xem chi tiết Job Order hiển thị chính xác toàn bộ vị trí thùng (Slot 1..N), trạng thái và mã Carton SN tương ứng.
-- [ ] Tab PO / Lot Runs gom nhóm chính xác các thùng thuộc cùng cặp PO Number & Lot Number kèm tổng khối lượng thực tế.
-- [ ] Cả Admin và QA đều có thể xem và tra cứu dữ liệu trên màn hình này.
+- [x] Bổ sung route `/admin/production-runs` và mục điều hướng tương ứng trên thanh Sidebar.
+- [x] Tab Job Orders hiển thị đầy đủ danh sách các công lệnh đang hoặc đã chạy, tính toán chính xác số lượng slot đã quét so với tổng slot.
+- [x] Nhấp xem chi tiết Job Order hiển thị chính xác toàn bộ vị trí thùng (Slot 1..N), trạng thái và mã Carton SN tương ứng.
+- [x] Tab PO / Lot Runs gom nhóm chính xác các thùng thuộc cùng cặp PO Number & Lot Number kèm tổng khối lượng thực tế.
+- [x] Cả Admin và QA đều có thể xem và tra cứu dữ liệu trên màn hình này.
+
 
 ## Blocked by
 .scratch/admin-portal-enhancement/issues/01-user-authentication-and-rbac.md

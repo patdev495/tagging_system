@@ -34,6 +34,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../../views/admin/DashboardPage.vue'),
       },
       {
+        path: 'production-runs',
+        name: 'ProductionRuns',
+        component: () => import('../../views/admin/ProductionRunsPage.vue'),
+      },
+      {
         path: 'customers',
         name: 'CustomerManagement',
         component: () => import('../../views/admin/CustomerManagementPage.vue'),
