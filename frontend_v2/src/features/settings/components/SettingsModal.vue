@@ -128,6 +128,39 @@
           </div>
         </div>
 
+        <!-- BarTender Engine Diagnostics & Recovery -->
+        <div class="mb-5 p-4 rounded-xl border border-indigo-100 bg-indigo-50/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-[0.85rem] text-indigo-950 flex items-center gap-2 m-0">
+              <i class="fas fa-stethoscope text-indigo-600"></i>
+              <span>Chẩn Đoán BarTender Engine</span>
+            </label>
+            <span :class="['text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1.5', bartenderStatus === 'ready' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800']">
+              <span class="w-1.5 h-1.5 rounded-full" :class="bartenderStatus === 'ready' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
+              <span>{{ bartenderStatus === 'ready' ? 'Sẵn Sàng (Ready)' : 'Ngoại Tuyến (Offline)' }}</span>
+            </span>
+          </div>
+          
+          <p class="text-[0.75rem] text-slate-500 m-0 leading-relaxed">
+            Kiểm tra trạng thái BarTender COM Engine. Nếu lệnh in bị đứng hoặc kẹt tiến trình <code class="text-indigo-600 font-mono">bartend.exe</code>, Admin có thể khởi động lại để phục hồi tự động.
+          </p>
+
+          <div v-if="authStore.isAdmin" class="pt-1">
+            <button 
+              type="button"
+              @click="handleRestartEngine" 
+              :disabled="isRestartingEngine"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-2 px-3 rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer border-none"
+            >
+              <i class="fas fa-arrows-rotate" :class="{ 'fa-spin': isRestartingEngine }"></i>
+              <span>{{ isRestartingEngine ? 'Đang khởi động lại BarTender...' : 'Khởi Động Lại BarTender COM Engine' }}</span>
+            </button>
+          </div>
+          <div v-else class="text-[11px] text-slate-400 italic">
+            (Chức năng khởi động lại Engine chỉ khả dụng cho tài khoản Admin)
+          </div>
+        </div>
+
         <!-- Template Path (Client Fallback) -->
         <div class="mb-4" v-if="formData.printMode === 'centralized'">
           <label class="block mb-1.5 font-semibold text-[0.85rem] text-slate-600"><i class="fas fa-file-alt mr-1.5 text-orange-500"></i>{{ t('settings.fallback_template') }}</label>
@@ -184,6 +217,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../core/stores/settings';
 import { useSystemStore } from '../../../core/stores/system';
+import { useAuthStore } from '../../../core/stores/auth';
 import printApi from '../../print/api';
 import scaleApi from '../../packing/scaleApi';
 
@@ -198,6 +232,40 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const store = useSettingsStore();
 const system = useSystemStore();
+const authStore = useAuthStore();
+
+const bartenderStatus = ref<'ready' | 'offline'>('offline');
+const isRestartingEngine = ref<boolean>(false);
+
+const checkEngineStatus = async () => {
+  try {
+    const res = await printApi.getPrintConfig();
+    bartenderStatus.value = res.data.bartender_ready ? 'ready' : 'offline';
+  } catch (err) {
+    bartenderStatus.value = 'offline';
+  }
+};
+
+const handleRestartEngine = async () => {
+  if (!confirm('Bạn có chắc chắn muốn giải phóng tiến trình bartend.exe và khởi động lại BarTender COM Engine?')) {
+    return;
+  }
+  isRestartingEngine.value = true;
+  try {
+    const res = await printApi.restartEngine();
+    if (res.data.success) {
+      bartenderStatus.value = res.data.bartender_ready ? 'ready' : 'offline';
+      system.showNotification('Đã khởi động lại BarTender COM Engine thành công!', 'success');
+      loadPrinters();
+    } else {
+      system.showNotification('Khởi động lại BarTender Engine thất bại: ' + res.data.message, 'error');
+    }
+  } catch (err: any) {
+    system.showNotification(err.response?.data?.detail || 'Lỗi khi khởi động lại BarTender Engine', 'error');
+  } finally {
+    isRestartingEngine.value = false;
+  }
+};
 
 interface AudioDevice {
   id: string;
@@ -413,6 +481,7 @@ watch(() => props.show, async (val) => {
     
     loadAudioDevices(); 
     loadScaleStatus();
+    checkEngineStatus();
     if (formData.value.printMode === 'local') {
       await discoverAgent();
     } else {
@@ -423,5 +492,6 @@ watch(() => props.show, async (val) => {
 onMounted(() => { 
   loadAudioDevices(); 
   loadScaleStatus();
+  checkEngineStatus();
 });
 </script>

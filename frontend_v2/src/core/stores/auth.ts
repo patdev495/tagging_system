@@ -4,7 +4,7 @@ import api from '../api';
 
 export interface AuthUser {
   id: number;
-  username: str;
+  username: string;
   role: 'admin' | 'qa' | string;
   full_name?: string;
   is_active?: number;
@@ -23,7 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isQA = computed(() => user.value?.role === 'qa');
   const roleName = computed(() => (user.value?.role || '').toUpperCase());
 
-  async function login(username: string, password: str) {
+  async function login(username: string, password: string) {
     const res = await api.post('/auth/login', { username, password });
     const data = res.data;
     

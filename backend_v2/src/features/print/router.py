@@ -33,6 +33,22 @@ def get_available_printers():
     printers = bt_engine.get_printers()
     return {"printers": printers}
 
+@router.get("/templates", response_model=schemas.TemplateListResponse)
+def get_templates():
+    """Lấy danh sách các file mẫu tem .btw có sẵn trên server kèm metadata."""
+    templates = service.get_available_templates()
+    return {"templates": templates}
+
+@router.post("/validate-template", response_model=schemas.TemplateValidateResponse)
+def validate_template(request: schemas.TemplateValidateRequest):
+    """Kiểm tra sự tồn tại và tính hợp lệ của tệp mẫu tem."""
+    return service.validate_template(request.template_name)
+
+@router.post("/restart-engine", response_model=schemas.EngineRestartResponse, dependencies=[Depends(require_admin)])
+def restart_engine():
+    """Khởi động lại BarTender COM Engine (Chỉ dành cho Admin)."""
+    return service.restart_engine()
+
 # ===== In ấn =====
 
 @router.patch("/carton/{carton_id}/status", response_model=Carton)

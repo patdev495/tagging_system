@@ -1,6 +1,6 @@
 # 05. Normalized Template Management & BarTender Diagnostic Tooling
 
-Status: ready-for-agent
+Status: completed
 
 ## Parent
 .scratch/admin-portal-enhancement/PRD.md
@@ -22,10 +22,10 @@ Chuẩn hóa cách thức quản lý file mẫu in BarTender (`.btw`) và bổ s
   - Phân quyền: Thao tác sửa sản phẩm và khởi động lại engine chỉ khả dụng cho tài khoản `Admin`.
 
 ## Acceptance criteria
-- [ ] Giao diện cấu hình Product hiển thị dropdown danh sách các file `.btw` thực tế có trên hệ thống, không còn phải gõ đường dẫn thủ công.
-- [ ] Bấm "Kiểm tra file" phản hồi chính xác trạng thái tồn tại và tính hợp lệ của mẫu tem.
-- [ ] Bấm nút "Khởi động lại BarTender Engine" gọi API giải phóng tiến trình kẹt thành công và tái lập kết nối COM mà không làm sập server Backend.
-- [ ] Tài khoản `QA` chỉ xem thông tin cấu hình sản phẩm, các nút chỉnh sửa/lưu và nút khởi động lại engine đều bị vô hiệu hóa hoặc ẩn đi.
+- [x] Giao diện cấu hình Product hiển thị dropdown danh sách các file `.btw` thực tế có trên hệ thống, không còn phải gõ đường dẫn thủ công.
+- [x] Bấm "Kiểm tra file" phản hồi chính xác trạng thái tồn tại và tính hợp lệ của mẫu tem.
+- [x] Bấm nút "Khởi động lại BarTender Engine" gọi API giải phóng tiến trình kẹt thành công và tái lập kết nối COM mà không làm sập server Backend.
+- [x] Tài khoản `QA` chỉ xem thông tin cấu hình sản phẩm, các nút chỉnh sửa/lưu và nút khởi động lại engine đều bị vô hiệu hóa hoặc ẩn đi.
 
 ## Blocked by
 .scratch/admin-portal-enhancement/issues/01-user-authentication-and-rbac.md

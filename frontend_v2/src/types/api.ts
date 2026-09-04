@@ -24,6 +24,7 @@ export interface Product {
   mfr_pn?: string;
   pkg_prefix?: string;
   revision?: string;
+  customer?: Customer;
 }
 
 export interface Carton {

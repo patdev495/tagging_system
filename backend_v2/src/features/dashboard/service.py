@@ -1,8 +1,8 @@
 import datetime
 import logging
-from typing import List, Tuple, Dict, cast as typing_cast
+from typing import List, Tuple, Dict, Optional, cast as typing_cast
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, case
 
 from src.core import models
 from .schemas import (
@@ -16,17 +16,39 @@ from .schemas import (
 
 logger = logging.getLogger("DashboardService")
 
-def get_time_boundary(time_range: str) -> Tuple[datetime.datetime, datetime.datetime]:
+def get_time_boundary(
+    time_range: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+) -> Tuple[datetime.datetime, datetime.datetime]:
     now = datetime.datetime.now()
     today_start = datetime.datetime.combine(now.date(), datetime.time.min)
-    end_dt = datetime.datetime.combine(now.date(), datetime.time.max)
+    today_end = datetime.datetime.combine(now.date(), datetime.time.max)
 
-    if time_range == "7d":
+    if time_range == "yesterday":
+        yesterday_date = now.date() - datetime.timedelta(days=1)
+        start_dt = datetime.datetime.combine(yesterday_date, datetime.time.min)
+        end_dt = datetime.datetime.combine(yesterday_date, datetime.time.max)
+    elif time_range == "7d":
         start_dt = today_start - datetime.timedelta(days=6)
+        end_dt = today_end
     elif time_range == "30d":
         start_dt = today_start - datetime.timedelta(days=29)
+        end_dt = today_end
+    elif time_range == "custom" and start_date and end_date:
+        try:
+            parsed_start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            parsed_end = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            start_dt = datetime.datetime.combine(parsed_start.date(), datetime.time.min)
+            end_dt = datetime.datetime.combine(parsed_end.date(), datetime.time.max)
+            if start_dt > end_dt:
+                start_dt, end_dt = end_dt, start_dt
+        except ValueError:
+            start_dt = today_start
+            end_dt = today_end
     else:  # default "today"
         start_dt = today_start
+        end_dt = today_end
 
     return start_dt, end_dt
 
@@ -43,44 +65,63 @@ def get_system_health() -> SystemHealth:
         logger.warning(f"Error checking system health: {e}")
         return SystemHealth(bartender_status="offline", active_printers_count=0)
 
-def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt: datetime.datetime, time_range: str) -> List[HourlyStat]:
+def calculate_hourly_throughput(
+    db: Session,
+    start_dt: datetime.datetime,
+    end_dt: datetime.datetime,
+    time_range: str
+) -> List[HourlyStat]:
+    span_days = (end_dt.date() - start_dt.date()).days
+    is_hourly = time_range in ("today", "yesterday") or (time_range == "custom" and span_days <= 1)
+
+    # Fast query 1: Fetch cartons headers without 132k items Cartesian join
     cartons = db.query(
         models.Carton.id,
         models.Carton.created_at,
         models.Carton.status,
-        models.Product.packed_qty,
-        func.count(models.CartonItem.id).label("scanned_items")
-    ).outerjoin(
-        models.CartonItem, models.CartonItem.carton_id == models.Carton.id
+        models.Product.packed_qty
     ).outerjoin(
         models.Product, models.Carton.product_id == models.Product.id
     ).filter(
         models.Carton.created_at >= start_dt,
         models.Carton.created_at <= end_dt
-    ).group_by(
-        models.Carton.id,
-        models.Carton.created_at,
-        models.Carton.status,
-        models.Product.packed_qty
     ).all()
 
-    if time_range == "today":
+    # Fast query 2: Batch item counts per carton using indexed foreign key
+    item_counts: dict[int, int] = {
+        carton_id: count
+        for carton_id, count in db.query(
+            models.CartonItem.carton_id,
+            func.count(models.CartonItem.id)
+        ).join(
+            models.Carton, models.CartonItem.carton_id == models.Carton.id
+        ).filter(
+            models.Carton.created_at >= start_dt,
+            models.Carton.created_at <= end_dt
+        ).group_by(models.CartonItem.carton_id).all()
+    }
+
+    if is_hourly:
+        # Standard hourly view (06:00 to 22:00 baseline)
         hour_keys = [f"{h:02d}:00" for h in range(6, 23)]
         extra_keys = set()
-        for _, created_at, _, _, _ in cartons:
+        for _, created_at, _, _ in cartons:
             if created_at:
                 h_key = created_at.strftime("%H:00")
                 if h_key not in hour_keys:
                     extra_keys.add(h_key)
         all_keys = sorted(list(set(hour_keys).union(extra_keys)))
 
-        stats_map: Dict[str, Dict[str, int]] = {k: {"total": 0, "success": 0, "failed": 0, "total_items": 0} for k in all_keys}
-        for _, created_at, status, packed_qty, scanned_items in cartons:
+        stats_map: Dict[str, Dict[str, int]] = {
+            k: {"total": 0, "success": 0, "failed": 0, "total_items": 0} for k in all_keys
+        }
+        for c_id, created_at, status, packed_qty in cartons:
             if created_at:
                 key = created_at.strftime("%H:00")
                 if key in stats_map:
                     stats_map[key]["total"] += 1
-                    items_count = scanned_items if scanned_items > 0 else (packed_qty or 0 if status == "SUCCESS" else 0)
+                    scanned = item_counts.get(c_id, 0)
+                    items_count = scanned if scanned > 0 else (packed_qty or 0 if status == "SUCCESS" else 0)
                     stats_map[key]["total_items"] += items_count
                     if status == "SUCCESS":
                         stats_map[key]["success"] += 1
@@ -98,6 +139,7 @@ def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt
             for k in all_keys
         ]
     else:
+        # Multi-day view (grouped by DD/MM)
         date_keys = []
         cur = start_dt.date()
         end_date = end_dt.date()
@@ -106,12 +148,13 @@ def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt
             cur += datetime.timedelta(days=1)
 
         stats_map = {k: {"total": 0, "success": 0, "failed": 0, "total_items": 0} for k in date_keys}
-        for _, created_at, status, packed_qty, scanned_items in cartons:
+        for c_id, created_at, status, packed_qty in cartons:
             if created_at:
                 key = created_at.strftime("%d/%m")
                 if key in stats_map:
                     stats_map[key]["total"] += 1
-                    items_count = scanned_items if scanned_items > 0 else (packed_qty or 0 if status == "SUCCESS" else 0)
+                    scanned = item_counts.get(c_id, 0)
+                    items_count = scanned if scanned > 0 else (packed_qty or 0 if status == "SUCCESS" else 0)
                     stats_map[key]["total_items"] += items_count
                     if status == "SUCCESS":
                         stats_map[key]["success"] += 1
@@ -129,7 +172,12 @@ def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt
             for k in date_keys
         ]
 
-def calculate_top_products(db: Session, start_dt: datetime.datetime, end_dt: datetime.datetime, total_cartons: int) -> List[ProductStat]:
+def calculate_top_products(
+    db: Session,
+    start_dt: datetime.datetime,
+    end_dt: datetime.datetime,
+    total_cartons: int
+) -> List[ProductStat]:
     results = db.query(
         models.Product.id.label("product_id"),
         models.Product.item_name,
@@ -156,16 +204,29 @@ def calculate_top_products(db: Session, start_dt: datetime.datetime, end_dt: dat
         desc("cnt")
     ).limit(8).all()
 
+    if not results:
+        return []
+
+    # Batch query item counts for all top products to eliminate N+1 queries
+    prod_ids = [r.product_id for r in results]
+    prod_items_map: dict[int, int] = {
+        product_id: count
+        for product_id, count in db.query(
+            models.Carton.product_id,
+            func.count(models.CartonItem.id)
+        ).join(
+            models.CartonItem, models.CartonItem.carton_id == models.Carton.id
+        ).filter(
+            models.Carton.product_id.in_(prod_ids),
+            models.Carton.created_at >= start_dt,
+            models.Carton.created_at <= end_dt
+        ).group_by(models.Carton.product_id).all()
+    }
+
     top_products = []
     for r in results:
         pct = round((r.cnt / total_cartons * 100), 1) if total_cartons > 0 else 0.0
-        prod_items = db.query(models.CartonItem).join(
-            models.Carton, models.CartonItem.carton_id == models.Carton.id
-        ).filter(
-            models.Carton.product_id == r.product_id,
-            models.Carton.created_at >= start_dt,
-            models.Carton.created_at <= end_dt
-        ).count()
+        prod_items = prod_items_map.get(r.product_id, 0)
         if prod_items == 0 and r.packed_qty:
             prod_items = r.cnt * r.packed_qty
 
@@ -183,40 +244,36 @@ def calculate_top_products(db: Session, start_dt: datetime.datetime, end_dt: dat
         )
     return top_products
 
+def get_dashboard_stats(
+    db: Session,
+    time_range: str = "today",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+) -> DashboardStatsResponse:
+    start_dt, end_dt = get_time_boundary(time_range, start_date=start_date, end_date=end_date)
 
-def get_dashboard_stats(db: Session, time_range: str = "today") -> DashboardStatsResponse:
-    start_dt, end_dt = get_time_boundary(time_range)
-
-    # 1. Query KPI counts
-    total_cartons = db.query(models.Carton).filter(
+    # 1. Combined KPI counts in 1 single query using CASE WHEN + SUM
+    kpi_query = db.query(
+        func.count(models.Carton.id).label("total"),
+        func.sum(case((models.Carton.status == "SUCCESS", 1), else_=0)).label("success"),
+        func.sum(case((models.Carton.status == "FAILED", 1), else_=0)).label("failed"),
+        func.sum(case((models.Carton.is_reprint == 1, 1), else_=0)).label("reprint"),
+    ).filter(
         models.Carton.created_at >= start_dt,
         models.Carton.created_at <= end_dt
-    ).count()
+    ).first()
 
-    success_cartons = db.query(models.Carton).filter(
-        models.Carton.created_at >= start_dt,
-        models.Carton.created_at <= end_dt,
-        models.Carton.status == "SUCCESS"
-    ).count()
+    total_cartons = (kpi_query.total if kpi_query else 0) or 0
+    success_cartons = (kpi_query.success if kpi_query else 0) or 0
+    failed_cartons = (kpi_query.failed if kpi_query else 0) or 0
+    reprint_cartons = (kpi_query.reprint if kpi_query else 0) or 0
 
-    failed_cartons = db.query(models.Carton).filter(
-        models.Carton.created_at >= start_dt,
-        models.Carton.created_at <= end_dt,
-        models.Carton.status == "FAILED"
-    ).count()
-
-    reprint_cartons = db.query(models.Carton).filter(
-        models.Carton.created_at >= start_dt,
-        models.Carton.created_at <= end_dt,
-        models.Carton.is_reprint == 1
-    ).count()
-
-    total_items = db.query(models.CartonItem).join(
+    total_items = db.query(func.count(models.CartonItem.id)).join(
         models.Carton, models.CartonItem.carton_id == models.Carton.id
     ).filter(
         models.Carton.created_at >= start_dt,
         models.Carton.created_at <= end_dt
-    ).count()
+    ).scalar() or 0
 
     success_rate = round((success_cartons / total_cartons * 100), 1) if total_cartons > 0 else 0.0
     error_rate = round((failed_cartons / total_cartons * 100), 1) if total_cartons > 0 else 0.0
@@ -233,10 +290,10 @@ def get_dashboard_stats(db: Session, time_range: str = "today") -> DashboardStat
         reprint_rate=reprint_rate
     )
 
-    # 2. Hourly throughput
+    # 2. Hourly/Daily throughput (optimized)
     hourly_throughput = calculate_hourly_throughput(db, start_dt, end_dt, time_range)
 
-    # 3. Top products
+    # 3. Top products (optimized, no N+1)
     top_products = calculate_top_products(db, start_dt, end_dt, total_cartons)
 
     # 4. Live feed (Cycle 3)

@@ -6,13 +6,16 @@ import datetime
 from sqlalchemy import cast, Date, func, case
 from src.features.carton import print_attempts, slot_lifecycle
 
-def get_cartons(
-    db: Session, 
-    skip: int = 0, 
-    limit: int = 50, 
+def build_carton_query(
+    db: Session,
     search: Optional[str] = None,
     product_id: Optional[int] = None,
-    status: Optional[str] = None
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    customer_id: Optional[int] = None,
+    job_order: Optional[str] = None,
+    po_number: Optional[str] = None,
 ):
     # Subquery to get the latest (max) ID for each unique carton_sn
     max_id_sub = db.query(
@@ -30,14 +33,65 @@ def get_cartons(
         max_id_sub, models.Carton.id == max_id_sub.c.max_id
     ).outerjoin(
         count_sub, models.Carton.carton_sn == count_sub.c.carton_sn
-    ).options(joinedload(models.Carton.product))
-    
+    ).options(joinedload(models.Carton.product).joinedload(models.Product.customer))
+
+    if customer_id:
+        base_query = base_query.join(models.Product, models.Carton.product_id == models.Product.id).filter(
+            models.Product.customer_id == customer_id
+        )
+
     if search:
         base_query = base_query.filter(models.Carton.carton_sn.like(f"%{search}%"))
     if product_id:
         base_query = base_query.filter(models.Carton.product_id == product_id)
     if status:
         base_query = base_query.filter(models.Carton.status == status)
+
+    if start_date:
+        try:
+            start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            base_query = base_query.filter(models.Carton.created_at >= start_dt)
+        except ValueError:
+            pass
+
+    if end_date:
+        try:
+            end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999)
+            base_query = base_query.filter(models.Carton.created_at <= end_dt)
+        except ValueError:
+            pass
+
+    if job_order:
+        base_query = base_query.filter(models.Carton.job_order.like(f"%{job_order}%"))
+    if po_number:
+        base_query = base_query.filter(models.Carton.po_number.like(f"%{po_number}%"))
+
+    return base_query
+
+def get_cartons(
+    db: Session, 
+    skip: int = 0, 
+    limit: int = 50, 
+    search: Optional[str] = None,
+    product_id: Optional[int] = None,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    customer_id: Optional[int] = None,
+    job_order: Optional[str] = None,
+    po_number: Optional[str] = None,
+):
+    base_query = build_carton_query(
+        db=db,
+        search=search,
+        product_id=product_id,
+        status=status,
+        start_date=start_date,
+        end_date=end_date,
+        customer_id=customer_id,
+        job_order=job_order,
+        po_number=po_number,
+    )
         
     total = base_query.count()
     results = base_query.order_by(models.Carton.id.desc()).offset(skip).limit(limit).all()
@@ -49,6 +103,40 @@ def get_cartons(
         items.append(carton)
         
     return {"total": total, "items": items}
+
+def export_cartons_to_excel(
+    db: Session,
+    mode: str = "summary",
+    search: Optional[str] = None,
+    product_id: Optional[int] = None,
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    customer_id: Optional[int] = None,
+    job_order: Optional[str] = None,
+    po_number: Optional[str] = None,
+) -> bytes:
+    from .excel_export import generate_carton_excel
+    
+    base_query = build_carton_query(
+        db=db,
+        search=search,
+        product_id=product_id,
+        status=status,
+        start_date=start_date,
+        end_date=end_date,
+        customer_id=customer_id,
+        job_order=job_order,
+        po_number=po_number,
+    )
+    
+    if mode == "detailed":
+        base_query = base_query.options(joinedload(models.Carton.items))
+
+    results = base_query.order_by(models.Carton.id.desc()).all()
+    cartons = [carton for carton, _ in results]
+    
+    return generate_carton_excel(cartons, mode=mode)
 
 def get_carton_detail(db: Session, carton_id: int):
     carton = db.query(models.Carton).options(

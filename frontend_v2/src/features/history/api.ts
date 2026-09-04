@@ -16,5 +16,11 @@ export default {
   },
   deleteCarton(id: number) {
     return api.delete(`/cartons/${id}`);
+  },
+  exportCartons(params: Record<string, any> = {}, mode: 'summary' | 'detailed' = 'summary') {
+    return api.get('/cartons/export', {
+      params: { ...params, mode },
+      responseType: 'blob'
+    });
   }
 };

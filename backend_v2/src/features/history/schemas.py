@@ -9,8 +9,17 @@ class CartonItem(BaseModel):
     class Config:
         from_attributes = True
 
+class CustomerInfo(BaseModel):
+    id: int
+    code: str
+    name: str
+
+    class Config:
+        from_attributes = True
+
 class ProductInfo(BaseModel):
     id: int
+    customer_id: Optional[int] = None
     item_name: str
     upc: Optional[str] = None
     packed_qty: Optional[int] = 1
@@ -19,6 +28,7 @@ class ProductInfo(BaseModel):
     middle_part: Optional[str] = ""
     template_type: Optional[str] = "standard"
     template_path: Optional[str] = None
+    customer: Optional[CustomerInfo] = None
     
     class Config:
         from_attributes = True

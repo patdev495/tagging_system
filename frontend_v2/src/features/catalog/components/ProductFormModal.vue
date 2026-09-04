@@ -65,13 +65,48 @@
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-xs font-bold text-slate-700 uppercase">Đường Dẫn File Tem BarTender (.btw)</label>
-              <input 
-                v-model="formData.template_path" 
-                type="text" 
-                placeholder="VD: D:\PAT\Templates\a11.btw" 
-                class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs text-slate-700"
-              >
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-700 uppercase">Mẫu Tem BarTender (.btw)</label>
+                <div v-if="validationStatus" class="flex items-center gap-1.5 text-xs">
+                  <span v-if="validationStatus.valid" class="text-emerald-600 font-bold flex items-center gap-1">
+                    <CheckCircle2 class="w-3.5 h-3.5" />
+                    <span>Hợp lệ</span>
+                  </span>
+                  <span v-else class="text-rose-600 font-bold flex items-center gap-1" :title="validationStatus.message">
+                    <AlertCircle class="w-3.5 h-3.5" />
+                    <span>Không hợp lệ</span>
+                  </span>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <select 
+                  v-model="formData.template_path"
+                  class="flex-1 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs text-slate-700 bg-white"
+                  @change="validationStatus = null"
+                >
+                  <option value="">-- Chọn Mẫu Tem (.btw) --</option>
+                  <option 
+                    v-if="formData.template_path && !availableTemplates.some(t => t.name === getBaseName(formData.template_path))" 
+                    :value="formData.template_path"
+                  >
+                    📄 {{ formData.template_path }} (Hiện tại)
+                  </option>
+                  <option v-for="tpl in availableTemplates" :key="tpl.name" :value="tpl.name">
+                    📄 {{ tpl.name }} ({{ formatBytes(tpl.size_bytes) }})
+                  </option>
+                </select>
+                <button 
+                  type="button" 
+                  @click="checkTemplateValidity" 
+                  :disabled="!formData.template_path || isValidating"
+                  class="px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                  title="Kiểm tra file trên BarTender Engine"
+                >
+                  <div v-if="isValidating" class="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  <CheckCircle2 v-else class="w-3.5 h-3.5" />
+                  <span>Kiểm Tra</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -294,30 +329,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { X } from 'lucide-vue-next';
-import { useSystemStore } from '../../../core/stores/system';
+import { X, CheckCircle2, AlertCircle } from 'lucide-vue-next';
+import { useProductForm, type ProductFormData } from '../composables/useProductForm';
 import type { Customer, Product } from '../../../types/api';
 
-export interface ProductFormData {
-  item_name: string;
-  upc: string;
-  packed_qty: number;
-  start_part: string;
-  middle_part: string;
-  template_type: 'standard' | 'detailed' | 'a11';
-  template_path: string;
-  allow_partial: number;
-  customer_id: number | null;
-  packing_mode: 'item_scan' | 'weight_scale';
-  target_weight?: number | null;
-  min_weight: number | null;
-  max_weight: number | null;
-  weight_unit: string;
-  mfr_pn: string;
-  pkg_prefix: string;
-  revision: string;
-}
+export type { ProductFormData };
 
 const props = defineProps<{
   show: boolean;
@@ -332,133 +348,16 @@ const emit = defineEmits<{
   (e: 'submit', data: ProductFormData): void;
 }>();
 
-const system = useSystemStore();
-
-const formData = ref<ProductFormData>({
-  item_name: '',
-  upc: '',
-  packed_qty: 1,
-  start_part: 'VN',
-  middle_part: '',
-  template_type: 'standard',
-  template_path: '',
-  allow_partial: 0,
-  customer_id: null,
-  packing_mode: 'item_scan',
-  target_weight: null,
-  min_weight: 12.300,
-  max_weight: 12.700,
-  weight_unit: 'kg',
-  mfr_pn: 'NYS5998',
-  pkg_prefix: 'VHK0010237',
-  revision: 'B',
-});
-
-watch(
-  () => [props.show, props.initialData],
-  ([isOpen]) => {
-    if (!isOpen) return;
-    if (props.isEdit && props.initialData) {
-      const p = props.initialData;
-      formData.value = {
-        item_name: p.item_name,
-        upc: p.upc || '',
-        packed_qty: p.packed_qty,
-        start_part: p.start_part || '',
-        middle_part: p.middle_part || '',
-        template_type: (p.template_type as 'standard' | 'detailed' | 'a11') || 'standard',
-        template_path: p.template_path || '',
-        allow_partial: p.allow_partial || 0,
-        customer_id: p.customer_id,
-        packing_mode: p.packing_mode || 'item_scan',
-        target_weight: p.target_weight ?? null,
-        min_weight: p.min_weight ?? 12.300,
-        max_weight: p.max_weight ?? 12.700,
-        weight_unit: p.weight_unit || 'kg',
-        mfr_pn: p.mfr_pn || 'NYS5998',
-        pkg_prefix: p.pkg_prefix || 'VHK0010237',
-        revision: p.revision ?? '',
-      };
-    } else {
-      const defaultCustomerId = props.customers.length > 0 ? props.customers[0].id : null;
-      formData.value = {
-        item_name: '',
-        upc: '',
-        packed_qty: 1,
-        start_part: 'VN',
-        middle_part: '',
-        template_type: 'standard',
-        template_path: '',
-        allow_partial: 0,
-        customer_id: defaultCustomerId,
-        packing_mode: 'item_scan',
-        target_weight: null,
-        min_weight: 12.300,
-        max_weight: 12.700,
-        weight_unit: 'kg',
-        mfr_pn: 'NYS5998',
-        pkg_prefix: 'VHK0010237',
-        revision: 'B',
-      };
-      if (defaultCustomerId) {
-        onCustomerChange();
-      }
-    }
-  },
-  { immediate: true }
-);
-
-const setPackingMode = (mode: 'item_scan' | 'weight_scale') => {
-  formData.value.packing_mode = mode;
-  if (mode === 'weight_scale' && formData.value.template_type !== 'a11') {
-    formData.value.template_type = 'a11';
-    if (!formData.value.template_path) {
-      formData.value.template_path = 'D:\\PAT\\Templates\\a11.btw';
-    }
-  } else if (mode === 'item_scan' && formData.value.template_type === 'a11') {
-    formData.value.template_type = 'standard';
-  }
-};
-
-const onCustomerChange = () => {
-  if (props.isEdit) return;
-  const selectedCust = props.customers.find(c => c.id === formData.value.customer_id);
-  if (!selectedCust) return;
-
-  const code = (selectedCust.code || '').toUpperCase();
-  if (code === 'A11') {
-    formData.value.packing_mode = 'weight_scale';
-    formData.value.template_type = 'a11';
-    formData.value.template_path = formData.value.template_path || 'D:\\PAT\\Templates\\a11.btw';
-    formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
-    formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
-    formData.value.mfr_pn = formData.value.mfr_pn || 'NYS5998';
-    formData.value.revision = formData.value.revision || 'B';
-    formData.value.target_weight = null;
-    formData.value.min_weight = 12.300;
-    formData.value.max_weight = 12.700;
-    formData.value.weight_unit = 'kg';
-  } else if (code === 'UI') {
-    formData.value.packing_mode = 'item_scan';
-    formData.value.template_type = 'standard';
-    formData.value.template_path = formData.value.template_path || 'D:\\PAT\\Templates\\carton.btw';
-    formData.value.start_part = formData.value.start_part || 'VN';
-    formData.value.packed_qty = formData.value.packed_qty === 190 ? 10 : formData.value.packed_qty;
-  }
-};
-
-const handleSubmit = () => {
-  if (formData.value.packing_mode === 'weight_scale') {
-    if (formData.value.min_weight === null || formData.value.min_weight === undefined ||
-        formData.value.max_weight === null || formData.value.max_weight === undefined) {
-      system.showNotification('Vui lòng nhập đầy đủ Min Weight và Max Weight', 'warning');
-      return;
-    }
-    if (formData.value.min_weight > formData.value.max_weight) {
-      system.showNotification('Trọng lượng Tối thiểu (Min) không được lớn hơn Tối đa (Max)', 'error');
-      return;
-    }
-  }
-  emit('submit', { ...formData.value });
-};
+const {
+  formData,
+  availableTemplates,
+  isValidating,
+  validationStatus,
+  formatBytes,
+  getBaseName,
+  checkTemplateValidity,
+  setPackingMode,
+  onCustomerChange,
+  handleSubmit,
+} = useProductForm(props, (_event, data) => emit('submit', data));
 </script>

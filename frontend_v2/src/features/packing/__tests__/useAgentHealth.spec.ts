@@ -13,6 +13,7 @@ describe('useAgentHealth Composable', () => {
     middle_part: '11',
     template_type: 'standard',
     template_path: 'D:\\PAT\\Templates\\carton.ui.btw',
+    allow_partial: 0,
   };
 
   beforeEach(() => {
@@ -32,7 +33,7 @@ describe('useAgentHealth Composable', () => {
     };
 
     // Mock fetch to reject
-    global.fetch = vi.fn().mockRejectedValue(new Error('Connection refused'));
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Connection refused')));
 
     const { agentConnected, checkAgentHealth } = useAgentHealth({
       settings,
@@ -52,7 +53,7 @@ describe('useAgentHealth Composable', () => {
       localTemplateDir: 'D:\\PAT\\Templates',
     };
 
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
       if (url.includes('/status')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'ok' }) });
       }
@@ -60,7 +61,7 @@ describe('useAgentHealth Composable', () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ exists: true }) });
       }
       return Promise.reject(new Error('Unknown url'));
-    });
+    }));
 
     const { agentConnected, templateMissing, templateFilename, checkAgentHealth } = useAgentHealth({
       settings,
@@ -82,7 +83,7 @@ describe('useAgentHealth Composable', () => {
       localTemplateDir: 'D:\\PAT\\Templates',
     };
 
-    global.fetch = vi.fn().mockImplementation((url: string) => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
       if (url.includes('/status')) {
         return Promise.resolve({ ok: true });
       }
@@ -90,7 +91,7 @@ describe('useAgentHealth Composable', () => {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ exists: false }) });
       }
       return Promise.reject(new Error('Unknown url'));
-    });
+    }));
 
     const { agentConnected, templateMissing, checkAgentHealth } = useAgentHealth({
       settings,
@@ -112,7 +113,7 @@ describe('useAgentHealth Composable', () => {
     };
 
     const fetchSpy = vi.fn();
-    global.fetch = fetchSpy;
+    vi.stubGlobal('fetch', fetchSpy);
 
     const { agentConnected, templateMissing, checkAgentHealth } = useAgentHealth({
       settings,

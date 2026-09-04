@@ -1,6 +1,6 @@
 # 04. Carton History Advanced Filtering & Dual-Level Excel Export
 
-Status: ready-for-agent
+Status: completed
 
 ## Parent
 .scratch/admin-portal-enhancement/PRD.md
@@ -28,11 +28,11 @@ Nâng cấp trang Lịch sử đóng thùng (`CartonHistoryPage.vue`) với bộ
   - Phân quyền: Cả Admin và QA đều được phép lọc và xuất Excel. Quyền xóa thùng hoặc Reprint chỉ khả dụng cho tài khoản Admin (ẩn nút đối với QA).
 
 ## Acceptance criteria
-- [ ] Bộ lọc ngày tháng hoạt động chính xác, cho phép tra cứu thùng đóng trong bất kỳ khoảng thời gian nào.
-- [ ] Lọc kết hợp đa điều kiện (Khoảng ngày + Khách hàng + Sản phẩm + Trạng thái) trả về đúng tập dữ liệu tương ứng.
-- [ ] Xuất báo cáo `summary` tạo ra file Excel `.xlsx` mở được bình thường trên Microsoft Excel/WPS, đúng cấu trúc cột và định dạng dữ liệu.
-- [ ] Xuất báo cáo `detailed` bao gồm đầy đủ toàn bộ danh sách mã sê-ri con (`item_sn`) của từng thùng hàng.
-- [ ] Tài khoản QA xuất được báo cáo bình thường nhưng không nhìn thấy nút Xóa thùng hoặc In lại.
+- [x] Bộ lọc ngày tháng hoạt động chính xác, cho phép tra cứu thùng đóng trong bất kỳ khoảng thời gian nào.
+- [x] Lọc kết hợp đa điều kiện (Khoảng ngày + Khách hàng + Sản phẩm + Trạng thái) trả về đúng tập dữ liệu tương ứng.
+- [x] Xuất báo cáo `summary` tạo ra file Excel `.xlsx` mở được bình thường trên Microsoft Excel/WPS, đúng cấu trúc cột và định dạng dữ liệu.
+- [x] Xuất báo cáo `detailed` bao gồm đầy đủ toàn bộ danh sách mã sê-ri con (`item_sn`) của từng thùng hàng.
+- [x] Tài khoản QA xuất được báo cáo bình thường nhưng không nhìn thấy nút Xóa thùng hoặc In lại.
 
 ## Blocked by
 .scratch/admin-portal-enhancement/issues/01-user-authentication-and-rbac.md

@@ -293,6 +293,22 @@ def test_dashboard_api_endpoint_access():
         )
         assert admin_resp.status_code == 200
         assert admin_resp.json()["time_range"] == "7d"
+
+        # 6. Test yesterday range
+        yesterday_resp = client.get(
+            "/api/v1/admin/dashboard/stats?time_range=yesterday",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        assert yesterday_resp.status_code == 200
+        assert yesterday_resp.json()["time_range"] == "yesterday"
+
+        # 7. Test custom date range
+        custom_resp = client.get(
+            "/api/v1/admin/dashboard/stats?time_range=custom&start_date=2026-09-01&end_date=2026-09-04",
+            headers={"Authorization": f"Bearer {admin_token}"}
+        )
+        assert custom_resp.status_code == 200
+        assert custom_resp.json()["time_range"] == "custom"
     finally:
         app.dependency_overrides.clear()
 

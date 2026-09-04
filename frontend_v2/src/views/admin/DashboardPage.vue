@@ -19,16 +19,44 @@
           <button
             v-for="tab in timeRanges" :key="tab.value"
             @click="setTimeRange(tab.value)"
-            :class="['px-3 py-1.5 rounded-lg transition-all', selectedRange === tab.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
+            :class="['px-3 py-1.5 rounded-lg transition-all cursor-pointer', selectedRange === tab.value ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
           >
             {{ tab.label }}
+          </button>
+        </div>
+
+        <!-- Custom Date Range Inputs (when Tùy Chọn is selected) -->
+        <div v-if="selectedRange === 'custom'" class="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-xl border border-slate-200 text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400 font-medium">Từ:</span>
+            <input 
+              type="date" 
+              v-model="customStartDate" 
+              class="bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none text-slate-700 font-medium focus:ring-1 focus:ring-indigo-500 text-xs"
+            />
+          </div>
+          <span class="text-slate-300">—</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400 font-medium">Đến:</span>
+            <input 
+              type="date" 
+              v-model="customEndDate" 
+              class="bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none text-slate-700 font-medium focus:ring-1 focus:ring-indigo-500 text-xs"
+            />
+          </div>
+          <button 
+            @click="loadData" 
+            :disabled="isLoading || !customStartDate || !customEndDate"
+            class="px-3 py-1 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            Lọc
           </button>
         </div>
 
         <!-- Refresh Button -->
         <button
           @click="loadData" :disabled="isLoading"
-          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
         >
           <RefreshCw :class="['w-4 h-4 text-slate-500', isLoading ? 'animate-spin text-indigo-600' : '']" />
           <span>{{ isLoading ? 'Đang tải...' : 'Làm mới' }}</span>
@@ -113,7 +141,7 @@
       <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
           <div>
-            <h2 class="text-base font-bold text-slate-900">{{ selectedRange === 'today' ? 'Sản Lượng Theo Khung Giờ (Hôm Nay)' : 'Sản Lượng Theo Ngày' }}</h2>
+            <h2 class="text-base font-bold text-slate-900">{{ throughputTitle }}</h2>
             <p class="text-xs text-slate-400">Phân bổ số lượng thùng quét và in theo thời gian thực</p>
           </div>
 
@@ -303,15 +331,24 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { PackageCheck, Layers, Printer, Server, RefreshCw } from 'lucide-vue-next';
-import { fetchDashboardStats, type DashboardStatsResponse, type HourlyStat } from '../../features/dashboard/api';
+import { 
+  fetchDashboardStats, 
+  type DashboardStatsResponse, 
+  type HourlyStat, 
+  type DashboardTimeRange 
+} from '../../features/dashboard/api';
 
-const timeRanges: { label: string; value: 'today' | '7d' | '30d' }[] = [
+const timeRanges: { label: string; value: DashboardTimeRange }[] = [
   { label: 'Hôm Nay', value: 'today' },
+  { label: 'Hôm Qua', value: 'yesterday' },
   { label: '7 Ngày Qua', value: '7d' },
   { label: '30 Ngày Qua', value: '30d' },
+  { label: 'Tùy Chọn', value: 'custom' },
 ];
 
-const selectedRange = ref<'today' | '7d' | '30d'>('today');
+const selectedRange = ref<DashboardTimeRange>('today');
+const customStartDate = ref<string>('');
+const customEndDate = ref<string>('');
 const isLoading = ref<boolean>(false);
 const lastUpdated = ref<string>('');
 const hoveredHourly = ref<HourlyStat | null>(null);
@@ -327,6 +364,20 @@ const stats = ref<DashboardStatsResponse>({
   top_products: [],
   live_feed: [],
   system: { bartender_status: 'offline', active_printers_count: 0 },
+});
+
+const throughputTitle = computed(() => {
+  if (selectedRange.value === 'today') return 'Sản Lượng Theo Khung Giờ (Hôm Nay)';
+  if (selectedRange.value === 'yesterday') return 'Sản Lượng Theo Khung Giờ (Hôm Qua)';
+  if (selectedRange.value === '7d') return 'Sản Lượng Theo Ngày (7 Ngày Qua)';
+  if (selectedRange.value === '30d') return 'Sản Lượng Theo Ngày (30 Ngày Qua)';
+  if (selectedRange.value === 'custom') {
+    if (customStartDate.value && customEndDate.value) {
+      return `Sản Lượng (${customStartDate.value} ~ ${customEndDate.value})`;
+    }
+    return 'Sản Lượng (Khoảng Ngày Tùy Chọn)';
+  }
+  return 'Sản Lượng Vận Hành';
 });
 
 const maxHourlyTotal = computed(() => {
@@ -352,9 +403,16 @@ function formatDateTime(dtStr: string): string {
 }
 
 async function loadData() {
+  if (selectedRange.value === 'custom' && (!customStartDate.value || !customEndDate.value)) {
+    return;
+  }
   isLoading.value = true;
   try {
-    const data = await fetchDashboardStats(selectedRange.value);
+    const data = await fetchDashboardStats(
+      selectedRange.value,
+      selectedRange.value === 'custom' ? customStartDate.value : undefined,
+      selectedRange.value === 'custom' ? customEndDate.value : undefined
+    );
     stats.value = data;
     lastUpdated.value = new Date().toLocaleTimeString('vi-VN');
   } catch (error) {
@@ -364,8 +422,16 @@ async function loadData() {
   }
 }
 
-function setTimeRange(range: 'today' | '7d' | '30d') {
+function setTimeRange(range: DashboardTimeRange) {
   selectedRange.value = range;
+  if (range === 'custom') {
+    if (!customStartDate.value || !customEndDate.value) {
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      customStartDate.value = firstDay.toISOString().slice(0, 10);
+      customEndDate.value = now.toISOString().slice(0, 10);
+    }
+  }
   loadData();
 }
 

@@ -106,3 +106,100 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
     new_carton.btxml = btxml_content  # type: ignore
     
     return new_carton
+
+
+def get_available_templates() -> List[dict]:
+    """Quét các thư mục lưu mẫu .btw trên hệ thống và trả về danh sách kèm metadata."""
+    import datetime
+    from src.core.utils import TemplateResolver
+    from src.core.config import settings
+
+    root = TemplateResolver.get_execution_root()
+    search_dirs = [
+        os.path.normpath(os.path.join(root, getattr(settings, 'LABEL_TEMPLATES_DIR', 'resources/label_templates'))),
+        os.path.normpath(os.path.join(root, 'resources', 'templates')),
+        os.path.normpath(root),
+        os.path.normpath("D:\\PAT\\Templates"),
+    ]
+
+    discovered = {}
+    for d in search_dirs:
+        if os.path.exists(d) and os.path.isdir(d):
+            try:
+                for entry in os.listdir(d):
+                    if entry.lower().endswith(".btw"):
+                        key = entry.lower()
+                        full_p = os.path.normpath(os.path.join(d, entry))
+                        if os.path.isfile(full_p) and key not in discovered:
+                            stat = os.stat(full_p)
+                            mod_time = datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                            discovered[key] = {
+                                "name": entry,
+                                "path": full_p,
+                                "size_bytes": stat.st_size,
+                                "updated_at": mod_time
+                            }
+            except Exception as e:
+                logger.warning(f"Error scanning template directory {d}: {e}")
+
+    return sorted(list(discovered.values()), key=lambda x: x["name"].lower())
+
+
+def validate_template(template_name: str) -> dict:
+    """Kiểm tra sự tồn tại và tính hợp lệ của tệp mẫu tem."""
+    from src.core.utils import TemplateResolver
+    from src.features.print.bartender_com import HAS_WINDOWS_DEPS, bt_com_app
+
+    resolved_path = TemplateResolver.resolve(template_name)
+    if not os.path.exists(resolved_path):
+        return {
+            "valid": False,
+            "message": f"Tệp mẫu tem không tồn tại trên máy chủ: {template_name}",
+            "resolved_path": None
+        }
+
+    if HAS_WINDOWS_DEPS and bt_com_app.is_initialized and bt_com_app.bt_app is not None:
+        try:
+            format_obj = bt_com_app.bt_app.Formats.Open(resolved_path, False, "")
+            if format_obj:
+                format_obj.Close(0)
+                return {
+                    "valid": True,
+                    "message": "Tệp mẫu tem hợp lệ và mở thành công qua BarTender COM Engine.",
+                    "resolved_path": resolved_path
+                }
+            else:
+                return {
+                    "valid": False,
+                    "message": "BarTender COM Engine không thể mở định dạng tệp tem này.",
+                    "resolved_path": resolved_path
+                }
+        except Exception as e:
+            return {
+                "valid": False,
+                "message": f"Lỗi BarTender khi mở tệp: {str(e)}",
+                "resolved_path": resolved_path
+            }
+
+    return {
+        "valid": True,
+        "message": "Tệp mẫu tem tồn tại và sẵn sàng sử dụng.",
+        "resolved_path": resolved_path
+    }
+
+
+def restart_engine() -> dict:
+    """Giải phóng tiến trình kẹt và tái lập kết nối BarTender Engine."""
+    from src.features.print.bartender_com import bt_com_app
+    logger.info("Restarting BarTender Engine requested...")
+    
+    bt_com_app._kill_bartender_process()
+    bt_com_app.is_initialized = False
+    bt_com_app.bt_app = None
+    
+    ready = bt_com_app.start()
+    return {
+        "success": ready,
+        "message": "Đã khởi động lại BarTender COM Engine thành công." if ready else "Khởi động lại BarTender thất bại.",
+        "bartender_ready": ready
+    }

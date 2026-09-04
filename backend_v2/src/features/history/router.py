@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
+import datetime
 from src.core.database import get_db
 from src.features.auth.dependencies import require_admin
 from . import schemas, service
@@ -14,10 +15,63 @@ def list_cartons(
     search: Optional[str] = None,
     product_id: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    customer_id: Optional[int] = Query(None),
+    job_order: Optional[str] = Query(None),
+    po_number: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
-    """Lấy danh sách lịch sử thùng hàng (có phân trang và lọc)"""
-    return service.get_cartons(db, skip, limit, search, product_id, status)
+    """Lấy danh sách lịch sử thùng hàng (có phân trang và lọc đa chiều)"""
+    return service.get_cartons(
+        db=db,
+        skip=skip,
+        limit=limit,
+        search=search,
+        product_id=product_id,
+        status=status,
+        start_date=start_date,
+        end_date=end_date,
+        customer_id=customer_id,
+        job_order=job_order,
+        po_number=po_number,
+    )
+
+@router.get("/export")
+def export_cartons(
+    mode: str = Query("summary", pattern="^(summary|detailed)$"),
+    search: Optional[str] = None,
+    product_id: Optional[int] = Query(None),
+    status: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    customer_id: Optional[int] = Query(None),
+    job_order: Optional[str] = Query(None),
+    po_number: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Xuất báo cáo danh sách thùng ra file Excel (chế độ summary hoặc detailed)"""
+    excel_bytes = service.export_cartons_to_excel(
+        db=db,
+        mode=mode,
+        search=search,
+        product_id=product_id,
+        status=status,
+        start_date=start_date,
+        end_date=end_date,
+        customer_id=customer_id,
+        job_order=job_order,
+        po_number=po_number,
+    )
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"carton_export_{mode}_{timestamp}.xlsx"
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 @router.get("/search", response_model=schemas.CartonDetail)
 def search_carton(carton_sn: str, db: Session = Depends(get_db)):

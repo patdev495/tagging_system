@@ -65,5 +65,17 @@ export default {
       params: { template_path: templatePath },
       responseType: 'text'
     });
+  },
+  /** Lấy danh sách template .btw có sẵn trên server */
+  getTemplates() {
+    return api.get<{ templates: { name: string; path: string; size_bytes: number; updated_at: string }[] }>('/print/templates');
+  },
+  /** Kiểm tra tính hợp lệ của file template */
+  validateTemplate(templateName: string) {
+    return api.post<{ valid: boolean; message: string; resolved_path: string | null }>('/print/validate-template', { template_name: templateName });
+  },
+  /** Khởi động lại BarTender COM Engine (Admin only) */
+  restartEngine() {
+    return api.post<{ success: boolean; message: string; bartender_ready: boolean }>('/print/restart-engine');
   }
 };

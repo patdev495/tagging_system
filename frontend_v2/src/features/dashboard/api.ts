@@ -58,11 +58,20 @@ export interface DashboardStatsResponse {
   system: SystemHealth;
 }
 
+export type DashboardTimeRange = 'today' | 'yesterday' | '7d' | '30d' | 'custom';
+
 export async function fetchDashboardStats(
-  timeRange: 'today' | '7d' | '30d' = 'today'
+  timeRange: DashboardTimeRange = 'today',
+  startDate?: string,
+  endDate?: string
 ): Promise<DashboardStatsResponse> {
+  const params: Record<string, any> = { time_range: timeRange };
+  if (timeRange === 'custom') {
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+  }
   const response = await api.get<DashboardStatsResponse>('/admin/dashboard/stats', {
-    params: { time_range: timeRange },
+    params,
   });
   return response.data;
 }
