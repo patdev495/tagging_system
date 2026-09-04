@@ -1,6 +1,6 @@
 # 02. Real-time Operational Dashboard (KPIs, Hourly Throughput & Live Feed)
 
-Status: ready-for-agent
+Status: closed
 
 ## Parent
 .scratch/admin-portal-enhancement/PRD.md
@@ -24,12 +24,13 @@ Xây dựng Dashboard giám sát vận hành đóng gói thời gian thực thay
   - Khối Live Feed: Bảng danh sách 15 thùng mới đóng gần nhất với badge trạng thái nhấp nháy/sinh động.
 
 ## Acceptance criteria
-- [ ] Truy cập trang Dashboard hiển thị 100% số liệu thực từ cơ sở dữ liệu thay cho số liệu giả lập.
-- [ ] Thẻ KPI hiển thị chính xác tổng số thùng, phân loại thành công / thất bại / in lại và tổng số sản phẩm con đóng gói.
-- [ ] Biểu đồ phân bổ theo giờ thể hiện đúng khung giờ sản xuất thực tế trong ngày theo giờ địa phương của nhà máy.
-- [ ] Bảng Live Feed hiển thị đúng các thùng vừa được quét/in từ các trạm, cập nhật dữ liệu ngay khi bấm nút Refresh.
-- [ ] Widget trạng thái BarTender hiển thị chính xác tình trạng kết nối của engine.
-- [ ] Cả tài khoản Admin và QA đều có quyền truy cập và xem dữ liệu đầy đủ trên trang này.
+- [x] Truy cập trang Dashboard hiển thị 100% số liệu thực từ cơ sở dữ liệu thay cho số liệu giả lập.
+- [x] Thẻ KPI hiển thị chính xác tổng số thùng, phân loại thành công / thất bại / in lại và tổng số sản phẩm con đóng gói.
+- [x] Biểu đồ phân bổ theo giờ thể hiện đúng khung giờ sản xuất thực tế trong ngày theo giờ địa phương của nhà máy.
+- [x] Bảng Live Feed hiển thị đúng các thùng vừa được quét/in từ các trạm, cập nhật dữ liệu ngay khi bấm nút Refresh.
+- [x] Widget trạng thái BarTender hiển thị chính xác tình trạng kết nối của engine.
+- [x] Cả tài khoản Admin và QA đều có quyền truy cập và xem dữ liệu đầy đủ trên trang này.
+
 
 ## Blocked by
 .scratch/admin-portal-enhancement/issues/01-user-authentication-and-rbac.md
