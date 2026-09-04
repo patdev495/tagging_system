@@ -111,50 +111,74 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Hourly Throughput Chart (8 cols) -->
       <div class="lg:col-span-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
           <div>
             <h2 class="text-base font-bold text-slate-900">{{ selectedRange === 'today' ? 'Sản Lượng Theo Khung Giờ (Hôm Nay)' : 'Sản Lượng Theo Ngày' }}</h2>
             <p class="text-xs text-slate-400">Phân bổ số lượng thùng quét và in theo thời gian thực</p>
           </div>
-          <div class="flex items-center gap-4 text-xs font-medium">
+
+          <!-- Live hover inspector OR default legend -->
+          <div v-if="hoveredHourly" class="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-mono flex items-center gap-2.5 shadow-md border border-slate-700 animate-in shrink-0">
+            <span class="font-bold text-indigo-300">{{ hoveredHourly.hour }}</span>
+            <span class="text-slate-500">|</span>
+            <span class="font-semibold text-white">{{ formatNumber(hoveredHourly.total) }} thùng</span>
+            <span class="text-emerald-400 font-medium">({{ formatNumber(hoveredHourly.success) }} OK)</span>
+            <span v-if="hoveredHourly.failed > 0" class="text-rose-400 font-medium">({{ formatNumber(hoveredHourly.failed) }} Lỗi)</span>
+            <span class="text-slate-500">|</span>
+            <span class="text-indigo-300 font-bold bg-indigo-500/20 px-1.5 py-0.5 rounded">{{ formatNumber(hoveredHourly.total_items) }} con</span>
+          </div>
+          <div v-else class="flex items-center gap-4 text-xs font-medium shrink-0">
             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500"></span><span class="text-slate-600">Thành công</span></div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-500"></span><span class="text-slate-600">Thất bại</span></div>
           </div>
         </div>
 
         <!-- SVG Bar Chart -->
-        <div class="w-full mt-2 pt-4">
+        <div class="w-full mt-2">
           <div v-if="stats.hourly_throughput.length === 0" class="py-16 text-center text-slate-400 text-sm">Chưa có dữ liệu sản lượng trong khung thời gian này.</div>
-          <div v-else class="w-full overflow-x-auto">
-            <div class="min-w-[500px]">
-              <!-- Bars Area -->
-              <div class="h-44 flex items-end gap-1.5 sm:gap-2 px-2 border-b border-slate-200">
-                <div v-for="(item, idx) in stats.hourly_throughput" :key="idx" class="flex-1 flex flex-col items-center justify-end h-full group relative">
-                  <!-- Tooltip with item count ("con") and carton count ("thùng") -->
-                  <div class="absolute -top-16 z-30 opacity-0 group-hover:opacity-100 transition-all pointer-events-none bg-slate-900/95 text-white text-[11px] rounded-xl px-3 py-2 shadow-xl whitespace-nowrap border border-slate-700/50 backdrop-blur-xs flex flex-col gap-0.5">
-                    <div class="flex items-center justify-between gap-3 border-b border-slate-700 pb-1">
-                      <span class="font-bold text-indigo-300 font-mono">{{ item.hour }}</span>
-                      <span class="px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-200 font-bold font-mono">{{ formatNumber(item.total_items) }} con</span>
-                    </div>
-                    <div class="flex items-center gap-2 pt-0.5 text-slate-300">
-                      <span>Tổng: <strong>{{ formatNumber(item.total) }}</strong> thùng</span>
-                      <span class="text-emerald-400 font-medium">({{ formatNumber(item.success) }} OK)</span>
-                      <span v-if="item.failed > 0" class="text-rose-400 font-medium">({{ formatNumber(item.failed) }} Lỗi)</span>
-                    </div>
+          <div v-else class="w-full overflow-x-auto pb-2">
+            <div class="min-w-full w-max flex items-end gap-1.5 sm:gap-2 px-3 pt-2 h-64">
+              <div
+                v-for="(item, idx) in stats.hourly_throughput"
+                :key="idx"
+                @mouseenter="hoveredHourly = item"
+                @mouseleave="hoveredHourly = null"
+                class="min-w-[34px] flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer"
+              >
+                <!-- Tooltip with item count ("con") and carton count ("thùng") -->
+                <div
+                  :class="[
+                    'absolute top-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none bg-slate-900 text-white text-[11px] rounded-xl px-3 py-2 shadow-2xl whitespace-nowrap border border-slate-700 flex flex-col gap-0.5',
+                    idx === 0 ? 'left-0 translate-x-0' : idx === stats.hourly_throughput.length - 1 ? 'right-0 left-auto translate-x-0' : 'left-1/2 -translate-x-1/2'
+                  ]"
+                >
+                  <div class="flex items-center justify-between gap-3 border-b border-slate-700 pb-1">
+                    <span class="font-bold text-indigo-300 font-mono">{{ item.hour }}</span>
+                    <span class="px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-200 font-bold font-mono">{{ formatNumber(item.total_items) }} con</span>
                   </div>
-                  <!-- Stacked Bar -->
-                  <div class="w-full max-w-[28px] flex flex-col justify-end items-center rounded-t-md overflow-hidden transition-all duration-300 group-hover:opacity-90">
+                  <div class="flex items-center gap-2 pt-0.5 text-slate-200">
+                    <span>Tổng: <strong class="text-white">{{ formatNumber(item.total) }}</strong> thùng</span>
+                    <span class="text-emerald-400 font-medium">({{ formatNumber(item.success) }} OK)</span>
+                    <span v-if="item.failed > 0" class="text-rose-400 font-medium">({{ formatNumber(item.failed) }} Lỗi)</span>
+                  </div>
+                </div>
+
+                <!-- Stacked Bar -->
+                <div class="w-full flex-1 flex flex-col justify-end items-center">
+                  <div class="w-full max-w-[26px] flex flex-col justify-end items-center rounded-t-md overflow-hidden transition-all duration-300 group-hover:brightness-110 group-hover:ring-2 group-hover:ring-indigo-400/50">
                     <div v-if="item.failed > 0" class="w-full bg-rose-500 transition-all duration-300" :style="{ height: getBarHeight(item.failed) + 'px' }"></div>
                     <div v-if="item.success > 0" class="w-full bg-emerald-500 transition-all duration-300" :style="{ height: getBarHeight(item.success) + 'px' }"></div>
                     <div v-if="item.total === 0" class="w-full h-1 bg-slate-100 rounded-t"></div>
                   </div>
                 </div>
-              </div>
-              <!-- Labels Area -->
-              <div class="flex gap-1.5 sm:gap-2 px-2 pt-2">
-                <div v-for="(item, idx) in stats.hourly_throughput" :key="idx" class="flex-1 text-center">
-                  <span class="text-[10px] font-mono text-slate-400 block truncate">{{ item.hour }}</span>
-                </div>
+
+                <!-- Baseline Divider -->
+                <div class="w-full border-b border-slate-200 mt-1"></div>
+
+                <!-- Column Label (Directly beneath the bar in the same vertical flex column!) -->
+                <span class="pt-1.5 text-[10px] font-mono text-slate-400 group-hover:text-slate-900 group-hover:font-bold transition-colors block text-center truncate w-full">
+                  {{ item.hour }}
+                </span>
               </div>
             </div>
           </div>
@@ -279,7 +303,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { PackageCheck, Layers, Printer, Server, RefreshCw } from 'lucide-vue-next';
-import { fetchDashboardStats, type DashboardStatsResponse } from '../../features/dashboard/api';
+import { fetchDashboardStats, type DashboardStatsResponse, type HourlyStat } from '../../features/dashboard/api';
 
 const timeRanges: { label: string; value: 'today' | '7d' | '30d' }[] = [
   { label: 'Hôm Nay', value: 'today' },
@@ -290,6 +314,7 @@ const timeRanges: { label: string; value: 'today' | '7d' | '30d' }[] = [
 const selectedRange = ref<'today' | '7d' | '30d'>('today');
 const isLoading = ref<boolean>(false);
 const lastUpdated = ref<string>('');
+const hoveredHourly = ref<HourlyStat | null>(null);
 let autoRefreshTimer: number | null = null;
 
 const stats = ref<DashboardStatsResponse>({
@@ -312,7 +337,7 @@ const maxHourlyTotal = computed(() => {
 
 function getBarHeight(val: number): number {
   if (val <= 0) return 0;
-  return Math.max(Math.round((val / maxHourlyTotal.value) * 160), 4);
+  return Math.max(Math.round((val / maxHourlyTotal.value) * 135), 4);
 }
 
 function formatNumber(num: number): string {

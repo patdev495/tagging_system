@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, cast as typing_cast
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import func, desc
 
@@ -249,20 +249,20 @@ def get_dashboard_stats(db: Session, time_range: str = "today") -> DashboardStat
     for c in recent_cartons:
         p_name = c.product.item_name if c.product else "N/A"
         c_code = c.product.customer.code if (c.product and c.product.customer) else "N/A"
-        items_cnt = len(c.items) if c.items else 0
+        items_cnt = len(typing_cast(list, c.items)) if c.items else 0
         live_feed.append(
-            LiveCartonFeed(
-                id=c.id,
-                carton_sn=c.carton_sn or "N/A",
-                item_name=p_name,
-                customer_code=c_code,
-                created_at=c.created_at or datetime.datetime.now(),
-                status=c.status or "UNKNOWN",
-                is_reprint=c.is_reprint or 0,
-                weight=c.weight,
-                station_id=c.station_id,
-                items_count=items_cnt
-            )
+            LiveCartonFeed.model_validate({
+                "id": c.id,
+                "carton_sn": c.carton_sn or "N/A",
+                "item_name": p_name,
+                "customer_code": c_code,
+                "created_at": c.created_at or datetime.datetime.now(),
+                "status": c.status or "UNKNOWN",
+                "is_reprint": c.is_reprint or 0,
+                "weight": c.weight,
+                "station_id": c.station_id,
+                "items_count": items_cnt
+            })
         )
 
     system = get_system_health()
