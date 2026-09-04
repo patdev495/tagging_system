@@ -130,10 +130,17 @@
               <!-- Bars Area -->
               <div class="h-44 flex items-end gap-1.5 sm:gap-2 px-2 border-b border-slate-200">
                 <div v-for="(item, idx) in stats.hourly_throughput" :key="idx" class="flex-1 flex flex-col items-center justify-end h-full group relative">
-                  <!-- Tooltip -->
-                  <div class="absolute -top-12 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-slate-900 text-white text-[11px] rounded-lg px-2.5 py-1.5 shadow-lg whitespace-nowrap">
-                    <p class="font-bold">{{ item.hour }}</p>
-                    <p class="text-slate-300">Tổng: {{ item.total }} (OK: {{ item.success }} | Lỗi: {{ item.failed }})</p>
+                  <!-- Tooltip with item count ("con") and carton count ("thùng") -->
+                  <div class="absolute -top-16 z-30 opacity-0 group-hover:opacity-100 transition-all pointer-events-none bg-slate-900/95 text-white text-[11px] rounded-xl px-3 py-2 shadow-xl whitespace-nowrap border border-slate-700/50 backdrop-blur-xs flex flex-col gap-0.5">
+                    <div class="flex items-center justify-between gap-3 border-b border-slate-700 pb-1">
+                      <span class="font-bold text-indigo-300 font-mono">{{ item.hour }}</span>
+                      <span class="px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-200 font-bold font-mono">{{ formatNumber(item.total_items) }} con</span>
+                    </div>
+                    <div class="flex items-center gap-2 pt-0.5 text-slate-300">
+                      <span>Tổng: <strong>{{ formatNumber(item.total) }}</strong> thùng</span>
+                      <span class="text-emerald-400 font-medium">({{ formatNumber(item.success) }} OK)</span>
+                      <span v-if="item.failed > 0" class="text-rose-400 font-medium">({{ formatNumber(item.failed) }} Lỗi)</span>
+                    </div>
                   </div>
                   <!-- Stacked Bar -->
                   <div class="w-full max-w-[28px] flex flex-col justify-end items-center rounded-t-md overflow-hidden transition-all duration-300 group-hover:opacity-90">
@@ -157,15 +164,42 @@
       <!-- Top Products Distribution (4 cols) -->
       <div class="lg:col-span-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
         <h2 class="text-base font-bold text-slate-900">Top Sản Phẩm Đóng Gói</h2>
-        <p class="text-xs text-slate-400 mt-0.5">Xếp hạng theo sản lượng thùng</p>
+        <p class="text-xs text-slate-400 mt-0.5">Xếp hạng theo sản lượng thùng (chỉ vào để xem chi tiết)</p>
 
         <div class="mt-4 flex-1 flex flex-col justify-center space-y-4">
           <div v-if="stats.top_products.length === 0" class="py-12 text-center text-slate-400 text-sm">Chưa có sản phẩm nào được đóng gói.</div>
-          <div v-for="(prod, idx) in stats.top_products" :key="idx" class="space-y-1.5">
+          <div v-for="(prod, idx) in stats.top_products" :key="idx" class="space-y-1.5 group relative cursor-pointer p-1.5 -mx-1.5 rounded-xl hover:bg-slate-50 transition-colors">
+            <!-- Hover Card: Full Product Information -->
+            <div :class="['absolute left-0 w-72 z-30 opacity-0 group-hover:opacity-100 transition-all pointer-events-none bg-slate-900 text-white rounded-xl p-3.5 shadow-2xl border border-slate-700 text-xs', idx === 0 ? 'top-full mt-2' : 'bottom-full mb-2']">
+              <p class="font-bold text-white text-sm leading-snug break-words">{{ prod.item_name }}</p>
+              <div class="mt-2 space-y-1.5 text-slate-300 border-t border-slate-700/80 pt-2 text-[11px]">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Khách hàng:</span>
+                  <span class="font-semibold text-white">{{ prod.customer_code }} <span v-if="prod.customer_name">({{ prod.customer_name }})</span></span>
+                </div>
+                <div v-if="prod.upc" class="flex justify-between">
+                  <span class="text-slate-400">Mã UPC:</span>
+                  <span class="font-mono text-indigo-300">{{ prod.upc }}</span>
+                </div>
+                <div v-if="prod.packed_qty" class="flex justify-between">
+                  <span class="text-slate-400">Quy cách:</span>
+                  <span class="text-white">{{ prod.packed_qty }} con / thùng</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Sản lượng:</span>
+                  <span class="font-bold text-emerald-400">{{ formatNumber(prod.count) }} thùng <span class="text-slate-300 font-normal">({{ formatNumber(prod.total_items) }} con)</span></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Tỷ trọng:</span>
+                  <span class="font-bold text-indigo-300">{{ prod.percentage }}% tổng sản lượng</span>
+                </div>
+              </div>
+            </div>
+
             <div class="flex items-center justify-between text-xs">
               <div class="flex items-center gap-2 truncate pr-2">
                 <span class="w-4 text-center font-bold text-slate-400">{{ idx + 1 }}</span>
-                <span class="font-medium text-slate-800 truncate" :title="prod.item_name">{{ prod.item_name }}</span>
+                <span class="font-medium text-slate-800 truncate">{{ prod.item_name }}</span>
                 <span class="px-1.5 py-0.2 bg-slate-100 text-slate-500 rounded text-[10px] uppercase font-mono shrink-0">{{ prod.customer_code }}</span>
               </div>
               <span class="font-semibold text-slate-700 shrink-0">
@@ -179,6 +213,7 @@
           </div>
         </div>
       </div>
+
     </div>
 
     <!-- Live Activity Feed Table -->

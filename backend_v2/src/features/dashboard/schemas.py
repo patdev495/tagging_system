@@ -21,14 +21,20 @@ class HourlyStat(BaseModel):
     total: int = 0
     success: int = 0
     failed: int = 0
+    total_items: int = 0  # Tổng số con (items) đóng trong khung giờ
 
 class ProductStat(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     item_name: str
     customer_code: str
-    count: int = 0
+    customer_name: Optional[str] = None
+    upc: Optional[str] = None
+    packed_qty: Optional[int] = None
+    count: int = 0  # Số thùng
+    total_items: int = 0  # Tổng số con
     percentage: float = 0.0
+
 
 class LiveCartonFeed(BaseModel):
     model_config = ConfigDict(from_attributes=True)

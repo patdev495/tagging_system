@@ -44,29 +44,44 @@ def get_system_health() -> SystemHealth:
         return SystemHealth(bartender_status="offline", active_printers_count=0)
 
 def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt: datetime.datetime, time_range: str) -> List[HourlyStat]:
-    cartons = db.query(models.Carton.created_at, models.Carton.status).filter(
+    cartons = db.query(
+        models.Carton.id,
+        models.Carton.created_at,
+        models.Carton.status,
+        models.Product.packed_qty,
+        func.count(models.CartonItem.id).label("scanned_items")
+    ).outerjoin(
+        models.CartonItem, models.CartonItem.carton_id == models.Carton.id
+    ).outerjoin(
+        models.Product, models.Carton.product_id == models.Product.id
+    ).filter(
         models.Carton.created_at >= start_dt,
         models.Carton.created_at <= end_dt
+    ).group_by(
+        models.Carton.id,
+        models.Carton.created_at,
+        models.Carton.status,
+        models.Product.packed_qty
     ).all()
 
     if time_range == "today":
-        # Default packaging shift hours: 06:00 to 22:00
         hour_keys = [f"{h:02d}:00" for h in range(6, 23)]
-        # Add any cartons that fall outside 06:00-22:00
         extra_keys = set()
-        for created_at, _ in cartons:
+        for _, created_at, _, _, _ in cartons:
             if created_at:
                 h_key = created_at.strftime("%H:00")
                 if h_key not in hour_keys:
                     extra_keys.add(h_key)
         all_keys = sorted(list(set(hour_keys).union(extra_keys)))
 
-        stats_map: Dict[str, Dict[str, int]] = {k: {"total": 0, "success": 0, "failed": 0} for k in all_keys}
-        for created_at, status in cartons:
+        stats_map: Dict[str, Dict[str, int]] = {k: {"total": 0, "success": 0, "failed": 0, "total_items": 0} for k in all_keys}
+        for _, created_at, status, packed_qty, scanned_items in cartons:
             if created_at:
                 key = created_at.strftime("%H:00")
                 if key in stats_map:
                     stats_map[key]["total"] += 1
+                    items_count = scanned_items if scanned_items > 0 else (packed_qty or 0 if status == "SUCCESS" else 0)
+                    stats_map[key]["total_items"] += items_count
                     if status == "SUCCESS":
                         stats_map[key]["success"] += 1
                     elif status == "FAILED":
@@ -77,13 +92,12 @@ def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt
                 hour=k,
                 total=stats_map[k]["total"],
                 success=stats_map[k]["success"],
-                failed=stats_map[k]["failed"]
+                failed=stats_map[k]["failed"],
+                total_items=stats_map[k]["total_items"]
             )
             for k in all_keys
         ]
     else:
-        # Multi-day: group by Date (DD/MM)
-        days_count = 7 if time_range == "7d" else 30
         date_keys = []
         cur = start_dt.date()
         end_date = end_dt.date()
@@ -91,12 +105,14 @@ def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt
             date_keys.append(cur.strftime("%d/%m"))
             cur += datetime.timedelta(days=1)
 
-        stats_map = {k: {"total": 0, "success": 0, "failed": 0} for k in date_keys}
-        for created_at, status in cartons:
+        stats_map = {k: {"total": 0, "success": 0, "failed": 0, "total_items": 0} for k in date_keys}
+        for _, created_at, status, packed_qty, scanned_items in cartons:
             if created_at:
                 key = created_at.strftime("%d/%m")
                 if key in stats_map:
                     stats_map[key]["total"] += 1
+                    items_count = scanned_items if scanned_items > 0 else (packed_qty or 0 if status == "SUCCESS" else 0)
+                    stats_map[key]["total_items"] += items_count
                     if status == "SUCCESS":
                         stats_map[key]["success"] += 1
                     elif status == "FAILED":
@@ -107,15 +123,20 @@ def calculate_hourly_throughput(db: Session, start_dt: datetime.datetime, end_dt
                 hour=k,
                 total=stats_map[k]["total"],
                 success=stats_map[k]["success"],
-                failed=stats_map[k]["failed"]
+                failed=stats_map[k]["failed"],
+                total_items=stats_map[k]["total_items"]
             )
             for k in date_keys
         ]
 
 def calculate_top_products(db: Session, start_dt: datetime.datetime, end_dt: datetime.datetime, total_cartons: int) -> List[ProductStat]:
     results = db.query(
+        models.Product.id.label("product_id"),
         models.Product.item_name,
-        models.Customer.code,
+        models.Product.upc,
+        models.Product.packed_qty,
+        models.Customer.code.label("customer_code"),
+        models.Customer.name.label("customer_name"),
         func.count(models.Carton.id).label("cnt")
     ).join(
         models.Carton, models.Carton.product_id == models.Product.id
@@ -125,24 +146,43 @@ def calculate_top_products(db: Session, start_dt: datetime.datetime, end_dt: dat
         models.Carton.created_at >= start_dt,
         models.Carton.created_at <= end_dt
     ).group_by(
+        models.Product.id,
         models.Product.item_name,
-        models.Customer.code
+        models.Product.upc,
+        models.Product.packed_qty,
+        models.Customer.code,
+        models.Customer.name
     ).order_by(
         desc("cnt")
     ).limit(8).all()
 
     top_products = []
-    for item_name, customer_code, cnt in results:
-        pct = round((cnt / total_cartons * 100), 1) if total_cartons > 0 else 0.0
+    for r in results:
+        pct = round((r.cnt / total_cartons * 100), 1) if total_cartons > 0 else 0.0
+        prod_items = db.query(models.CartonItem).join(
+            models.Carton, models.CartonItem.carton_id == models.Carton.id
+        ).filter(
+            models.Carton.product_id == r.product_id,
+            models.Carton.created_at >= start_dt,
+            models.Carton.created_at <= end_dt
+        ).count()
+        if prod_items == 0 and r.packed_qty:
+            prod_items = r.cnt * r.packed_qty
+
         top_products.append(
             ProductStat(
-                item_name=item_name or "Unknown",
-                customer_code=customer_code or "N/A",
-                count=cnt,
+                item_name=r.item_name or "Unknown",
+                customer_code=r.customer_code or "N/A",
+                customer_name=r.customer_name,
+                upc=r.upc,
+                packed_qty=r.packed_qty,
+                count=r.cnt,
+                total_items=prod_items,
                 percentage=pct
             )
         )
     return top_products
+
 
 def get_dashboard_stats(db: Session, time_range: str = "today") -> DashboardStatsResponse:
     start_dt, end_dt = get_time_boundary(time_range)

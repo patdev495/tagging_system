@@ -62,18 +62,7 @@ def get_job_order_slots(db: Session, job_order: str) -> List[JobOrderSlotDetail]
         models.JobOrderCartonSlot.job_order == job_order
     ).order_by(models.JobOrderCartonSlot.carton_number.asc()).all()
 
-    return [
-        JobOrderSlotDetail(
-            id=s.id,
-            carton_number=s.carton_number,
-            carton_sn=s.carton_sn,
-            status=s.status,
-            scanned_at=s.scanned_at,
-            carton_id=s.carton_id,
-            shipped=s.shipped or 0
-        )
-        for s in slots
-    ]
+    return [JobOrderSlotDetail.model_validate(s) for s in slots]
 
 def get_po_lot_runs(db: Session) -> List[POLotRunSummary]:
     results = db.query(

@@ -16,14 +16,20 @@ export interface HourlyStat {
   total: number;
   success: number;
   failed: number;
+  total_items: number;
 }
 
 export interface ProductStat {
   item_name: string;
   customer_code: string;
+  customer_name?: string | null;
+  upc?: string | null;
+  packed_qty?: number | null;
   count: number;
+  total_items: number;
   percentage: number;
 }
+
 
 export interface LiveCartonFeed {
   id: number;
