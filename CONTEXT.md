@@ -63,7 +63,7 @@ Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt 
 _Avoid_: Quốc gia sê-ri
 
 **Reprint**:
-Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng.
+Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng. Quy trình này áp dụng cho Customer UI; đối với Customer A11, hành động Reprint bị cấm hoàn toàn theo quy định kiểm soát tem nhãn chống trùng lặp.
 _Avoid_: In bù, in mới, in đè
 
 **Station ID**:

@@ -186,6 +186,14 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
+    # ADR 0005: Customer A11 strictly forbids manual sequence manipulation
+    customer_code = product.customer.code if product.customer else None
+    if customer_code in ("A11", "UX") and (weigh_in.custom_sn is not None or weigh_in.custom_yymm is not None):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Khách hàng {customer_code} không cho phép chỉnh sửa số thứ tự thùng thủ công (Manual sequence override is prohibited for {customer_code})."
+        )
+
     # Weight tolerance checks
     if product.min_weight is not None and weigh_in.weight < product.min_weight:
         raise HTTPException(

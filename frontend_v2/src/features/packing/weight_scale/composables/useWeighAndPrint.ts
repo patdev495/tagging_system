@@ -19,9 +19,6 @@ export interface UseWeighAndPrintOptions {
   isAgentOnline: Ref<boolean>;
   scaleReading: Ref<ScaleReading>;
   scaleStatus: Ref<ScaleStatus>;
-  isAutoSN: Ref<boolean>;
-  manualSequence: Ref<number | null>;
-  snCheckError: Ref<string>;
   advanceSequence: () => void;
   notify?: (message: string, type: 'info' | 'success' | 'warning' | 'error') => void;
   getSettings?: () => WeighAndPrintSettings;
@@ -37,9 +34,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     isAgentOnline,
     scaleReading,
     scaleStatus,
-    isAutoSN,
-    manualSequence,
-    snCheckError,
     advanceSequence,
     notify,
     getSettings = (): WeighAndPrintSettings => ({}),
@@ -63,40 +57,31 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     maxWeight: number;
   } | null>(null);
 
-  const getToleranceTitle = (status: string) => {
-    switch (status) {
-      case 'READY': return 'ĐẠT CHUẨN TRỌNG LƯỢNG';
-      case 'UNSTABLE': return 'CÂN CHƯA ỔN ĐỊNH';
-      case 'UNDERWEIGHT': return 'THIẾU TRỌNG LƯỢNG';
-      case 'OVERWEIGHT': return 'THỪA TRỌNG LƯỢNG';
-      case 'DISCONNECTED': return !isAgentOnline.value ? 'CHƯA BẬT PRINT AGENT' : 'CHƯA KẾT NỐI CÂN';
-      default: return 'CHƯA KẾT NỐI CÂN';
-    }
-  };
-
   const toleranceResult = computed<ScaleToleranceResult>(() => {
     return evaluateScaleTolerance({
       isConnected: isAgentOnline.value && scaleStatus.value.connected,
       currentWeight: scaleReading.value.weight,
       isStable: scaleReading.value.is_stable,
-      product: selectedProduct.value ? {
-        min_weight: selectedProduct.value.min_weight ?? 12.300,
-        max_weight: selectedProduct.value.max_weight ?? 12.700,
-      } : null,
+      product: selectedProduct.value,
     });
   });
 
-  const calculateGaugePercent = (currentWeight: number): number => {
-    if (!isAgentOnline.value || !scaleStatus.value.connected) return 50;
-    const min = selectedProduct.value?.min_weight ?? 0.150;
-    const max = selectedProduct.value?.max_weight ?? 0.200;
-    const range = max - min;
-    if (range <= 0) return 50;
+  const getToleranceTitle = (status: string) => {
+    switch (status) {
+      case 'UNDERWEIGHT': return 'Trọng Lượng Thiếu (Underweight)';
+      case 'OVERWEIGHT': return 'Trọng Lượng Thừa (Overweight)';
+      case 'SCALE_UNSTABLE': return 'Cân Chưa Ổn Định (Unstable)';
+      case 'NO_PRODUCT': return 'Chưa Chọn Sản Phẩm Đóng Gói';
+      case 'AGENT_OFFLINE': return 'Print Agent Chưa Khởi Động';
+      case 'SCALE_DISCONNECTED': return 'Đầu Cân Mất Kết Nối';
+      default: return 'Lỗi Dung Sai Trọng Lượng';
+    }
+  };
 
-    const gaugeMin = min - 0.25 * range;
-    const gaugeMax = max + 0.25 * range;
-    const percent = ((currentWeight - gaugeMin) / (gaugeMax - gaugeMin)) * 100;
-    return Math.min(Math.max(percent, 2), 98);
+  const calculateGaugePercent = (weight: number, target: number) => {
+    if (!target || target <= 0) return 0;
+    const pct = (weight / target) * 100;
+    return Math.min(Math.max(pct, 0), 100);
   };
 
   const triggerWeighAndPrint = async () => {
@@ -125,17 +110,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       return;
     }
 
-    if (!isAutoSN.value) {
-      if (!manualSequence.value || manualSequence.value <= 0) {
-        notify?.('Vui lòng nhập số thùng hợp lệ (> 0)', 'warning');
-        return;
-      }
-      if (snCheckError.value) {
-        notify?.(snCheckError.value, 'error');
-        return;
-      }
-    }
-
     if (isPrinting.value) return;
 
     isPrinting.value = true;
@@ -143,7 +117,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     const settings = getSettings();
 
     try {
-      // 1. Call Backend API to Allocate A11 SN and generate A11 BTXML
+      // 1. Call Backend API to Allocate A11 SN and generate A11 BTXML (Strict Monotonic)
       const res = await packingApi.weighPackCarton({
         product_id: selectedProduct.value.id,
         weight: currentWeight,
@@ -152,7 +126,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
         printer_name: settings.printerName || undefined,
         template_path: settings.templatePath || undefined,
         station_id: settings.stationId || undefined,
-        custom_sn: isAutoSN.value ? undefined : (manualSequence.value || undefined),
       });
 
       const newCarton = res.data;
@@ -205,45 +178,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     }
   };
 
-  const handleEmergencyReprint = async (carton: Carton) => {
-    const settings = getSettings();
-    try {
-      isPrinting.value = true;
-      const res = await printApi.reprintCarton(
-        carton.id,
-        settings.templatePath || '',
-        settings.printerName || ''
-      );
-      const reprintCarton = res.data;
-      const btxml = (reprintCarton as any).btxml;
-
-      if (btxml) {
-        const agentUrl = settings.agentUrl || 'http://127.0.0.1:8080';
-        const printResult = await printApi.agentPrint(agentUrl, btxml, settings.printerName, settings.localTemplateDir);
-        if (printResult?.type === 'pdf' && printResult?.data) {
-          const link = document.createElement('a');
-          link.href = `data:application/pdf;base64,${printResult.data}`;
-          link.download = `Reprint_${carton.carton_sn}.pdf`;
-          link.click();
-        }
-        notify?.(`In lại thành công tem thùng: ${carton.carton_sn}`, 'success');
-        return true;
-      } else {
-        throw new Error('No BTXML returned for reprint');
-      }
-    } catch (err: any) {
-      notify?.(`In lại thất bại: ${err.response?.data?.error || err.message}`, 'error');
-      return false;
-    } finally {
-      isPrinting.value = false;
-    }
-  };
-
-  const reprintLastCarton = async () => {
-    if (!lastPackedCarton.value) return;
-    await handleEmergencyReprint(lastPackedCarton.value);
-  };
-
   const resetSessionCount = () => {
     if (confirm('Bạn có chắc muốn đặt lại bộ đếm số thùng trong ca về 0?')) {
       sessionPackedCount.value = 0;
@@ -261,8 +195,6 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     toleranceResult,
     calculateGaugePercent,
     triggerWeighAndPrint,
-    handleEmergencyReprint,
-    reprintLastCarton,
     resetSessionCount,
     getToleranceTitle,
   };

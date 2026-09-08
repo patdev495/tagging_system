@@ -73,6 +73,15 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
         logger.warning(f"Reprint failed: Carton {carton_id} not found in database")
         raise HTTPException(status_code=404, detail="Original carton not found")
     
+    product = original.product or (db.query(models.Product).filter(models.Product.id == original.product_id).first() if original.product_id else None)
+    customer_code = product.customer.code if (product and product.customer) else None
+    if customer_code in ("A11", "UX"):
+        logger.warning(f"Reprint rejected: Customer {customer_code} does not allow reprint for carton {original.carton_sn}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Khách hàng {customer_code} không cho phép in lại tem thùng (Reprint prohibited for {customer_code})."
+        )
+
     initial_status = "SUCCESS" if original.status == "SUCCESS" else "PRINTED"
     new_carton = models.Carton(
         product_id=original.product_id,
@@ -91,7 +100,6 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
     db.add(new_carton)
     db.flush()
     
-    product = db.query(models.Product).filter(models.Product.id == original.product_id).first()
     item_sns = print_attempts.item_sns_for_attempt(db, original)
     # Priority logic inside resolve_template_path: DB -> Client -> Default
     db_path = getattr(product, 'template_path', None)

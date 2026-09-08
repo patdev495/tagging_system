@@ -78,17 +78,6 @@
             <span class="text-slate-600 font-medium">{{ formatDateTime(lastPackedCarton.created_at) }}</span>
           </div>
         </div>
-
-        <div class="pt-2 border-t border-slate-100 mt-2 shrink-0">
-          <button
-            @click="$emit('reprint')"
-            :disabled="isPrinting"
-            class="w-full py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <i class="fas fa-redo text-xs"></i>
-            <span>In Lại Thùng Này (Reprint)</span>
-          </button>
-        </div>
       </div>
 
       <!-- Empty State for Last Carton -->
@@ -111,7 +100,6 @@ defineProps<{
 }>();
 
 defineEmits<{
-  (e: 'reprint'): void;
   (e: 'reset-session'): void;
 }>();
 

@@ -15,11 +15,10 @@ vi.mock('../../../print/api', () => ({
   default: {
     agentPrint: vi.fn(),
     updateCartonStatus: vi.fn(),
-    reprintCarton: vi.fn(),
   },
 }));
 
-describe('useWeighAndPrint Composable', () => {
+describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0005)', () => {
   const selectedProduct = ref<Product | null>({
     id: 10,
     customer_id: 2,
@@ -49,9 +48,6 @@ describe('useWeighAndPrint Composable', () => {
     baudrate: 9600,
     is_streaming: true,
   });
-  const isAutoSN = ref(true);
-  const manualSequence = ref<number | null>(null);
-  const snCheckError = ref('');
   const advanceSequence = vi.fn();
   const notify = vi.fn();
 
@@ -67,9 +63,6 @@ describe('useWeighAndPrint Composable', () => {
       isAgentOnline,
       scaleReading,
       scaleStatus,
-      isAutoSN,
-      manualSequence,
-      snCheckError,
       advanceSequence,
       notify,
       getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
@@ -89,9 +82,6 @@ describe('useWeighAndPrint Composable', () => {
       isAgentOnline,
       scaleReading,
       scaleStatus,
-      isAutoSN,
-      manualSequence,
-      snCheckError,
       advanceSequence,
       notify,
       getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
@@ -106,7 +96,7 @@ describe('useWeighAndPrint Composable', () => {
     expect(packingApi.weighPackCarton).not.toHaveBeenCalled();
   });
 
-  it('executes full weigh & print flow when conditions are valid', async () => {
+  it('executes full weigh & print flow with strictly automatic sequence', async () => {
     scaleReading.value.weight = 12.505;
 
     vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
@@ -133,9 +123,6 @@ describe('useWeighAndPrint Composable', () => {
       isAgentOnline,
       scaleReading,
       scaleStatus,
-      isAutoSN,
-      manualSequence,
-      snCheckError,
       advanceSequence,
       notify,
       getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
@@ -144,7 +131,15 @@ describe('useWeighAndPrint Composable', () => {
     sessionPackedCount.value = 0;
     await triggerWeighAndPrint();
 
-    expect(packingApi.weighPackCarton).toHaveBeenCalled();
+    expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
+      product_id: 10,
+      weight: 12.505,
+      po_number: 'PO-2026-001',
+      lot_number: 'LOT-9988',
+      printer_name: undefined,
+      template_path: undefined,
+      station_id: undefined,
+    });
     expect(printApi.agentPrint).toHaveBeenCalled();
     expect(printApi.updateCartonStatus).toHaveBeenCalledWith(123, 'SUCCESS');
     expect(advanceSequence).toHaveBeenCalled();

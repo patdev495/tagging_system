@@ -53,10 +53,6 @@
           </div>
 
           <!-- Actions -->
-          <button @click="showReprintModal = true" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer" title="In lại tem khẩn cấp">
-            <i class="fas fa-history text-slate-500"></i>
-            <span>In Lại</span>
-          </button>
           <button @click="showSettingsModal = true" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
             <i class="fas fa-cog text-slate-500"></i>
             <span>Cài Đặt</span>
@@ -146,12 +142,6 @@
 
           <A11SerialControl
             :currentSNPreview="currentSNPreview"
-            :isAutoSN="isAutoSN"
-            :manualSequence="manualSequence"
-            :snCheckError="snCheckError"
-            @toggle-mode="toggleSNMode"
-            @update:manual-sequence="manualSequence = $event"
-            @check-manual-sn="checkManualSN"
           />
 
           <!-- Giant Primary Print Action Button -->
@@ -160,7 +150,7 @@
             :disabled="isPrinting"
             :class="[
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
-              toleranceResult.canPrint && activePO && activeLot && (isAutoSN || !snCheckError)
+              toleranceResult.canPrint && activePO && activeLot
                 ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                 : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20'
             ]"
@@ -179,7 +169,6 @@
             :selectedProduct="selectedProduct"
             :lastPackedCarton="lastPackedCarton"
             :isPrinting="isPrinting"
-            @reprint="reprintLastCarton"
             @reset-session="resetSessionCount"
           />
         </div>
@@ -209,12 +198,6 @@
         @close="showSettingsModal = false"
       />
 
-      <EmergencyReprintModal
-        :show="showReprintModal"
-        @close="showReprintModal = false"
-        @reprint="handleEmergencyReprint"
-      />
-
       <ScaleToleranceErrorModal
         :show="showToleranceErrorModal"
         :details="toleranceErrorDetails"
@@ -234,7 +217,6 @@ import catalogApi from '../features/catalog/api';
 import type { Product } from '../types/api';
 
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
-import EmergencyReprintModal from '../features/print/components/EmergencyReprintModal.vue';
 import ScaleDigitalGauge from '../features/packing/weight_scale/components/ScaleDigitalGauge.vue';
 import A11SerialControl from '../features/packing/weight_scale/components/A11SerialControl.vue';
 import A11LastCartonCard from '../features/packing/weight_scale/components/A11LastCartonCard.vue';
@@ -254,7 +236,6 @@ const system = useSystemStore();
 const showProductModal = ref(false);
 const showBatchModal = ref(false);
 const showSettingsModal = ref(false);
-const showReprintModal = ref(false);
 
 // Active Selection State
 const a11Products = ref<Product[]>([]);
@@ -273,19 +254,14 @@ const {
   stopPolling,
 } = useScaleStream(() => settings.agentUrl || 'http://127.0.0.1:8080');
 
-// 2. S/N Sequence Composable
+// 2. S/N Sequence Composable (Strict Monotonic - ADR 0005)
 const {
-  isAutoSN,
-  manualSequence,
-  snCheckError,
   currentSNPreview,
   fetchNextSN,
-  toggleSNMode,
-  checkManualSN,
   advanceSequence,
 } = useA11SerialNumber(selectedProduct);
 
-// 3. Weigh & Print Orchestrator Composable
+// 3. Weigh & Print Orchestrator Composable (No Reprint - ADR 0005)
 const {
   isPrinting,
   sessionPackedCount,
@@ -294,8 +270,6 @@ const {
   toleranceErrorDetails,
   toleranceResult,
   triggerWeighAndPrint,
-  handleEmergencyReprint,
-  reprintLastCarton,
   resetSessionCount,
 } = useWeighAndPrint({
   selectedProduct,
@@ -304,9 +278,6 @@ const {
   isAgentOnline,
   scaleReading,
   scaleStatus,
-  isAutoSN,
-  manualSequence,
-  snCheckError,
   advanceSequence,
   notify: (msg, type) => system.showNotification(msg, type),
   getSettings: () => ({

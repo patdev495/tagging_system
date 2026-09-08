@@ -1,13 +1,15 @@
 import { ref, computed, type Ref } from 'vue';
 import catalogApi from '../../../catalog/api';
-import printApi from '../../../print/api';
 import type { Product } from '../../../../types/api';
 
+/**
+ * Composable for managing Customer A11 carton serial numbers.
+ * Per ADR 0005, Customer A11 strictly mandates automatic, monotonic serial numbers.
+ * Manual sequence editing and toggling are completely removed.
+ */
 export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
   const isAutoSN = ref<boolean>(true);
   const autoSequence = ref<number>(1);
-  const manualSequence = ref<number | null>(null);
-  const snCheckError = ref<string>('');
   const currentYYMM = ref<string>('');
 
   const fetchNextSN = async () => {
@@ -17,9 +19,6 @@ export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
       if (res?.data) {
         autoSequence.value = res.data.next_seq || 1;
         currentYYMM.value = res.data.yymm || '';
-        if (manualSequence.value === null || isAutoSN.value) {
-          manualSequence.value = autoSequence.value;
-        }
       }
     } catch (err) {
       console.warn('Could not fetch next S/N sequence:', err);
@@ -36,63 +35,19 @@ export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       yymm = `${yy}${mm}`;
     }
-    const seq = isAutoSN.value ? autoSequence.value : (manualSequence.value || 1);
-    return `${prefix}${yymm}${String(seq).padStart(6, '0')}`;
+    return `${prefix}${yymm}${String(autoSequence.value).padStart(6, '0')}`;
   });
 
-  const toggleSNMode = () => {
-    if (isAutoSN.value) {
-      isAutoSN.value = false;
-      manualSequence.value = autoSequence.value;
-      checkManualSN();
-    } else {
-      isAutoSN.value = true;
-      snCheckError.value = '';
-      fetchNextSN();
-    }
-  };
-
-  let checkSNTimer: any = null;
-  const checkManualSN = () => {
-    snCheckError.value = '';
-    if (!manualSequence.value || manualSequence.value <= 0) {
-      snCheckError.value = 'Số thùng phải lớn hơn 0';
-      return;
-    }
-    clearTimeout(checkSNTimer);
-    checkSNTimer = setTimeout(async () => {
-      try {
-        const sn = currentSNPreview.value;
-        const res = await printApi.searchCarton(sn);
-        if (res.data && res.data.id) {
-          snCheckError.value = `Sê-ri ${sn} đã tồn tại trong lịch sử!`;
-        }
-      } catch {
-        // Not found is clean/valid
-        snCheckError.value = '';
-      }
-    }, 300);
-  };
-
   const advanceSequence = () => {
-    if (isAutoSN.value) {
-      autoSequence.value += 1;
-    } else {
-      manualSequence.value = (manualSequence.value || 1) + 1;
-      checkManualSN();
-    }
+    autoSequence.value += 1;
   };
 
   return {
     isAutoSN,
     autoSequence,
-    manualSequence,
-    snCheckError,
     currentYYMM,
     currentSNPreview,
     fetchNextSN,
-    toggleSNMode,
-    checkManualSN,
     advanceSequence,
   };
 }
