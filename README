@@ -2,16 +2,16 @@
 
 ## Sau khi commit, chạy theo thứ tự:
 
-### Bước 1: Build frontend (chạy local)
+### Bước 1: Build frontend (chạy local, trong thư mục gốc project)
 ```
 cd frontend_v2
 npm run build
 cd ..
 ```
 
-### Bước 2: Copy dist lên production server
+### Bước 2: Copy dist lên production server (vào backend_v2/static/)
 ```
-scp -r .\frontend_v2\dist\* Admin@192.168.209.62:"D:/projects_production/NY_tagging_sys_new/frontend_v2/dist/"
+scp -r .\frontend_v2\dist\* Admin@192.168.209.62:"D:/projects_production/NY_tagging_sys_new/backend_v2/static/"
 ```
 
 ### Bước 3: Deploy backend lên production server
@@ -23,7 +23,8 @@ ssh Admin@192.168.209.62 "cd /d D:\projects_production\NY_tagging_sys_new && git
 
 ---
 
-## Lý do:
-- `frontend_v2/dist/` bị gitignore → git pull KHÔNG kéo được file build mới
-- Production server KHÔNG cài Node.js → không thể build trên server
-- Phải build local rồi copy dist qua SCP
+## Lý do phải copy vào backend_v2/static/:
+- FastAPI ưu tiên serve từ `backend_v2/static/` trước
+- Nếu copy vào `frontend_v2/dist/` sẽ KHÔNG có tác dụng
+- `frontend_v2/dist/` bị gitignore → git pull không kéo được
+- Production server không cài Node.js → không thể build trên server
