@@ -1,34 +1,99 @@
 <template>
-  <div class="w-full h-[400px] md:h-[450px] relative mt-4 md:mt-5 bg-white rounded-[24px] border border-slate-100 flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.03)] lg:w-[320px] xl:w-[380px] lg:h-[calc(100vh-100px)] lg:sticky lg:top-4 lg:mt-0">
-    <div class="px-6 py-5 border-b border-slate-50 flex justify-between items-center bg-linear-to-b from-slate-50 to-white rounded-t-[24px]">
-      <h3 class="m-0 text-[1.1rem] font-extrabold text-slate-900">{{ t('packing.scanned') }} ({{ items.length }})</h3>
-      <button @click="$emit('clear')" class="px-3 py-1.5 text-[0.8rem] font-bold text-rose-500 bg-rose-50 border-none rounded-lg cursor-pointer transition-all hover:bg-rose-100 hover:-translate-y-0.5" v-if="items.length > 0">{{ t('packing.clear') }}</button>
+  <div class="w-full bg-white rounded-xl border border-slate-200 flex flex-col shadow-xs lg:w-[320px] xl:w-[360px] h-[380px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-3 shrink-0 overflow-hidden">
+    <!-- Header -->
+    <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full" :class="items.length > 0 ? 'bg-emerald-500' : 'bg-slate-300'"></div>
+        <h3 class="m-0 text-sm font-bold text-slate-800 uppercase tracking-wide">
+          {{ t('packing.scanned') }} ({{ items.length }})
+        </h3>
+      </div>
+      <button 
+        v-if="items.length > 0"
+        @click="confirmClear" 
+        class="px-2.5 py-1 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg cursor-pointer transition-all hover:bg-rose-100 hover:border-rose-300 active:scale-95"
+        title="Xóa toàn bộ sê-ri đã quét của thùng này"
+      >
+        {{ t('packing.clear') }}
+      </button>
     </div>
-    <div class="overflow-y-auto p-4 flex-1 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent" ref="listContainer">
-      <div v-if="items.length === 0" class="flex flex-col justify-center items-center h-full text-slate-400 text-[0.9rem]">{{ t('packing.no_items_scanned') }}</div>
-      <ul class="list-none p-0 m-0" v-else>
-        <li v-for="(item, idx) in items" :key="idx" class="flex justify-between items-center px-4 py-3 bg-white rounded-xl mb-2 border border-slate-100 shadow-xs transition-all hover:border-blue-500 hover:translate-x-1 hover:shadow-[0_4px_12px_rgba(59,130,246,0.05)]">
-          <span class="font-bold text-slate-800 text-[1.05rem] font-mono">{{ item }}</span>
-          <span class="text-[0.75rem] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">#{{ idx + 1 }}</span>
-        </li>
-      </ul>
+
+    <!-- Scanned Items List Container -->
+    <div class="overflow-y-auto p-2.5 flex-1 divide-y divide-slate-100" ref="listContainer">
+      <div v-if="items.length === 0" class="flex flex-col justify-center items-center h-full text-slate-400 text-xs text-center p-4">
+        <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-2">
+          <i class="fas fa-barcode text-xl"></i>
+        </div>
+        <p class="font-semibold text-slate-600 m-0 mb-1">Chưa có mã quét</p>
+        <p class="text-[11px] text-slate-400 m-0">Bắn mã vạch sản phẩm con để ghi nhận vào thùng</p>
+      </div>
+
+      <div v-else class="space-y-1.5">
+        <div 
+          v-for="(item, idx) in displayedItems" 
+          :key="idx" 
+          class="flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100/90 rounded-lg border border-slate-200/80 transition-colors group"
+        >
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <span class="text-[11px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded font-mono shrink-0">
+              #{{ item.actualIndex + 1 }}
+            </span>
+            <span class="font-barcode-mono font-bold text-slate-900 text-sm truncate select-all" :title="item.sn">
+              {{ item.sn }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <!-- Latest item badge -->
+            <span v-if="item.actualIndex === items.length - 1" class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+              Mới nhất
+            </span>
+
+            <!-- Remove single item button -->
+            <button 
+              @click="$emit('remove-item', item.actualIndex)"
+              class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors border border-transparent hover:border-rose-200 cursor-pointer"
+              title="Xóa mã này khỏi thùng"
+            >
+              <i class="fas fa-times text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Summary -->
+    <div v-if="items.length > 0" class="px-4 py-2 border-t border-slate-200 bg-slate-50/60 text-[11px] text-slate-500 flex justify-between items-center shrink-0">
+      <span>Mã vừa quét: <strong class="font-mono text-slate-700">{{ items[items.length - 1] }}</strong></span>
+      <span class="font-bold text-emerald-700">{{ items.length }} pcs</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+
 const props = defineProps<{
-  items: string[]
+  items: string[];
 }>();
-defineEmits<{
-  (e: 'clear'): void
+
+const emit = defineEmits<{
+  (e: 'clear'): void;
+  (e: 'remove-item', index: number): void;
 }>();
-const listContainer = ref<HTMLElement | null>(null);
-watch(() => props.items, () => {
-  nextTick(() => { if (listContainer.value) listContainer.value.scrollTo({ top: listContainer.value.scrollHeight, behavior: 'smooth' }); });
-}, { deep: true });
+
+
+// Display in reverse chronological order (newest on top) for fast worker verification
+const displayedItems = computed(() => {
+  return props.items.map((sn, idx) => ({ sn, actualIndex: idx })).reverse();
+});
+
+const confirmClear = () => {
+  if (window.confirm('Bạn có chắc muốn xóa TOÀN BỘ các mã sê-ri con đã quét trong thùng này?')) {
+    emit('clear');
+  }
+};
 </script>

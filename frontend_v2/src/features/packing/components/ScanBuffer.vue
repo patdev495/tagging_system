@@ -1,91 +1,142 @@
 <template>
-  <div class="mb-4">
-    <div class="flex gap-2 md:gap-3 items-start">
-      <textarea 
-        :value="scanBuffer"
-        @input="handleInput"
-        @keydown.enter.prevent="$emit('scan')"
-        @keydown.space="handleSpace"
-        :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : t('packing.scan_prompt_default')))"
-        ref="scanInput"
-        :disabled="disabled"
-        rows="1"
-        class="flex-1 min-w-0 px-3 md:px-4 py-2.5 md:py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-[1rem] md:text-[1.15rem] font-bold text-center mb-1.5 md:mb-2 transition-all min-h-[48px] md:min-h-[58px] flex items-center outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 shrink-0 resize-none overflow-hidden"
-        :class="{ 
-          'bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed': !jobOrder || disabled, 
-          'bg-orange-50 border-orange-500 text-orange-900 focus:border-orange-600 focus:bg-orange-50 focus:ring-orange-500/15': awaitingNext && jobOrder && !disabled 
-        }"
-      ></textarea>
+  <div class="mb-3">
+    <!-- Top indicator: Scanner State + Helper -->
+    <div class="flex items-center justify-between px-1 mb-1.5 text-xs font-semibold">
+      <div class="flex items-center gap-1.5">
+        <span class="relative flex h-2 w-2">
+          <span v-if="!disabled && jobOrder" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span :class="['relative inline-flex rounded-full h-2 w-2', (!disabled && jobOrder) ? 'bg-emerald-500' : 'bg-slate-400']"></span>
+        </span>
+        <span :class="(!disabled && jobOrder) ? 'text-emerald-700 font-bold uppercase tracking-wide' : 'text-slate-500'">
+          {{ (!disabled && jobOrder) ? (awaitingNext ? 'THÙNG ĐÃ ĐỦ - CHỜ ĐỔI THÙNG' : 'SẴN SÀNG QUÉT MÃ') : 'TẠM KHÓA QUÉT' }}
+        </span>
+      </div>
+
+      <div class="text-slate-400 text-[11px] font-mono">
+        <span v-if="!disabled && jobOrder">Phím tắt: Enter (Quét) | Space (Đổi thùng)</span>
+      </div>
+    </div>
+
+    <!-- Main Scanner Input Bar -->
+    <div class="flex gap-2 items-stretch">
+      <div class="relative flex-1 min-w-0">
+        <input 
+          type="text"
+          :value="scanBuffer"
+          @input="handleInput"
+          @keydown.enter.prevent="$emit('scan')"
+          @keydown.space="handleSpace"
+          :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : 'Bắn mã sê-ri con (Item SN) vào đây...'))"
+          ref="scanInput"
+          :disabled="disabled"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          class="w-full h-12 md:h-14 px-4 bg-white border-2 rounded-xl text-slate-900 text-base md:text-lg font-barcode-mono font-bold text-center transition-all outline-none shadow-xs"
+          :class="[
+            disabled 
+              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
+              : (awaitingNext 
+                  ? 'bg-amber-50/60 border-amber-500 text-amber-900 focus:ring-4 focus:ring-amber-500/20' 
+                  : (flashState === 'fail' 
+                      ? 'border-rose-600 bg-rose-50 text-rose-900 animate-scan-fail' 
+                      : (flashState === 'pass' 
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-900 animate-scan-pass' 
+                          : 'border-slate-300 hover:border-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/15 focus:bg-white'))),
+            hasErrors ? 'animate-shake' : ''
+          ]"
+        />
+        <!-- Barcode icon overlay inside input -->
+        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <i class="fas fa-barcode text-lg"></i>
+        </div>
+      </div>
+
+      <!-- Action Button Next Carton -->
       <button 
         v-if="awaitingNext" 
         @click="handleNextCartonClick" 
-        class="px-4 md:px-6 h-[48px] md:h-[58px] bg-linear-to-br from-emerald-500 to-emerald-600 text-white border-none rounded-xl font-bold flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all animate-pulse-gentle"
-        :class="hasErrors ? 'opacity-50 cursor-not-allowed grayscale-[40%]' : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(16,185,129,0.4)] hover:bg-linear-to-br hover:from-emerald-600 hover:to-emerald-700'"
+        class="px-5 h-12 md:h-14 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 rounded-xl font-bold flex items-center gap-2 whitespace-nowrap shadow-sm transition-all shrink-0 cursor-pointer"
+        :class="hasErrors ? 'opacity-50 cursor-not-allowed grayscale-[40%]' : 'active:scale-95 animate-pulse-gentle'"
         :disabled="disabled || hasErrors"
         :title="hasErrors ? 'Vui lòng xóa các lỗi quét trước khi chuyển thùng' : t('packing.next_carton_title')"
       >
-        <i class="fas fa-plus-circle text-[0.85rem] md:text-[1rem]"></i>
+        <i class="fas fa-plus-circle text-base"></i>
         <span>{{ t('packing.next_carton') }}</span>
-        <span class="text-[0.7rem] font-mono font-black opacity-90 px-1.5 py-0.5 bg-black/25 rounded-md tracking-wider">Space</span>
+        <span class="text-[10px] font-barcode-mono font-black px-1.5 py-0.5 bg-black/25 rounded tracking-wider">Space</span>
       </button>
+
+      <!-- Action Button Pack Now (Partial) -->
       <button 
         v-else-if="allowPartial && scannedCount > 0 && jobOrder" 
         @click="$emit('pack-now')" 
-        class="px-4 md:px-6 h-[48px] md:h-[58px] bg-linear-to-br from-blue-500 to-blue-600 text-white border-none rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-[0_4px_12px_rgba(59,130,246,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(59,130,246,0.4)] hover:bg-linear-to-br hover:from-blue-600 hover:to-blue-700"
+        class="px-5 h-12 md:h-14 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 rounded-xl font-bold cursor-pointer flex items-center gap-2 whitespace-nowrap shadow-sm transition-all shrink-0 active:scale-95"
         :disabled="disabled"
         :title="t('packing.pack_now_title')"
       >
-        <i class="fas fa-box-open text-[0.85rem] md:text-[1rem]"></i> {{ t('packing.pack_now') }}
+        <i class="fas fa-box-open text-base"></i>
+        <span>{{ t('packing.pack_now') }}</span>
       </button>
     </div>
-    <p class="text-center text-slate-400 text-[0.85rem]" v-if="jobOrder && !awaitingNext && !disabled">{{ t('packing.waiting_scanner') }}</p>
-    <p class="text-center text-[0.85rem] text-rose-600 font-bold" v-else-if="awaitingNext && hasErrors && !disabled"><i class="fas fa-exclamation-triangle mr-1"></i> Vui lòng xóa các lỗi quét bên dưới trước khi mở thùng mới</p>
-    <p class="text-center text-[0.85rem] text-orange-600 font-bold" v-else-if="awaitingNext && !disabled">{{ t('packing.carton_complete_hint') }}</p>
-    <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="!jobOrder && !disabled">{{ t('packing.fill_job_order_hint') }}</p>
-    <p class="text-center text-[0.85rem] text-rose-500 font-bold" v-else-if="disabled && placeholder.includes('AGENT')">{{ t('packing.agent_offline_hint') }}</p>
 
-    <!-- Overflow Scans Area (excess scans after carton full) -->
-    <div v-if="overflowScans.length > 0" class="mt-4 bg-orange-50 border-2 border-orange-400 rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(249,115,22,0.15)] transition-opacity animate-in">
-      <div class="px-3.5 py-2.5 bg-linear-to-br from-orange-50 to-orange-100 border-b border-orange-400 flex justify-between items-center text-orange-800 text-[0.85rem] font-bold">
-        <span><i class="fas fa-exclamation-triangle text-orange-600 mr-1.5"></i> {{ t('packing.overflow_title', { count: overflowScans.length }) }}</span>
-        <button @click="$emit('clear-overflow')" class="bg-transparent border border-orange-400 text-orange-800 px-2 py-0.5 rounded-md text-[0.7rem] cursor-pointer transition-all hover:bg-orange-100">{{ t('packing.clear') }}</button>
+    <!-- Status Hints -->
+    <div class="mt-1.5 px-1 min-h-[20px] flex items-center justify-center">
+      <p class="text-xs text-rose-600 font-bold flex items-center gap-1.5" v-if="awaitingNext && hasErrors && !disabled">
+        <i class="fas fa-exclamation-triangle"></i> Vui lòng xóa các lỗi quét bên dưới trước khi mở thùng mới
+      </p>
+      <p class="text-xs text-amber-700 font-bold flex items-center gap-1.5" v-else-if="awaitingNext && !disabled">
+        <i class="fas fa-check-circle text-emerald-600"></i> {{ t('packing.carton_complete_hint') }}
+      </p>
+      <p class="text-xs text-rose-600 font-bold flex items-center gap-1.5" v-else-if="disabled && placeholder.includes('AGENT')">
+        <i class="fas fa-plug-circle-xmark"></i> {{ t('packing.agent_offline_hint') }}
+      </p>
+      <p class="text-xs text-slate-500 font-medium" v-else-if="jobOrder && !disabled">
+        {{ t('packing.waiting_scanner') }}
+      </p>
+    </div>
+
+    <!-- Overflow Scans Area -->
+    <div v-if="overflowScans.length > 0" class="mt-3 bg-amber-50 border border-amber-300 rounded-xl overflow-hidden shadow-xs animate-in">
+      <div class="px-3.5 py-2 bg-amber-100/70 border-b border-amber-300 flex justify-between items-center text-amber-900 text-xs font-bold">
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-triangle-exclamation text-amber-600"></i> 
+          {{ t('packing.overflow_title', { count: overflowScans.length }) }}
+        </span>
+        <button @click="$emit('clear-overflow')" class="bg-white border border-amber-300 text-amber-800 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer hover:bg-amber-50">
+          {{ t('packing.clear') }}
+        </button>
       </div>
-      <div class="max-h-[200px] overflow-y-auto p-2">
-        <div v-for="(item, idx) in overflowScans" :key="idx" class="flex justify-between items-center px-3 py-2 bg-white rounded-lg mb-1 border border-orange-200 border-l-4 border-l-orange-500 transition-all hover:bg-amber-50">
-          <div class="flex items-center gap-2.5">
-            <span class="text-[0.7rem] font-extrabold text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded-sm">#{{ idx + 1 }}</span>
-            <span class="font-mono font-bold text-orange-950 text-[0.95rem]">{{ item.sn }}</span>
+      <div class="max-h-[140px] overflow-y-auto p-2">
+        <div v-for="(item, idx) in overflowScans" :key="idx" class="flex justify-between items-center px-3 py-1.5 bg-white rounded-lg mb-1 border border-amber-200 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">#{{ idx + 1 }}</span>
+            <span class="font-barcode-mono font-bold text-slate-900 text-sm">{{ item.sn }}</span>
           </div>
-          <span class="text-[0.75rem] text-slate-400">{{ item.time }}</span>
+          <span class="text-[11px] text-slate-400 font-mono">{{ item.time }}</span>
         </div>
       </div>
     </div>
 
     <!-- Invalid Scans Area -->
-    <div v-if="invalidScans.length > 0" class="mt-5 bg-rose-50 border border-rose-200 rounded-xl overflow-hidden shadow-md transition-opacity animate-in">
-      <div class="px-3 py-2 bg-white border-b border-rose-200 flex justify-between items-center text-rose-700 text-[0.85rem] font-bold">
-        <span><i class="fas fa-exclamation-circle mr-1.5"></i> {{ t('packing.invalid_scans_title') }}</span>
-        <button @click="$emit('clear-invalid')" class="bg-transparent border border-rose-200 text-rose-700 px-2 py-0.5 rounded-md text-[0.7rem] cursor-pointer transition-all hover:bg-rose-50 hover:border-rose-700">{{ t('packing.clear') }}</button>
+    <div v-if="invalidScans.length > 0" class="mt-3 bg-rose-50 border border-rose-300 rounded-xl overflow-hidden shadow-xs animate-in">
+      <div class="px-3.5 py-2 bg-rose-100/70 border-b border-rose-300 flex justify-between items-center text-rose-900 text-xs font-bold">
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-circle-exclamation text-rose-600"></i> 
+          {{ t('packing.invalid_scans_title') }} ({{ invalidScans.length }})
+        </span>
+        <button @click="$emit('clear-invalid')" class="bg-white border border-rose-300 text-rose-800 px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer hover:bg-rose-50">
+          {{ t('packing.clear') }}
+        </button>
       </div>
-      <div class="max-h-[150px] overflow-y-auto p-2">
-        <div v-for="(err, idx) in [...invalidScans].reverse()" :key="idx" class="flex justify-between items-center px-2.5 py-1.5 bg-white rounded-md mb-1 border border-rose-100 border-l-4"
-          :class="{
-            'border-l-orange-500': err.type === 'pattern',
-            'border-l-purple-500': err.type === 'duplicate',
-            'border-l-rose-500': !['pattern', 'duplicate'].includes(err.type || '')
-          }"
-        >
-          <div class="flex items-center">
-            <span class="font-mono font-semibold text-rose-600">{{ err.sn }}</span>
-            <span class="text-[0.7rem] px-1.5 py-0.5 rounded-sm ml-2.5 font-bold uppercase tracking-wider"
-              :class="{
-                'bg-orange-100 text-orange-800': err.type === 'pattern',
-                'bg-purple-100 text-purple-800': err.type === 'duplicate',
-                'bg-rose-200 text-rose-900': !['pattern', 'duplicate'].includes(err.type || '')
-              }"
-            >{{ err.reason }}</span>
+      <div class="max-h-[140px] overflow-y-auto p-2">
+        <div v-for="(err, idx) in [...invalidScans].reverse()" :key="idx" class="flex justify-between items-center px-3 py-1.5 bg-white rounded-lg mb-1 border border-rose-200 border-l-4 border-l-rose-500 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-barcode-mono font-bold text-rose-700 text-sm">{{ err.sn }}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider bg-rose-100 text-rose-800">
+              {{ err.reason }}
+            </span>
           </div>
-          <span class="text-[0.75rem] text-slate-400">{{ err.time }}</span>
+          <span class="text-[11px] text-slate-400 font-mono">{{ err.time }}</span>
         </div>
       </div>
     </div>
@@ -93,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -131,11 +182,36 @@ const emit = defineEmits<{
   (e: 'clear-overflow'): void;
 }>();
 
-const scanInput = ref<HTMLTextAreaElement | null>(null);
+const scanInput = ref<HTMLInputElement | null>(null);
+const flashState = ref<'pass' | 'fail' | ''>('');
+let flashTimer: ReturnType<typeof setTimeout> | null = null;
+let focusLockTimer: ReturnType<typeof setInterval> | null = null;
 
 const hasErrors = computed(() => (props.invalidScans?.length > 0) || (props.overflowScans?.length > 0));
 
-const handleInput = (e: Event) => emit('update:scanBuffer', (e.target as HTMLTextAreaElement).value);
+const triggerFlash = (state: 'pass' | 'fail') => {
+  flashState.value = state;
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => {
+    flashState.value = '';
+  }, 500);
+};
+
+// Watch for invalid scans increase to trigger fail animation
+watch(() => props.invalidScans?.length, (newLen, oldLen) => {
+  if (newLen && oldLen !== undefined && newLen > oldLen) {
+    triggerFlash('fail');
+  }
+});
+
+// Watch scanned count increase to trigger pass animation
+watch(() => props.scannedCount, (newCount, oldCount) => {
+  if (newCount > (oldCount || 0)) {
+    triggerFlash('pass');
+  }
+});
+
+const handleInput = (e: Event) => emit('update:scanBuffer', (e.target as HTMLInputElement).value);
 
 const handleSpace = (e: KeyboardEvent) => {
   if (props.awaitingNext) {
@@ -153,8 +229,36 @@ const handleNextCartonClick = () => {
 };
 
 const focusScan = () => {
-  if (scanInput.value) scanInput.value.focus({ preventScroll: true });
+  if (scanInput.value && !props.disabled) {
+    scanInput.value.focus({ preventScroll: true });
+  }
 };
 
-defineExpose({ focusScan });
+// Ergonomic Auto-Focus Lock: Maintain focus for scanner barcode gun
+const handleGlobalClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  const isInteractive = target.closest('button, a, input, select, textarea, [role="dialog"]');
+  if (!isInteractive && !props.disabled && scanInput.value) {
+    setTimeout(focusScan, 100);
+  }
+};
+
+onMounted(() => {
+  focusScan();
+  window.addEventListener('click', handleGlobalClick);
+  focusLockTimer = setInterval(() => {
+    // If no active element or active element is body, refocus scan input
+    if (document.activeElement === document.body && !props.disabled) {
+      focusScan();
+    }
+  }, 2000);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('click', handleGlobalClick);
+  if (focusLockTimer) clearInterval(focusLockTimer);
+  if (flashTimer) clearTimeout(flashTimer);
+});
+
+defineExpose({ focusScan, triggerFlash });
 </script>

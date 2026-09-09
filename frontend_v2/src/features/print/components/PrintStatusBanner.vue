@@ -1,33 +1,81 @@
 <template>
-  <div class="mb-4 animate-in" v-if="lastCarton">
-    <div 
-      class="p-4 rounded-xl flex items-center gap-4 animate-in transition-colors" 
-      :class="{ 
-        'bg-rose-100 text-rose-800': lastCarton.status === 'FAILED', 
-        'bg-blue-100 text-blue-800': lastCarton.status === 'PRINTING',
-        'bg-emerald-100 text-emerald-800': lastCarton.status === 'SUCCESS'
-      }"
+  <div class="mb-3 animate-in" v-if="lastCarton">
+    <!-- PRINTING state: slim pulsing bar -->
+    <div
+      v-if="lastCarton.status === 'PRINTING'"
+      class="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border border-blue-300 rounded-xl text-blue-900 text-sm font-bold"
     >
-      <i class="fas" :class="{ 'fa-check-circle': lastCarton.status === 'SUCCESS', 'fa-exclamation-triangle': lastCarton.status === 'FAILED', 'fa-spinner fa-spin': lastCarton.status === 'PRINTING' }"></i>
-      <span>
-        <template v-if="lastCarton.status === 'PRINTING'">{{ t('print.printing_carton') }}: <strong>{{ lastCarton.carton_sn }}</strong>...</template>
-        <template v-else-if="lastCarton.status === 'SUCCESS'">{{ t('print.last_carton') }}: <strong>{{ lastCarton.carton_sn }}</strong></template>
-        <template v-else>{{ t('print.attempt_failed') }}: <strong class="line-through opacity-70">{{ lastCarton.carton_sn }}</strong>
-          <span v-if="agentErrorMessage" class="text-[0.85rem] font-normal ml-1"> - {{ agentErrorMessage }}</span>
-        </template>
+      <i class="fas fa-spinner fa-spin text-blue-600 text-base shrink-0"></i>
+      <span class="flex-1">
+        {{ t('print.printing_carton') }}:
+        <span class="font-barcode-mono font-black text-blue-800 ml-1 tracking-wider">{{ lastCarton.carton_sn }}</span>
       </span>
-      <div class="flex gap-2.5 ml-auto" v-if="lastCarton.status !== 'PRINTING'">
-        <a v-if="lastCarton.status === 'SUCCESS'" :href="downloadUrl" class="bg-emerald-700 text-white border-none px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 font-semibold transition-all no-underline hover:bg-emerald-800" download>
-          <i class="fas fa-file-download"></i> {{ t('print.manual_download') }}
-        </a>
-        <button 
-          @click="$emit('retry')" 
-          class="border-none px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 font-semibold transition-all no-underline" 
-          :class="lastCarton.status === 'SUCCESS' ? 'bg-white text-emerald-700 border border-emerald-700 hover:bg-emerald-50' : 'bg-rose-500 text-white hover:bg-rose-600'"
+      <span class="text-[11px] text-blue-500 font-normal font-mono animate-pulse">Đang gửi lệnh in...</span>
+    </div>
+
+    <!-- SUCCESS state: compact green banner -->
+    <div
+      v-else-if="lastCarton.status === 'SUCCESS'"
+      class="flex items-center gap-3 px-4 py-2.5 bg-emerald-50 border border-emerald-300 rounded-xl"
+    >
+      <div class="w-7 h-7 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0">
+        <i class="fas fa-check text-xs"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide block leading-none mb-0.5">
+          {{ t('print.last_carton') }}
+        </span>
+        <span class="font-barcode-mono font-black text-emerald-900 text-base tracking-wider block truncate">
+          {{ lastCarton.carton_sn }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a
+          :href="downloadUrl"
+          class="px-3 py-1.5 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold flex items-center gap-1.5 no-underline transition-colors cursor-pointer"
+          download
+          title="Tải file BTXML"
         >
-          <i class="fas fa-redo"></i> {{ lastCarton.status === 'SUCCESS' ? t('print.reprint') : t('print.try_again') }}
+          <i class="fas fa-file-download text-[10px]"></i>
+          {{ t('print.manual_download') }}
+        </a>
+        <button
+          @click="$emit('retry')"
+          class="px-3 py-1.5 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
+          title="In lại thùng này"
+        >
+          <i class="fas fa-redo text-[10px]"></i>
+          {{ t('print.reprint') }}
         </button>
       </div>
+    </div>
+
+    <!-- FAILED state: red urgent banner -->
+    <div
+      v-else
+      class="flex items-center gap-3 px-4 py-2.5 bg-rose-50 border border-rose-400 border-l-4 border-l-rose-600 rounded-xl animate-shake"
+    >
+      <div class="w-7 h-7 rounded-md bg-rose-600 text-white flex items-center justify-center shrink-0">
+        <i class="fas fa-exclamation text-xs"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <span class="text-xs font-bold text-rose-700 uppercase tracking-wide block leading-none mb-0.5">
+          {{ t('print.attempt_failed') }}
+        </span>
+        <span class="font-barcode-mono font-black text-rose-900 text-base tracking-wider block truncate line-through opacity-70">
+          {{ lastCarton.carton_sn }}
+        </span>
+        <span v-if="agentErrorMessage" class="text-[11px] text-rose-700 font-normal block mt-0.5 truncate">
+          {{ agentErrorMessage }}
+        </span>
+      </div>
+      <button
+        @click="$emit('retry')"
+        class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white border border-rose-700 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 active:scale-95"
+      >
+        <i class="fas fa-redo text-[10px]"></i>
+        {{ t('print.try_again') }}
+      </button>
     </div>
   </div>
 </template>
@@ -49,8 +97,8 @@ defineEmits<{
 
 const downloadUrl = computed(() => {
   if (!props.lastCarton) return '';
-  const base = import.meta.env.DEV 
-    ? `http://${window.location.hostname}:8001/api/v1` 
+  const base = import.meta.env.DEV
+    ? `http://${window.location.hostname}:8001/api/v1`
     : '/api/v1';
   return `${base}/print/carton/${props.lastCarton.id}/btxml`;
 });

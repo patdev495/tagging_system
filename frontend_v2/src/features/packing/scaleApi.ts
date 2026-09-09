@@ -9,6 +9,11 @@ export default {
     if (!res.ok) throw new Error('Failed to fetch scale reading');
     return res.json();
   },
+  async getScalePorts(agentUrl: string = 'http://127.0.0.1:8080') {
+    const res = await fetch(`${agentUrl}/scale/ports`, { signal: AbortSignal.timeout(2000) });
+    if (!res.ok) throw new Error('Failed to fetch scale ports');
+    return res.json();
+  },
   async tareScale(agentUrl: string = 'http://127.0.0.1:8080') {
     const res = await fetch(`${agentUrl}/scale/tare`, { method: 'POST', signal: AbortSignal.timeout(2000) });
     if (!res.ok) throw new Error('Failed to tare scale');

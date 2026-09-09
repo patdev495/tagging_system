@@ -1,47 +1,59 @@
 <template>
-  <div class="flex-1 flex flex-col justify-center items-center py-16 md:py-24">
-    <div class="w-full max-w-[480px] bg-slate-50 border border-slate-200/60 rounded-3xl p-6 md:p-8 shadow-xl">
-      <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
-          <i class="fas fa-file-invoice text-[2rem]"></i>
+  <div class="flex-1 flex flex-col justify-center items-center py-10 md:py-16">
+    <div class="w-full max-w-[500px] bg-white border border-slate-300 rounded-xl p-6 md:p-8 shadow-md">
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3 text-blue-600">
+          <i class="fas fa-barcode text-2xl"></i>
         </div>
-        <h2 class="text-[1.5rem] font-black text-slate-900 mb-2">{{ t('packing.enter_job_order_title', 'Nhập Số Công Lệnh') }}</h2>
-        <p class="text-slate-500 text-[0.9rem]">{{ t('packing.enter_job_order_desc', 'Vui lòng quét hoặc nhập mã công lệnh sản xuất để bắt đầu đóng thùng.') }}</p>
+        <h2 class="text-xl font-black text-slate-900 mb-1.5">{{ t('packing.enter_job_order_title', 'Nhập Số Công Lệnh') }}</h2>
+        <p class="text-slate-500 text-xs leading-relaxed max-w-sm mx-auto">
+          {{ t('packing.enter_job_order_desc', 'Bắn máy quét hoặc nhập số công lệnh sản xuất để bắt đầu đóng thùng.') }}
+        </p>
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div class="relative">
-          <input
-            ref="inputRef"
-            :value="modelValue"
-            @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-            :placeholder="t('packing.job_order_placeholder', 'Nhập số công lệnh...')"
-            class="w-full border rounded-2xl px-5 py-4 text-[1.1rem] outline-none bg-white font-mono transition-all text-center tracking-wider"
-            :class="hasError
-              ? 'border-rose-500 text-rose-600 focus:border-rose-500 focus:ring-rose-500/10 shadow-[0_0_0_4px_rgba(239,68,68,0.1)] bg-rose-50/10'
-              : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 text-slate-800'"
-            autocomplete="off"
-            :disabled="isLoading"
-          />
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 pl-0.5">
+            Mã Công Lệnh (Job Order):
+          </label>
+          <div class="relative">
+            <input
+              ref="inputRef"
+              :value="modelValue"
+              @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+              :placeholder="t('packing.job_order_placeholder', 'Ví dụ: 1256738...')"
+              class="w-full h-14 border-2 rounded-xl px-4 text-xl outline-none bg-white font-barcode-mono font-black transition-all text-center tracking-wider shadow-xs"
+              :class="hasError
+                ? 'border-rose-500 text-rose-700 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15 bg-rose-50/20'
+                : 'border-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 text-slate-900'"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+              :disabled="isLoading"
+            />
+          </div>
         </div>
 
-        <!-- Job Order Error Alert -->
+        <!-- Job Order Error Alert with recovery instructions -->
         <div 
           v-if="hasError && errorText"
-          class="text-[0.85rem] text-rose-600 bg-rose-50 px-4 py-3 rounded-2xl border border-rose-100 font-bold flex items-center gap-2 animate-in"
+          class="text-xs text-rose-700 bg-rose-50 p-3 rounded-lg border border-rose-200 font-medium flex items-start gap-2 animate-in"
         >
-          <i class="fas fa-exclamation-circle text-rose-500"></i>
-          <span>{{ errorText }}</span>
+          <i class="fas fa-circle-exclamation text-rose-600 mt-0.5 shrink-0 text-sm"></i>
+          <div>
+            <strong class="block font-bold text-rose-800">{{ errorText }}</strong>
+            <span class="text-[11px] text-rose-600 mt-0.5 block">Vui lòng kiểm tra lại mã trên phiếu sản xuất hoặc liên hệ Trưởng ca để kích hoạt Job Order.</span>
+          </div>
         </div>
 
         <button
           type="submit"
           :disabled="!modelValue.trim() || isLoading"
-          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/10"
+          class="w-full h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-98"
         >
           <i v-if="isLoading" class="fas fa-spinner fa-spin"></i>
-          <i v-else class="fas fa-arrow-right"></i>
-          <span>{{ t('packing.confirm', 'Xác Nhận') }}</span>
+          <span v-else>{{ t('packing.confirm', 'Xác Nhận') }}</span>
+          <span class="text-xs font-barcode-mono font-black px-1.5 py-0.5 bg-black/20 rounded">ENTER ↵</span>
         </button>
       </form>
     </div>
@@ -49,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 defineProps<{
@@ -74,8 +86,13 @@ const handleSubmit = () => {
 const focusInput = () => {
   if (inputRef.value) {
     inputRef.value.focus();
+    inputRef.value.select();
   }
 };
+
+onMounted(() => {
+  focusInput();
+});
 
 defineExpose({
   focusInput,

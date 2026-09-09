@@ -1,64 +1,104 @@
 <template>
   <div 
     v-if="show" 
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 select-none animate-in"
+    role="dialog"
+    aria-modal="true"
   >
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-100 flex flex-col gap-5">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 border border-slate-300 flex flex-col gap-4">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
         <div class="flex items-center gap-2.5">
-          <i class="fas fa-boxes text-indigo-600 text-lg"></i>
-          <h2 class="font-bold text-lg text-slate-900">Chọn Sản Phẩm Khách Hàng A11</h2>
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <i class="fas fa-boxes text-sm"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-base text-slate-900 leading-tight">Chọn Sản Phẩm Khách Hàng A11</h2>
+            <p class="text-xs text-slate-500 m-0">Chọn mã sản phẩm để thiết lập dải trọng lượng cân</p>
+          </div>
         </div>
         <div class="flex items-center gap-1.5">
           <button 
             @click="$emit('reload')" 
             :disabled="isLoading" 
-            class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition-all cursor-pointer"
+            class="w-8 h-8 rounded-lg border border-slate-300 text-slate-600 hover:text-emerald-700 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
             title="Làm mới danh sách sản phẩm từ CSDL"
           >
-            <i :class="['fas fa-rotate', isLoading ? 'animate-spin text-indigo-600' : '']"></i>
+            <i :class="['fas fa-rotate text-xs', isLoading ? 'animate-spin text-emerald-600' : '']"></i>
           </button>
-          <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
-            <i class="fas fa-times text-lg"></i>
+          <button 
+            @click="$emit('close')" 
+            class="w-8 h-8 rounded-lg border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center transition-colors cursor-pointer"
+            title="Đóng (Esc)"
+          >
+            <i class="fas fa-times text-xs"></i>
           </button>
         </div>
       </div>
 
-      <div class="space-y-3 max-h-[60vh] overflow-y-auto">
+      <!-- Products List or States -->
+      <div class="space-y-2 max-h-[60vh] overflow-y-auto">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="py-10 flex flex-col items-center justify-center text-slate-500 gap-2">
+          <i class="fas fa-spinner fa-spin text-2xl text-emerald-600"></i>
+          <span class="text-xs font-semibold">Đang tải danh sách sản phẩm A11 từ CSDL...</span>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="!products || products.length === 0" class="py-8 px-4 text-center bg-slate-50 rounded-xl border border-slate-200">
+          <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center mx-auto mb-2">
+            <i class="fas fa-box-open text-lg"></i>
+          </div>
+          <h4 class="font-bold text-sm text-slate-800 mb-1">Chưa có sản phẩm A11 nào</h4>
+          <p class="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed mb-3">
+            Hệ thống chưa tìm thấy sản phẩm nào được gán cho Khách hàng A11 trong cơ sở dữ liệu.
+          </p>
+          <button 
+            @click="$emit('reload')"
+            class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer inline-flex items-center gap-1.5"
+          >
+            <i class="fas fa-rotate text-[10px]"></i>
+            <span>Tải Lại CSDL</span>
+          </button>
+        </div>
+
+        <!-- List Items -->
         <div
+          v-else
           v-for="p in products"
           :key="p.id"
           @click="$emit('select', p)"
           :class="[
-            'p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between',
+            'p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between',
             selectedProduct?.id === p.id
-              ? 'border-indigo-600 bg-indigo-50/50 shadow-sm'
-              : 'border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
+              ? 'border-emerald-600 bg-emerald-50/70 shadow-xs'
+              : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
           ]"
         >
           <div>
             <div class="flex items-center gap-2">
-              <h4 class="font-black text-base text-slate-900 font-mono">{{ p.item_name }}</h4>
-              <span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-xs font-bold">{{ p.packed_qty }} PCS</span>
+              <h4 class="font-black text-sm md:text-base text-slate-900 font-barcode-mono">{{ p.item_name }}</h4>
+              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-xs font-bold">{{ p.packed_qty }} PCS</span>
             </div>
-            <p class="text-xs text-slate-500 mt-1">
-              Mfr P/N: <strong class="text-slate-700">{{ p.mfr_pn || 'NYS5998' }}</strong> | 
-              Tiền tố: <strong class="text-slate-700">{{ p.pkg_prefix || 'VHK0010237' }}</strong>
+            <p class="text-xs text-slate-500 mt-1 mb-0.5">
+              Mfr P/N: <strong class="text-slate-700 font-barcode-mono">{{ p.mfr_pn || 'NYS5998' }}</strong> | 
+              Tiền tố: <strong class="text-slate-700 font-barcode-mono">{{ p.pkg_prefix || 'VHK0010237' }}</strong>
             </p>
-            <p class="text-xs text-emerald-700 font-mono mt-0.5">
-              Dải trọng lượng: {{ p.min_weight?.toFixed(3) || '12.300' }}kg - {{ p.max_weight?.toFixed(3) || '12.700' }}kg
+            <p class="text-xs text-emerald-700 font-barcode-mono font-bold mt-0.5 mb-0">
+              Dung sai cân: {{ p.min_weight?.toFixed(3) || '0.000' }}kg - {{ p.max_weight?.toFixed(3) || '0.000' }}kg
             </p>
           </div>
-          <div v-if="selectedProduct?.id === p.id" class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs">
+          <div v-if="selectedProduct?.id === p.id" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">
             <i class="fas fa-check"></i>
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end pt-2">
+      <!-- Footer -->
+      <div class="flex justify-end pt-2 border-t border-slate-200">
         <button
           @click="$emit('close')"
-          class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+          class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
         >
           Đóng
         </button>

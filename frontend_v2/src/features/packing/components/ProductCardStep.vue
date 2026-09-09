@@ -1,65 +1,80 @@
 <template>
-  <div class="flex-1 flex flex-col justify-center items-center py-16 md:py-24 animate-in">
-    <div class="w-full max-w-[550px] space-y-6">
-      <div class="flex justify-between items-center px-2">
-        <span class="text-[0.9rem] text-slate-500 font-medium">
-          {{ t('packing.job_order', 'Công lệnh') }}: <strong class="font-mono text-slate-800">{{ jobOrder }}</strong>
+  <div class="flex-1 flex flex-col justify-center items-center py-8 md:py-14 animate-in">
+    <div class="w-full max-w-[620px] space-y-4">
+      <!-- Breadcrumb / Job Order Bar -->
+      <div class="flex justify-between items-center px-1">
+        <span class="text-xs text-slate-600 font-bold uppercase tracking-wider">
+          {{ t('packing.job_order', 'Công lệnh') }}: <strong class="font-barcode-mono text-slate-900 text-sm">{{ jobOrder }}</strong>
         </span>
-        <button @click="$emit('changeJobOrder')" class="text-blue-600 hover:text-blue-800 border-none bg-transparent font-bold cursor-pointer text-[0.9rem] flex items-center gap-1.5">
-          <i class="fas fa-exchange-alt"></i> {{ t('packing.change_job_order', 'Đổi công lệnh') }}
+        <button 
+          @click="$emit('changeJobOrder')" 
+          class="text-blue-600 hover:text-blue-800 border-none bg-transparent font-bold cursor-pointer text-xs flex items-center gap-1.5 hover:underline"
+        >
+          <i class="fas fa-arrow-rotate-left"></i> {{ t('packing.change_job_order', 'Đổi công lệnh khác') }}
         </button>
       </div>
 
-      <!-- Product Card -->
+      <!-- Main Product Confirmation Card -->
       <div 
         @click="$emit('enterScanning')"
-        class="bg-linear-to-br from-slate-900 to-slate-800 text-white rounded-[24px] p-8 shadow-2xl hover:scale-[1.02] cursor-pointer transition-all duration-300 relative overflow-hidden group border border-slate-700/30"
+        class="group cursor-pointer bg-slate-900 text-white rounded-xl p-6 md:p-8 shadow-xl border border-slate-800 hover:border-slate-700 relative overflow-hidden transition-all"
       >
-        <div class="absolute -right-10 -bottom-10 opacity-5 text-[10rem] pointer-events-none group-hover:scale-110 transition-transform duration-500">
-          <i class="fas fa-box-open"></i>
-        </div>
-        
-        <div class="flex justify-between items-start mb-6">
-          <span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-xl px-3 py-1 text-[0.8rem] font-bold uppercase tracking-wider">
-            Product Info
+        <div class="flex justify-between items-start mb-4">
+          <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider">
+            Xác nhận mã hàng
           </span>
-          <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white/80 group-hover:bg-white/20 transition-colors">
-            <i class="fas fa-arrow-right"></i>
-          </div>
+          <span class="text-xs font-mono text-slate-400">
+            UPC: <strong class="text-white font-barcode-mono">{{ jobOrderDetails?.product.upc || 'N/A' }}</strong>
+          </span>
         </div>
 
-        <h3 class="text-[1.8rem] font-black leading-tight mb-2 tracking-wide text-white group-hover:text-blue-200 transition-colors">
+        <!-- Product Item Name -->
+        <h3 class="text-xl md:text-2xl font-black leading-tight mb-6 tracking-wide text-white">
           {{ jobOrderDetails?.product.item_name }}
         </h3>
-        
-        <p class="text-slate-400 font-mono text-[1rem] mb-6">
-          UPC: {{ jobOrderDetails?.product.upc || 'N/A' }}
-        </p>
 
-        <div class="grid grid-cols-3 gap-2 border-t border-white/10 pt-6">
-          <div>
-            <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">Quy cách / Thùng</span>
-            <span class="text-[1.3rem] font-black text-white">QTY: {{ jobOrderDetails?.product.packed_qty }}</span>
+        <!-- Key Metrics 3-Column Grid -->
+        <div class="grid grid-cols-3 gap-3 border-t border-slate-800 pt-5 text-center">
+          <div class="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
+            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">Quy cách</span>
+            <span class="text-lg md:text-xl font-black text-white font-barcode-mono">
+              {{ jobOrderDetails?.product.packed_qty }} <span class="text-xs font-normal text-slate-400">pcs/thùng</span>
+            </span>
           </div>
-          <div class="border-x border-white/10 px-2 text-center">
-            <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">{{ t('packing.total_qty', 'Tổng Số Lượng') }}</span>
-            <span class="text-[1.3rem] font-black text-emerald-400">{{ jobOrderDetails?.total_qty }} con</span>
+
+          <div class="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
+            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.total_qty', 'Tổng Số Lượng') }}</span>
+            <span class="text-lg md:text-xl font-black text-emerald-400 font-barcode-mono">
+              {{ jobOrderDetails?.total_qty }} <span class="text-xs font-normal text-slate-400">con</span>
+            </span>
           </div>
-          <div class="text-right">
-            <span class="text-slate-400 text-[0.8rem] uppercase font-bold block mb-1">{{ t('packing.total_cartons', 'Tổng Số Thùng') }}</span>
-            <span class="text-[1.3rem] font-black text-blue-400">{{ jobOrderDetails?.total_cartons }} Thùng</span>
+
+          <div class="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
+            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.total_cartons', 'Tổng Số Thùng') }}</span>
+            <span class="text-lg md:text-xl font-black text-blue-400 font-barcode-mono">
+              {{ jobOrderDetails?.total_cartons }} <span class="text-xs font-normal text-slate-400">thùng</span>
+            </span>
           </div>
         </div>
       </div>
-      
-      <p class="text-center text-slate-400 text-[0.85rem] italic">
-        Bấm vào thẻ sản phẩm ở trên để vào giao diện quét mã
-      </p>
+
+      <!-- Prominent Primary Call-to-Action Button -->
+      <div class="pt-2">
+        <button
+          @click="$emit('enterScanning')"
+          class="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base rounded-xl transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer active:scale-98"
+          title="Bấm hoặc nhấn Enter để bắt đầu"
+        >
+          <span>BẮT ĐẦU ĐÓNG HÀNG & QUÉT MÃ</span>
+          <span class="text-xs font-barcode-mono font-black px-2 py-0.5 bg-black/25 rounded tracking-wider">ENTER ↵</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { JobOrderDetails } from '../../../types/api';
 
@@ -68,10 +83,25 @@ defineProps<{
   jobOrderDetails: JobOrderDetails | null;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'changeJobOrder'): void;
   (e: 'enterScanning'): void;
 }>();
 
 const { t } = useI18n();
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    emit('enterScanning');
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+});
 </script>
