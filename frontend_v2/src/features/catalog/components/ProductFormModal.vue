@@ -79,32 +79,21 @@
                 </div>
               </div>
               <div class="flex gap-2">
-                <select 
-                  v-model="formData.template_path"
-                  class="flex-1 p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs text-slate-700 bg-white"
-                  @change="validationStatus = null"
-                >
-                  <option value="">-- Chọn Mẫu Tem (.btw) --</option>
-                  <option 
-                    v-if="formData.template_path && !availableTemplates.some(t => t.name === getBaseName(formData.template_path))" 
-                    :value="formData.template_path"
-                  >
-                    📄 {{ formData.template_path }} (Hiện tại)
-                  </option>
-                  <option v-for="tpl in availableTemplates" :key="tpl.name" :value="tpl.name">
-                    📄 {{ tpl.name }} ({{ formatBytes(tpl.size_bytes) }})
-                  </option>
-                </select>
+                <div class="flex-1 flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono text-slate-800">
+                  <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold uppercase text-[10px] shrink-0">Cố định</span>
+                  <span class="font-bold flex-1 text-slate-900 truncate">📄 {{ formData.template_path || getCanonicalTemplateName(formData.template_type) }}</span>
+                  <span class="text-[11px] text-slate-400 font-sans hidden sm:inline shrink-0">(Thư mục: D:\PAT\Templates)</span>
+                </div>
                 <button 
                   type="button" 
                   @click="checkTemplateValidity" 
-                  :disabled="!formData.template_path || isValidating"
+                  :disabled="isValidating"
                   class="px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                  title="Kiểm tra file trên BarTender Engine"
+                  title="Kiểm tra file trên BarTender Server"
                 >
                   <div v-if="isValidating" class="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                   <CheckCircle2 v-else class="w-3.5 h-3.5" />
-                  <span>Kiểm Tra</span>
+                  <span>Kiểm Tra Server</span>
                 </button>
               </div>
             </div>
@@ -433,11 +422,9 @@ const emit = defineEmits<{
 
 const {
   formData,
-  availableTemplates,
   isValidating,
   validationStatus,
-  formatBytes,
-  getBaseName,
+  getCanonicalTemplateName,
   checkTemplateValidity,
   setPackingMode,
   onCustomerChange,

@@ -33,6 +33,16 @@ export interface UseProductFormProps {
   initialData?: Product | null;
 }
 
+export function getCanonicalTemplateName(templateType?: string): string {
+  switch (templateType) {
+    case 'a11_tem2': return 'a11_02.btw';
+    case 'a11': return 'a11.btw';
+    case 'detailed': return 'carton_detail.btw';
+    case 'standard':
+    default: return 'carton_base.btw';
+  }
+}
+
 export function useProductForm(
   props: UseProductFormProps | Ref<UseProductFormProps>,
   emit: (e: 'submit', data: ProductFormData) => void
@@ -89,11 +99,10 @@ export function useProductForm(
   });
 
   const checkTemplateValidity = async () => {
-    if (!formData.value.template_path) return;
+    const filename = getBaseName(formData.value.template_path || getCanonicalTemplateName(formData.value.template_type));
     isValidating.value = true;
     validationStatus.value = null;
     try {
-      const filename = getBaseName(formData.value.template_path);
       const res = await printApi.validateTemplate(filename);
       validationStatus.value = {
         valid: res.data.valid,
@@ -125,7 +134,7 @@ export function useProductForm(
     if (code === 'A11') {
       formData.value.packing_mode = 'weight_scale';
       formData.value.template_type = 'a11';
-      formData.value.template_path = formData.value.template_path || 'a11.btw';
+      formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
       formData.value.mfr_pn = formData.value.mfr_pn || 'NYS5998';
@@ -137,16 +146,16 @@ export function useProductForm(
     } else if (code === 'UI') {
       formData.value.packing_mode = 'item_scan';
       formData.value.template_type = 'standard';
-      formData.value.template_path = formData.value.template_path || 'carton_base.btw';
+      formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
       formData.value.start_part = formData.value.start_part || 'VN';
       formData.value.packed_qty = formData.value.packed_qty === 190 ? 10 : formData.value.packed_qty;
     }
   };
 
   const onTemplateTypeChange = () => {
+    formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
     if (formData.value.template_type === 'a11_tem2') {
       formData.value.packing_mode = 'weight_scale';
-      formData.value.template_path = formData.value.template_path || 'a11_02.btw';
       formData.value.pkg_prefix = formData.value.pkg_prefix || '37033907';
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.min_weight = formData.value.min_weight ?? 5.0;
@@ -154,7 +163,6 @@ export function useProductForm(
       formData.value.target_weight = formData.value.target_weight ?? 6.0;
     } else if (formData.value.template_type === 'a11') {
       formData.value.packing_mode = 'weight_scale';
-      formData.value.template_path = formData.value.template_path || 'a11.btw';
       formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.min_weight = formData.value.min_weight ?? 12.300;
@@ -252,7 +260,7 @@ export function useProductForm(
         return;
       }
     }
-    formData.value.template_path = getBaseName(formData.value.template_path);
+    formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
     emit('submit', { ...formData.value });
   };
 
@@ -263,6 +271,7 @@ export function useProductForm(
     validationStatus,
     formatBytes,
     getBaseName,
+    getCanonicalTemplateName,
     checkTemplateValidity,
     setPackingMode,
     onCustomerChange,

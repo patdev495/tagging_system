@@ -136,6 +136,25 @@
         </button>
       </div>
 
+      <!-- Template Missing Warning Banner (Pre-flight Check) -->
+      <div v-if="settings.printMode !== 'centralized' && isAgentOnline && templateMissing" class="mb-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in">
+        <div class="flex items-center gap-2.5">
+          <div class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+            <i class="fas fa-file-circle-exclamation text-xs"></i>
+          </div>
+          <div>
+            <span class="font-black text-amber-900">Chưa có file mẫu tem trên máy trạm: <code>{{ templateFilename }}</code>!</span>
+            <span class="text-amber-700 ml-1.5 text-[11px]">
+              Vui lòng sao chép file <strong>{{ templateFilename }}</strong> vào thư mục <code>{{ settings.localTemplateDir || 'D:\\PAT\\Templates' }}</code> trên máy tính này.
+            </span>
+          </div>
+        </div>
+        <button @click="checkTemplateExists" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
+          <i class="fas fa-rotate-right text-[10px]"></i>
+          <span>Kiểm Tra Lại</span>
+        </button>
+      </div>
+
       <!-- Main Packing Station Cockpit Grid -->
       <main class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
         <!-- Left: Live Scale Gauge & Action Controls (8 Cols) -->
@@ -156,18 +175,21 @@
           <!-- Giant Primary Print Action Button -->
           <button
             @click="triggerWeighAndPrint"
-            :disabled="isPrinting"
+            :disabled="isPrinting || (settings.printMode !== 'centralized' && templateMissing)"
             :class="[
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
-              toleranceResult.canPrint && (selectedProduct?.template_type === 'a11_tem2' || (activePO && activeLot))
-                ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
-                : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20'
+              (settings.printMode !== 'centralized' && templateMissing)
+                ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
+                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'a11_tem2' || (activePO && activeLot))
+                  ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
+                  : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
             ]"
           >
             <i v-if="isPrinting" class="fas fa-spinner fa-spin text-lg"></i>
+            <i v-else-if="settings.printMode !== 'centralized' && templateMissing" class="fas fa-file-circle-exclamation text-lg"></i>
             <i v-else-if="toleranceResult.canPrint" class="fas fa-print text-lg"></i>
             <i v-else class="fas fa-triangle-exclamation text-lg"></i>
-            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : (toleranceResult.canPrint ? 'CÂN & IN TEM A11 [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]') }}</span>
+            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (toleranceResult.canPrint ? 'CÂN & IN TEM A11 [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]')) }}</span>
           </button>
         </div>
 
@@ -218,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
@@ -236,6 +258,7 @@ import A11BatchConfigModal from '../features/packing/weight_scale/components/A11
 import { useScaleStream } from '../features/packing/weight_scale/composables/useScaleStream';
 import { useA11SerialNumber } from '../features/packing/weight_scale/composables/useA11SerialNumber';
 import { useWeighAndPrint } from '../features/packing/weight_scale/composables/useWeighAndPrint';
+import { useAgentHealth } from '../features/packing/composables/useAgentHealth';
 
 const router = useRouter();
 const settings = useSettingsStore();
@@ -298,6 +321,26 @@ const {
   }),
   openProductModal: () => { showProductModal.value = true; },
   openBatchModal: () => { showBatchModal.value = true; },
+});
+
+// 4. Agent & Template Health Composable
+const {
+  templateMissing,
+  templateFilename,
+  checkTemplateExists,
+} = useAgentHealth({
+  settings: computed(() => ({
+    printMode: settings.printMode || 'local',
+    agentUrl: settings.agentUrl || 'http://127.0.0.1:8080',
+    localTemplateDir: settings.localTemplateDir || 'D:\\PAT\\Templates',
+  })),
+  currentProduct: selectedProduct,
+});
+
+watch([selectedProduct, isAgentOnline], () => {
+  if (isAgentOnline.value) {
+    checkTemplateExists();
+  }
 });
 
 // Navigation & Config Actions

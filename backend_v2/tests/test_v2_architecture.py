@@ -49,6 +49,26 @@ class TestTemplateResolver:
         assert "templates" in resolved
         assert resolved.endswith("label.btw")
 
+    def test_template_resolver_canonical_mapping(self):
+        """Should return canonical template filename for each template type."""
+        assert TemplateResolver.get_canonical_template_filename("a11_tem2") == "a11_02.btw"
+        assert TemplateResolver.get_canonical_template_filename("a11") == "a11.btw"
+        assert TemplateResolver.get_canonical_template_filename("standard") == "carton_base.btw"
+        assert TemplateResolver.get_canonical_template_filename("detailed") == "carton_detail.btw"
+        assert TemplateResolver.get_canonical_template_filename("unknown") == "carton_base.btw"
+
+    @patch("os.path.exists")
+    def test_check_template_exists(self, mock_exists):
+        """Should verify template existence in default or custom directory."""
+        mock_exists.side_effect = lambda p: "D:\\PAT\\Templates\\a11_02.btw" in p
+        
+        res = TemplateResolver.check_template_exists("a11_02.btw")
+        assert res["exists"] is True
+        assert res["path"] == os.path.normpath("D:\\PAT\\Templates\\a11_02.btw")
+
+        res_missing = TemplateResolver.check_template_exists("missing.btw")
+        assert res_missing["exists"] is False
+
 
 # ==========================================
 # 2. TESTS FOR BTXMLDOCUMENT DOMAIN OBJECT
