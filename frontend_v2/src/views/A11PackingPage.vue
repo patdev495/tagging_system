@@ -90,9 +90,9 @@
 
           <div class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
             <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || 'Chưa nhập' }}</span>
+            <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || (selectedProduct?.template_type === 'a11_tem2' ? 'Không bắt buộc' : 'Chưa nhập') }}</span>
             <span class="text-slate-300">|</span>
-            <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || 'Chưa nhập' }}</span>
+            <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || (selectedProduct?.template_type === 'a11_tem2' ? 'Không bắt buộc' : 'Chưa nhập') }}</span>
           </div>
         </div>
 

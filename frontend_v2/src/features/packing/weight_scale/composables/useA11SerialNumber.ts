@@ -27,6 +27,11 @@ export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
 
   const currentSNPreview = computed<string>(() => {
     if (!selectedProduct.value) return '-';
+    if (selectedProduct.value.template_type === 'a11_tem2') {
+      const prefix = selectedProduct.value.pkg_prefix || '37033907';
+      const seqStr = String(autoSequence.value).padStart(7, '0');
+      return `(00) 0 ${prefix} ${seqStr}`;
+    }
     const prefix = selectedProduct.value.pkg_prefix || 'VHK0010237';
     let yymm = currentYYMM.value;
     if (!yymm || yymm.length !== 4) {

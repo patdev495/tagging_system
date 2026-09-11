@@ -91,7 +91,8 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       return;
     }
 
-    if (!activePO.value || !activeLot.value) {
+    const isTem2 = selectedProduct.value.template_type === 'a11_tem2';
+    if (!isTem2 && (!activePO.value || !activeLot.value)) {
       notify?.('Vui lòng nhập PO và LOT trước khi in', 'warning');
       openBatchModal?.();
       return;

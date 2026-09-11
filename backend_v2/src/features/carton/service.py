@@ -206,14 +206,25 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             detail=f"Weight {weigh_in.weight}kg is above maximum tolerance {product.max_weight}kg."
         )
 
-    # Allocate A11 yearly SN
-    plan = plan_next_a11_carton_sn(
-        db,
-        product,
-        custom_yymm=weigh_in.custom_yymm,
-        custom_sequence=weigh_in.custom_sn,
-        lock=True,
-    )
+    # Allocate carton SN according to template type
+    if product.template_type == "a11_tem2":
+        from src.features.carton.sscc_allocator import plan_next_sscc_carton_sn
+        plan = plan_next_sscc_carton_sn(
+            db,
+            product,
+            custom_sequence=weigh_in.custom_sn,
+            lock=True,
+        )
+        date_code = None
+    else:
+        plan = plan_next_a11_carton_sn(
+            db,
+            product,
+            custom_yymm=weigh_in.custom_yymm,
+            custom_sequence=weigh_in.custom_sn,
+            lock=True,
+        )
+        date_code = plan.date_code
 
     if weigh_in.custom_sn:
         existing = db.query(models.Carton).filter(
@@ -237,7 +248,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             weight=weigh_in.weight,
             po_number=weigh_in.po_number,
             lot_number=weigh_in.lot_number,
-            date_code=plan.date_code,
+            date_code=date_code,
             is_reprint=0,
         )
         db.add(new_carton)

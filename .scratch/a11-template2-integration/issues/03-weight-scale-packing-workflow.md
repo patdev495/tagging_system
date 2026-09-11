@@ -1,5 +1,5 @@
 # Issue 03: Quy trình Cân Đóng Gói Tem 2 (Weight Scale Gatekeeper & PO/Lot Bypass)
-Status: ready-for-agent
+Status: completed
 
 ## What to build
 1. Cập nhật schema `CartonWeighPackCreate` và service `weigh_pack_carton` (`backend_v2/src/features/carton/`):
@@ -12,11 +12,13 @@ Status: ready-for-agent
    - Khi trọng lượng nằm trong dung sai và nhấn In (`F9`), gọi API `/cartons/weigh-pack` tạo thùng hàng và in tem.
 
 ## Acceptance criteria
-- [ ] API `/cartons/weigh-pack` chấp thuận đóng gói thành công sản phẩm Tem 2 ngay cả khi `po_number` và `lot_number` truyền lên là rỗng.
-- [ ] Màn hình Cân không hiện cảnh báo lỗi "Vui lòng nhập PO và LOT trước khi in" khi chọn sản phẩm Tem 2.
-- [ ] Carton được lưu vào DB với mã sê-ri chuẩn SSCC 18 số (ví dụ: `03703390700000013`).
-- [ ] Cơ chế Gatekeeper dung sai cân (Weight Tolerance) vẫn hoạt động nghiêm ngặt: cân thiếu hoặc cân thừa đều chặn in.
+- [x] API `/cartons/weigh-pack` chấp thuận đóng gói thành công sản phẩm Tem 2 ngay cả khi `po_number` và `lot_number` truyền lên là rỗng.
+- [x] Màn hình Cân không hiện cảnh báo lỗi "Vui lòng nhập PO và LOT trước khi in" khi chọn sản phẩm Tem 2.
+- [x] Carton được lưu vào DB với mã sê-ri chuẩn SSCC 18 số (ví dụ: `03703390700000013`).
+- [x] Cơ chế Gatekeeper dung sai cân (Weight Tolerance) vẫn hoạt động nghiêm ngặt: cân thiếu hoặc cân thừa đều chặn in.
+- [x] Có bộ unit test tự động phủ kín (`tests/test_a11_tem2_weigh_pack.py`).
 
 ## Blocked by
 - .scratch/a11-template2-integration/issues/01-sscc-allocator-btxml.md
 - .scratch/a11-template2-integration/issues/02-product-schema-admin-portal.md
+

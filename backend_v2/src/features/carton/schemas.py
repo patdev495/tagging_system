@@ -24,8 +24,8 @@ class CartonRescan(BaseModel):
 class CartonWeighPackCreate(BaseModel):
     product_id: int
     weight: float
-    po_number: str
-    lot_number: str
+    po_number: Optional[str] = None
+    lot_number: Optional[str] = None
     printer_name: Optional[str] = None
     template_path: Optional[str] = None
     station_id: Optional[str] = None

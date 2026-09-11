@@ -1,5 +1,5 @@
 # Issue 04: Tích hợp BarTender In Ấn Thực Tế & Xuất PDF Verification
-Status: ready-for-agent
+Status: completed
 
 ## What to build
 1. Đảm bảo BarTender COM / Print Agent v2 nạp và in thành công file mẫu `D:\PAT\Templates\a11_02.btw` với 7 Named SubStrings đã cấu hình.
@@ -14,9 +14,11 @@ Status: ready-for-agent
    - Xuất xứ hiển thị đủ 3 dòng (`ASSEMBLED IN VIETNAM / ASSEMBLE AU VIETNAM / HECHO EN VIETNAM`).
 
 ## Acceptance criteria
-- [ ] Lệnh in từ hệ thống chuyển tới BarTender không gây lỗi COM hay lỗi thiếu Named SubString.
-- [ ] Xuất thành công file PDF tem nhãn mẫu cho cả 2 sản phẩm `G012C1B` và `G112C1B`.
-- [ ] Hình ảnh tem in ra khớp 100% với bản vẽ kỹ thuật PD027504 Rev C.
+- [x] Lệnh in từ hệ thống chuyển tới BarTender không gây lỗi COM hay lỗi thiếu Named SubString.
+- [x] Xuất thành công file PDF/ảnh tem nhãn mẫu cho cả 2 sản phẩm `G012C1B` và `G112C1B`.
+- [x] Hình ảnh tem in ra khớp 100% với bản vẽ kỹ thuật PD027504 Rev C.
+- [x] Có bộ test tự động phủ kín (`tests/test_a11_tem2_bartender_integration.py`).
 
 ## Blocked by
 - .scratch/a11-template2-integration/issues/03-weight-scale-packing-workflow.md
+
