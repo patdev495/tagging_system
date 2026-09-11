@@ -52,17 +52,23 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     if carton_in.custom_sn is not None or slot is not None:
         existing = db.query(models.Carton).filter(models.Carton.carton_sn == new_sn).first()
         if existing:
-            if existing.status in ("PRINTED", "SUCCESS", "SHIPPED"):
-                raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {existing.status}).")
-            elif existing.status == "FAILED" and existing.job_order == carton_in.job_order and existing.product_id == carton_in.product_id:
+            status_val = str(getattr(existing, "status", ""))
+            if status_val in ("PRINTED", "SUCCESS", "SHIPPED"):
+                raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {status_val}).")
+            elif (
+                status_val == "FAILED"
+                and getattr(existing, "job_order", None) == carton_in.job_order
+                and getattr(existing, "product_id", None) == carton_in.product_id
+            ):
                 # Reuse and update existing failed carton attempt
-                existing.packed_by = carton_in.printer_name or "System"
-                existing.carton_origin = carton_in.carton_origin
-                existing.station_id = carton_in.station_id
+                setattr(existing, "packed_by", carton_in.printer_name or "System")
+                setattr(existing, "carton_origin", carton_in.carton_origin)
+                setattr(existing, "station_id", carton_in.station_id)
                 
-                db.query(models.CartonItem).filter(models.CartonItem.carton_id == existing.id).delete()
+                existing_id = getattr(existing, "id", None)
+                db.query(models.CartonItem).filter(models.CartonItem.carton_id == existing_id).delete()
                 for item_sn in carton_in.items:
-                    db.add(models.CartonItem(carton_id=existing.id, item_sn=item_sn))
+                    db.add(models.CartonItem(carton_id=existing_id, item_sn=item_sn))
                 
                 db_path = getattr(product, 'template_path', None)
                 path_to_use = utils.resolve_template_path(primary_path=db_path, fallback_path=carton_in.template_path)
@@ -73,12 +79,12 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
                     path_to_use, 
                     carton_in.printer_name
                 )
-                existing.btxml = btxml_content  # type: ignore
+                setattr(existing, "btxml", btxml_content)
                 db.commit()
                 db.refresh(existing)
                 return existing, btxml_content
             else:
-                raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {existing.status}).")
+                raise HTTPException(status_code=400, detail=f"Carton S/N '{new_sn}' is already in use (Status: {status_val}).")
 
     try:
         new_carton = models.Carton(
@@ -264,7 +270,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             path_to_use,
             weigh_in.printer_name
         )
-        new_carton.btxml = btxml_content
+        setattr(new_carton, "btxml", btxml_content)
 
         db.commit()
         db.refresh(new_carton)
