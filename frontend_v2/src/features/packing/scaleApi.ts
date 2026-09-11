@@ -10,9 +10,14 @@ export default {
     return res.json();
   },
   async getScalePorts(agentUrl: string = 'http://127.0.0.1:8080') {
-    const res = await fetch(`${agentUrl}/scale/ports`, { signal: AbortSignal.timeout(2000) });
-    if (!res.ok) throw new Error('Failed to fetch scale ports');
-    return res.json();
+    try {
+      const res = await fetch(`${agentUrl}/scale/ports`, { signal: AbortSignal.timeout(2000) });
+      if (res.ok) return await res.json();
+    } catch {}
+    const statusRes = await fetch(`${agentUrl}/scale/status`, { signal: AbortSignal.timeout(2000) });
+    if (!statusRes.ok) throw new Error('Failed to fetch scale ports');
+    const data = await statusRes.json();
+    return { ports: data.available_ports || [] };
   },
   async tareScale(agentUrl: string = 'http://127.0.0.1:8080') {
     const res = await fetch(`${agentUrl}/scale/tare`, { method: 'POST', signal: AbortSignal.timeout(2000) });

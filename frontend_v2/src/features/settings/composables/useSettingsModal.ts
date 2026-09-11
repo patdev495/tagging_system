@@ -263,7 +263,10 @@ export function useSettingsModal(
     for (const port of testPorts) {
       const url = `http://127.0.0.1:${port}`;
       try {
-        const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(1000) });
+        let res = await fetch(`${url}/status`, { signal: AbortSignal.timeout(1000) });
+        if (!res.ok) {
+          res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(1000) });
+        }
         if (res.ok) {
           formData.value.agentUrl = url;
           found = true;

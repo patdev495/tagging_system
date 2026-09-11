@@ -72,6 +72,7 @@ class ScaleConfigRequest(BaseModel):
 # === Endpoints ===
 
 @app.get("/status")
+@app.get("/health")
 def get_status():
     return {
         "status": "online", 
@@ -106,6 +107,12 @@ def check_file(folder: str, filename: str):
 def get_scale_status():
     """Lấy trạng thái kết nối cổng COM cân điện tử"""
     return scale_manager.get_status()
+
+@app.get("/scale/ports")
+def get_scale_ports():
+    """Lấy danh sách cổng COM có thể kết nối cân"""
+    status = scale_manager.get_status()
+    return {"ports": status.get("available_ports", [])}
 
 @app.get("/scale/current")
 def get_scale_current():
