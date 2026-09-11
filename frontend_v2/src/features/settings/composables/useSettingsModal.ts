@@ -290,7 +290,8 @@ export function useSettingsModal(
         const res = await fetch(`${targetUrl}/printers`, { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
           const data = await res.json();
-          availablePrinters.value = data.printers || [];
+          const list = (Array.isArray(data) ? data : (data.printers || [])) as (string | Printer)[];
+          availablePrinters.value = list.filter(p => p && (typeof p === 'string' || (typeof p === 'object' && (p as any).name)));
         } else {
           availablePrinters.value = [];
         }
