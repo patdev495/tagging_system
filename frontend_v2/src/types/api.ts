@@ -13,7 +13,7 @@ export interface Product {
   packed_qty: number;
   start_part?: string;
   middle_part?: string;
-  template_type: 'standard' | 'detailed' | 'a11';
+  template_type: 'standard' | 'detailed' | 'a11' | 'a11_tem2';
   template_path?: string;
   allow_partial: number;
   packing_mode?: 'item_scan' | 'weight_scale';
@@ -24,6 +24,9 @@ export interface Product {
   mfr_pn?: string;
   pkg_prefix?: string;
   revision?: string;
+  factory_pn?: string;
+  asin?: string;
+  product_desc?: string;
   customer?: Customer;
 }
 

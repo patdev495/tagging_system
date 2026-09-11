@@ -9,7 +9,7 @@ export interface ProductFormData {
   packed_qty: number;
   start_part: string;
   middle_part: string;
-  template_type: 'standard' | 'detailed' | 'a11';
+  template_type: 'standard' | 'detailed' | 'a11' | 'a11_tem2';
   template_path: string;
   allow_partial: number;
   customer_id: number | null;
@@ -21,6 +21,9 @@ export interface ProductFormData {
   mfr_pn: string;
   pkg_prefix: string;
   revision: string;
+  factory_pn?: string;
+  asin?: string;
+  product_desc?: string;
 }
 
 export interface UseProductFormProps {
@@ -80,6 +83,9 @@ export function useProductForm(
     mfr_pn: 'NYS5998',
     pkg_prefix: 'VHK0010237',
     revision: 'B',
+    factory_pn: '',
+    asin: '',
+    product_desc: '',
   });
 
   const checkTemplateValidity = async () => {
@@ -137,6 +143,25 @@ export function useProductForm(
     }
   };
 
+  const onTemplateTypeChange = () => {
+    if (formData.value.template_type === 'a11_tem2') {
+      formData.value.packing_mode = 'weight_scale';
+      formData.value.template_path = formData.value.template_path || 'a11_02.btw';
+      formData.value.pkg_prefix = formData.value.pkg_prefix || '37033907';
+      formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
+      formData.value.min_weight = formData.value.min_weight ?? 5.0;
+      formData.value.max_weight = formData.value.max_weight ?? 7.0;
+      formData.value.target_weight = formData.value.target_weight ?? 6.0;
+    } else if (formData.value.template_type === 'a11') {
+      formData.value.packing_mode = 'weight_scale';
+      formData.value.template_path = formData.value.template_path || 'a11.btw';
+      formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
+      formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
+      formData.value.min_weight = formData.value.min_weight ?? 12.300;
+      formData.value.max_weight = formData.value.max_weight ?? 12.700;
+    }
+  };
+
   watch(
     () => {
       const p = 'value' in props ? props.value : props;
@@ -155,7 +180,7 @@ export function useProductForm(
           packed_qty: p.packed_qty,
           start_part: p.start_part || '',
           middle_part: p.middle_part || '',
-          template_type: (p.template_type as 'standard' | 'detailed' | 'a11') || 'standard',
+          template_type: (p.template_type as any) || 'standard',
           template_path: getBaseName(p.template_path || ''),
           allow_partial: p.allow_partial || 0,
           customer_id: p.customer_id,
@@ -167,6 +192,9 @@ export function useProductForm(
           mfr_pn: p.mfr_pn || 'NYS5998',
           pkg_prefix: p.pkg_prefix || 'VHK0010237',
           revision: p.revision ?? '',
+          factory_pn: p.factory_pn || '',
+          asin: p.asin || '',
+          product_desc: p.product_desc || '',
         };
       } else {
         const defaultCustomerId = currentProps.customers.length > 0 ? currentProps.customers[0].id : null;
@@ -188,6 +216,9 @@ export function useProductForm(
           mfr_pn: 'NYS5998',
           pkg_prefix: 'VHK0010237',
           revision: 'B',
+          factory_pn: '',
+          asin: '',
+          product_desc: '',
         };
         if (defaultCustomerId) {
           onCustomerChange();
@@ -199,12 +230,12 @@ export function useProductForm(
 
   const setPackingMode = (mode: 'item_scan' | 'weight_scale') => {
     formData.value.packing_mode = mode;
-    if (mode === 'weight_scale' && formData.value.template_type !== 'a11') {
+    if (mode === 'weight_scale' && formData.value.template_type !== 'a11' && formData.value.template_type !== 'a11_tem2') {
       formData.value.template_type = 'a11';
       if (!formData.value.template_path) {
         formData.value.template_path = 'a11.btw';
       }
-    } else if (mode === 'item_scan' && formData.value.template_type === 'a11') {
+    } else if (mode === 'item_scan' && (formData.value.template_type === 'a11' || formData.value.template_type === 'a11_tem2')) {
       formData.value.template_type = 'standard';
     }
   };
@@ -235,6 +266,7 @@ export function useProductForm(
     checkTemplateValidity,
     setPackingMode,
     onCustomerChange,
+    onTemplateTypeChange,
     handleSubmit,
   };
 }

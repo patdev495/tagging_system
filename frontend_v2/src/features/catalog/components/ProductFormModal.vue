@@ -235,16 +235,99 @@
             <label class="text-xs font-bold text-slate-700 uppercase">Kiểu Định Dạng Tem In (Template Type) *</label>
             <select 
               v-model="formData.template_type" 
+              @change="onTemplateTypeChange"
               class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-sm"
             >
               <option value="standard">Tiêu chuẩn (Standard - Tem cơ bản)</option>
               <option value="detailed">Chi tiết (Detailed - Lưới 40 mã sê-ri con)</option>
-              <option value="a11">A11 (Tiêu chuẩn khách hàng A11)</option>
+              <option value="a11">A11 - Tem 1 (PD014736 Carton SN + Rev)</option>
+              <option value="a11_tem2">A11 - Tem 2 (PD027504 Pallet SSCC + ASIN)</option>
             </select>
           </div>
 
-          <!-- Fields for A11 or yearly prefix -->
-          <div v-if="formData.template_type === 'a11' || formData.packing_mode === 'weight_scale'" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
+          <!-- Fields for A11 Tem 2 (PD027504) -->
+          <div v-if="formData.template_type === 'a11_tem2'" class="p-4 bg-sky-50/60 rounded-2xl border border-sky-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-sky-900 flex items-center gap-1.5">
+                <i class="fas fa-barcode text-sky-600"></i>
+                <span>Thông Số Tem 2 A11 (Pallet SSCC & Amazon ASIN)</span>
+              </span>
+              <span class="text-[10px] text-sky-700 font-semibold bg-sky-100 px-2 py-0.5 rounded">PD027504</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Xưởng (Factory P/N) *</label>
+                <input 
+                  v-model="formData.factory_pn" 
+                  type="text" 
+                  placeholder="1LAE0009D2U004MAAR" 
+                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
+                >
+                <p class="text-[10px] text-slate-400">厂内料号 để đối soát BOM xưởng.</p>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">Amazon ASIN *</label>
+                <input 
+                  v-model="formData.asin" 
+                  type="text" 
+                  placeholder="B08G9M4HXS" 
+                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold uppercase"
+                >
+                <p class="text-[10px] text-slate-400">Mã định danh ASIN trên Amazon.</p>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">Unit UPC Barcode *</label>
+                <input 
+                  v-model="formData.upc" 
+                  type="text" 
+                  placeholder="852582006785" 
+                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
+                >
+                <p class="text-[10px] text-slate-400">Mã vạch sản phẩm con in trên tem.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">P/N Trên Tem (Spec No) *</label>
+                <input 
+                  v-model="formData.mfr_pn" 
+                  type="text" 
+                  placeholder="NYS5998 hoặc NYS5996" 
+                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
+                >
+                <p class="text-[10px] text-slate-400">In vào vùng P/N và barcode P/N.</p>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">SSCC Company Prefix *</label>
+                <input 
+                  v-model="formData.pkg_prefix" 
+                  type="text" 
+                  placeholder="37033907" 
+                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
+                >
+                <p class="text-[10px] text-slate-400">Mặc định: 37033907 (Bộ đếm toàn cục).</p>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Sản Phẩm (Product Description) *</label>
+              <textarea 
+                v-model="formData.product_desc" 
+                rows="2"
+                placeholder="ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND" 
+                class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-medium"
+              ></textarea>
+              <p class="text-[10px] text-slate-400">Dòng mô tả quy cách in ở góc trái tem.</p>
+            </div>
+          </div>
+
+          <!-- Fields for A11 Tem 1 or yearly prefix -->
+          <div v-else-if="formData.template_type === 'a11' || formData.packing_mode === 'weight_scale'" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-slate-700 uppercase">PKG Prefix (Carton SN) *</label>
               <input 
@@ -358,6 +441,7 @@ const {
   checkTemplateValidity,
   setPackingMode,
   onCustomerChange,
+  onTemplateTypeChange,
   handleSubmit,
 } = useProductForm(props, (_event, data) => emit('submit', data));
 </script>

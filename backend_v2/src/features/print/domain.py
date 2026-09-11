@@ -122,6 +122,35 @@ class BTXMLDocument:
             substrings["QR_Content"] = qr_content
             substrings["Rev"] = rev
             substrings["Origin"] = origin_text
+        elif template_type == "a11_tem2":
+            product_desc = getattr(product, 'product_desc', '') or ''
+            product_name_text = f"Product name:{product_desc}" if product_desc else (product.item_name or "")
+            qty = str(product.packed_qty or actual_qty or 190)
+            carton_sn = carton.carton_sn or ""
+
+            # Extract SSCC text and CD from carton_sn (e.g. 03703390710002861)
+            # Format: '0' + prefix(8) + seq(7) + cd(1) = 17 chars
+            if len(carton_sn) >= 17 and carton_sn.startswith("0"):
+                company_prefix = carton_sn[1:9]
+                seq_part = carton_sn[9:16]
+                cd_part = carton_sn[16:17]
+                sscc_text = f"(00) 0 {company_prefix} {seq_part}"
+                sscc_cd = cd_part
+            else:
+                sscc_text = carton_sn
+                sscc_cd = ""
+
+            pn = getattr(product, 'mfr_pn', '') or ""
+            asin = getattr(product, 'asin', '') or ""
+            unit_upc = getattr(product, 'upc', '') or ""
+
+            substrings["ProductName"] = product_name_text
+            substrings["QTY"] = qty
+            substrings["SSCC_Text"] = sscc_text
+            substrings["SSCC_CD"] = sscc_cd
+            substrings["PN"] = pn
+            substrings["ASIN"] = asin
+            substrings["UnitUPC"] = unit_upc
 
         return cls(template_path=template_path, printer_name=printer_name, substrings=substrings)
 
@@ -165,6 +194,12 @@ class BTXMLDocument:
             "lot_no": self.substrings.get("LotNo", ""),
             "po_no": self.substrings.get("PONo", ""),
             "rev": self.substrings.get("Rev", ""),
+            "product_name": self.substrings.get("ProductName", ""),
+            "sscc_text": self.substrings.get("SSCC_Text", ""),
+            "sscc_cd": self.substrings.get("SSCC_CD", ""),
+            "pn": self.substrings.get("PN", ""),
+            "asin": self.substrings.get("ASIN", ""),
+            "unit_upc": self.substrings.get("UnitUPC", ""),
         }
 
         # Build dynamic detailed grid tags if needed

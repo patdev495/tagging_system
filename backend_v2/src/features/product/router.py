@@ -15,12 +15,13 @@ def get_products_by_customer(customer_id: int, db: Session = Depends(get_db)):
     return service.get_products_by_customer(customer_id, db)
 
 @router.get("/products", response_model=List[schemas.Product])
-def get_all_products(customer_code: Optional[str] = None, db: Session = Depends(get_db)):
-    """Lấy tất cả sản phẩm (cho trang Admin hoặc lọc theo customer_code)"""
-    query = db.query(Product)
-    if customer_code:
-        query = query.join(Customer).filter(Customer.code == customer_code)
-    return query.all()
+def get_all_products(
+    customer_code: Optional[str] = None,
+    search: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Lấy tất cả sản phẩm (cho trang Admin hoặc lọc theo customer_code / search)"""
+    return service.get_all_products(db, customer_code=customer_code, search=search)
 
 @router.get("/products/{product_id}", response_model=schemas.Product)
 def get_product(product_id: int, db: Session = Depends(get_db)):

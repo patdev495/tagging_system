@@ -1,0 +1,112 @@
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.core.models import Base, Customer, Product
+from src.core.database import seed_a11_data
+from src.features.product import schemas, service as product_service
+
+
+@pytest.fixture
+def db_session():
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=engine)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    yield session
+    session.close()
+
+
+def test_product_schema_supports_tem2_fields():
+    data = {
+        "item_name": "G012C1B",
+        "factory_pn": "1LAE0009D2U004MAAR",
+        "asin": "B08G9M4HXS",
+        "product_desc": "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND",
+        "packed_qty": 190,
+        "customer_id": 1,
+        "packing_mode": "weight_scale",
+        "template_type": "a11_tem2",
+        "template_path": r"D:\PAT\Templates\a11_02.btw",
+        "mfr_pn": "NYS5998",
+        "upc": "852582006785",
+        "min_weight": 5.0,
+        "max_weight": 7.0,
+        "target_weight": 6.0,
+    }
+    schema = schemas.ProductCreate(**data)
+    assert schema.factory_pn == "1LAE0009D2U004MAAR"
+    assert schema.asin == "B08G9M4HXS"
+    assert schema.product_desc == "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"
+
+
+def test_product_service_creates_and_searches_by_factory_pn(db_session):
+    customer = Customer(code="A11", name="Customer A11")
+    db_session.add(customer)
+    db_session.commit()
+
+    prod_in = schemas.ProductCreate(
+        customer_id=customer.id,
+        item_name="G112C1B",
+        factory_pn="1LAE0009D2U002MAAS",
+        asin="B0C32N712K",
+        product_desc="ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND",
+        packed_qty=190,
+        packing_mode="weight_scale",
+        template_type="a11_tem2",
+        template_path=r"D:\PAT\Templates\a11_02.btw",
+        mfr_pn="NYS5996",
+        upc="840268969493",
+        min_weight=5.0,
+        max_weight=7.0,
+        target_weight=6.0,
+    )
+    created = product_service.create_product(db_session, prod_in)
+    assert created.id is not None
+    assert created.factory_pn == "1LAE0009D2U002MAAS"
+    assert created.asin == "B0C32N712K"
+    assert created.product_desc.startswith("ASSY, BAND WRAPPED")
+
+    # Search by factory_pn
+    results = product_service.get_all_products(db_session, search="1LAE0009D2U002MAAS")
+    assert len(results) == 1
+    assert results[0].item_name == "G112C1B"
+
+
+def test_seed_a11_data_seeds_both_tem1_and_tem2(db_session):
+    seed_a11_data(db_session)
+
+    # Check Tem 1 products
+    p840 = db_session.query(Product).filter(Product.item_name == "840-00083").first()
+    assert p840 is not None
+    assert p840.template_type == "a11"
+
+    # Check Tem 2 products
+    g012 = db_session.query(Product).filter(Product.item_name == "G012C1B").first()
+    assert g012 is not None
+    assert g012.template_type == "a11_tem2"
+    assert g012.factory_pn == "1LAE0009D2U004MAAR"
+    assert g012.asin == "B08G9M4HXS"
+    assert g012.mfr_pn == "NYS5998"
+    assert g012.upc == "852582006785"
+    assert g012.packed_qty == 190
+    assert g012.template_path == r"D:\PAT\Templates\a11_02.btw"
+
+    g112 = db_session.query(Product).filter(Product.item_name == "G112C1B").first()
+    assert g112 is not None
+    assert g112.template_type == "a11_tem2"
+    assert g112.factory_pn == "1LAE0009D2U002MAAS"
+    assert g112.asin == "B0C32N712K"
+    assert g112.mfr_pn == "NYS5996"
+    assert g112.upc == "840268969493"
+    assert g112.packed_qty == 190
+    assert g112.template_path == r"D:\PAT\Templates\a11_02.btw"
+
+
+def test_get_next_sn_returns_sscc_for_a11_tem2(db_session):
+    seed_a11_data(db_session)
+    g012 = db_session.query(Product).filter(Product.item_name == "G012C1B").first()
+    sn_info = product_service.get_next_sn(g012.id, db_session)
+    assert sn_info["next_seq"] == 1
+    assert sn_info["next_sn"] == "03703390700000013"
+    assert sn_info["sscc_text"] == "(00) 0 37033907 0000001"
+    assert sn_info["check_digit"] == 3

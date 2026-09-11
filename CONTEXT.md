@@ -19,8 +19,17 @@ _Avoid_: Hộp, thùng chứa, kiện hàng
 **Carton SN**:
 Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hình của từng Customer/Product:
 - Với khách hàng UI: Tiền tố `start_part` (mặc định `CN` - Carton Number), theo sau là ngày tháng (`YYMM`), ký tự phân biệt sản phẩm và số thứ tự 5 chữ số reset hàng tháng.
-- Với khách hàng A11 (tiêu chuẩn tem A11): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm.
-_Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem A11)
+- Với khách hàng A11 - Tem 1 (`PD014736`): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm (PKG ID).
+- Với khách hàng A11 - Tem 2 (`PD027504`): Mã SSCC 18 chữ số theo chuẩn GS1 `037033907{seq:07d}{cd}` với số thứ tự sê-ri 7 chữ số tăng liên tục không reset, mã kiểm tra tính theo Modulo 10.
+_Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem A11 Tem 1)
+
+**SSCC**:
+Mã định danh công-ten-nơ vận chuyển duy nhất theo tiêu chuẩn GS1 (Serial Shipping Container Code, 18 chữ số), bắt đầu bằng `(00)`, dùng làm mã định danh Carton SN cho tem thùng xuất xưởng CM của khách hàng A11 (Tem 2).
+_Avoid_: Pallet code, mã công-ten-nơ, mã vận đơn
+
+**ASIN**:
+Mã số định danh tiêu chuẩn của Amazon (Amazon Standard Identification Number) gồm 10 ký tự chữ và số, được cấu hình cố định theo từng Product của khách hàng A11 xuất khẩu cho hệ thống Amazon eero.
+_Avoid_: Mã Amazon, mã sàn, product ASIN
 
 **Date Code**:
 Mã thời gian sản xuất gồm 2 chữ số cuối của năm và 2 chữ số của tuần trong năm theo chuẩn ISO (`YYWW`, ví dụ tuần 34 năm 2026 là `2634`).
@@ -37,6 +46,10 @@ _Avoid_: Mã PO, order ref, mã hợp đồng
 **Mfr P/N**:
 Mã số chứng nhận sản xuất hoặc tiêu chuẩn nội bộ (承认书编号 / NYS Spec No, ví dụ: `NYS5998`), được cấu hình cố định cho từng Product.
 _Avoid_: Mã chứng nhận, mã spec, internal part number
+
+**Factory P/N**:
+Mã số thành phẩm hoặc vật tư nội bộ nhà máy (厂内料号, ví dụ: `1LAE0009D2U004MAAR`), dùng để đối chiếu với hệ thống ERP/BOM của Nien Yi và phục vụ tra cứu sản phẩm trên Web UI.
+_Avoid_: Mã xưởng, ERP code, material code, part number nội bộ
 
 **Carton Item**:
 Một sản phẩm con riêng lẻ được quét bằng máy quét sê-ri để xếp vào thùng (Carton), được định danh bởi một mã sê-ri sản phẩm (Item SN).

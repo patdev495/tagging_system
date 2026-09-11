@@ -23,7 +23,7 @@ def update_customer(db: Session, customer_id: int, customer: schemas.CustomerUpd
     if not db_customer:
         return None
     
-    update_data = customer.dict(exclude_unset=True)
+    update_data = customer.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_customer, key, value)
     

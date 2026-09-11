@@ -109,12 +109,18 @@ def test_seed_a11_data(db_session):
     assert a11 is not None
 
     prods = db_session.query(Product).filter(Product.customer_id == a11.id).all()
-    assert len(prods) == 3
-    names = {p.item_name for p in prods}
-    assert names == {"840-00083", "840-00091", "840-00092"}
-    for p in prods:
+    assert len(prods) == 5
+    tem1_prods = [p for p in prods if p.template_type == "a11"]
+    assert len(tem1_prods) == 3
+    tem1_names = {p.item_name for p in tem1_prods}
+    assert tem1_names == {"840-00083", "840-00091", "840-00092"}
+    for p in tem1_prods:
         assert p.packed_qty == 190
         assert p.pkg_prefix == "VHK0010237"
         assert p.mfr_pn == "NYS5998"
-        assert p.template_type == "a11"
         assert p.packing_mode == "weight_scale"
+
+    tem2_prods = [p for p in prods if p.template_type == "a11_tem2"]
+    assert len(tem2_prods) == 2
+    tem2_names = {p.item_name for p in tem2_prods}
+    assert tem2_names == {"G012C1B", "G112C1B"}

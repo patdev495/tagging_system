@@ -80,12 +80,14 @@ def seed_a11_data(db):
                 logger.info("Seeded Customer A11")
 
         a11_products = [
-            ("840-00083", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700),
-            ("840-00091", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700),
-            ("840-00092", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700),
+            ("840-00083", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
+            ("840-00091", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
+            ("840-00092", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
+            ("G012C1B", 190, "37033907", "NYS5998", "a11_tem2", r"D:\PAT\Templates\a11_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "852582006785", "1LAE0009D2U004MAAR", "B08G9M4HXS", "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"),
+            ("G112C1B", 190, "37033907", "NYS5996", "a11_tem2", r"D:\PAT\Templates\a11_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "840268969493", "1LAE0009D2U002MAAS", "B0C32N712K", "ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND"),
         ]
 
-        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w in a11_products:
+        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w, upc, factory_pn, asin, product_desc in a11_products:
             prod = db.query(models.Product).filter(
                 models.Product.customer_id == a11_customer.id,
                 models.Product.item_name == item_name
@@ -105,9 +107,29 @@ def seed_a11_data(db):
                     target_weight=target_w,
                     min_weight=min_w,
                     max_weight=max_w,
+                    upc=upc,
+                    factory_pn=factory_pn,
+                    asin=asin,
+                    product_desc=product_desc,
                 )
                 db.add(prod)
                 logger.info(f"Seeded A11 Product: {item_name}")
+            else:
+                updated = False
+                if factory_pn and not prod.factory_pn:
+                    prod.factory_pn = factory_pn
+                    updated = True
+                if asin and not prod.asin:
+                    prod.asin = asin
+                    updated = True
+                if product_desc and not prod.product_desc:
+                    prod.product_desc = product_desc
+                    updated = True
+                if upc and not prod.upc:
+                    prod.upc = upc
+                    updated = True
+                if updated:
+                    db.add(prod)
 
         db.commit()
     except Exception as e:
@@ -158,6 +180,9 @@ def init_db():
                     ('mfr_pn', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
                     ('pkg_prefix', 'VARCHAR(20) NULL', 'VARCHAR(20) NULL'),
                     ('revision', 'VARCHAR(10) DEFAULT \'B\'', 'VARCHAR(10) DEFAULT \'B\''),
+                    ('factory_pn', 'VARCHAR(100) NULL', 'VARCHAR(100) NULL'),
+                    ('asin', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
+                    ('product_desc', 'VARCHAR(255) NULL', 'VARCHAR(255) NULL'),
                 ]
                 for col_name, sqlite_type, mssql_type in new_prod_cols:
                     if col_name not in prod_cols:

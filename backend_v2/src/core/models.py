@@ -26,15 +26,18 @@ class Product(Base):
     template_path = Column(String(500), nullable=True) # E.g. D:\PAT\Template\carton.btw
     allow_partial = Column(Integer, default=0) # 0 = must be full | 1 = can be partial
     
-    # UX Customer & Weight-scale additions
+    # UX / A11 Customer & Weight-scale additions
     packing_mode = Column(String(50), default="item_scan") # "item_scan" | "weight_scale"
     target_weight = Column(Float, nullable=True)
     min_weight = Column(Float, nullable=True)
     max_weight = Column(Float, nullable=True)
     weight_unit = Column(String(10), default="kg")
     mfr_pn = Column(String(50), nullable=True) # e.g. NYS5998
-    pkg_prefix = Column(String(20), nullable=True) # e.g. VHK0010237
+    pkg_prefix = Column(String(20), nullable=True) # e.g. VHK0010237 hoặc 37033907
     revision = Column(String(10), default="B")
+    factory_pn = Column(String(100), nullable=True, index=True) # Mã nội bộ xưởng 厂内料号 (1LAE...)
+    asin = Column(String(50), nullable=True) # Amazon ASIN (B08G9M4HXS...)
+    product_desc = Column(String(255), nullable=True) # Mô tả cáp đầy đủ trên tem 2
     
     customer = relationship("Customer", back_populates="products")
     cartons = relationship("Carton", back_populates="product")

@@ -73,7 +73,10 @@
             <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-indigo-50/30 transition-colors">
               <td class="p-4">
                 <div class="font-bold text-slate-900 font-mono text-base">{{ product.item_name }}</div>
+                <div v-if="product.factory_pn" class="text-xs text-indigo-700 font-mono font-bold mt-0.5">Xưởng: {{ product.factory_pn }}</div>
+                <div v-if="product.asin" class="text-xs text-amber-700 font-mono font-bold mt-0.5">ASIN: {{ product.asin }}</div>
                 <div v-if="product.upc" class="text-xs text-slate-400 font-mono mt-0.5">UPC: {{ product.upc }}</div>
+                <div v-if="product.product_desc" class="text-[11px] text-slate-500 line-clamp-1 max-w-xs mt-0.5" :title="product.product_desc">{{ product.product_desc }}</div>
               </td>
               
               <td class="p-4">
@@ -106,7 +109,12 @@
               </td>
 
               <td class="p-4">
-                <div v-if="product.packing_mode === 'weight_scale'" class="text-xs font-mono space-y-0.5">
+                <div v-if="product.template_type === 'a11_tem2'" class="text-xs font-mono space-y-0.5">
+                  <div><span class="text-slate-400">SSCC:</span> <span class="font-bold text-indigo-600">0{{ product.pkg_prefix || '37033907' }}...</span></div>
+                  <div><span class="text-slate-400">P/N:</span> <span class="text-slate-700 font-semibold">{{ product.mfr_pn || '-' }}</span></div>
+                  <div v-if="product.asin"><span class="text-slate-400">ASIN:</span> <span class="font-bold text-amber-600">{{ product.asin }}</span></div>
+                </div>
+                <div v-else-if="product.packing_mode === 'weight_scale'" class="text-xs font-mono space-y-0.5">
                   <div><span class="text-slate-400">Prefix:</span> <span class="font-bold text-indigo-600">{{ product.pkg_prefix || '-' }}</span></div>
                   <div><span class="text-slate-400">MFR:</span> <span class="text-slate-700 font-semibold">{{ product.mfr_pn || '-' }}</span></div>
                   <div v-if="product.revision"><span class="text-slate-400">Rev:</span> <span class="font-bold text-purple-700">{{ product.revision }}</span></div>
@@ -121,11 +129,12 @@
                 <div class="space-y-1">
                   <span :class="[
                     'px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider inline-block',
+                    product.template_type === 'a11_tem2' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
                     product.template_type === 'a11' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
                     product.template_type === 'detailed' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
                     'bg-indigo-100 text-indigo-800 border border-indigo-200'
                   ]">
-                    {{ product.template_type || 'standard' }}
+                    {{ product.template_type === 'a11_tem2' ? 'A11 Tem 2' : (product.template_type || 'standard') }}
                   </span>
                   <div class="text-[11px] text-slate-400 font-mono truncate max-w-[140px]" :title="product.template_path">
                     {{ product.template_path || 'Mặc định' }}
@@ -213,7 +222,10 @@ const filteredProducts = computed(() => {
       p.item_name.toLowerCase().includes(q) || 
       (p.upc && p.upc.toLowerCase().includes(q)) ||
       (p.pkg_prefix && p.pkg_prefix.toLowerCase().includes(q)) ||
-      (p.mfr_pn && p.mfr_pn.toLowerCase().includes(q))
+      (p.mfr_pn && p.mfr_pn.toLowerCase().includes(q)) ||
+      (p.factory_pn && p.factory_pn.toLowerCase().includes(q)) ||
+      (p.asin && p.asin.toLowerCase().includes(q)) ||
+      (p.product_desc && p.product_desc.toLowerCase().includes(q))
     );
   }
   return list;
