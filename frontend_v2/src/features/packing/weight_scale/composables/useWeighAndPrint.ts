@@ -122,8 +122,8 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       const res = await packingApi.weighPackCarton({
         product_id: selectedProduct.value.id,
         weight: currentWeight,
-        po_number: activePO.value,
-        lot_number: activeLot.value,
+        po_number: isTem2 ? undefined : (activePO.value || undefined),
+        lot_number: isTem2 ? undefined : (activeLot.value || undefined),
         printer_name: settings.printerName || undefined,
         template_path: settings.templatePath || undefined,
         station_id: settings.stationId || undefined,

@@ -147,4 +147,52 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0005)', () => {
     expect(sessionPackedCount.value).toBe(1);
     expect(notify).toHaveBeenCalledWith(expect.stringContaining('Đã in thành công'), 'success');
   });
+
+  it('sends undefined po_number and lot_number for a11_tem2 products even if activePO has value', async () => {
+    selectedProduct.value = {
+      id: 20,
+      item_name: 'G012C1B',
+      template_type: 'a11_tem2',
+      target_weight: 8.0,
+      min_weight: 7.5,
+      max_weight: 8.5,
+      packed_qty: 25,
+      weight_unit: 'kg',
+    } as any;
+    scaleReading.value = { weight: 8.05, unit: 'kg', is_stable: true };
+
+    vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
+      data: {
+        id: 456,
+        carton_sn: '(00) 0 37033907 0000001 5',
+        btxml: '<XML>TEM2</XML>',
+      },
+    } as any);
+    vi.mocked(printApi.agentPrint).mockResolvedValueOnce({ success: true } as any);
+    vi.mocked(printApi.updateCartonStatus).mockResolvedValueOnce({} as any);
+
+    const { triggerWeighAndPrint } = useWeighAndPrint({
+      selectedProduct,
+      activePO,
+      activeLot,
+      isAgentOnline,
+      scaleReading,
+      scaleStatus,
+      advanceSequence,
+      notify,
+      getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
+    });
+
+    await triggerWeighAndPrint();
+
+    expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
+      product_id: 20,
+      weight: 8.05,
+      po_number: undefined,
+      lot_number: undefined,
+      printer_name: undefined,
+      template_path: undefined,
+      station_id: undefined,
+    });
+  });
 });

@@ -90,14 +90,23 @@
 
           <div class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
             <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || (selectedProduct?.template_type === 'a11_tem2' ? 'Không bắt buộc' : 'Chưa nhập') }}</span>
-            <span class="text-slate-300">|</span>
-            <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || (selectedProduct?.template_type === 'a11_tem2' ? 'Không bắt buộc' : 'Chưa nhập') }}</span>
+            <template v-if="selectedProduct?.template_type === 'a11_tem2'">
+              <span class="font-bold text-xs text-slate-500 italic bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Không áp dụng (Tem 2)</span>
+            </template>
+            <template v-else>
+              <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || 'Chưa nhập' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || 'Chưa nhập' }}</span>
+            </template>
           </div>
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <button @click="showBatchModal = true" class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer">
+          <button 
+            v-if="selectedProduct?.template_type !== 'a11_tem2'"
+            @click="showBatchModal = true" 
+            class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+          >
             <i class="fas fa-edit text-indigo-500"></i>
             <span>Đổi PO/LOT</span>
           </button>
@@ -150,7 +159,7 @@
             :disabled="isPrinting"
             :class="[
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
-              toleranceResult.canPrint && activePO && activeLot
+              toleranceResult.canPrint && (selectedProduct?.template_type === 'a11_tem2' || (activePO && activeLot))
                 ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                 : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20'
             ]"
