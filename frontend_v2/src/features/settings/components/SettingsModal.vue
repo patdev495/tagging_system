@@ -338,7 +338,6 @@ const {
   loadingScale,
   handleRestartEngine,
   loadScaleStatus,
-  loadAudioDevices,
   discoverAgent,
   loadPrinters,
   handleSave,

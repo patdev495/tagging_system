@@ -78,8 +78,8 @@ export interface ScaleStatus {
 export interface CartonWeighPackPayload {
   product_id: number;
   weight: number;
-  po_number: string;
-  lot_number: string;
+  po_number?: string;
+  lot_number?: string;
   printer_name?: string;
   template_path?: string;
   station_id?: string;
