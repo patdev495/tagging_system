@@ -96,44 +96,135 @@
             </div>
           </div>
 
-          <!-- Agent URL & Template Folder (if local) -->
-          <div v-if="formData.printMode === 'local'" class="space-y-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
-            <div>
-              <label class="block mb-1 font-bold text-slate-700">
-                <i class="fas fa-link mr-1 text-blue-600"></i>{{ t('settings.agent_url') }}
-              </label>
-              <div class="flex gap-2">
-                <input 
-                  :value="detectingAgent ? t('settings.detecting_agent') : formData.agentUrl" 
-                  type="text" 
-                  readonly 
-                  class="flex-1 h-9 px-3 border border-slate-300 rounded-lg bg-slate-100 text-slate-600 font-barcode-mono font-bold cursor-not-allowed" 
-                />
-                <button 
-                  type="button"
-                  @click="discoverAgent" 
-                  class="h-9 px-3 bg-blue-50 text-blue-700 border border-blue-300 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer hover:bg-blue-100 disabled:opacity-50" 
-                  title="Tự động tìm kiếm Print Agent" 
-                  :disabled="detectingAgent"
-                >
-                  <i class="fas fa-search" :class="{'fa-spin': detectingAgent}"></i>
-                  <span>Dò Agent</span>
-                </button>
-              </div>
+          <!-- Agent URL (if local) -->
+          <div v-if="formData.printMode === 'local'" class="space-y-2 bg-blue-50/50 p-3.5 rounded-xl border border-blue-200">
+            <label class="block font-bold text-slate-700">
+              <i class="fas fa-link mr-1 text-blue-600"></i>{{ t('settings.agent_url') }}
+            </label>
+            <div class="flex gap-2">
+              <input 
+                :value="detectingAgent ? t('settings.detecting_agent') : formData.agentUrl" 
+                type="text" 
+                readonly 
+                class="flex-1 h-9 px-3 border border-slate-300 rounded-lg bg-slate-100 text-slate-600 font-barcode-mono font-bold cursor-not-allowed" 
+              />
+              <button 
+                type="button"
+                @click="discoverAgent" 
+                class="h-9 px-3 bg-blue-50 text-blue-700 border border-blue-300 rounded-lg font-bold flex items-center gap-1.5 cursor-pointer hover:bg-blue-100 disabled:opacity-50" 
+                title="Tự động tìm kiếm Print Agent" 
+                :disabled="detectingAgent"
+              >
+                <i class="fas fa-search" :class="{'fa-spin': detectingAgent}"></i>
+                <span>Dò Agent</span>
+              </button>
             </div>
+            <p class="text-[11px] text-slate-500 m-0">Print Agent chạy tại máy trạm tiếp nhận lệnh in từ trình duyệt gửi qua cổng cục bộ.</p>
+          </div>
 
+          <!-- Common Template Directory Configuration (Both Centralized & Local) -->
+          <div class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
             <div>
-              <label class="block mb-1 font-bold text-slate-700">
-                <i class="fas fa-folder-open mr-1 text-amber-600"></i>{{ t('settings.local_folder') }}
-              </label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-700 flex items-center gap-1.5 m-0">
+                  <i class="fas fa-folder-open text-amber-600"></i>
+                  <span>Thư Mục Chứa Tem BarTender (.btw)</span>
+                </label>
+                <span class="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded">Dùng chung 2 chế độ</span>
+              </div>
               <input 
                 v-model="formData.localTemplateDir" 
                 type="text" 
-                placeholder="C:\NY_Templates\" 
-                class="w-full h-9 px-3 border border-slate-300 rounded-lg bg-white text-slate-900 font-barcode-mono" 
+                placeholder="D:\PAT\Templates" 
+                class="w-full h-9 px-3 border border-slate-300 rounded-lg bg-white text-slate-900 font-mono font-bold" 
                 :class="{ 'border-rose-500 bg-rose-50': dirError }"
               />
-              <small v-if="dirError" class="block mt-1 text-rose-600 font-bold">{{ dirError }}</small>
+              <p class="text-[11px] text-slate-500 mt-1 m-0">
+                Thư mục chứa 7 file tem chuẩn. Hệ thống sẽ tìm tem trong thư mục này tại 
+                <strong class="text-slate-700">{{ formData.printMode === 'local' ? 'Máy Trạm cục bộ' : 'Máy Chủ Server' }}</strong>.
+              </p>
+            </div>
+
+            <!-- Canonical Templates Verification Box -->
+            <div class="pt-2 border-t border-slate-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <i class="fas fa-layer-group text-indigo-600"></i>
+                    <span>Bộ Tem Chuẩn Của Hệ Thống (7 Mẫu Tem)</span>
+                  </span>
+                  <p class="text-[10px] text-slate-500 m-0">
+                    Đối chiếu file tem tại: <span class="font-mono font-bold text-slate-700">{{ formData.localTemplateDir || 'D:\PAT\Templates' }}</span>
+                  </p>
+                </div>
+                <button 
+                  type="button" 
+                  @click="checkAllTemplates" 
+                  :disabled="isCheckingTemplates" 
+                  class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 transition-colors"
+                  :title="formData.printMode === 'local' ? 'Kiểm tra file trên máy trạm qua Print Agent' : 'Kiểm tra file trên máy chủ Server'"
+                >
+                  <i class="fas fa-arrows-rotate" :class="{'fa-spin': isCheckingTemplates}"></i>
+                  <span>{{ isCheckingTemplates ? 'Đang kiểm tra...' : 'Kiểm Tra Bộ Tem' }}</span>
+                </button>
+              </div>
+
+              <!-- Template List Table -->
+              <div class="rounded-lg border border-slate-200 bg-white overflow-hidden max-h-52 overflow-y-auto">
+                <table class="w-full text-left border-collapse text-[11px]">
+                  <thead>
+                    <tr class="bg-slate-100/80 text-slate-600 border-b border-slate-200 text-[10px] uppercase font-bold">
+                      <th class="py-1.5 px-2.5">Tên File Tem (.btw)</th>
+                      <th class="py-1.5 px-2">Khách</th>
+                      <th class="py-1.5 px-2">Quy Cách & Con Hàng Áp Dụng</th>
+                      <th class="py-1.5 px-2 text-right">Trạng Thái</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr v-for="tpl in CANONICAL_TEMPLATES" :key="tpl.filename" class="hover:bg-slate-50/80">
+                      <td class="py-1.5 px-2.5 font-mono font-bold text-slate-800">
+                        📄 {{ tpl.filename }}
+                      </td>
+                      <td class="py-1.5 px-2">
+                        <span 
+                          :class="[
+                            'text-[9px] font-black uppercase px-1.5 py-0.5 rounded',
+                            tpl.customer === 'A11' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                          ]"
+                        >
+                          {{ tpl.customer }}
+                        </span>
+                      </td>
+                      <td class="py-1.5 px-2 text-slate-600 truncate max-w-[200px]" :title="tpl.desc">
+                        {{ tpl.desc }}
+                      </td>
+                      <td class="py-1.5 px-2 text-right">
+                        <span v-if="templateCheckResults[tpl.filename]?.checking" class="text-slate-400 font-bold text-[10px]">
+                          <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                        <span 
+                          v-else-if="templateCheckResults[tpl.filename]?.exists" 
+                          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]"
+                        >
+                          <i class="fas fa-circle-check text-emerald-500"></i>
+                          <span>Sẵn sàng</span>
+                        </span>
+                        <span 
+                          v-else-if="templateCheckResults[tpl.filename] && !templateCheckResults[tpl.filename]?.exists" 
+                          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[10px]"
+                          :title="templateCheckResults[tpl.filename]?.error || 'Không tìm thấy file trong thư mục'"
+                        >
+                          <i class="fas fa-triangle-exclamation text-rose-500"></i>
+                          <span>Thiếu file</span>
+                        </span>
+                        <span v-else class="text-slate-400 text-[10px] italic">
+                          Chưa kiểm tra
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -336,6 +427,10 @@ const {
   detectingAgent,
   availableScalePorts,
   loadingScale,
+  CANONICAL_TEMPLATES,
+  templateCheckResults,
+  isCheckingTemplates,
+  checkAllTemplates,
   handleRestartEngine,
   loadScaleStatus,
   discoverAgent,

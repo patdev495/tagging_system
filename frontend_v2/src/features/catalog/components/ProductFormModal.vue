@@ -65,36 +65,29 @@
             </div>
 
             <div class="space-y-1.5">
-              <div class="flex items-center justify-between">
-                <label class="text-xs font-bold text-slate-700 uppercase">Mẫu Tem BarTender (.btw)</label>
-                <div v-if="validationStatus" class="flex items-center gap-1.5 text-xs">
-                  <span v-if="validationStatus.valid" class="text-emerald-600 font-bold flex items-center gap-1">
-                    <CheckCircle2 class="w-3.5 h-3.5" />
-                    <span>Hợp lệ</span>
-                  </span>
-                  <span v-else class="text-rose-600 font-bold flex items-center gap-1" :title="validationStatus.message">
-                    <AlertCircle class="w-3.5 h-3.5" />
-                    <span>Không hợp lệ</span>
-                  </span>
-                </div>
+              <label class="text-xs font-bold text-slate-700 uppercase">Mẫu Tem BarTender (.btw) *</label>
+
+              <!-- For A11 products: Fixed template -->
+              <div v-if="isA11Product" class="w-full flex items-center gap-2 p-3 rounded-xl border border-purple-200 bg-purple-50/60 text-xs font-mono text-purple-900">
+                <span class="px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-bold uppercase text-[10px] shrink-0">Cố định A11</span>
+                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'a11_tem2' ? 'a11_02.btw' : 'a11.btw' }}</span>
+                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'a11_tem2' ? 'Tem 2 Pallet SSCC & ASIN' : 'Tem 1 Thùng Carton SN' }})</span>
               </div>
-              <div class="flex gap-2">
-                <div class="flex-1 flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono text-slate-800">
-                  <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold uppercase text-[10px] shrink-0">Cố định</span>
-                  <span class="font-bold flex-1 text-slate-900 truncate">📄 {{ formData.template_path || getCanonicalTemplateName(formData.template_type) }}</span>
-                  <span class="text-[11px] text-slate-400 font-sans hidden sm:inline shrink-0">(Thư mục: D:\PAT\Templates)</span>
-                </div>
-                <button 
-                  type="button" 
-                  @click="checkTemplateValidity" 
-                  :disabled="isValidating"
-                  class="px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                  title="Kiểm tra file trên BarTender Server"
+
+              <!-- For UI products: Select from 5 valid UI templates or retain existing DB value -->
+              <div v-else class="space-y-1">
+                <select 
+                  v-model="formData.template_path" 
+                  class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-mono text-xs font-bold text-slate-800"
                 >
-                  <div v-if="isValidating" class="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                  <CheckCircle2 v-else class="w-3.5 h-3.5" />
-                  <span>Kiểm Tra Server</span>
-                </button>
+                  <option v-if="formData.template_path && !UI_TEMPLATES.some(t => t.filename === formData.template_path)" :value="formData.template_path">
+                    📄 {{ formData.template_path }} (Hiện tại trong DB)
+                  </option>
+                  <option v-for="t in UI_TEMPLATES" :key="t.filename" :value="t.filename">
+                    📄 {{ t.label }}
+                  </option>
+                </select>
+                <p class="text-[10px] text-slate-400">Chọn mẫu tem BarTender trong thư mục D:\PAT\Templates tương ứng với mặt hàng UI.</p>
               </div>
             </div>
           </div>
@@ -227,10 +220,14 @@
               @change="onTemplateTypeChange"
               class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-sm"
             >
-              <option value="standard">Tiêu chuẩn (Standard - Tem cơ bản)</option>
-              <option value="detailed">Chi tiết (Detailed - Lưới 40 mã sê-ri con)</option>
-              <option value="a11">A11 - Tem 1 (PD014736 Carton SN + Rev)</option>
-              <option value="a11_tem2">A11 - Tem 2 (PD027504 Pallet SSCC + ASIN)</option>
+              <optgroup label="Khách Hàng A11">
+                <option value="a11">A11 - Tem 1 (PD014736 Carton SN + Rev — a11.btw)</option>
+                <option value="a11_tem2">A11 - Tem 2 (PD027504 Pallet SSCC + ASIN — a11_02.btw)</option>
+              </optgroup>
+              <optgroup label="Khách Hàng UI">
+                <option value="standard">Tiêu chuẩn (Standard - Tem thùng cơ bản)</option>
+                <option value="detailed">Chi tiết (Detailed - Lưới 40 mã sê-ri con)</option>
+              </optgroup>
             </select>
           </div>
 
@@ -401,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import { X, CheckCircle2, AlertCircle } from 'lucide-vue-next';
+import { X } from 'lucide-vue-next';
 import { useProductForm, type ProductFormData } from '../composables/useProductForm';
 import type { Customer, Product } from '../../../types/api';
 
@@ -422,10 +419,8 @@ const emit = defineEmits<{
 
 const {
   formData,
-  isValidating,
-  validationStatus,
-  getCanonicalTemplateName,
-  checkTemplateValidity,
+  UI_TEMPLATES,
+  isA11Product,
   setPackingMode,
   onCustomerChange,
   onTemplateTypeChange,

@@ -42,7 +42,12 @@ def get_templates():
 @router.post("/validate-template", response_model=schemas.TemplateValidateResponse)
 def validate_template(request: schemas.TemplateValidateRequest):
     """Kiểm tra sự tồn tại và tính hợp lệ của tệp mẫu tem."""
-    return service.validate_template(request.template_name)
+    return service.validate_template(request.template_name, folder=request.folder)
+
+@router.get("/canonical-templates", response_model=schemas.CanonicalTemplatesResponse)
+def get_canonical_templates(folder: Optional[str] = None):
+    """Lấy danh sách 7 mẫu tem chuẩn và trạng thái tồn tại trên máy chủ."""
+    return service.get_canonical_templates(folder=folder)
 
 @router.post("/restart-engine", response_model=schemas.EngineRestartResponse, dependencies=[Depends(require_admin)])
 def restart_engine():

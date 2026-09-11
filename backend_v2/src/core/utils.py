@@ -20,6 +20,15 @@ class TemplateResolver:
         "standard": "carton_base.btw",
         "detailed": "carton_detail.btw",
     }
+    ALL_CANONICAL_TEMPLATES = [
+        {"filename": "a11_02.btw", "customer": "A11", "type": "a11_tem2", "name": "A11 Tem 2 (Pallet SSCC-18 & ASIN)"},
+        {"filename": "a11.btw", "customer": "A11", "type": "a11", "name": "A11 Tem 1 (Thùng Carton SN + Rev)"},
+        {"filename": "carton_base.btw", "customer": "UI", "type": "standard", "name": "UI Tem Thùng Tiêu Chuẩn (Patch Cords)"},
+        {"filename": "Carton_45.btw", "customer": "UI", "type": "standard", "name": "UI Tem Thùng Cáp 4.5M/5M/8M (BK Cables)"},
+        {"filename": "carton_detail_1M_W.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết Cáp 1M (Lưới 40 S/N)"},
+        {"filename": "carton_detail_2_3M_W.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết Cáp 2M/3M (Lưới 40 S/N)"},
+        {"filename": "carton_detail_UISP_Connector_SHD.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết UISP Connector"},
+    ]
 
     @classmethod
     def get_canonical_template_filename(cls, template_type: Optional[str]) -> str:

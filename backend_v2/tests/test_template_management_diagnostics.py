@@ -97,3 +97,21 @@ def test_restart_engine_rbac_and_recovery(test_setup):
     data = resp_ok.json()
     assert data["success"] is True
     assert "bartender_ready" in data
+
+
+def test_get_canonical_templates(test_setup):
+    """Test GET /api/v1/print/canonical-templates returns all 7 canonical templates."""
+    _, client = test_setup
+    resp = client.get("/api/v1/print/canonical-templates")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "templates" in data
+    assert len(data["templates"]) == 7
+    filenames = [t["filename"] for t in data["templates"]]
+    assert "a11.btw" in filenames
+    assert "a11_02.btw" in filenames
+    assert "carton_base.btw" in filenames
+    assert "Carton_45.btw" in filenames
+    assert "carton_detail_1M_W.btw" in filenames
+    assert "carton_detail_2_3M_W.btw" in filenames
+    assert "carton_detail_UISP_Connector_SHD.btw" in filenames

@@ -153,13 +153,13 @@ def get_available_templates() -> List[dict]:
     return sorted(list(discovered.values()), key=lambda x: x["name"].lower())
 
 
-def validate_template(template_name: str) -> dict:
+def validate_template(template_name: str, folder: Optional[str] = None) -> dict:
     """Kiểm tra sự tồn tại và tính hợp lệ của tệp mẫu tem."""
     from src.core.utils import TemplateResolver
     from src.features.print.bartender_com import HAS_WINDOWS_DEPS, bt_com_app
 
-    resolved_path = TemplateResolver.resolve(template_name)
-    if not os.path.exists(resolved_path):
+    resolved_path = TemplateResolver.resolve(template_name, local_dir=folder)
+    if not resolved_path or not os.path.exists(resolved_path):
         return {
             "valid": False,
             "message": f"Tệp mẫu tem không tồn tại trên máy chủ: {template_name}",
@@ -193,6 +193,28 @@ def validate_template(template_name: str) -> dict:
         "valid": True,
         "message": "Tệp mẫu tem tồn tại và sẵn sàng sử dụng.",
         "resolved_path": resolved_path
+    }
+
+
+def get_canonical_templates(folder: Optional[str] = None) -> dict:
+    """Lấy danh sách 7 mẫu tem chuẩn và trạng thái tồn tại trên máy chủ."""
+    from src.core.utils import TemplateResolver
+    target_dir = folder or TemplateResolver.DEFAULT_TEMPLATES_DIR
+    results = []
+    for tpl in TemplateResolver.ALL_CANONICAL_TEMPLATES:
+        filename = tpl["filename"]
+        chk = TemplateResolver.check_template_exists(filename, custom_dir=folder)
+        results.append({
+            "filename": filename,
+            "customer": tpl["customer"],
+            "type": tpl["type"],
+            "name": tpl["name"],
+            "exists": chk["exists"],
+            "resolved_path": chk["path"],
+        })
+    return {
+        "templates": results,
+        "templates_dir": target_dir,
     }
 
 

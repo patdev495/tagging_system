@@ -71,8 +71,25 @@ export default {
     return api.get<{ templates: { name: string; path: string; size_bytes: number; updated_at: string }[] }>('/print/templates');
   },
   /** Kiểm tra tính hợp lệ của file template */
-  validateTemplate(templateName: string) {
-    return api.post<{ valid: boolean; message: string; resolved_path: string | null }>('/print/validate-template', { template_name: templateName });
+  validateTemplate(templateName: string, folder?: string) {
+    return api.post<{ valid: boolean; message: string; resolved_path: string | null }>('/print/validate-template', { 
+      template_name: templateName,
+      folder: folder || undefined
+    });
+  },
+  /** Lấy danh sách 7 tem BarTender chuẩn của hệ thống kèm trạng thái */
+  getCanonicalTemplates(folder?: string) {
+    return api.get<{
+      templates: {
+        filename: string;
+        customer: string;
+        type: string;
+        name: string;
+        exists: boolean;
+        resolved_path: string | null;
+      }[];
+      templates_dir: string;
+    }>('/print/canonical-templates', { params: { folder: folder || undefined } });
   },
   /** Khởi động lại BarTender COM Engine (Admin only) */
   restartEngine() {

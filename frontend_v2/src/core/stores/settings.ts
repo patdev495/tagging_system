@@ -9,7 +9,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const audioDeviceId = ref<string>('');
   const printMode = ref<'centralized' | 'local'>('centralized');
   const agentUrl = ref<string>('http://localhost:8080');
-  const localTemplateDir = ref<string>('C:\\NY_Templates\\');
+  const localTemplateDir = ref<string>('D:\\PAT\\Templates');
   const language = ref<'vi' | 'en'>('vi');
 
   function loadSettings() {
@@ -23,7 +23,11 @@ export const useSettingsStore = defineStore('settings', () => {
         if (parsed.audioDeviceId !== undefined) audioDeviceId.value = parsed.audioDeviceId;
         if (parsed.printMode !== undefined) printMode.value = parsed.printMode;
         if (parsed.agentUrl !== undefined) agentUrl.value = parsed.agentUrl;
-        if (parsed.localTemplateDir !== undefined) localTemplateDir.value = parsed.localTemplateDir;
+        if (parsed.localTemplateDir !== undefined) {
+          localTemplateDir.value = (!parsed.localTemplateDir || parsed.localTemplateDir === 'C:\\NY_Templates\\')
+            ? 'D:\\PAT\\Templates'
+            : parsed.localTemplateDir;
+        }
         if (parsed.language !== undefined) language.value = parsed.language;
       } catch (e) {
         console.error('Failed to parse settings', e);

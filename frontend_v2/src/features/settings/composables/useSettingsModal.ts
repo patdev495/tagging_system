@@ -9,6 +9,73 @@ export interface Printer {
   port?: string;
 }
 
+export interface CanonicalTemplate {
+  filename: string;
+  customer: 'A11' | 'UI';
+  type: string;
+  name: string;
+  desc: string;
+}
+
+export const CANONICAL_TEMPLATES: CanonicalTemplate[] = [
+  { 
+    filename: 'a11_02.btw', 
+    customer: 'A11', 
+    type: 'a11_tem2', 
+    name: 'A11 Tem 2 (Pallet SSCC & ASIN)', 
+    desc: 'Hàng G012C1B, G112C1B — In Pallet SSCC-18, ASIN, factory PN' 
+  },
+  { 
+    filename: 'a11.btw', 
+    customer: 'A11', 
+    type: 'a11', 
+    name: 'A11 Tem 1 (Thùng Carton SN + Rev)', 
+    desc: 'Hàng 840-00083, 840-00091, 840-00092 — In Carton S/N năm, Rev, MFR P/N' 
+  },
+  { 
+    filename: 'carton_base.btw', 
+    customer: 'UI', 
+    type: 'standard', 
+    name: 'UI Tem Thùng Tiêu Chuẩn', 
+    desc: 'Cáp Patch RJ45 tiêu chuẩn 0.3M - 8M, UACC Outdoor 5M-W / 8M-W' 
+  },
+  { 
+    filename: 'Carton_45.btw', 
+    customer: 'UI', 
+    type: 'standard', 
+    name: 'UI Tem Thùng Cáp Dài 4.5M/5M/8M Đen', 
+    desc: 'UACC Outdoor 5M-BK, 8M-BK, UACC-G4-INS Cable USB 4.5M' 
+  },
+  { 
+    filename: 'carton_detail_1M_W.btw', 
+    customer: 'UI', 
+    type: 'detailed', 
+    name: 'UI Tem Chi Tiết Cáp 1M', 
+    desc: 'UACC Outdoor 1M Trắng & Đen — Lưới 40 mã sê-ri con' 
+  },
+  { 
+    filename: 'carton_detail_2_3M_W.btw', 
+    customer: 'UI', 
+    type: 'detailed', 
+    name: 'UI Tem Chi Tiết Cáp 2M & 3M', 
+    desc: 'UACC Outdoor 2M, 3M Trắng & Đen — Lưới 40 mã sê-ri con' 
+  },
+  { 
+    filename: 'carton_detail_UISP_Connector_SHD.btw', 
+    customer: 'UI', 
+    type: 'detailed', 
+    name: 'UI Tem Chi Tiết UISP Connector', 
+    desc: 'Đầu nối UISP-Connector-SHD — Lưới mã sê-ri con' 
+  },
+];
+
+export interface TemplateCheckItem {
+  checking: boolean;
+  exists?: boolean;
+  resolvedPath?: string;
+  error?: string;
+}
+
 export function useSettingsModal(
   props: { show: boolean } | Ref<{ show: boolean }>,
   emit: (e: 'close') => void
@@ -21,16 +88,104 @@ export function useSettingsModal(
   const isRestartingEngine = ref<boolean>(false);
   const dirError = ref<string>('');
 
+  const templateCheckResults = ref<Record<string, TemplateCheckItem>>({});
+  const isCheckingTemplates = ref<boolean>(false);
+
   const formData = ref({
     printMode: store.printMode,
     language: store.language,
     agentUrl: store.agentUrl,
-    localTemplateDir: store.localTemplateDir,
+    localTemplateDir: store.localTemplateDir || 'D:\\PAT\\Templates',
     printerName: store.printerName,
     templatePath: store.templatePath,
     audioDeviceId: store.audioDeviceId,
     scalePort: '',
   });
+
+  const checkAllTemplates = async () => {
+    isCheckingTemplates.value = true;
+    const targetFolder = formData.value.localTemplateDir || 'D:\\PAT\\Templates';
+    const mode = formData.value.printMode;
+    
+    try {
+      for (const tpl of CANONICAL_TEMPLATES) {
+        templateCheckResults.value[tpl.filename] = { checking: true };
+      }
+
+      if (mode === 'local') {
+        const agentUrl = formData.value.agentUrl || 'http://127.0.0.1:8080';
+        await Promise.all(CANONICAL_TEMPLATES.map(async (tpl) => {
+          try {
+            const url = `${agentUrl}/check-file?folder=${encodeURIComponent(targetFolder)}&filename=${encodeURIComponent(tpl.filename)}`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+            if (res.ok) {
+              const data = await res.json();
+              templateCheckResults.value[tpl.filename] = {
+                checking: false,
+                exists: !!data.exists,
+                resolvedPath: data.path,
+              };
+            } else {
+              templateCheckResults.value[tpl.filename] = {
+                checking: false,
+                exists: false,
+                error: `HTTP ${res.status}`,
+              };
+            }
+          } catch (err: any) {
+            templateCheckResults.value[tpl.filename] = {
+              checking: false,
+              exists: false,
+              error: 'Không kết nối được Print Agent máy trạm',
+            };
+          }
+        }));
+      } else {
+        // Centralized mode: check on server
+        try {
+          const res = await printApi.getCanonicalTemplates(targetFolder);
+          if (res.data && res.data.templates) {
+            for (const item of res.data.templates) {
+              templateCheckResults.value[item.filename] = {
+                checking: false,
+                exists: item.exists,
+                resolvedPath: item.resolved_path || undefined,
+              };
+            }
+          }
+        } catch (err: any) {
+          // Fallback to validating individually
+          await Promise.all(CANONICAL_TEMPLATES.map(async (tpl) => {
+            try {
+              const res = await printApi.validateTemplate(tpl.filename, targetFolder);
+              templateCheckResults.value[tpl.filename] = {
+                checking: false,
+                exists: res.data.valid,
+                resolvedPath: res.data.resolved_path || undefined,
+                error: res.data.valid ? undefined : res.data.message,
+              };
+            } catch (e: any) {
+              templateCheckResults.value[tpl.filename] = {
+                checking: false,
+                exists: false,
+                error: e.message || 'Lỗi kiểm tra server',
+              };
+            }
+          }));
+        }
+      }
+
+      const total = CANONICAL_TEMPLATES.length;
+      const found = Object.values(templateCheckResults.value).filter(r => r.exists).length;
+      if (found === total) {
+        system.showNotification(`Tìm thấy đầy đủ ${found}/${total} mẫu tem trong thư mục!`, 'success');
+      } else {
+        system.showNotification(`Tìm thấy ${found}/${total} mẫu tem. Có ${total - found} mẫu tem chưa có trong thư mục!`, 'warning');
+      }
+    } finally {
+      isCheckingTemplates.value = false;
+    }
+  };
 
   const audioDevices = ref<{ id: string; label: string }[]>([]);
   const availablePrinters = ref<(string | Printer)[]>([]);
@@ -191,7 +346,7 @@ export function useSettingsModal(
         printMode: store.printMode,
         language: store.language,
         agentUrl: store.agentUrl,
-        localTemplateDir: store.localTemplateDir,
+        localTemplateDir: store.localTemplateDir || 'D:\\PAT\\Templates',
         printerName: store.printerName,
         templatePath: store.templatePath,
         audioDeviceId: store.audioDeviceId,
@@ -201,6 +356,7 @@ export function useSettingsModal(
       loadAudioDevices(); 
       loadScaleStatus();
       checkEngineStatus();
+      checkAllTemplates();
       if (formData.value.printMode === 'local') {
         await discoverAgent();
       } else {
@@ -227,6 +383,10 @@ export function useSettingsModal(
     detectingAgent,
     availableScalePorts,
     loadingScale,
+    CANONICAL_TEMPLATES,
+    templateCheckResults,
+    isCheckingTemplates,
+    checkAllTemplates,
     checkEngineStatus,
     handleRestartEngine,
     loadScaleStatus,

@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue';
+import { ref, computed, watch, type Ref } from 'vue';
 import { useSystemStore } from '../../../core/stores/system';
 import printApi from '../../print/api';
 import type { Customer, Product } from '../../../types/api';
@@ -33,11 +33,19 @@ export interface UseProductFormProps {
   initialData?: Product | null;
 }
 
+export const UI_TEMPLATES = [
+  { filename: 'carton_base.btw', label: 'carton_base.btw (Thùng Tiêu Chuẩn Patch Cords)' },
+  { filename: 'Carton_45.btw', label: 'Carton_45.btw (Thùng Cáp Dài 4.5M/5M/8M Đen)' },
+  { filename: 'carton_detail_1M_W.btw', label: 'carton_detail_1M_W.btw (Chi Tiết Cáp 1M - Lưới 40 S/N)' },
+  { filename: 'carton_detail_2_3M_W.btw', label: 'carton_detail_2_3M_W.btw (Chi Tiết Cáp 2M & 3M - Lưới 40 S/N)' },
+  { filename: 'carton_detail_UISP_Connector_SHD.btw', label: 'carton_detail_UISP_Connector_SHD.btw (Chi Tiết UISP Connector)' },
+];
+
 export function getCanonicalTemplateName(templateType?: string): string {
   switch (templateType) {
     case 'a11_tem2': return 'a11_02.btw';
     case 'a11': return 'a11.btw';
-    case 'detailed': return 'carton_detail.btw';
+    case 'detailed': return 'carton_detail_1M_W.btw';
     case 'standard':
     default: return 'carton_base.btw';
   }
@@ -152,9 +160,16 @@ export function useProductForm(
     }
   };
 
+  const isA11Product = computed(() => {
+    const currentProps = 'value' in props ? props.value : props;
+    const cust = currentProps.customers.find(c => c.id === formData.value.customer_id);
+    const code = (cust?.code || '').toUpperCase();
+    return code === 'A11' || formData.value.template_type === 'a11' || formData.value.template_type === 'a11_tem2';
+  });
+
   const onTemplateTypeChange = () => {
-    formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
     if (formData.value.template_type === 'a11_tem2') {
+      formData.value.template_path = 'a11_02.btw';
       formData.value.packing_mode = 'weight_scale';
       formData.value.pkg_prefix = formData.value.pkg_prefix || '37033907';
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
@@ -162,11 +177,20 @@ export function useProductForm(
       formData.value.max_weight = formData.value.max_weight ?? 7.0;
       formData.value.target_weight = formData.value.target_weight ?? 6.0;
     } else if (formData.value.template_type === 'a11') {
+      formData.value.template_path = 'a11.btw';
       formData.value.packing_mode = 'weight_scale';
       formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.min_weight = formData.value.min_weight ?? 12.300;
       formData.value.max_weight = formData.value.max_weight ?? 12.700;
+    } else if (formData.value.template_type === 'detailed') {
+      if (!formData.value.template_path || !formData.value.template_path.includes('detail')) {
+        formData.value.template_path = 'carton_detail_1M_W.btw';
+      }
+    } else if (formData.value.template_type === 'standard') {
+      if (!formData.value.template_path || formData.value.template_path.includes('detail')) {
+        formData.value.template_path = 'carton_base.btw';
+      }
     }
   };
 
@@ -213,7 +237,7 @@ export function useProductForm(
           start_part: 'VN',
           middle_part: '',
           template_type: 'standard',
-          template_path: '',
+          template_path: 'carton_base.btw',
           allow_partial: 0,
           customer_id: defaultCustomerId,
           packing_mode: 'item_scan',
@@ -240,11 +264,10 @@ export function useProductForm(
     formData.value.packing_mode = mode;
     if (mode === 'weight_scale' && formData.value.template_type !== 'a11' && formData.value.template_type !== 'a11_tem2') {
       formData.value.template_type = 'a11';
-      if (!formData.value.template_path) {
-        formData.value.template_path = 'a11.btw';
-      }
+      formData.value.template_path = 'a11.btw';
     } else if (mode === 'item_scan' && (formData.value.template_type === 'a11' || formData.value.template_type === 'a11_tem2')) {
       formData.value.template_type = 'standard';
+      formData.value.template_path = 'carton_base.btw';
     }
   };
 
@@ -260,13 +283,19 @@ export function useProductForm(
         return;
       }
     }
-    formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
+    if (isA11Product.value) {
+      formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
+    } else {
+      formData.value.template_path = formData.value.template_path || (formData.value.template_type === 'detailed' ? 'carton_detail_1M_W.btw' : 'carton_base.btw');
+    }
     emit('submit', { ...formData.value });
   };
 
   return {
     formData,
     availableTemplates,
+    UI_TEMPLATES,
+    isA11Product,
     isValidating,
     validationStatus,
     formatBytes,
