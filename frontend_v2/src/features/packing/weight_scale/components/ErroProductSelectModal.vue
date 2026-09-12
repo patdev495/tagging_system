@@ -62,35 +62,64 @@
           </button>
         </div>
 
-        <!-- List Items -->
-        <div
-          v-else
-          v-for="p in products"
-          :key="p.id"
-          @click="$emit('select', p)"
-          :class="[
-            'p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between',
-            selectedProduct?.id === p.id
-              ? 'border-emerald-600 bg-emerald-50/70 shadow-xs'
-              : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
-          ]"
-        >
-          <div>
+        <!-- Products grouped by label format -->
+        <div v-else class="space-y-4">
+          <div class="flex flex-wrap gap-2" aria-label="Lọc theo mẫu tem">
+            <button
+              v-for="filter in templateFilters"
+              :key="filter.key"
+              type="button"
+              @click="selectedTemplate = filter.key"
+              :aria-pressed="selectedTemplate === filter.key"
+              :class="[
+                'px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer',
+                selectedTemplate === filter.key
+                  ? 'border-emerald-600 bg-emerald-600 text-white'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:text-emerald-700'
+              ]"
+            >
+              {{ filter.label }} <span class="opacity-75">({{ filter.count }})</span>
+            </button>
+          </div>
+
+          <section v-for="group in visibleTemplateGroups" :key="group.key" class="space-y-2">
             <div class="flex items-center gap-2">
-              <h4 class="font-black text-sm md:text-base text-slate-900 font-barcode-mono">{{ p.item_name }}</h4>
-              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-xs font-bold">{{ p.packed_qty }} PCS</span>
+              <span :class="['w-2 h-2 rounded-full', group.dotClass]"></span>
+              <h3 class="text-xs font-black uppercase tracking-wide text-slate-700">{{ group.label }}</h3>
+              <span class="text-[11px] text-slate-400">{{ group.products.length }} sản phẩm</span>
             </div>
-            <p class="text-xs text-slate-500 mt-1 mb-0.5">
-              Mfr P/N: <strong class="text-slate-700 font-barcode-mono">{{ p.mfr_pn || 'NYS5998' }}</strong> | 
-              Tiền tố: <strong class="text-slate-700 font-barcode-mono">{{ p.pkg_prefix || 'VHK0010237' }}</strong>
-            </p>
-            <p class="text-xs text-emerald-700 font-barcode-mono font-bold mt-0.5 mb-0">
-              Dung sai cân: {{ p.min_weight?.toFixed(3) || '0.000' }}kg - {{ p.max_weight?.toFixed(3) || '0.000' }}kg
-            </p>
-          </div>
-          <div v-if="selectedProduct?.id === p.id" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">
-            <i class="fas fa-check"></i>
-          </div>
+
+            <button
+              v-for="p in group.products"
+              :key="p.id"
+              type="button"
+              @click="$emit('select', p)"
+              :aria-pressed="selectedProduct?.id === p.id"
+              :class="[
+                'w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between',
+                selectedProduct?.id === p.id
+                  ? 'border-emerald-600 bg-emerald-50/70 shadow-xs'
+                  : 'border-slate-200 hover:border-emerald-300 hover:bg-slate-50'
+              ]"
+            >
+              <div>
+                <div class="flex items-center gap-2">
+                  <h4 class="font-black text-sm md:text-base text-slate-900 font-barcode-mono">{{ p.item_name }}</h4>
+                  <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-xs font-bold">{{ p.packed_qty }} PCS</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1 mb-0.5">
+                  Mfr P/N: <strong class="text-slate-700 font-barcode-mono">{{ p.mfr_pn || 'NYS5998' }}</strong> |
+                  Tiền tố: <strong class="text-slate-700 font-barcode-mono">{{ p.pkg_prefix || 'VHK0010237' }}</strong>
+                </p>
+                <p class="text-xs text-emerald-700 font-barcode-mono font-bold mt-0.5 mb-0">
+                  Dung sai cân: {{ p.min_weight?.toFixed(3) || '0.000' }}kg - {{ p.max_weight?.toFixed(3) || '0.000' }}kg
+                </p>
+              </div>
+              <div v-if="selectedProduct?.id === p.id" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0">
+                <i class="fas fa-check"></i>
+              </div>
+            </button>
+          </section>
         </div>
       </div>
 
@@ -108,14 +137,47 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import type { Product } from '../../../../types/api';
 
-defineProps<{
+const props = defineProps<{
   show: boolean;
   products: Product[];
   selectedProduct: Product | null;
   isLoading?: boolean;
 }>();
+
+const selectedTemplate = ref('all');
+
+const templateGroups = computed(() => {
+  const definitions = [
+    { key: 'erro_01', label: 'Erro 01 · Carton SN', dotClass: 'bg-emerald-500' },
+    { key: 'erro_02', label: 'Erro 02 · SSCC', dotClass: 'bg-sky-500' },
+    { key: 'erro_03', label: 'Erro 03 · Luxshare', dotClass: 'bg-amber-500' },
+  ];
+
+  const groups = definitions.map(definition => ({
+    ...definition,
+    products: props.products.filter(product => product.template_type === definition.key),
+  })).filter(group => group.products.length > 0);
+
+  const otherProducts = props.products.filter(product => !definitions.some(definition => definition.key === product.template_type));
+  if (otherProducts.length > 0) {
+    groups.push({ key: 'other', label: 'Khác', dotClass: 'bg-slate-400', products: otherProducts });
+  }
+  return groups;
+});
+
+const templateFilters = computed(() => [
+  { key: 'all', label: 'Tất cả', count: props.products.length },
+  ...templateGroups.value.map(group => ({ key: group.key, label: group.label.split(' · ')[0], count: group.products.length })),
+]);
+
+const visibleTemplateGroups = computed(() => (
+  selectedTemplate.value === 'all'
+    ? templateGroups.value
+    : templateGroups.value.filter(group => group.key === selectedTemplate.value)
+));
 
 defineEmits<{
   (e: 'close'): void;
