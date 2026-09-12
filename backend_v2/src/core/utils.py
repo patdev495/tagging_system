@@ -19,6 +19,7 @@ class TemplateResolver:
         "erro_02": "erro_02.btw",
         "erro_01": "erro_01.btw",
         "erro_04": "erro_04.btw",
+        "erro_05": "erro_05.btw",
         "standard": "carton_base.btw",
         "detailed": "carton_detail.btw",
     }
@@ -27,6 +28,7 @@ class TemplateResolver:
         {"filename": "erro_02.btw", "customer": "ERRO", "type": "erro_02", "name": "Erro 02 (Pallet SSCC-18 & ASIN)"},
         {"filename": "erro_01.btw", "customer": "ERRO", "type": "erro_01", "name": "Erro 01 (Thùng Carton SN + Rev)"},
         {"filename": "erro_04.btw", "customer": "ERRO", "type": "erro_04", "name": "Erro 04 (PD027032 eero carton)"},
+        {"filename": "erro_05.btw", "customer": "ERRO", "type": "erro_05", "name": "Erro 05 (PD016906 Pegatron NN9)"},
         {"filename": "carton_base.btw", "customer": "UI", "type": "standard", "name": "UI Tem Thùng Tiêu Chuẩn (Patch Cords)"},
         {"filename": "Carton_45.btw", "customer": "UI", "type": "standard", "name": "UI Tem Thùng Cáp 4.5M/5M/8M (BK Cables)"},
         {"filename": "carton_detail_1M_W.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết Cáp 1M (Lưới 40 S/N)"},

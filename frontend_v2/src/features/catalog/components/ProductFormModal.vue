@@ -70,8 +70,8 @@
               <!-- Erro products use their fixed canonical template. -->
               <div v-if="isErroProduct" class="w-full flex items-center gap-2 p-3 rounded-xl border border-purple-200 bg-purple-50/60 text-xs font-mono text-purple-900">
                 <span class="px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-bold uppercase text-[10px] shrink-0">Cố định Erro</span>
-                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'erro_04' ? 'erro_04.btw' : (formData.template_type === 'erro_03' ? 'erro_03.btw' : (formData.template_type === 'erro_02' ? 'erro_02.btw' : 'erro_01.btw')) }}</span>
-                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'erro_04' ? 'Erro 04 PD027032' : (formData.template_type === 'erro_03' ? 'Erro 03 Luxshare NME' : (formData.template_type === 'erro_02' ? 'Erro 02 Pallet SSCC & ASIN' : 'Erro 01 Thùng Carton SN')) }})</span>
+                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'erro_05' ? 'erro_05.btw' : (formData.template_type === 'erro_04' ? 'erro_04.btw' : (formData.template_type === 'erro_03' ? 'erro_03.btw' : (formData.template_type === 'erro_02' ? 'erro_02.btw' : 'erro_01.btw'))) }}</span>
+                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'erro_05' ? 'Erro 05 Pegatron NN9' : (formData.template_type === 'erro_04' ? 'Erro 04 PD027032' : (formData.template_type === 'erro_03' ? 'Erro 03 Luxshare NME' : (formData.template_type === 'erro_02' ? 'Erro 02 Pallet SSCC & ASIN' : 'Erro 01 Thùng Carton SN'))) }})</span>
               </div>
 
               <!-- For UI products: Select from 5 valid UI templates or retain existing DB value -->
@@ -221,16 +221,30 @@
               class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-sm"
             >
               <optgroup label="Khách Hàng Erro">
-                <option value="erro_01">Erro 01 (PD014736 Carton SN + Rev — erro_01.btw)</option>
-                <option value="erro_02">Erro 02 (PD027504 Pallet SSCC + ASIN — erro_02.btw)</option>
-                <option value="erro_03">Erro 03 (Luxshare NME PD024364 — erro_03.btw)</option>
+                <option value="erro_05">Erro 05 (Pegatron NN9 PD016906 — erro_05.btw)</option>
                 <option value="erro_04">Erro 04 (eero PD027032 — erro_04.btw)</option>
+                <option value="erro_03">Erro 03 (Luxshare NME PD024364 — erro_03.btw)</option>
+                <option value="erro_02">Erro 02 (PD027504 Pallet SSCC + ASIN — erro_02.btw)</option>
+                <option value="erro_01">Erro 01 (PD014736 Carton SN + Rev — erro_01.btw)</option>
               </optgroup>
               <optgroup label="Khách Hàng UI">
                 <option value="standard">Tiêu chuẩn (Standard - Tem thùng cơ bản)</option>
                 <option value="detailed">Chi tiết (Detailed - Lưới 40 mã sê-ri con)</option>
               </optgroup>
             </select>
+          </div>
+
+          <!-- Fields for Erro 05 (PD016906 Pegatron NN9) -->
+          <div v-if="formData.template_type === 'erro_05'" class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-emerald-900 flex items-center gap-1.5"><i class="fas fa-microchip text-emerald-600"></i><span>Thông Số Erro 05 (Pegatron NN9 Ngoại Thùng)</span></span>
+              <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded">PD016906 Rev I</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Mã Liệu Thành Phẩm (Factory Item Code) *</label><input v-model="formData.factory_item_code" type="text" placeholder="1HWU3023C1XX02NN9" class="w-full p-2.5 rounded-xl border border-emerald-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Tiền Tố Thùng (pkg_prefix) *</label><input v-model="formData.pkg_prefix" type="text" placeholder="MC220TW1" class="w-full p-2.5 rounded-xl border border-emerald-200 bg-white font-mono text-xs font-bold uppercase" /></div>
+            </div>
+            <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Quy Cách (Description) *</label><textarea v-model="formData.product_desc" rows="2" placeholder="X LED CABLE 30AWG 230mm" class="w-full p-2.5 rounded-xl border border-emerald-200 bg-white font-mono text-xs font-medium"></textarea></div>
           </div>
 
           <!-- Fields for Erro 04 (PD027032) -->
@@ -248,117 +262,29 @@
           <!-- Fields for Erro 03 (PD024364) -->
           <div v-if="formData.template_type === 'erro_03'" class="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase text-amber-900 flex items-center gap-1.5">
-                <i class="fas fa-industry text-amber-600"></i>
-                <span>Thông Số Erro 03 (Luxshare NME Ngoại Thùng)</span>
-              </span>
+              <span class="text-xs font-bold uppercase text-amber-900 flex items-center gap-1.5"><i class="fas fa-industry text-amber-600"></i><span>Thông Số Erro 03 (Luxshare NME Ngoại Thùng)</span></span>
               <span class="text-[10px] text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded">PD024364 REV.M</span>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Nhà Cung Cấp (Supplier Code) *</label>
-                <input 
-                  v-model="formData.pkg_prefix" 
-                  type="text" 
-                  placeholder="1012665" 
-                  class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-bold"
-                >
-                <p class="text-[10px] text-slate-400">Mặc định VN: 1012665 (7 ký tự).</p>
-              </div>
-
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">APN-Rev (Bản vẽ)</label>
-                <input 
-                  v-model="formData.revision" 
-                  type="text" 
-                  placeholder="/" 
-                  class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-bold uppercase"
-                >
-                <p class="text-[10px] text-slate-400">Mặc định bản vẽ: /</p>
-              </div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Mã Nhà Cung Cấp (Supplier Code) *</label><input v-model="formData.pkg_prefix" type="text" placeholder="1012665" class="w-full p-2.5 rounded-xl border border-amber-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">APN-Rev (Bản vẽ)</label><input v-model="formData.revision" type="text" placeholder="/" class="w-full p-2.5 rounded-xl border border-amber-200 bg-white font-mono text-xs font-bold uppercase" /></div>
             </div>
-
-            <div class="space-y-1">
-              <label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Sản Phẩm (Description) *</label>
-              <textarea 
-                v-model="formData.product_desc" 
-                rows="2"
-                placeholder="CAT5E ETHERNET CABLE" 
-                class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-medium"
-              ></textarea>
-              <p class="text-[10px] text-slate-400">Mô tả quy cách in vào trường Description trên tem.</p>
-            </div>
+            <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Sản Phẩm (Description) *</label><textarea v-model="formData.product_desc" rows="2" placeholder="CAT5E ETHERNET CABLE" class="w-full p-2.5 rounded-xl border border-amber-200 bg-white font-mono text-xs font-medium"></textarea></div>
           </div>
 
           <!-- Fields for Erro 02 (PD027504) -->
           <div v-else-if="formData.template_type === 'erro_02'" class="p-4 bg-sky-50/60 rounded-2xl border border-sky-200 space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase text-sky-900 flex items-center gap-1.5">
-                <i class="fas fa-barcode text-sky-600"></i>
-                <span>Thông Số Erro 02 (Pallet SSCC & Amazon ASIN)</span>
-              </span>
+              <span class="text-xs font-bold uppercase text-sky-900 flex items-center gap-1.5"><i class="fas fa-barcode text-sky-600"></i><span>Thông Số Erro 02 (Pallet SSCC & Amazon ASIN)</span></span>
               <span class="text-[10px] text-sky-700 font-semibold bg-sky-100 px-2 py-0.5 rounded">PD027504</span>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Amazon ASIN *</label>
-                <input 
-                  v-model="formData.asin" 
-                  type="text" 
-                  placeholder="B08G9M4HXS" 
-                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold uppercase"
-                >
-                <p class="text-[10px] text-slate-400">Mã định danh ASIN trên Amazon.</p>
-              </div>
-
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Unit UPC Barcode *</label>
-                <input 
-                  v-model="formData.upc" 
-                  type="text" 
-                  placeholder="852582006785" 
-                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
-                >
-                <p class="text-[10px] text-slate-400">Mã vạch sản phẩm con in trên tem.</p>
-              </div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Amazon ASIN *</label><input v-model="formData.asin" type="text" placeholder="B08G9M4HXS" class="w-full p-2.5 rounded-xl border border-sky-200 bg-white font-mono text-xs font-bold uppercase" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Unit UPC Barcode *</label><input v-model="formData.upc" type="text" placeholder="852582006785" class="w-full p-2.5 rounded-xl border border-sky-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">P/N Trên Tem (Spec No) *</label><input v-model="formData.mfr_pn" type="text" placeholder="NYS5998" class="w-full p-2.5 rounded-xl border border-sky-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">SSCC Company Prefix *</label><input v-model="formData.pkg_prefix" type="text" placeholder="37033907" class="w-full p-2.5 rounded-xl border border-sky-200 bg-white font-mono text-xs font-bold" /></div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">P/N Trên Tem (Spec No) *</label>
-                <input 
-                  v-model="formData.mfr_pn" 
-                  type="text" 
-                  placeholder="NYS5998 hoặc NYS5996" 
-                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
-                >
-                <p class="text-[10px] text-slate-400">In vào vùng P/N và barcode P/N.</p>
-              </div>
-
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">SSCC Company Prefix *</label>
-                <input 
-                  v-model="formData.pkg_prefix" 
-                  type="text" 
-                  placeholder="37033907" 
-                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
-                >
-                <p class="text-[10px] text-slate-400">Mặc định: 37033907 (Bộ đếm toàn cục).</p>
-              </div>
-            </div>
-
-            <div class="space-y-1">
-              <label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Sản Phẩm (Product Description) *</label>
-              <textarea 
-                v-model="formData.product_desc" 
-                rows="2"
-                placeholder="ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND" 
-                class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-medium"
-              ></textarea>
-              <p class="text-[10px] text-slate-400">Dòng mô tả quy cách in ở góc trái tem.</p>
-            </div>
+            <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Sản Phẩm (Product Description) *</label><textarea v-model="formData.product_desc" rows="2" placeholder="ASSY,BAND WRAPPED..." class="w-full p-2.5 rounded-xl border border-sky-200 bg-white font-mono text-xs font-medium"></textarea></div>
           </div>
 
           <!-- Fields for Erro 01 or yearly prefix -->

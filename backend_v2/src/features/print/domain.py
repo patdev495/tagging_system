@@ -196,6 +196,35 @@ class BTXMLDocument:
             substrings["Qty"] = str(product.packed_qty or actual_qty or "")
             substrings["Rev"] = getattr(product, "revision", "") or ""
             substrings["SKUDescription"] = getattr(product, "product_desc", "") or ""
+        elif template_type == "erro_05":
+            carton_sn = carton.carton_sn or ""
+            created_at = getattr(carton, "created_at", None) or datetime.datetime.now()
+            yy = created_at.strftime("%y")
+            ww = f"{created_at.isocalendar()[1]:02d}"
+            date_code = f"{yy}{ww}"
+            lot_code = (getattr(carton, "lot_number", None) or "").strip() or created_at.strftime("%Y%m%d")
+            qty = str(product.packed_qty or actual_qty or "1000")
+            item = product.item_name or ""
+            desc = getattr(product, "product_desc", "") or ""
+            mpn = ""
+            rev = getattr(product, "revision", "") or ""
+            config = ""
+            batch = (getattr(carton, "po_number", None) or "").strip()
+            stage = ""
+            qr_code_content = f"{carton_sn},{item},{mpn},{batch},{qty},{date_code},{lot_code}"
+
+            substrings["CartonNo"] = carton_sn
+            substrings["Item"] = item
+            substrings["DESC"] = desc
+            substrings["DateCode"] = date_code
+            substrings["LotCode"] = lot_code
+            substrings["QTY"] = qty
+            substrings["QRCode_Content"] = qr_code_content
+            substrings["MPN"] = mpn
+            substrings["Rev"] = rev
+            substrings["Config"] = config
+            substrings["Batch"] = batch
+            substrings["Stage"] = stage
 
         return cls(template_path=template_path, printer_name=printer_name, substrings=substrings)
 
@@ -259,6 +288,14 @@ class BTXMLDocument:
             "po": self.substrings.get("PO", ""),
             "sku": self.substrings.get("SKU", ""),
             "sku_description": self.substrings.get("SKUDescription", ""),
+            "carton_no": self.substrings.get("CartonNo", ""),
+            "item": self.substrings.get("Item", ""),
+            "desc": self.substrings.get("DESC", ""),
+            "lot_code": self.substrings.get("LotCode", ""),
+            "mpn": self.substrings.get("MPN", ""),
+            "config": self.substrings.get("Config", ""),
+            "batch": self.substrings.get("Batch", ""),
+            "stage": self.substrings.get("Stage", ""),
         }
 
         # Build dynamic detailed grid tags if needed

@@ -198,6 +198,81 @@ def seed_erro_data(db):
                     target_weight=5.0,
                 ))
 
+        # PD016906 Page 3 Erro 05 (Pegatron NN9) products (all 38 items):
+        erro_05_products = [
+            ("1401-02BP0W3", "1CAU0002M2WH07NX9", "USB2.0 AM TO 90° TYPE-C TPE 2M"),
+            ("1412-04FH0W3", "1CAH0007C0XX01NX9", "FFC CABLE 40p"),
+            ("1412-04FJ0W3", "1CAH0003C0XX01NX9", "FFC CABLE 16P"),
+            ("1412-04M80W3", "1CAH0032A0XX01NX9", "FFC CABLE 16P P:0.5mm L:32mm"),
+            ("1412-04T50W3", "1CAH0007C0XX03NX9", "FFC CABLE 40p,325-00274-03"),
+            ("1414-0E5A0W3", "1HWN2870A2BK06NX9", "WIRE CABLE 10P TO 10P L:70mm"),
+            ("1414-0EG10W3", "1HWU2825C2BK04NX9", "28AWG*1C FEP JACKET BK 250MM"),
+            ("1414-0EKE0W3", "1HWN2817C2BK01NX9", "HSG 10P-10P L BLACK 17CM"),
+            ("1414-0EP50W3", "1HWU1870A2BK05NX9", "18AWG*1C GROUNDING CABLE 70MM"),
+            ("1414-0F0W0W3", "1LAX2812C2U003NX9", "28AWG*1C FEP JACKET BLACK"),
+            ("1414-0F0X0W3", "1LAX2860A2U003NX9", "28AWG*1C HSG 4P TO 4P L=60mm"),
+            ("1401-02DC0W3", "1CAU3202M2WH02NN9", "USB2.0 AM TO 90° TYPE-C TPE JAC"),
+            ("1401-02HF0W9", "1CAD2420D2WH01M22P", "USB 2.0,USB A TO MICRO B"),
+            ("1401-02QK0W9", "1CAC2402M2WH02M22Q", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAC2402M2WH03M22Q", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAC2402M2WH04M22Q", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D1WH03M22P", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D1WH03M22Q", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D2WH01M22Q", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D2WH02M22P", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D2WH02M22Q", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D2WH02M22V", "CBL,USB A TO MICRO B, L=2M"),
+            ("1401-02QK0W9", "1CAD2420D2WH03M22V", "CBL,USB A TO MICRO B, L=2M"),
+            ("1402-00GD000", "1LAE2403M2U001NN9", "LAN CAT.5E 8P8C CABLE YELLOW"),
+            ("1402-01060DL", "1LA62615D2F001NN9", "26AWG*4P CAT6 CABLE YELLOW15DM"),
+            ("1412-04HK0W3", "1CAH0007C0XX02NN9", "FFC CABLE 40p"),
+            ("1414-0E600W3", "1CAC2050C2BK02NN9", "20AWG*10C PVC JACKET BLACK"),
+            ("1414-0G1M0BV", "1HWU3023C1XX01NN9", "X LED CABLE 30AWG 230mm PD030625"),
+            ("1414-0G1N0BV", "1HWU3006C1XX01NN9", "W LED CABLE 30AWG 60mm PD030627"),
+            ("1414-0G3C0BV", "1HWU1895A2XX03NN9", "CABLE,EXT TEMP,SFP"),
+            ("1417-0062000", "1CAC2815D2BK02NN9", "RCA CABLE (RYW) L=1.5M"),
+            ("1417-0063000", "1CAC2815D2BK01NN9", "RCA CABLE (RBG) L=1.5M"),
+            ("1401-03GN0W9", "1CAU0010D2XX02NN9", "inbox cable,USB2.0 AM TO TYPE-C L=1M"),
+            ("1414-0GD90BV", "1HWU3006C1XX02NN9", "W LED CABLE 30AWG 60mm"),
+            ("1414-0GDA0BV", "1HWU3023C1XX02NN9", "X LED CABLE 30AWG 230mm"),
+            ("1401-03L40BV", "1CAC2822C2BK02MAA", "CABLE,DEBUG,USB-C,W4"),
+            ("1401-03L50BV", "1CAC2811C2BK02MAA", "CABLE,DEBUG,USB-C,X4/W2/X2"),
+            ("0A02-02WF0BV", "1MA00PCBAXX045NN9", "LED PCBA BOARD NIENYI/NYS6994"),
+        ]
+
+        for item_name, factory_item_code, product_desc in erro_05_products:
+            prod = db.query(models.Product).filter(
+                models.Product.customer_id == erro_customer.id,
+                models.Product.factory_item_code == factory_item_code,
+            ).first()
+            if not prod:
+                db.add(models.Product(
+                    customer_id=erro_customer.id,
+                    item_name=item_name,
+                    factory_item_code=factory_item_code,
+                    product_desc=product_desc,
+                    pkg_prefix="MC220TW1",
+                    packed_qty=1000,
+                    template_type="erro_05",
+                    template_path=r"D:\PAT\Templates\erro_05.btw",
+                    packing_mode="weight_scale",
+                    min_weight=0.0,
+                    max_weight=10.0,
+                    target_weight=5.0,
+                    weight_unit="kg",
+                    revision="",
+                ))
+            else:
+                updated = False
+                if not prod.template_type:
+                    prod.template_type = "erro_05"
+                    updated = True
+                if not prod.pkg_prefix:
+                    prod.pkg_prefix = "MC220TW1"
+                    updated = True
+                if updated:
+                    db.add(prod)
+
         db.commit()
     except Exception as e:
         db.rollback()

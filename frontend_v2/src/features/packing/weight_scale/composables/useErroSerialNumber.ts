@@ -29,8 +29,21 @@ export function useErroSerialNumber(selectedProduct: Ref<Product | null>) {
 
   const currentSNPreview = computed<string>(() => {
     if (!selectedProduct.value) return '-';
-    if (selectedProduct.value.template_type === 'erro_04' && nextCartonSN.value) {
+    if ((selectedProduct.value.template_type === 'erro_04' || selectedProduct.value.template_type === 'erro_05') && nextCartonSN.value) {
       return nextCartonSN.value;
+    }
+    if (selectedProduct.value.template_type === 'erro_05') {
+      const prefix = selectedProduct.value.pkg_prefix || 'MC220TW1';
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+      const ww = String(weekNo).padStart(2, '0');
+      const seqStr = String(autoSequence.value).padStart(5, '0');
+      return `${prefix}2${yy}${ww}${seqStr}`;
     }
     if (selectedProduct.value.template_type === 'erro_03') {
       const supplierCode = selectedProduct.value.pkg_prefix || '1012665';

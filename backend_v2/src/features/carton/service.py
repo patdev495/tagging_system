@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -240,6 +241,12 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
         from src.features.carton.erro_04_sn_allocator import plan_next_erro_04_carton_sn
         plan = plan_next_erro_04_carton_sn(db, product, lock=True)
         date_code = plan.date_code
+    elif product.template_type == "erro_05":
+        from src.features.carton.erro_05_sn_allocator import plan_next_erro_05_carton_sn
+        plan = plan_next_erro_05_carton_sn(db, product, lock=True)
+        date_code = plan.date_code
+        if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
+            weigh_in.lot_number = datetime.now().strftime("%Y%m%d")
     else:
         plan = plan_next_erro_01_carton_sn(
             db,

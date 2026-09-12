@@ -9,7 +9,7 @@ Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đón
 _Avoid_: Client, đối tác, đối tác mua hàng
 
 **Erro Label Template Code**:
-Mã kỹ thuật ổn định xác định một trong năm mẫu tem của Customer Erro: `erro_01`, `erro_02`, `erro_03`, `erro_04`, hoặc `erro_05`. Ba mã đang hoạt động ánh xạ từ hệ thống cũ theo thứ tự: `a11` → `erro_01`, `a11_tem2` → `erro_02`, và `a11_tem3` → `erro_03`. `erro_04` và `erro_05` chưa có cấu hình hoặc mẫu tem. Cả năm mã đều cấm in lại và chỉ được cấp số tem tự động, tăng tuần tự.
+Mã kỹ thuật ổn định xác định một trong năm mẫu tem của Customer Erro: `erro_01`, `erro_02`, `erro_03`, `erro_04`, hoặc `erro_05`. Ba mã đang hoạt động ánh xạ từ hệ thống cũ theo thứ tự: `a11` → `erro_01`, `a11_tem2` → `erro_02`, và `a11_tem3` → `erro_03`. `erro_04` áp dụng cho tem eero Mỹ (PD027032). `erro_05` áp dụng cho tem thùng ngoài PEGATRON (PD016906). Cả năm mã đều cấm in lại và chỉ được cấp số tem tự động, tăng tuần tự.
 _Avoid_: Tem A11, loại tem A11
 
 **Product**:
@@ -26,11 +26,17 @@ Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hìn
 - Với khách hàng Erro - `erro_01` (`PD014736`): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm (PKG ID).
 - Với khách hàng Erro - `erro_02` (`PD027504`): Mã SSCC 18 chữ số theo chuẩn GS1 `037033907{seq:07d}{cd}` với số thứ tự sê-ri 7 chữ số tăng liên tục không reset, mã kiểm tra tính theo Modulo 10.
 - Với khách hàng Erro - `erro_03` (`PD024364`): Mã định danh thùng xuất xưởng Luxshare NME gồm 17 ký tự: mã nhà cung ứng 7 chữ số (mặc định xưởng Việt Nam là `1012665`), thời gian sản xuất 6 chữ số (`YYMMDD`), và số thứ tự 4 chữ số reset theo ngày.
+- Với khách hàng Erro - `erro_04` (`PD027032`): Mã định danh thùng xuất eero Mỹ gồm 8 ký tự: tiền tố cáp (`H` hoặc `K`), ngày sản xuất mã hóa base-32 (`YMD`), và chuỗi base-32 4 ký tự không reset dùng chung cho toàn bộ Product erro_04.
+- Với khách hàng Erro - `erro_05` (`PD016906`): Mã định danh thùng PEGATRON gồm 18 ký tự: mã nhà cung ứng (`MC220TW1`), số cố định `2`, năm (`YY`), tuần (`WW`) và số thứ tự 5 chữ số dùng chung cho mọi Product erro_05, reset về `50001` vào đầu mỗi tháng đối với xưởng Việt Nam (dải `50001`–`99999`).
 _Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem Erro 01)
 
 **Erro 04 Carton Sequence**:
 Bộ đếm chung, tăng đơn điệu và không reset cho mọi Product dùng Erro Label Template Code `erro_04`. Bộ đếm được biểu diễn bằng bốn ký tự base-32 từ `0001` đến `ZZZZ`, dùng `0`-`9` và chữ cái trừ `I`, `L`, `O`, `U`; tiền tố `H` (CAT6A) hoặc `K` (CAT5E) không tạo bộ đếm riêng.
 _Avoid_: Số thứ tự theo ngày, bộ đếm H/K riêng, số thập phân bốn chữ số
+
+**Erro 05 Carton Sequence**:
+Bộ đếm chung cho mọi Product dùng Erro Label Template Code `erro_05`, biểu diễn bằng năm chữ số từ `50001` đến `99999` cho xưởng Việt Nam, tự động reset về `50001` vào 00:00 ngày đầu tiên mỗi tháng theo Giờ Cục bộ máy chủ; không reset theo tuần hay tách bộ đếm riêng theo từng mã hàng. Tiền tố nhà cung ứng (mặc định `MC220TW1`) được cấu hình trong trường `pkg_prefix` tại phân hệ Quản trị (Admin) và không được phép chỉnh sửa tại giao diện trạm đóng gói.
+_Avoid_: Sê-ri reset theo tuần, bộ đếm riêng theo Product, sê-ri bắt đầu từ 00001 tại Việt Nam, sửa mã nhà cung ứng tại trạm cân
 
 **Erro 04 Carton ID Prefix**:
 Ký tự đầu của Carton SN thuộc Product `erro_04`, được cấu hình bắt buộc theo Product: `H` cho CAT6A và `K` cho CAT5E. Đây là metadata ổn định, không được suy luận từ SKU hay SKU Description.
@@ -53,7 +59,7 @@ Ngày sản xuất của Carton, lấy theo Local Server Time tại thời đi�
 _Avoid_: Date Code, ngày nhập tay, ngày đơn hàng
 
 **Lot Number**:
-Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô. Với `erro_04`, Lot Number là bắt buộc cho Production Run để phục vụ truy xuất nguồn gốc, nhưng không được in trên tem.
+Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô. Với `erro_04`, Lot Number là bắt buộc cho Production Run để phục vụ truy xuất nguồn gốc, nhưng không được in trên tem. Với `erro_05`, Lot Number (trường `Lot Code` trên tem) mặc định tự động sinh theo ngày sản xuất `YYYYMMDD` của máy chủ, cho phép người vận hành chỉnh sửa lại nếu cần.
 _Avoid_: Mã mẻ, mã batch, số lô con
 
 **PO Number**:

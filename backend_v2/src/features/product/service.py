@@ -23,6 +23,7 @@ def get_all_products(db: Session, customer_code: Optional[str] = None, search: O
                 Product.asin.ilike(search_filter),
                 Product.mfr_pn.ilike(search_filter),
                 Product.product_desc.ilike(search_filter),
+                Product.factory_item_code.ilike(search_filter),
             )
         )
     return query.all()
@@ -124,6 +125,16 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
             "next_seq": plan.sequence,
             "next_sn": plan.carton_sn,
             "carton_id_prefix": plan.carton_id_prefix,
+            "date_code": plan.date_code,
+        }
+
+    if product.template_type == "erro_05":
+        from src.features.carton.erro_05_sn_allocator import plan_next_erro_05_carton_sn
+        plan = plan_next_erro_05_carton_sn(db, product)
+        return {
+            "next_seq": plan.sequence,
+            "next_sn": plan.carton_sn,
+            "pkg_prefix": plan.pkg_prefix,
             "date_code": plan.date_code,
         }
 

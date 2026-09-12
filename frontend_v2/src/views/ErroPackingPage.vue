@@ -82,7 +82,13 @@
           </div>
 
           <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
-            <template v-if="selectedProduct.template_type === 'erro_04'">
+            <template v-if="selectedProduct.template_type === 'erro_05'">
+              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Prefix:</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || 'MC220TW1' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.factory_item_code || '-' }}</span>
+            </template>
+            <template v-else-if="selectedProduct.template_type === 'erro_04'">
               <span class="text-xs uppercase font-bold text-slate-400 font-sans">Carton ID:</span>
               <span class="font-bold text-sm text-slate-700">{{ selectedProduct.carton_id_prefix || '-' }}...</span>
               <span class="text-slate-300">|</span>
@@ -108,7 +114,12 @@
 
           <div class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
             <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <template v-if="selectedProduct?.template_type === 'erro_02'">
+            <template v-if="selectedProduct?.template_type === 'erro_05'">
+              <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || '(Tùy chọn)' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || 'Tự động' }}</span>
+            </template>
+            <template v-else-if="selectedProduct?.template_type === 'erro_02'">
               <span class="font-bold text-xs text-slate-500 italic bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Không áp dụng (Tem 2)</span>
             </template>
             <template v-else-if="selectedProduct?.template_type === 'erro_03'">

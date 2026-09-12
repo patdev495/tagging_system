@@ -155,6 +155,7 @@ const templateGroups = computed(() => {
     { key: 'erro_02', label: 'Erro 02 · SSCC', dotClass: 'bg-sky-500' },
     { key: 'erro_03', label: 'Erro 03 · Luxshare', dotClass: 'bg-amber-500' },
     { key: 'erro_04', label: 'Erro 04 · PD027032', dotClass: 'bg-rose-500' },
+    { key: 'erro_05', label: 'Erro 05 · Pegatron NN9', dotClass: 'bg-teal-500' },
   ];
 
   const groups = definitions.map(definition => ({

@@ -1,26 +1,26 @@
-# Kiến Trúc Toàn Bộ Hệ Thống Tem Khách Hàng A11 (Dự Án Amazon eero)
+# Kiến Trúc Toàn Bộ Hệ Thống Tem Khách Hàng erro (Dự Án Amazon eero)
 
 > **Tài liệu tham chiếu chuẩn cho các phiên làm việc và Sub-Agent.**  
 > **Ngày cập nhật**: Tháng 09/2026  
-> **Khách hàng**: `A11` (Dự án cáp mạng Amazon eero sản xuất tại Nien Yi)  
-> **Thư mục tài nguyên mẫu**: `d:\Workspace\NY_tagging_sys\templates\a11\`
+> **Khách hàng**: `erro` (Dự án cáp mạng Amazon eero sản xuất tại Nien Yi)  
+> **Thư mục tài nguyên mẫu**: `d:\Workspace\NY_tagging_sys\templates\erro\`
 
 ---
 
-## 1. Bức Tranh Toàn Cảnh: Phân Loại 5 Dòng Tem Nhãn Khách Hàng A11
+## 1. Bức Tranh Toàn Cảnh: Phân Loại 5 Dòng Tem Nhãn Khách Hàng erro
 
-Toàn bộ hệ sinh thái đóng gói nhãn thùng (Carton) của khách hàng A11 gồm **5 loại tem nhãn** tương ứng với từng kênh phân phối, đối tác lắp ráp (CM / Luxshare) và tiêu chuẩn xuất xưởng.
+Toàn bộ hệ sinh thái đóng gói nhãn thùng (Carton) của khách hàng erro gồm **5 loại tem nhãn** tương ứng với từng kênh phân phối, đối tác lắp ráp (CM / Luxshare) và tiêu chuẩn xuất xưởng.
 
-Mối quan hệ tổng thể được trích xuất trực tiếp từ [ERRO ITEM清单-B.xlsx](file:///d:/Workspace/NY_tagging_sys/templates/a11/ERRO%20ITEM清单-B.xlsx) (Sheet `格式贴纸` - Bảng Master Mapping):
+Mối quan hệ tổng thể được trích xuất trực tiếp từ [ERRO ITEM清单-B.xlsx](file:///d:/Workspace/NY_tagging_sys/templates/erro/ERRO%20ITEM清单-B.xlsx) (Sheet `格式贴纸` - Bảng Master Mapping):
 
 ```mermaid
 graph TD
-    A11["Khách hàng A11 (Dự án Amazon eero)"]
-    A11 --> T1["Tem 1: PD014736<br/>(Bản vẽ A11 đứng 3x5 inch)"]
-    A11 --> T2["Tem 2: PD027504<br/>(Bản vẽ tem ngang CM xuất xưởng 152x95 mm)"]
-    A11 --> T3["Tem 3: PD024364<br/>(Bản vẽ tem xuất xưởng Luxshare 立讯)"]
-    A11 --> T4["Tem 4: PD027032<br/>(Bản vẽ tem xuất đi eero Mỹ)"]
-    A11 --> T5["Tem 5: PD016906<br/>(Bản vẽ tiêu chuẩn PD016906)"]
+    erro["Khách hàng erro (Dự án Amazon eero)"]
+    erro --> T1["Tem 1: PD014736<br/>(Bản vẽ erro đứng 3x5 inch)"]
+    erro --> T2["Tem 2: PD027504<br/>(Bản vẽ tem ngang CM xuất xưởng 152x95 mm)"]
+    erro --> T3["Tem 3: PD024364<br/>(Bản vẽ tem xuất xưởng Luxshare 立讯)"]
+    erro --> T4["Tem 4: PD027032<br/>(Bản vẽ tem xuất đi eero Mỹ)"]
+    erro --> T5["Tem 5: PD016906<br/>(Bản vẽ tiêu chuẩn PD016906)"]
 
     T1 --> P1["840-00083, 840-00091, 840-00092..."]
     T2 --> P2["G012C1B (CAT5E), G112C1B (CAT6A)"]
@@ -39,8 +39,8 @@ graph TD
 | 4 | **`G012C1B`** | `1LAE0009D2U004MAAR` | **2** | **`PD027504 Rev C`** | **Đang sản xuất (在生产)** | `第2.btw` | `第2 纸箱标签PD027504.pdf` |
 | 5 | **`G112C1B`** | `1LAE0009D2U002MAAS` | **2** | **`PD027504 Rev C`** | **Chuẩn bị chạy** | `第2.btw` | `第2 纸箱标签PD027504.pdf` |
 | 6 | `2M21-00508-0004H` | `1LAE0091C2U011NMES` | **3** | `PD024364` | Đang sản xuất (在生产) | `第3 2M21-00508-0004 Tem NGOÀI.btw` | `第3 PD024364 立讯内外箱标签M.pdf` |
-| 7 | `G111D1A` ... `G111F1C` | `1LAX0005F...` | **4** | `PD027032 REV.B` | Dự kiến | `第4.btw` | `第4 PD027032  REV.B 出eero美国.pdf` |
-| 8 | Các mã theo chuẩn 5 | `...` | **5** | `PD016906` | Dự kiến | `第5 PD016906.btw` | `第5 PD016906 贴纸图-I.pdf` |
+| 7 | `G111D1A` ... `G111F1C` | `1LAX0005F...` | **4** | `PD027032 REV.B` | Đã hoàn thành | `erro_04.btw` | `erro_04_PD027032.pdf` |
+| 8 | 38 mã dự án NN9 | `1CAU...`, `1HWN...` | **5** | `PD016906 REV.I` | Đang triển khai | `erro_05.btw` | `erro_05_PD016906.pdf` |
 
 ---
 
@@ -155,13 +155,13 @@ def calculate_gs1_check_digit(number_str: str) -> int:
 
 ### 5.1. Database Schema (`backend_v2/src/core/models.py`)
 Mở rộng bảng `Product` để lưu trữ các metadata mới của Tem 2 mà không phá vỡ Tem 1:
-- `template_type`: Thêm giá trị `"a11_tem2"` (hoặc `"a11_sscc"`).
+- `template_type`: Thêm giá trị `"erro_tem2"` (hoặc `"erro_sscc"`).
 - `factory_pn`: `Column(String(100), nullable=True)` — Lưu mã nội bộ xưởng (厂内料号, ví dụ `1LAE0009D2U004MAAR`, `1LAE0009D2U002MAAS`) phục vụ tìm kiếm/tra cứu trên Web UI và đối chiếu BOM.
 - `asin`: `Column(String(50), nullable=True)` — Lưu ASIN (ví dụ `B08G9M4HXS`, `B0C32N712K`).
 - `product_desc`: `Column(String(255), nullable=True)` — Lưu mô tả dài cho `Product name`.
 - `sscc_seq`: Dùng chung bộ đếm tự tăng toàn cục theo tiền tố doanh nghiệp `037033907` (bắt đầu từ `0000001` đến `9999999`, không bao giờ reset).
 
-### 5.2. File BarTender Template (`D:\PAT\Templates\a11_02.btw`)
+### 5.2. File BarTender Template (`D:\PAT\Templates\erro_02.btw`)
 File tem đã được cấu hình và kiểm chứng hoạt động 100% qua BarTender COM với **7 Named SubStrings** chuẩn:
 1. **`ProductName`**: Chuỗi mô tả đầy đủ kèm tiền tố (`Product name:{product_desc}`)
 2. **`QTY`**: Số lượng đóng gói (`{qty}`, ví dụ `190`)
@@ -175,8 +175,8 @@ File tem đã được cấu hình và kiểm chứng hoạt động 100% qua Ba
 > Khối xuất xứ 3 dòng (`ASSEMBLED IN VIETNAM / ASSEMBLE AU VIETNAM / HECHO EN VIETNAM`) là text tĩnh cố định trên tem bản vẽ Việt Nam, không cần NamedSubString.
 
 ### 5.3. In ấn & BTXML Document (`backend_v2/src/features/print/domain.py`)
-- Tạo template XML `backend_v2/src/features/print/templates/a11_tem2.xml`.
-- Bổ sung logic phân nhánh trong `BTXMLDocument.from_carton_data`: Khi `template_type == "a11_tem2"`, tự động sinh mã SSCC, tính Check Digit, và fill các NamedSubStrings của Tem 2.
+- Tạo template XML `backend_v2/src/features/print/templates/erro_tem2.xml`.
+- Bổ sung logic phân nhánh trong `BTXMLDocument.from_carton_data`: Khi `template_type == "erro_tem2"`, tự động sinh mã SSCC, tính Check Digit, và fill các NamedSubStrings của Tem 2.
 
 ### 5.4. Quy trình Cân & Đóng Gói (Packing UI & Weight Scale)
 - Tem 2 chạy chế độ `weight_scale`.
@@ -213,9 +213,9 @@ Theo đúng quy cách mã hóa phân cách bằng ký tự `$` trên bản vẽ:
 *Ví dụ thực tế*:
 `10126652609110001$1012665$NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED$2M21-00508-0004H$$92607933$20260911$190$$$$$$`
 
-### 6.4. Cấu Hình File BarTender Template (`D:\PAT\Templates\a11_03.btw`)
-- **Tên file chuẩn hóa**: `a11_03.btw` (sao chép và cấu hình từ `第3 2M21-00508-0004 Tem NGOÀI.btw`).
-- **Mã loại tem (`template_type`)**: `"a11_tem3"`.
+### 6.4. Cấu Hình File BarTender Template (`D:\PAT\Templates\erro_03.btw`)
+- **Tên file chuẩn hóa**: `erro_03.btw` (sao chép và cấu hình từ `第3 2M21-00508-0004 Tem NGOÀI.btw`).
+- **Mã loại tem (`template_type`)**: `"erro_tem3"`.
 - **Danh sách Named SubStrings chuẩn**:
   1. `ProjectStage`: Dòng tiêu đề dự án & giai đoạn (`项目: Andy Town/ Firefly         生产阶段：QB/CR`)
   2. `PartNo`: Mã vật liệu Luxshare (`料号: {part_no}`)
@@ -235,4 +235,68 @@ Theo đúng quy cách mã hóa phân cách bằng ký tự `$` trên bản vẽ:
 - **PO Number**: Mặc định cho phép để rỗng (bypass popup bắt buộc PO như Tem 2), cho phép người dùng tùy ý chỉnh sửa nếu có PO cụ thể.
 - **Lot Number**: Mặc định lấy từ metadata sản phẩm/bản vẽ, cho phép người vận hành chỉnh sửa linh hoạt trên giao diện ca đóng gói như Tem 1.
 - **Chính sách In lại (Reprint)**: **Tuyệt đối cấm in lại tem cũ (No Reprint)** theo quyết định kiến trúc `ADR-0005`. Tem lỗi/rách được xử lý bằng thao tác in ngay tem tiếp theo với số thứ tự mới.
+
+---
+
+## 7. Đặc Tả Chi Tiết & Thiết Kế Kiến Trúc Tem Số 5 (Bản Vẽ PD016906 - Pegatron NN9)
+
+### 7.1. Thông Tin Nhận Diện & Phạm Vi Áp Dụng
+- **Bản vẽ kỹ thuật**: `NY1107103E(PD016906)` Rev I (Bản vẽ tem mã vạch NN9 bao bì bên ngoài / 外包装).
+- **Kích thước tem**: $102 \times 77\text{ mm}$ (in tem trắng `30510000F030`).
+- **Phông chữ chuẩn**: Verdana (theo ghi chú bản vẽ).
+- **Khách hàng / Đối tác**: `PEGATRON` (Dự án NN9).
+- **Mã loại tem (`template_type`)**: `"erro_05"`.
+- **File mẫu BarTender**: `D:\PAT\Templates\erro_05.btw`.
+- **Danh mục áp dụng**: Toàn bộ 38 mã hàng dự án NN9 (Trang 3 bản vẽ), ví dụ mã đại diện: `1414-0GDA0BV` (`1HWU3023C1XX02NN9` - `X LED CABLE 30AWG 230mm`).
+
+### 7.2. Quy Tắc Sinh Mã Thùng (Carton SN)
+Theo đúng ghi chú kỹ thuật trên bản vẽ `PD016906`:
+$$\text{Carton No (18 ký tự)} = \underbrace{\text{MC220TW1}}_{\text{pkg\_prefix}} + \underbrace{\text{2}}_{\text{Ký tự cố định}} + \underbrace{\text{YY}}_{\text{Năm (2 số)}} + \underbrace{\text{WW}}_{\text{Tuần (2 số)}} + \underbrace{\text{Seq:05d}}_{\text{Sê-ri 5 số}}$$
+
+- **Tiền tố nhà cung ứng (`pkg_prefix`)**: Mặc định là `MC220TW1`, được cấu hình trong phân hệ Quản trị (Admin), khóa không cho phép sửa đổi tại giao diện trạm đóng gói.
+- **Ký tự cố định**: Số `2` (theo quy cách bản vẽ Pegatron).
+- **Thời gian sản xuất**: `YY` (2 chữ số cuối của năm) + `WW` (2 chữ số tuần trong năm theo ISO).
+- **Bộ đếm sê-ri 5 chữ số**:
+  - Dải sê-ri xưởng Việt Nam: **`50001` – `99999`**.
+  - **Reset sê-ri**: Tự động reset về `50001` vào lúc 00:00:00 ngày đầu tiên của mỗi tháng mới (`YYYY-MM` theo giờ cục bộ của máy chủ nhà máy).
+  - Dùng chung một bộ đếm thống nhất cho toàn bộ danh mục sản phẩm `erro_05`, không tách riêng theo mã hàng hay tuần sản xuất.
+- **Chống trùng lặp & Khóa hàng**: Cấp phát sê-ri sử dụng cơ chế khóa hàng bảo đảm an toàn dữ liệu tuyệt đối khi nhiều cân thao tác đồng thời.
+
+### 7.3. Cấu Trúc Mã Vạch 1D & 2D QR Code
+- **Mã vạch 1D (Code 128)** gồm 5 mã:
+  1. `Carton No`: Mã hóa chuỗi `{carton_sn}` (18 ký tự).
+  2. `P/N`: Mã hóa mã Item của Pegatron (`{item_name}`, ví dụ `1414-0GDA0BV`).
+  3. `Date Code`: Mã hóa mã tuần `{date_code}` (`YYWW`, ví dụ `2637`).
+  4. `Lot Code`: Mã hóa ngày sản xuất `{lot_code}` (`YYYYMMDD`, ví dụ `20260912`).
+  5. `QTY`: Mã hóa số lượng đóng gói `{qty}` (ví dụ `1000`).
+- **Mã vạch 2D QR Code**:
+  Tổng hợp 7 trường dữ liệu phân cách bằng dấu phẩy:
+  ```text
+  {CartonNo},{Item},{MPN},{Batch},{QTY},{DateCode},{LotCode}
+  ```
+  *Ví dụ thực tế*:
+  `MC220TW12263750001,1414-0GDA0BV,,,1000,2637,20260912`  
+  *(Các trường rỗng như MPN, Batch giữ nguyên vị trí phân cách bằng dấu phẩy)*.
+
+### 7.4. Cấu Hình BarTender Template & 12 Named SubStrings (`erro_05.btw`)
+1. `CartonNo`: Mã thùng 18 ký tự (`{carton_sn}`)
+2. `Item`: Mã linh kiện Pegatron (`{item_name}`)
+3. `DESC`: Mô tả quy cách (`{product_desc}`)
+4. `DateCode`: Tuần sản xuất `YYWW` (`{date_code}`)
+5. `LotCode`: Ngày sản xuất `YYYYMMDD` (`{lot_code}`)
+6. `QTY`: Số lượng đóng gói (`{qty}`)
+7. `QRCode_Content`: Chuỗi nội dung nạp vào mã QR 2D
+8. `MPN`: Mã MPN (mặc định `""`)
+9. `Rev`: Phiên bản khách hàng (lấy từ `Product.revision`, nếu không có thì `""`)
+10. `Config`: Cấu hình (mặc định `""`)
+11. `Batch`: Mã Batch (mặc định `""`, hoặc lấy từ ca đóng gói nếu có nhập)
+12. `Stage`: Công đoạn sản xuất (mặc định `""`)
+
+### 7.5. Quy Trình Vận Hành & Cân Đóng Gói (Packing UI)
+- **Chế độ đóng gói**: `weight_scale` (xác thực dải cân `Weight Tolerance` trước khi cấp phát số Carton SN và in nhãn).
+- **Date Code**: Tính tự động từ giờ máy chủ nhà máy lúc in.
+- **Lot Code**: Mặc định tự động sinh theo ngày `YYYYMMDD` của thời điểm in, người vận hành có thể điều chỉnh trên giao diện ca đóng gói nếu xưởng có mã lô riêng.
+- **PO Number & Batch**: Cho phép để trống mặc định (bypass popup bắt buộc PO), cho phép nhập tùy chọn.
+- **Chính sách In lại (Reprint)**: Tuyệt đối cấm in lại tem cũ (No Reprint) theo quyết định `ADR-0005`.
+
 

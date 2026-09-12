@@ -13,7 +13,7 @@ export interface Product {
   packed_qty: number;
   start_part?: string;
   middle_part?: string;
-  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03' | 'erro_04';
+  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03' | 'erro_04' | 'erro_05';
   template_path?: string;
   allow_partial: number;
   packing_mode?: 'item_scan' | 'weight_scale';

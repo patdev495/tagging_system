@@ -108,7 +108,12 @@
               </td>
 
               <td class="p-4">
-                <div v-if="product.template_type === 'erro_04'" class="text-xs font-mono space-y-0.5">
+                <div v-if="product.template_type === 'erro_05'" class="text-xs font-mono space-y-0.5">
+                  <div><span class="text-slate-400">Prefix:</span> <span class="font-bold text-emerald-600">{{ product.pkg_prefix || 'MC220TW1' }}</span></div>
+                  <div><span class="text-slate-400">Factory item:</span> <span class="text-slate-700 font-semibold">{{ product.factory_item_code || '-' }}</span></div>
+                  <div class="text-[11px] text-slate-500 truncate max-w-[180px]" :title="product.product_desc">{{ product.product_desc }}</div>
+                </div>
+                <div v-else-if="product.template_type === 'erro_04'" class="text-xs font-mono space-y-0.5">
                   <div><span class="text-slate-400">Carton ID:</span> <span class="font-bold text-rose-600">{{ product.carton_id_prefix || '-' }}...</span></div>
                   <div><span class="text-slate-400">Factory item:</span> <span class="text-slate-700 font-semibold">{{ product.factory_item_code || '-' }}</span></div>
                   <div><span class="text-slate-400">P/N:</span> <span class="text-slate-700 font-semibold">{{ product.mfr_pn || '-' }}</span></div>
@@ -138,6 +143,7 @@
                 <div class="space-y-1">
                   <span :class="[
                     'px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider inline-block',
+                    product.template_type === 'erro_05' ? 'bg-teal-100 text-teal-800 border border-teal-200' :
                     product.template_type === 'erro_04' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
                     product.template_type === 'erro_03' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
                     product.template_type === 'erro_02' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
@@ -145,7 +151,7 @@
                     product.template_type === 'detailed' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
                     'bg-indigo-100 text-indigo-800 border border-indigo-200'
                   ]">
-                    {{ product.template_type === 'erro_04' ? 'Erro 04' : (product.template_type === 'erro_03' ? 'Erro 03' : (product.template_type === 'erro_02' ? 'Erro 02' : (product.template_type === 'erro_01' ? 'Erro 01' : (product.template_type || 'standard')))) }}
+                    {{ product.template_type === 'erro_05' ? 'Erro 05' : (product.template_type === 'erro_04' ? 'Erro 04' : (product.template_type === 'erro_03' ? 'Erro 03' : (product.template_type === 'erro_02' ? 'Erro 02' : (product.template_type === 'erro_01' ? 'Erro 01' : (product.template_type || 'standard'))))) }}
                   </span>
                   <div class="text-[11px] text-slate-400 font-mono truncate max-w-[140px]" :title="product.template_path">
                     {{ product.template_path || 'Mặc định' }}

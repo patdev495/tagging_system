@@ -109,7 +109,7 @@ def test_seed_erro_data(db_session):
     assert erro is not None
 
     prods = db_session.query(Product).filter(Product.customer_id == erro.id).all()
-    assert len(prods) == 22
+    assert len(prods) == 60
     tem1_prods = [p for p in prods if p.template_type == "erro_01"]
     assert len(tem1_prods) == 3
     tem1_names = {p.item_name for p in tem1_prods}
@@ -128,6 +128,9 @@ def test_seed_erro_data(db_session):
     tem3_prods = [p for p in prods if p.template_type == "erro_03"]
     assert len(tem3_prods) == 1
     assert tem3_prods[0].item_name == "2M21-00508-0004H"
+
+    tem5_prods = [p for p in prods if p.template_type == "erro_05"]
+    assert len(tem5_prods) == 38
 
 
 def test_migrate_legacy_erro_data_preserves_customer_and_products(db_session):

@@ -93,7 +93,8 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
 
     const isTem2 = selectedProduct.value.template_type === 'erro_02';
     const isTem3 = selectedProduct.value.template_type === 'erro_03';
-    if (!isTem2 && !isTem3 && (!activePO.value?.trim() || !activeLot.value?.trim())) {
+    const isTem5 = selectedProduct.value.template_type === 'erro_05';
+    if (!isTem2 && !isTem3 && !isTem5 && (!activePO.value?.trim() || !activeLot.value?.trim())) {
       notify?.('Vui lòng nhập PO và LOT trước khi in', 'warning');
       openBatchModal?.();
       return;

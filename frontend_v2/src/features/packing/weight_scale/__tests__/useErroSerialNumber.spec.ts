@@ -91,4 +91,31 @@ describe('useErroSerialNumber Composable (Strict Monotonic Sequence - ADR 0006)'
 
     expect(currentSNPreview.value).toBe('H69C000A');
   });
+
+  it('uses server-provided Carton SN and calculates 18-char preview for erro_05 products', async () => {
+    const erro05Product = ref<Product | null>({
+      id: 50,
+      customer_id: 2,
+      item_name: '1414-0GDA0BV',
+      packed_qty: 1000,
+      template_type: 'erro_05',
+      pkg_prefix: 'MC220TW1',
+      allow_partial: 0,
+    });
+
+    const { fetchNextSN, currentSNPreview, autoSequence } = useErroSerialNumber(erro05Product);
+    autoSequence.value = 50001;
+
+    // Verify local preview (18 chars, format MC220TW12{YY}{WW}50001)
+    expect(currentSNPreview.value).toMatch(/^MC220TW12\d{4}50001$/);
+    expect(currentSNPreview.value.length).toBe(18);
+
+    // Verify server-provided SN
+    vi.mocked(catalogApi.getNextSN).mockResolvedValueOnce({
+      data: { next_seq: 50002, next_sn: 'MC220TW12263750002', pkg_prefix: 'MC220TW1', date_code: '2637' },
+    } as any);
+
+    await fetchNextSN();
+    expect(currentSNPreview.value).toBe('MC220TW12263750002');
+  });
 });

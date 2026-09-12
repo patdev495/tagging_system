@@ -367,4 +367,59 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     });
     expect(lastPackedCarton.value?.carton_sn).toBe('H69C0002');
   });
+
+  it('allows erro_05 weigh and print with empty PO and empty Lot (optional / auto LotCode)', async () => {
+    selectedProduct.value = {
+      id: 50,
+      item_name: '1414-0GDA0BV',
+      template_type: 'erro_05',
+      target_weight: 5.0,
+      min_weight: 0.0,
+      max_weight: 10.0,
+      packed_qty: 1000,
+      weight_unit: 'kg',
+      pkg_prefix: 'MC220TW1',
+      factory_item_code: '1HWU3023C1XX02NN9',
+    } as any;
+    activePO.value = '';
+    activeLot.value = '';
+    scaleReading.value = { weight: 5.0, unit: 'kg', is_stable: true };
+
+    vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
+      data: {
+        id: 201,
+        carton_sn: 'MC220TW12263750001',
+        po_number: null,
+        lot_number: '20260912',
+        date_code: '2637',
+        btxml: '<XML>ERRO-05</XML>',
+      },
+    } as any);
+
+    const { triggerWeighAndPrint, lastPackedCarton } = useWeighAndPrint({
+      selectedProduct,
+      activePO,
+      activeLot,
+      isAgentOnline,
+      scaleReading,
+      scaleStatus,
+      advanceSequence,
+      notify,
+      getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
+    });
+
+    await triggerWeighAndPrint();
+
+    expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
+      product_id: 50,
+      weight: 5.0,
+      po_number: undefined,
+      lot_number: undefined,
+      printer_name: undefined,
+      template_path: undefined,
+      station_id: undefined,
+    });
+    expect(printApi.agentPrint).toHaveBeenCalled();
+    expect(lastPackedCarton.value?.carton_sn).toBe('MC220TW12263750001');
+  });
 });

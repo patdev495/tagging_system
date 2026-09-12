@@ -106,8 +106,9 @@ def test_get_canonical_templates(test_setup):
     assert resp.status_code == 200
     data = resp.json()
     assert "templates" in data
-    assert len(data["templates"]) == 9
+    assert len(data["templates"]) == 10
     filenames = [t["filename"] for t in data["templates"]]
+    assert "erro_05.btw" in filenames
     assert "erro_04.btw" in filenames
     assert "erro_03.btw" in filenames
     assert "erro_02.btw" in filenames

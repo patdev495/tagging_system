@@ -19,6 +19,13 @@ export interface CanonicalTemplate {
 
 export const CANONICAL_TEMPLATES: CanonicalTemplate[] = [
   {
+    filename: 'erro_05.btw',
+    customer: 'ERRO',
+    type: 'erro_05',
+    name: 'Erro 05 (Pegatron NN9 PD016906)',
+    desc: '38 mã hàng NN9 — Carton No 18 ký tự: MC220TW1 + 2 + YYWW + 50001..99999 (reset hàng tháng)'
+  },
+  {
     filename: 'erro_04.btw',
     customer: 'ERRO',
     type: 'erro_04',
