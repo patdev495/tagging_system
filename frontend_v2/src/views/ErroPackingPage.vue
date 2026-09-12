@@ -214,7 +214,7 @@
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
               (settings.printMode !== 'centralized' && templateMissing)
                 ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
-                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || (activePO?.trim() && activeLot?.trim()))
+                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || (activePO?.trim() && activeLot?.trim()))
                   ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                   : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
             ]"
