@@ -70,8 +70,8 @@
               <!-- Erro products use their fixed canonical template. -->
               <div v-if="isErroProduct" class="w-full flex items-center gap-2 p-3 rounded-xl border border-purple-200 bg-purple-50/60 text-xs font-mono text-purple-900">
                 <span class="px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-bold uppercase text-[10px] shrink-0">Cố định Erro</span>
-                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'erro_03' ? 'erro_03.btw' : (formData.template_type === 'erro_02' ? 'erro_02.btw' : 'erro_01.btw') }}</span>
-                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'erro_03' ? 'Erro 03 Luxshare NME' : (formData.template_type === 'erro_02' ? 'Erro 02 Pallet SSCC & ASIN' : 'Erro 01 Thùng Carton SN') }})</span>
+                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'erro_04' ? 'erro_04.btw' : (formData.template_type === 'erro_03' ? 'erro_03.btw' : (formData.template_type === 'erro_02' ? 'erro_02.btw' : 'erro_01.btw')) }}</span>
+                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'erro_04' ? 'Erro 04 PD027032' : (formData.template_type === 'erro_03' ? 'Erro 03 Luxshare NME' : (formData.template_type === 'erro_02' ? 'Erro 02 Pallet SSCC & ASIN' : 'Erro 01 Thùng Carton SN')) }})</span>
               </div>
 
               <!-- For UI products: Select from 5 valid UI templates or retain existing DB value -->
@@ -224,12 +224,25 @@
                 <option value="erro_01">Erro 01 (PD014736 Carton SN + Rev — erro_01.btw)</option>
                 <option value="erro_02">Erro 02 (PD027504 Pallet SSCC + ASIN — erro_02.btw)</option>
                 <option value="erro_03">Erro 03 (Luxshare NME PD024364 — erro_03.btw)</option>
+                <option value="erro_04">Erro 04 (eero PD027032 — erro_04.btw)</option>
               </optgroup>
               <optgroup label="Khách Hàng UI">
                 <option value="standard">Tiêu chuẩn (Standard - Tem thùng cơ bản)</option>
                 <option value="detailed">Chi tiết (Detailed - Lưới 40 mã sê-ri con)</option>
               </optgroup>
             </select>
+          </div>
+
+          <!-- Fields for Erro 04 (PD027032) -->
+          <div v-if="formData.template_type === 'erro_04'" class="p-4 bg-rose-50/60 rounded-2xl border border-rose-200 space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Factory Item Code *</label><input v-model="formData.factory_item_code" required placeholder="115-00020" class="w-full p-2.5 rounded-xl border border-rose-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Carton ID Prefix *</label><select v-model="formData.carton_id_prefix" required class="w-full p-2.5 rounded-xl border border-rose-200 bg-white font-mono text-xs font-bold"><option disabled value="">Chọn H/K</option><option value="H">H - CAT6A</option><option value="K">K - CAT5E</option></select></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">UPC *</label><input v-model="formData.upc" required class="w-full p-2.5 rounded-xl border border-rose-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Supplier PN *</label><input v-model="formData.mfr_pn" required class="w-full p-2.5 rounded-xl border border-rose-200 bg-white font-mono text-xs font-bold" /></div>
+              <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">Revision *</label><input v-model="formData.revision" required class="w-full p-2.5 rounded-xl border border-rose-200 bg-white font-mono text-xs font-bold" /></div>
+            </div>
+            <div class="space-y-1"><label class="text-[11px] font-bold text-slate-700 uppercase">SKU Description *</label><textarea v-model="formData.product_desc" required rows="2" class="w-full p-2.5 rounded-xl border border-rose-200 bg-white font-mono text-xs"></textarea></div>
           </div>
 
           <!-- Fields for Erro 03 (PD024364) -->

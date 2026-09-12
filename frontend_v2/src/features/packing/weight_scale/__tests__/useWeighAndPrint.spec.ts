@@ -246,4 +246,125 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     });
     expect(printApi.agentPrint).toHaveBeenCalled();
   });
+
+  it('blocks erro_04 weigh and print if PO or Lot is missing and opens batch modal', async () => {
+    selectedProduct.value = {
+      id: 40,
+      item_name: 'G111A1A',
+      template_type: 'erro_04',
+      target_weight: 5.0,
+      min_weight: 0.0,
+      max_weight: 10.0,
+      packed_qty: 120,
+      weight_unit: 'kg',
+      carton_id_prefix: 'H',
+      factory_item_code: '115-00020',
+      revision: 'B',
+    } as any;
+    activePO.value = '';
+    activeLot.value = 'LOT-04';
+    scaleReading.value = { weight: 5.0, unit: 'kg', is_stable: true };
+
+    const openBatchModal = vi.fn();
+    const { triggerWeighAndPrint } = useWeighAndPrint({
+      selectedProduct,
+      activePO,
+      activeLot,
+      isAgentOnline,
+      scaleReading,
+      scaleStatus,
+      advanceSequence,
+      notify,
+      openBatchModal,
+      getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
+    });
+
+    await triggerWeighAndPrint();
+
+    expect(notify).toHaveBeenCalledWith('Vui lòng nhập PO và LOT trước khi in', 'warning');
+    expect(openBatchModal).toHaveBeenCalled();
+    expect(packingApi.weighPackCarton).not.toHaveBeenCalled();
+  });
+
+  it('executes erro_04 weigh and print with required PO and Lot and supports mutable session values', async () => {
+    selectedProduct.value = {
+      id: 40,
+      item_name: 'G111A1A',
+      template_type: 'erro_04',
+      target_weight: 5.0,
+      min_weight: 0.0,
+      max_weight: 10.0,
+      packed_qty: 120,
+      weight_unit: 'kg',
+      carton_id_prefix: 'H',
+      factory_item_code: '115-00020',
+      revision: 'B',
+    } as any;
+    activePO.value = 'PO-ERRO-1';
+    activeLot.value = 'LOT-ERRO-1';
+    scaleReading.value = { weight: 5.01, unit: 'kg', is_stable: true };
+
+    vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
+      data: {
+        id: 101,
+        carton_sn: 'H69C0001',
+        po_number: 'PO-ERRO-1',
+        lot_number: 'LOT-ERRO-1',
+        btxml: '<XML>ERRO-04</XML>',
+      },
+    } as any);
+    vi.mocked(printApi.agentPrint).mockResolvedValueOnce({ success: true } as any);
+    vi.mocked(printApi.updateCartonStatus).mockResolvedValueOnce({} as any);
+
+    const { triggerWeighAndPrint, lastPackedCarton } = useWeighAndPrint({
+      selectedProduct,
+      activePO,
+      activeLot,
+      isAgentOnline,
+      scaleReading,
+      scaleStatus,
+      advanceSequence,
+      notify,
+      getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
+    });
+
+    await triggerWeighAndPrint();
+
+    expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
+      product_id: 40,
+      weight: 5.01,
+      po_number: 'PO-ERRO-1',
+      lot_number: 'LOT-ERRO-1',
+      printer_name: undefined,
+      template_path: undefined,
+      station_id: undefined,
+    });
+    expect(lastPackedCarton.value?.carton_sn).toBe('H69C0001');
+
+    // Operator mutates session values to PO-ERRO-2 and LOT-ERRO-2
+    activePO.value = 'PO-ERRO-2';
+    activeLot.value = 'LOT-ERRO-2';
+    vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
+      data: {
+        id: 102,
+        carton_sn: 'H69C0002',
+        po_number: 'PO-ERRO-2',
+        lot_number: 'LOT-ERRO-2',
+        btxml: '<XML>ERRO-04-2</XML>',
+      },
+    } as any);
+
+    await triggerWeighAndPrint();
+
+    expect(packingApi.weighPackCarton).toHaveBeenLastCalledWith({
+      product_id: 40,
+      weight: 5.01,
+      po_number: 'PO-ERRO-2',
+      lot_number: 'LOT-ERRO-2',
+      printer_name: undefined,
+      template_path: undefined,
+      station_id: undefined,
+    });
+    expect(lastPackedCarton.value?.carton_sn).toBe('H69C0002');
+  });
 });

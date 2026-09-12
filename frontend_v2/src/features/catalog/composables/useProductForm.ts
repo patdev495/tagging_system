@@ -9,7 +9,7 @@ export interface ProductFormData {
   packed_qty: number;
   start_part: string;
   middle_part: string;
-  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03';
+  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03' | 'erro_04';
   template_path: string;
   allow_partial: number;
   customer_id: number | null;
@@ -23,6 +23,8 @@ export interface ProductFormData {
   revision: string;
   asin?: string;
   product_desc?: string;
+  factory_item_code?: string;
+  carton_id_prefix?: 'H' | 'K' | '';
 }
 
 export interface UseProductFormProps {
@@ -45,6 +47,7 @@ export function getCanonicalTemplateName(templateType?: string): string {
     case 'erro_03': return 'erro_03.btw';
     case 'erro_02': return 'erro_02.btw';
     case 'erro_01': return 'erro_01.btw';
+    case 'erro_04': return 'erro_04.btw';
     case 'detailed': return 'carton_detail_1M_W.btw';
     case 'standard':
     default: return 'carton_base.btw';
@@ -103,6 +106,8 @@ export function useProductForm(
     revision: 'B',
     asin: '',
     product_desc: '',
+    factory_item_code: '',
+    carton_id_prefix: '',
   });
 
   const checkTemplateValidity = async () => {
@@ -163,11 +168,17 @@ export function useProductForm(
     const currentProps = 'value' in props ? props.value : props;
     const cust = currentProps.customers.find(c => c.id === formData.value.customer_id);
     const code = (cust?.code || '').toUpperCase();
-    return code === 'ERRO' || ['erro_01', 'erro_02', 'erro_03'].includes(formData.value.template_type);
+    return code === 'ERRO' || ['erro_01', 'erro_02', 'erro_03', 'erro_04'].includes(formData.value.template_type);
   });
 
   const onTemplateTypeChange = () => {
-    if (formData.value.template_type === 'erro_03') {
+    if (formData.value.template_type === 'erro_04') {
+      formData.value.template_path = 'erro_04.btw';
+      formData.value.packing_mode = 'weight_scale';
+      formData.value.min_weight = formData.value.min_weight ?? 0;
+      formData.value.max_weight = formData.value.max_weight ?? 10;
+      formData.value.target_weight = formData.value.target_weight ?? 5;
+    } else if (formData.value.template_type === 'erro_03') {
       formData.value.template_path = 'erro_03.btw';
       formData.value.packing_mode = 'weight_scale';
       formData.value.pkg_prefix = formData.value.pkg_prefix || '1012665';
@@ -234,6 +245,8 @@ export function useProductForm(
           revision: p.revision ?? '',
           asin: p.asin || '',
           product_desc: p.product_desc || '',
+          factory_item_code: p.factory_item_code || '',
+          carton_id_prefix: p.carton_id_prefix || '',
         };
       } else {
         const defaultCustomerId = currentProps.customers.length > 0 ? currentProps.customers[0].id : null;
@@ -257,6 +270,8 @@ export function useProductForm(
           revision: 'B',
           asin: '',
           product_desc: '',
+          factory_item_code: '',
+          carton_id_prefix: '',
         };
         if (defaultCustomerId) {
           onCustomerChange();
@@ -268,7 +283,7 @@ export function useProductForm(
 
   const setPackingMode = (mode: 'item_scan' | 'weight_scale') => {
     formData.value.packing_mode = mode;
-    const isErro = ['erro_01', 'erro_02', 'erro_03'].includes(formData.value.template_type);
+    const isErro = ['erro_01', 'erro_02', 'erro_03', 'erro_04'].includes(formData.value.template_type);
     if (mode === 'weight_scale' && !isErro) {
       formData.value.template_type = 'erro_01';
       formData.value.template_path = 'erro_01.btw';

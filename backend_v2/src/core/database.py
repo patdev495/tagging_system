@@ -112,6 +112,27 @@ def seed_erro_data(db):
             ("2M21-00508-0004H", 190, "1012665", None, "erro_03", r"D:\PAT\Templates\erro_03.btw", "weight_scale", "/", "kg", 6.000, 5.000, 7.000, None, None, "CAT5E ETHERNET CABLE"),
         ]
 
+        # PD027032 Table 1 Erro 04 products (exactly 16 complete rows):
+        # Note: The incomplete row NYS6248 is not created and is documented as pending source data (lacks UPC and SKU).
+        erro_04_products = [
+            ("115-00020", "840268939793", "G111A1A", "NYS5896", 120, "H", "Accessory, Ethernet Cable CAT6a, 15cm, Black, 1PK, Basic Box"),
+            ("115-00021", "840268971793", "G111B1A", "NYS5944", 96, "H", "Accessory, Ethernet Cable CAT6a, 30cm, Black, 1PK, Basic Box"),
+            ("115-00022", "840268917517", "G111C1A", "NYS5850", 90, "H", "Accessory, Ethernet Cable CAT6a, 91cm, Black, 1PK, Basic Box"),
+            ("115-00023", "840268972110", "G111D1A", "NYS5945", 66, "H", "Accessory, Ethernet Cable CAT6a, 152cm, Black, 1PK, Basic Box"),
+            ("115-00024", "840268922047", "G111F1A", "NYS5946", 54, "H", "Accessory, Ethernet Cable CAT6a, 305cm, Black, 1PK, Basic Box"),
+            ("115-00025", "840268995669", "G111A1B", "NYS5895", 120, "H", "Accessory, Ethernet Cable CAT6a, 15cm, White, 1PK, Basic Box"),
+            ("115-00026", "840268992958", "G111B1B", "NYS5940", 96, "H", "Accessory, Ethernet Cable CAT6a, 30cm, White, 1PK, Basic Box"),
+            ("115-00027", "840268921125", "G111C1B", "NYS5849", 90, "H", "Accessory, Ethernet Cable CAT6a, 91cm, White, 1PK, Basic Box"),
+            ("115-00028", "840268976620", "G111D1B", "NYS5941", 66, "H", "Accessory, Ethernet Cable CAT6a, 152cm, White, 1PK, Basic Box"),
+            ("115-00029", "840268911294", "G111F1B", "NYS5943", 54, "H", "Accessory, Ethernet Cable CAT6a, 305cm, White, 1PK, Basic Box"),
+            ("115-00030", "840268936198", "G111A1C", "NYS5897", 120, "H", "Accessory, Ethernet Cable CAT6a, 15cm, Midnight Blue, 1PK, Basic Box"),
+            ("115-00031", "840268937065", "G111B1C", "NYS5947", 96, "H", "Accessory, Ethernet Cable CAT6a, 30cm, Midnight Blue, 1PK, Basic Box"),
+            ("115-00032", "840268938062", "G111C1C", "NYS5851", 90, "H", "Accessory, Ethernet Cable CAT6a, 91cm, Midnight Blue, 1PK, Basic Box"),
+            ("115-00033", "840268902889", "G111D1C", "NYS5949", 66, "H", "Accessory, Ethernet Cable CAT6a, 152cm, Midnight Blue, 1PK, Basic Box"),
+            ("115-00034", "840268936235", "G111F1C", "NYS5950", 54, "H", "Accessory, Ethernet Cable CAT6a, 305cm, Midnight Blue, 1PK, Basic Box"),
+            ("115-00035", "840080582474", "G011C1B", "NYS5989", 90, "K", "Accessory, Ethernet Cable CAT5e, 91cm, White, 1PK, Basic Box"),
+        ]
+
         for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w, upc, asin, product_desc in erro_products:
             prod = db.query(models.Product).filter(
                 models.Product.customer_id == erro_customer.id,
@@ -151,6 +172,31 @@ def seed_erro_data(db):
                     updated = True
                 if updated:
                     db.add(prod)
+
+        for factory_item_code, upc, sku, supplier_pn, qty, carton_id_prefix, product_desc in erro_04_products:
+            prod = db.query(models.Product).filter(
+                models.Product.customer_id == erro_customer.id,
+                models.Product.item_name == sku,
+            ).first()
+            if not prod:
+                db.add(models.Product(
+                    customer_id=erro_customer.id,
+                    item_name=sku,
+                    upc=upc,
+                    packed_qty=qty,
+                    template_type="erro_04",
+                    template_path=r"D:\PAT\Templates\erro_04.btw",
+                    packing_mode="weight_scale",
+                    mfr_pn=supplier_pn,
+                    product_desc=product_desc,
+                    factory_item_code=factory_item_code,
+                    carton_id_prefix=carton_id_prefix,
+                    revision="B",
+                    weight_unit="kg",
+                    min_weight=0.0,
+                    max_weight=10.0,
+                    target_weight=5.0,
+                ))
 
         db.commit()
     except Exception as e:
@@ -201,6 +247,8 @@ def init_db():
                     ('revision', 'VARCHAR(10) DEFAULT \'B\'', 'VARCHAR(10) DEFAULT \'B\''),
                     ('asin', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
                     ('product_desc', 'VARCHAR(255) NULL', 'VARCHAR(255) NULL'),
+                    ('factory_item_code', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
+                    ('carton_id_prefix', 'VARCHAR(1) NULL', 'VARCHAR(1) NULL'),
                 ]
                 for col_name, sqlite_type, mssql_type in new_prod_cols:
                     if col_name not in prod_cols:

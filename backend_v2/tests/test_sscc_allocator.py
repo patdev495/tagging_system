@@ -57,8 +57,8 @@ def db_session():
 
 
 @pytest.fixture
-def a11_tem2_product(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+def erro_02_product(db_session):
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
 
@@ -72,8 +72,8 @@ def a11_tem2_product(db_session):
         max_weight=7.000,
         weight_unit="kg",
         mfr_pn="NYS5998",
-        template_type="a11_tem2",
-        template_path=r"D:\PAT\Templates\a11_02.btw",
+        template_type="erro_02",
+        template_path=r"D:\PAT\Templates\erro_02.btw",
     )
     db_session.add(product)
     db_session.commit()
@@ -85,9 +85,9 @@ def test_next_sscc_sequence_starts_at_1_when_empty(db_session):
     assert seq == 1
 
 
-def test_next_sscc_sequence_increments_across_cartons(db_session, a11_tem2_product):
+def test_next_sscc_sequence_increments_across_cartons(db_session, erro_02_product):
     c1 = Carton(
-        product_id=a11_tem2_product.id,
+        product_id=erro_02_product.id,
         carton_sn="03703390700000013",
         status="SUCCESS",
         is_reprint=0,
@@ -99,8 +99,8 @@ def test_next_sscc_sequence_increments_across_cartons(db_session, a11_tem2_produ
     assert seq == 2
 
 
-def test_plan_next_sscc_carton_sn(db_session, a11_tem2_product):
-    plan = plan_next_sscc_carton_sn(db_session, a11_tem2_product)
+def test_plan_next_sscc_carton_sn(db_session, erro_02_product):
+    plan = plan_next_sscc_carton_sn(db_session, erro_02_product)
     assert plan.sequence == 1
     assert plan.check_digit == 3
     assert plan.carton_sn == "03703390700000013"

@@ -3,7 +3,7 @@ from src.core.models import Product, Carton
 from src.features.print.domain import BTXMLDocument
 
 
-def test_a11_btxml_document_from_carton_data():
+def test_erro_01_btxml_document_from_carton_data():
     product = Product(
         id=1,
         item_name="840-00083",
@@ -55,7 +55,7 @@ def test_a11_btxml_document_from_carton_data():
     assert f'<NamedSubString Name="QR_Content"><Value>{expected_qr}</Value></NamedSubString>' in xml
 
 
-def test_a11_btxml_revision_empty_when_no_rev():
+def test_erro_01_btxml_revision_empty_when_no_rev():
     """Khi product.revision = "" (sản phẩm đặc biệt không có Rev),
     substrings['Rev'] phải là "" — không được fallback thành 'B'."""
     product = Product(

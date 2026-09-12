@@ -28,6 +28,14 @@ Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hìn
 - Với khách hàng Erro - `erro_03` (`PD024364`): Mã định danh thùng xuất xưởng Luxshare NME gồm 17 ký tự: mã nhà cung ứng 7 chữ số (mặc định xưởng Việt Nam là `1012665`), thời gian sản xuất 6 chữ số (`YYMMDD`), và số thứ tự 4 chữ số reset theo ngày.
 _Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem Erro 01)
 
+**Erro 04 Carton Sequence**:
+Bộ đếm chung, tăng đơn điệu và không reset cho mọi Product dùng Erro Label Template Code `erro_04`. Bộ đếm được biểu diễn bằng bốn ký tự base-32 từ `0001` đến `ZZZZ`, dùng `0`-`9` và chữ cái trừ `I`, `L`, `O`, `U`; tiền tố `H` (CAT6A) hoặc `K` (CAT5E) không tạo bộ đếm riêng.
+_Avoid_: Số thứ tự theo ngày, bộ đếm H/K riêng, số thập phân bốn chữ số
+
+**Erro 04 Carton ID Prefix**:
+Ký tự đầu của Carton SN thuộc Product `erro_04`, được cấu hình bắt buộc theo Product: `H` cho CAT6A và `K` cho CAT5E. Đây là metadata ổn định, không được suy luận từ SKU hay SKU Description.
+_Avoid_: Tự nhận diện loại cáp từ tên sản phẩm, pkg_prefix
+
 **SSCC**:
 Mã định danh công-ten-nơ vận chuyển duy nhất theo tiêu chuẩn GS1 (Serial Shipping Container Code, 18 chữ số), bắt đầu bằng `(00)`, dùng làm mã định danh Carton SN cho tem thùng xuất xưởng CM của khách hàng Erro (`erro_02`).
 _Avoid_: Pallet code, mã công-ten-nơ, mã vận đơn
@@ -40,21 +48,33 @@ _Avoid_: Mã Amazon, mã sàn, product ASIN
 Mã thời gian sản xuất gồm 2 chữ số cuối của năm và 2 chữ số của tuần trong năm theo chuẩn ISO (`YYWW`, ví dụ tuần 34 năm 2026 là `2634`).
 _Avoid_: Tuần sản xuất, mã tuần, date text
 
+**Manufacturing Date**:
+Ngày sản xuất của Carton, lấy theo Local Server Time tại thời điểm in. Với `erro_04`, trường `Date` in theo `YYMMDD` và các thành phần ngày trong Carton SN được mã hóa từ chính ngày này theo bảng PD027032.
+_Avoid_: Date Code, ngày nhập tay, ngày đơn hàng
+
 **Lot Number**:
-Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô.
+Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô. Với `erro_04`, Lot Number là bắt buộc cho Production Run để phục vụ truy xuất nguồn gốc, nhưng không được in trên tem.
 _Avoid_: Mã mẻ, mã batch, số lô con
 
 **PO Number**:
-Mã đơn đặt hàng của khách hàng (Purchase Order / 訂單號) tương ứng với đợt sản xuất, được cấu hình hoặc nhập khi mở ca đóng hàng.
+Mã đơn đặt hàng của khách hàng (Purchase Order / 訂單號) tương ứng với đợt sản xuất, được cấu hình hoặc nhập khi mở ca đóng hàng. Với Erro Label Template Code `erro_04`, đây là trường bắt buộc, được nhập một lần khi mở Production Run và áp dụng cho toàn bộ Carton của đợt đó.
 _Avoid_: Mã PO, order ref, mã hợp đồng
 
 **Mfr P/N**:
 Mã số chứng nhận sản xuất hoặc tiêu chuẩn nội bộ (承认书编号 / NYS Spec No, ví dụ: `NYS5998`), được cấu hình cố định cho từng Product.
 _Avoid_: Mã chứng nhận, mã spec, internal part number
 
+**Revision**:
+Phiên bản khách hàng áp dụng cho Product, được in tại trường `Rev` của tem `erro_04`. Revision là metadata bắt buộc theo Product `erro_04`, không có giá trị mặc định dùng chung.
+_Avoid_: Revision mặc định, revision của file tem
+
 **Factory P/N**:
 Mã số thành phẩm hoặc vật tư nội bộ nhà máy (厂内料号, ví dụ: `1LAE0009D2U004MAAR`), dùng để đối chiếu với hệ thống ERP/BOM của Nien Yi và phục vụ tra cứu sản phẩm trên Web UI.
 _Avoid_: Mã xưởng, ERP code, material code, part number nội bộ
+
+**Factory Item Code**:
+Mã ITEM nội bộ của nhà máy dùng để đối chiếu Product với bảng nguồn, ví dụ `115-00020` của `erro_04`. Đây là metadata riêng không in trên tem và không đồng nhất với SKU hoặc Supplier PN.
+_Avoid_: SKU, Supplier PN, mã in nhãn
 
 **Carton Item**:
 Một sản phẩm con riêng lẻ được quét bằng máy quét sê-ri để xếp vào thùng (Carton), được định danh bởi một mã sê-ri sản phẩm (Item SN).
@@ -107,7 +127,7 @@ Giá trị trọng lượng thực tế đo được từ Scale tại thời đi
 _Avoid_: Số cân, trọng lượng đọc, scale value
 
 **Weight Tolerance**:
-Dải trọng lượng hợp lệ của Product (xác định bởi ngưỡng tối thiểu `min_weight` và tối đa `max_weight`), là điều kiện tiên quyết để hệ thống chấp thuận in tem cho Carton ở chế độ `weight_scale`.
+Dải trọng lượng hợp lệ của Product (xác định bởi ngưỡng tối thiểu `min_weight` và tối đa `max_weight`), là điều kiện tiên quyết để hệ thống chấp thuận in tem cho Carton ở chế độ `weight_scale`. Các Product `erro_04` được khởi tạo với dải 0–10 kg và có thể được Admin điều chỉnh theo thông số thực tế.
 _Avoid_: Biên độ cân, khoảng cân cho phép, dải sai số
 
 **UPC**:
@@ -121,7 +141,7 @@ Vai trò phân quyền của tài khoản truy cập vào phân hệ Quản tr�
 _Avoid_: Phân quyền động, user type, level, cấp bậc
 
 **Production Run**:
-Đợt sản xuất gom nhóm các Carton được đóng trong ca làm việc, được nhận diện qua **Job Order** (ở chế độ `item_scan`) hoặc bộ đôi **PO Number** & **Lot Number** (ở chế độ `weight_scale`).
+Đợt sản xuất gom nhóm các Carton được đóng trong ca làm việc, được nhận diện qua **Job Order** (ở chế độ `item_scan`) hoặc bộ đôi **PO Number** & **Lot Number** (ở chế độ `weight_scale`). Với `erro_04`, người vận hành có thể sửa PO Number và Lot Number trong khi chạy; mỗi Carton giữ snapshot của hai giá trị tại lúc in, không hồi tố các Carton đã in.
 _Avoid_: Phiên làm việc, ca chạy, mẻ hàng
 
 **Shipped Job Order Carton Slot**:
@@ -155,3 +175,4 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 
 - **packed_by**: Trường `packed_by` trong bảng cartons thực chất đang lưu tên của **Printer** (Thiết bị in) chứ không phải thông tin của người đóng gói (Packer/Operator).
 - **CN**: Ký tự `CN` ở tiền tố số sê-ri (`start_part`) là viết tắt của **Carton Number**, hoàn toàn độc lập với ký tự `CN` đại diện cho Trung Quốc (China) trong trường quốc gia sản xuất (`Origin Country` / `carton_origin`).
+- **NYS6248**: Dòng sản phẩm NYS6248 trong Bảng 1 của bản vẽ PD027032 thiếu thông tin UPC và SKU nên chưa được tạo vào danh mục Erro 04; được ghi nhận là dữ liệu chờ bổ sung từ khách hàng (pending source data).

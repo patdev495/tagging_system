@@ -18,7 +18,7 @@ def db_session():
 
 
 @pytest.fixture
-def a11_product(db_session):
+def erro_product(db_session):
     customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
@@ -64,13 +64,13 @@ def ui_product(db_session):
     return product
 
 
-def test_reprint_a11_carton_is_strictly_forbidden(db_session, a11_product):
+def test_reprint_erro_carton_is_strictly_forbidden(db_session, erro_product):
     """
-    ADR 0005: Customer A11 strictly forbids carton label reprints
+    ADR 0005: Customer Erro strictly forbids carton label reprints
     to eliminate any risk of duplicate labels and mixed inventory.
     """
     orig = Carton(
-        product_id=a11_product.id,
+        product_id=erro_product.id,
         carton_sn="VHK00102372608000081",
         weight=12.480,
         po_number="PO-ORIG-100",
@@ -86,7 +86,7 @@ def test_reprint_a11_carton_is_strictly_forbidden(db_session, a11_product):
 
     with pytest.raises(HTTPException) as exc_info:
         reprint_carton(
-            carton_id=int(orig.id),  # type: ignore[arg-type]
+            carton_id=cast(int, orig.id),
             printer_name="TSC_TTP_244_Pro",
             db=db_session,
         )
@@ -112,7 +112,7 @@ def test_reprint_ui_carton_still_allowed(db_session, ui_product):
     db_session.commit()
 
     reprinted = reprint_carton(
-        carton_id=int(orig.id),  # type: ignore[arg-type]
+        carton_id=cast(int, orig.id),
         printer_name="TSC_TTP_244_Pro",
         db=db_session,
     )
@@ -122,16 +122,16 @@ def test_reprint_ui_carton_still_allowed(db_session, ui_product):
     assert cast(int, reprinted.is_reprint) == 1
 
 
-def test_weigh_pack_a11_rejects_custom_sn(db_session, a11_product):
+def test_weigh_pack_erro_rejects_custom_sn(db_session, erro_product):
     """
-    ADR 0005: Customer A11 strictly forbids manual sequence manipulation.
+    ADR 0005: Customer Erro strictly forbids manual sequence manipulation.
     Passing custom_sn must be rejected by the API.
     """
     from src.features.carton.service import weigh_pack_carton
     from src.features.carton.schemas import CartonWeighPackCreate
 
     weigh_in = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_product.id),
         weight=12.500,
         po_number="PO-12345",
         lot_number="LOT-9999",
@@ -145,7 +145,7 @@ def test_weigh_pack_a11_rejects_custom_sn(db_session, a11_product):
     assert "thủ công" in str(exc_info.value.detail) or "manual" in str(exc_info.value.detail).lower() or "ERRO" in str(exc_info.value.detail)
 
 
-def test_weigh_pack_a11_damaged_label_sop_sequential_increment(db_session, a11_product):
+def test_weigh_pack_erro_damaged_label_sop_sequential_increment(db_session, erro_product):
     """
     SOP for Damaged Label:
     If a label is torn/damaged, worker prints the next sequence (F9).
@@ -155,7 +155,7 @@ def test_weigh_pack_a11_damaged_label_sop_sequential_increment(db_session, a11_p
     from src.features.carton.schemas import CartonWeighPackCreate
 
     weigh_1 = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_product.id),
         weight=12.500,
         po_number="PO-12345",
         lot_number="LOT-9999",
@@ -164,7 +164,7 @@ def test_weigh_pack_a11_damaged_label_sop_sequential_increment(db_session, a11_p
 
     # Label 1 is damaged physically, worker prints next label:
     weigh_2 = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_product.id),
         weight=12.500,
         po_number="PO-12345",
         lot_number="LOT-9999",

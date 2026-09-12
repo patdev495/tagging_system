@@ -22,7 +22,7 @@ def db_session():
 
 
 @pytest.fixture
-def a11_product(db_session):
+def erro_01_product(db_session):
     customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
@@ -63,17 +63,17 @@ def test_format_erro_01_carton_sn():
     assert len(sn) == len("VHK0010237") + 4 + 6
 
 
-def test_plan_next_erro_01_carton_sn_first_in_year(db_session, a11_product):
-    plan = plan_next_erro_01_carton_sn(db_session, a11_product, custom_yymm="2608")
+def test_plan_next_erro_01_carton_sn_first_in_year(db_session, erro_01_product):
+    plan = plan_next_erro_01_carton_sn(db_session, erro_01_product, custom_yymm="2608")
     assert plan.sequence == 1
     assert plan.carton_sn == "VHK00102372608000001"
     assert plan.date_code == current_iso_date_code()
 
 
-def test_plan_next_a11_carton_sn_sequential_increment_across_months(db_session, a11_product):
+def test_plan_next_erro_01_carton_sn_sequential_increment_across_months(db_session, erro_01_product):
     # Existing carton in month 08
     c1 = Carton(
-        product_id=a11_product.id,
+        product_id=erro_01_product.id,
         carton_sn="VHK00102372608000080",
         weight=12.45,
         status="SUCCESS",
@@ -83,15 +83,15 @@ def test_plan_next_a11_carton_sn_sequential_increment_across_months(db_session, 
     db_session.commit()
 
     # Next carton in month 09 of the same year 26 should be sequence 81
-    plan = plan_next_erro_01_carton_sn(db_session, a11_product, custom_yymm="2609")
+    plan = plan_next_erro_01_carton_sn(db_session, erro_01_product, custom_yymm="2609")
     assert plan.sequence == 81
     assert plan.carton_sn == "VHK00102372609000081"
 
 
-def test_plan_next_a11_carton_sn_resets_on_new_year(db_session, a11_product):
+def test_plan_next_erro_01_carton_sn_resets_on_new_year(db_session, erro_01_product):
     # Existing carton in year 25
     c_prev_year = Carton(
-        product_id=a11_product.id,
+        product_id=erro_01_product.id,
         carton_sn="VHK00102372512000999",
         weight=12.45,
         status="SUCCESS",
@@ -101,20 +101,20 @@ def test_plan_next_a11_carton_sn_resets_on_new_year(db_session, a11_product):
     db_session.commit()
 
     # In year 26, sequence should reset to 1
-    plan = plan_next_erro_01_carton_sn(db_session, a11_product, custom_yymm="2601")
+    plan = plan_next_erro_01_carton_sn(db_session, erro_01_product, custom_yymm="2601")
     assert plan.sequence == 1
     assert plan.carton_sn == "VHK00102372601000001"
 
 
-def test_plan_next_a11_carton_sn_ignores_reprints(db_session, a11_product):
+def test_plan_next_erro_01_carton_sn_ignores_reprints(db_session, erro_01_product):
     c_orig = Carton(
-        product_id=a11_product.id,
+        product_id=erro_01_product.id,
         carton_sn="VHK00102372608000005",
         status="SUCCESS",
         is_reprint=0,
     )
     c_reprint = Carton(
-        product_id=a11_product.id,
+        product_id=erro_01_product.id,
         carton_sn="VHK00102372608000005",
         status="SUCCESS",
         is_reprint=1,
@@ -122,6 +122,7 @@ def test_plan_next_a11_carton_sn_ignores_reprints(db_session, a11_product):
     db_session.add_all([c_orig, c_reprint])
     db_session.commit()
 
-    plan = plan_next_erro_01_carton_sn(db_session, a11_product, custom_yymm="2608")
+    plan = plan_next_erro_01_carton_sn(db_session, erro_01_product, custom_yymm="2608")
     assert plan.sequence == 6
     assert plan.carton_sn == "VHK00102372608000006"
+

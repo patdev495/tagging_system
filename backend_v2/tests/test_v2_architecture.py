@@ -51,8 +51,9 @@ class TestTemplateResolver:
 
     def test_template_resolver_canonical_mapping(self):
         """Should return canonical template filename for each template type."""
-        assert TemplateResolver.get_canonical_template_filename("a11_tem2") == "a11_02.btw"
-        assert TemplateResolver.get_canonical_template_filename("a11") == "a11.btw"
+        assert TemplateResolver.get_canonical_template_filename("erro_02") == "erro_02.btw"
+        assert TemplateResolver.get_canonical_template_filename("erro_01") == "erro_01.btw"
+        assert TemplateResolver.get_canonical_template_filename("erro_04") == "erro_04.btw"
         assert TemplateResolver.get_canonical_template_filename("standard") == "carton_base.btw"
         assert TemplateResolver.get_canonical_template_filename("detailed") == "carton_detail.btw"
         assert TemplateResolver.get_canonical_template_filename("unknown") == "carton_base.btw"

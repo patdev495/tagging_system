@@ -1,4 +1,5 @@
 import pytest
+from typing import cast
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -56,7 +57,7 @@ def test_product_service_creates_and_searches_tem3(db_session):
     db_session.commit()
 
     prod_in = schemas.ProductCreate(
-        customer_id=customer.id,
+        customer_id=cast(int, customer.id),
         item_name="2M21-00508-0004H",
         pkg_prefix="1012665",
         revision="/",
@@ -78,7 +79,7 @@ def test_product_service_creates_and_searches_tem3(db_session):
     assert results[0].item_name == "2M21-00508-0004H"
 
 
-def test_seed_a11_data_seeds_tem3_product(db_session):
+def test_seed_erro_data_seeds_erro_03_product(db_session):
     seed_erro_data(db_session)
 
     p_tem3 = db_session.query(Product).filter(Product.item_name == "2M21-00508-0004H").first()
@@ -95,7 +96,8 @@ def test_seed_a11_data_seeds_tem3_product(db_session):
 def test_get_next_sn_returns_tem3_carton_sn(db_session):
     seed_erro_data(db_session)
     p_tem3 = db_session.query(Product).filter(Product.item_name == "2M21-00508-0004H").first()
-    sn_info = product_service.get_next_sn(p_tem3.id, db_session)
+    assert p_tem3 is not None
+    sn_info = product_service.get_next_sn(cast(int, p_tem3.id), db_session)
     assert sn_info["next_seq"] == 1
     today_yymmdd = datetime.now().strftime("%y%m%d")
     expected_sn = f"1012665{today_yymmdd}0001"

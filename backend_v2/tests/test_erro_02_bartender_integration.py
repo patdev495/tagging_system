@@ -5,11 +5,11 @@ from src.features.print.domain import BTXMLDocument
 from src.features.print.service import generate_btxml
 
 
-def test_a11_tem2_btxml_contains_all_7_named_substrings():
+def test_erro_02_btxml_contains_all_7_named_substrings():
     product = Product(
         id=1,
         item_name="G012C1B",
-        template_type="a11_tem2",
+        template_type="erro_02",
         template_path=r"D:\PAT\Templates\a11_02.btw",
         mfr_pn="NYS5998",
         upc="852582006785",

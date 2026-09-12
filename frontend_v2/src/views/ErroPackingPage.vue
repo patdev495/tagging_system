@@ -82,7 +82,13 @@
           </div>
 
           <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
-            <template v-if="selectedProduct.template_type === 'erro_03'">
+            <template v-if="selectedProduct.template_type === 'erro_04'">
+              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Carton ID:</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.carton_id_prefix || '-' }}...</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || '-' }}</span>
+            </template>
+            <template v-else-if="selectedProduct.template_type === 'erro_03'">
               <span class="text-xs uppercase font-bold text-slate-400 font-sans">Supplier:</span>
               <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || '1012665' }}</span>
             </template>
@@ -197,7 +203,7 @@
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
               (settings.printMode !== 'centralized' && templateMissing)
                 ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
-                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || (activePO && activeLot))
+                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || (activePO?.trim() && activeLot?.trim()))
                   ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                   : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
             ]"
@@ -291,8 +297,8 @@ const showSettingsModal = ref(false);
 const erroProducts = ref<Product[]>([]);
 const selectedProduct = ref<Product | null>(null);
 const isLoadingProducts = ref(false);
-const activePO = ref<string>(localStorage.getItem('erro_active_po') || 'B432-22156381');
-const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '92608521');
+const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
+const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
 
 // 1. Scale Stream Composable
 const {

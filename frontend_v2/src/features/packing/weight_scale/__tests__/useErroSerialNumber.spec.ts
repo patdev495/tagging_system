@@ -71,4 +71,24 @@ describe('useErroSerialNumber Composable (Strict Monotonic Sequence - ADR 0006)'
     expect(currentSNPreview.value).toMatch(/^1012665\d{6}0001$/);
     expect(currentSNPreview.value.length).toBe(17);
   });
+
+  it('uses the server-provided PD027032 Carton ID preview for erro_04 products', async () => {
+    const erro04Product = ref<Product | null>({
+      id: 40,
+      customer_id: 2,
+      item_name: 'G111A1A',
+      packed_qty: 120,
+      template_type: 'erro_04',
+      carton_id_prefix: 'H',
+      allow_partial: 0,
+    });
+    vi.mocked(catalogApi.getNextSN).mockResolvedValueOnce({
+      data: { next_seq: 10, next_sn: 'H69C000A', carton_id_prefix: 'H' },
+    } as any);
+
+    const { fetchNextSN, currentSNPreview } = useErroSerialNumber(erro04Product);
+    await fetchNextSN();
+
+    expect(currentSNPreview.value).toBe('H69C000A');
+  });
 });

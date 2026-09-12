@@ -1,4 +1,5 @@
 import pytest
+from typing import cast
 from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import create_engine
@@ -46,7 +47,7 @@ def tem3_product(db_session):
 
 def test_weigh_pack_tem3_allows_empty_po_and_default_lot(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=6.050,
         po_number=None,
         lot_number=None,
@@ -81,14 +82,14 @@ def test_weigh_pack_tem3_increments_sequence_monotonically(db_session, tem3_prod
     today_yymmdd = datetime.now().strftime("%y%m%d")
 
     payload1 = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=6.100,
     )
     carton1, _ = carton_service.weigh_pack_carton(payload1, db_session)
     assert carton1.carton_sn == f"1012665{today_yymmdd}0001"
 
     payload2 = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=6.200,
     )
     carton2, _ = carton_service.weigh_pack_carton(payload2, db_session)
@@ -97,7 +98,7 @@ def test_weigh_pack_tem3_increments_sequence_monotonically(db_session, tem3_prod
 
 def test_weigh_pack_tem3_rejects_underweight(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=4.950,
     )
     with pytest.raises(HTTPException) as exc:
@@ -108,7 +109,7 @@ def test_weigh_pack_tem3_rejects_underweight(db_session, tem3_product):
 
 def test_weigh_pack_tem3_rejects_overweight(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=7.100,
     )
     with pytest.raises(HTTPException) as exc:
@@ -119,7 +120,7 @@ def test_weigh_pack_tem3_rejects_overweight(db_session, tem3_product):
 
 def test_weigh_pack_tem3_strictly_forbids_manual_sequence(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=6.000,
         custom_sn=999,
     )
@@ -131,13 +132,13 @@ def test_weigh_pack_tem3_strictly_forbids_manual_sequence(db_session, tem3_produ
 
 def test_tem3_strictly_forbids_reprint(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem3_product.id,
+        product_id=cast(int, tem3_product.id),
         weight=6.000,
     )
     carton, _ = carton_service.weigh_pack_carton(payload, db_session)
     assert carton.id is not None
 
     with pytest.raises(HTTPException) as exc:
-        print_service.reprint_carton(carton_id=carton.id, db=db_session)
+        print_service.reprint_carton(carton_id=cast(int, carton.id), db=db_session)
     assert exc.value.status_code == 400
     assert "không cho phép in lại tem thùng" in exc.value.detail

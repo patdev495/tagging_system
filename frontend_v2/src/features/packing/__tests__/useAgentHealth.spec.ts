@@ -104,6 +104,26 @@ describe('useAgentHealth Composable', () => {
     expect(templateMissing.value).toBe(true);
   });
 
+  it('checks the canonical Erro 04 template when the Product has no explicit path', async () => {
+    const currentProduct = ref<Product | null>({
+      id: 4,
+      customer_id: 1,
+      item_name: 'G111A1A',
+      packed_qty: 120,
+      template_type: 'erro_04',
+      allow_partial: 0,
+    });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ exists: true }) }));
+
+    const { templateFilename, checkTemplateExists } = useAgentHealth({
+      settings: { printMode: 'local', localTemplateDir: 'D:\\PAT\\Templates' },
+      currentProduct,
+    });
+    await checkTemplateExists();
+
+    expect(templateFilename.value).toBe('erro_04.btw');
+  });
+
   it('bypasses check when printMode is server', async () => {
     const currentProduct = ref<Product | null>(mockProduct);
     const settings = {

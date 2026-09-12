@@ -184,6 +184,18 @@ class BTXMLDocument:
             substrings["ProjectStage"] = project_stage_text
             substrings["QR_Content"] = qr_code_content
             substrings["QRCode_Content"] = qr_code_content
+        elif template_type == "erro_04":
+            carton_sn = carton.carton_sn or ""
+            created_at = getattr(carton, "created_at", None) or datetime.datetime.now()
+            substrings["UPC"] = getattr(product, "upc", "") or ""
+            substrings["SKU"] = product.item_name or ""
+            substrings["CartonID"] = carton_sn
+            substrings["SupplierPN"] = getattr(product, "mfr_pn", "") or ""
+            substrings["PO"] = getattr(carton, "po_number", "") or ""
+            substrings["Date"] = created_at.strftime("%y%m%d")
+            substrings["Qty"] = str(product.packed_qty or actual_qty or "")
+            substrings["Rev"] = getattr(product, "revision", "") or ""
+            substrings["SKUDescription"] = getattr(product, "product_desc", "") or ""
 
         return cls(template_path=template_path, printer_name=printer_name, substrings=substrings)
 
@@ -215,7 +227,7 @@ class BTXMLDocument:
             "template_path": self.template_path,
             "printer_tag": printer_tag,
             "item_name": self.substrings.get("ItemName", ""),
-            "qty": self.substrings.get("QTY", ""),
+            "qty": self.substrings.get("Qty") or self.substrings.get("QTY", ""),
             "carton_sn": self.substrings.get("CartonSN", ""),
             "upc": self.substrings.get("UPC", ""),
             "qr_content": self.substrings.get("QR_Content", ""),
@@ -242,6 +254,11 @@ class BTXMLDocument:
             "supplier_name": self.substrings.get("SupplierName", ""),
             "origin": self.substrings.get("Origin", ""),
             "qr_code_content": self.substrings.get("QR_Content") or self.substrings.get("QRCode_Content", ""),
+            "supplier_pn": self.substrings.get("SupplierPN", ""),
+            "carton_id": self.substrings.get("CartonID", ""),
+            "po": self.substrings.get("PO", ""),
+            "sku": self.substrings.get("SKU", ""),
+            "sku_description": self.substrings.get("SKUDescription", ""),
         }
 
         # Build dynamic detailed grid tags if needed

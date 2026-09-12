@@ -1,4 +1,5 @@
 import pytest
+from typing import cast
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.core.models import Base, Customer, Product
@@ -43,7 +44,7 @@ def test_product_service_creates_and_searches_by_asin(db_session):
     db_session.commit()
 
     prod_in = schemas.ProductCreate(
-        customer_id=customer.id,
+        customer_id=cast(int, customer.id),
         item_name="G112C1B",
         asin="B0C32N712K",
         product_desc="ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND",

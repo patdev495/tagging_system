@@ -3,7 +3,7 @@ from src.core.models import Product, Carton
 from src.features.print.domain import BTXMLDocument
 
 
-def test_a11_tem3_btxml_document_from_carton_data():
+def test_erro_03_btxml_document_from_carton_data():
     product = Product(
         id=30,
         item_name="2M21-00508-0004H",

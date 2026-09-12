@@ -1,4 +1,5 @@
 import pytest
+from typing import cast
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -18,8 +19,8 @@ def db_session():
 
 
 @pytest.fixture
-def a11_product(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+def erro_01_product(db_session):
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
 
@@ -35,7 +36,7 @@ def a11_product(db_session):
         mfr_pn="NYS5998",
         pkg_prefix="VHK0010237",
         revision="B",
-        template_type="a11",
+        template_type="erro_01",
         template_path=r"D:\PAT\Template\第1.btw",
     )
     db_session.add(product)
@@ -43,9 +44,9 @@ def a11_product(db_session):
     return product
 
 
-def test_weigh_pack_rejects_underweight(db_session, a11_product):
+def test_weigh_pack_rejects_underweight(db_session, erro_01_product):
     payload = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_01_product.id),
         weight=12.100,  # Below min_weight 12.300
         po_number="PO12345",
         lot_number="LOT67890",
@@ -58,9 +59,9 @@ def test_weigh_pack_rejects_underweight(db_session, a11_product):
     assert "below minimum tolerance" in exc_info.value.detail
 
 
-def test_weigh_pack_rejects_overweight(db_session, a11_product):
+def test_weigh_pack_rejects_overweight(db_session, erro_01_product):
     payload = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_01_product.id),
         weight=12.900,  # Above max_weight 12.700
         po_number="PO12345",
         lot_number="LOT67890",
@@ -73,9 +74,9 @@ def test_weigh_pack_rejects_overweight(db_session, a11_product):
     assert "above maximum tolerance" in exc_info.value.detail
 
 
-def test_weigh_pack_success(db_session, a11_product):
+def test_weigh_pack_success(db_session, erro_01_product):
     payload = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_01_product.id),
         weight=12.500,
         po_number="PO-9999",
         lot_number="LOT-8888",
@@ -97,15 +98,15 @@ def test_weigh_pack_success(db_session, a11_product):
     assert "<NamedSubString Name=\"LotNo\"><Value>LOT-8888</Value></NamedSubString>" in btxml
 
 
-def test_weigh_pack_sequential_sn(db_session, a11_product):
+def test_weigh_pack_sequential_sn(db_session, erro_01_product):
     p1 = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_01_product.id),
         weight=12.450,
         po_number="PO-1",
         lot_number="LOT-1",
     )
     p2 = CartonWeighPackCreate(
-        product_id=a11_product.id,
+        product_id=cast(int, erro_01_product.id),
         weight=12.550,
         po_number="PO-1",
         lot_number="LOT-1",
@@ -114,6 +115,6 @@ def test_weigh_pack_sequential_sn(db_session, a11_product):
     c1, _ = carton_service.weigh_pack_carton(p1, db_session)
     c2, _ = carton_service.weigh_pack_carton(p2, db_session)
 
-    sn1_seq = int(c1.carton_sn[-6:])
-    sn2_seq = int(c2.carton_sn[-6:])
+    sn1_seq = int(str(c1.carton_sn)[-6:])
+    sn2_seq = int(str(c2.carton_sn)[-6:])
     assert sn2_seq == sn1_seq + 1

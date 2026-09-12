@@ -13,7 +13,7 @@ export interface Product {
   packed_qty: number;
   start_part?: string;
   middle_part?: string;
-  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03';
+  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03' | 'erro_04';
   template_path?: string;
   allow_partial: number;
   packing_mode?: 'item_scan' | 'weight_scale';
@@ -26,6 +26,8 @@ export interface Product {
   revision?: string;
   asin?: string;
   product_desc?: string;
+  factory_item_code?: string;
+  carton_id_prefix?: 'H' | 'K';
   customer?: Customer;
 }
 

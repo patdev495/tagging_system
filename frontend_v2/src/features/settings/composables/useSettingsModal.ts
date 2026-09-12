@@ -18,6 +18,13 @@ export interface CanonicalTemplate {
 }
 
 export const CANONICAL_TEMPLATES: CanonicalTemplate[] = [
+  {
+    filename: 'erro_04.btw',
+    customer: 'ERRO',
+    type: 'erro_04',
+    name: 'Erro 04 (eero PD027032)',
+    desc: 'Dòng G111/G011 — Carton ID H/K + mã ngày PD027032 + chuỗi base-32 dùng chung'
+  },
   { 
     filename: 'erro_03.btw', 
     customer: 'ERRO', 

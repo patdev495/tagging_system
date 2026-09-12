@@ -93,7 +93,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
 
     const isTem2 = selectedProduct.value.template_type === 'erro_02';
     const isTem3 = selectedProduct.value.template_type === 'erro_03';
-    if (!isTem2 && !isTem3 && (!activePO.value || !activeLot.value)) {
+    if (!isTem2 && !isTem3 && (!activePO.value?.trim() || !activeLot.value?.trim())) {
       notify?.('Vui lòng nhập PO và LOT trước khi in', 'warning');
       openBatchModal?.();
       return;
@@ -123,8 +123,8 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       const res = await packingApi.weighPackCarton({
         product_id: selectedProduct.value.id,
         weight: currentWeight,
-        po_number: isTem2 ? undefined : (activePO.value || undefined),
-        lot_number: isTem2 ? undefined : (activeLot.value || undefined),
+        po_number: isTem2 ? undefined : (activePO.value?.trim() || undefined),
+        lot_number: isTem2 ? undefined : (activeLot.value?.trim() || undefined),
         printer_name: settings.printerName || undefined,
         template_path: settings.templatePath || undefined,
         station_id: settings.stationId || undefined,

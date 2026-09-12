@@ -28,9 +28,9 @@ def client():
 
     app.dependency_overrides[get_db] = override_get_db
 
-    # Seed A11 Product
+    # Seed Erro Product
     db = TestingSessionLocal()
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db.add(customer)
     db.flush()
 
@@ -46,7 +46,7 @@ def client():
         mfr_pn="NYS5998",
         pkg_prefix="VHK0010237",
         revision="B",
-        template_type="a11",
+        template_type="erro_01",
         template_path=r"D:\PAT\Template\第1.btw",
     )
     db.add(product)
@@ -86,4 +86,3 @@ def test_weigh_pack_api_out_of_tolerance(client):
     })
     assert res.status_code == 400
     assert "below minimum tolerance" in res.json()["error"]
-

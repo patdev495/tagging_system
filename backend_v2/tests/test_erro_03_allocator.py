@@ -32,14 +32,14 @@ def test_format_erro_03_carton_sn():
     assert len(sn_large) == 17
 
 
-def test_parse_a11_tem3_sequence():
+def test_parse_erro_03_sequence():
     assert parse_erro_03_sequence("10126652609110001", "1012665", "260911") == 1
     assert parse_erro_03_sequence("10126652609112209", "1012665", "260911") == 2209
     # Mismatched date should return 0
     assert parse_erro_03_sequence("10126652609110001", "1012665", "260912") == 0
 
 
-def test_next_a11_tem3_sequence_daily_reset(db_session):
+def test_next_erro_03_sequence_daily_reset(db_session):
     product = Product(
         id=1,
         item_name="2M21-00508-0004H",
@@ -68,7 +68,7 @@ def test_next_a11_tem3_sequence_daily_reset(db_session):
     assert seq_day2 == 1
 
 
-def test_plan_next_a11_tem3_carton_sn(db_session):
+def test_plan_next_erro_03_carton_sn(db_session):
     product = Product(
         id=2,
         item_name="2M21-00508-0004H",

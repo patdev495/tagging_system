@@ -109,7 +109,7 @@
                 </div>
                 <p class="text-xs text-slate-500 mt-1 mb-0.5">
                   Mfr P/N: <strong class="text-slate-700 font-barcode-mono">{{ p.mfr_pn || 'NYS5998' }}</strong> |
-                  Tiền tố: <strong class="text-slate-700 font-barcode-mono">{{ p.pkg_prefix || 'VHK0010237' }}</strong>
+                  Tiền tố: <strong class="text-slate-700 font-barcode-mono">{{ p.template_type === 'erro_04' ? (p.carton_id_prefix || '-') : (p.pkg_prefix || 'VHK0010237') }}</strong>
                 </p>
                 <p class="text-xs text-emerald-700 font-barcode-mono font-bold mt-0.5 mb-0">
                   Dung sai cân: {{ p.min_weight?.toFixed(3) || '0.000' }}kg - {{ p.max_weight?.toFixed(3) || '0.000' }}kg
@@ -154,6 +154,7 @@ const templateGroups = computed(() => {
     { key: 'erro_01', label: 'Erro 01 · Carton SN', dotClass: 'bg-emerald-500' },
     { key: 'erro_02', label: 'Erro 02 · SSCC', dotClass: 'bg-sky-500' },
     { key: 'erro_03', label: 'Erro 03 · Luxshare', dotClass: 'bg-amber-500' },
+    { key: 'erro_04', label: 'Erro 04 · PD027032', dotClass: 'bg-rose-500' },
   ];
 
   const groups = definitions.map(definition => ({

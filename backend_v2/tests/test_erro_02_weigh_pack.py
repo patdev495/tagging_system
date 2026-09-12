@@ -1,4 +1,5 @@
 import pytest
+from typing import cast
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -46,7 +47,7 @@ def tem2_product(db_session):
 
 def test_weigh_pack_tem2_allows_empty_po_and_lot(db_session, tem2_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem2_product.id,
+        product_id=cast(int, tem2_product.id),
         weight=6.050,
         po_number=None,
         lot_number=None,
@@ -69,7 +70,7 @@ def test_weigh_pack_tem2_allows_empty_po_and_lot(db_session, tem2_product):
 
 def test_weigh_pack_tem2_rejects_underweight(db_session, tem2_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem2_product.id,
+        product_id=cast(int, tem2_product.id),
         weight=4.950,
     )
     with pytest.raises(HTTPException) as exc:
@@ -80,7 +81,7 @@ def test_weigh_pack_tem2_rejects_underweight(db_session, tem2_product):
 
 def test_weigh_pack_tem2_rejects_overweight(db_session, tem2_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem2_product.id,
+        product_id=cast(int, tem2_product.id),
         weight=7.100,
     )
     with pytest.raises(HTTPException) as exc:
@@ -91,7 +92,7 @@ def test_weigh_pack_tem2_rejects_overweight(db_session, tem2_product):
 
 def test_weigh_pack_tem2_strictly_forbids_manual_sequence(db_session, tem2_product):
     payload = carton_schemas.CartonWeighPackCreate(
-        product_id=tem2_product.id,
+        product_id=cast(int, tem2_product.id),
         weight=6.000,
         custom_sn=999,
     )
@@ -103,14 +104,14 @@ def test_weigh_pack_tem2_strictly_forbids_manual_sequence(db_session, tem2_produ
 
 def test_weigh_pack_tem2_increments_sscc_monotonically(db_session, tem2_product):
     payload1 = carton_schemas.CartonWeighPackCreate(
-        product_id=tem2_product.id,
+        product_id=cast(int, tem2_product.id),
         weight=6.100,
     )
     carton1, _ = carton_service.weigh_pack_carton(payload1, db_session)
     assert carton1.carton_sn == "03703390700000013"
 
     payload2 = carton_schemas.CartonWeighPackCreate(
-        product_id=tem2_product.id,
+        product_id=cast(int, tem2_product.id),
         weight=6.200,
     )
     carton2, _ = carton_service.weigh_pack_carton(payload2, db_session)

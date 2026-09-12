@@ -37,6 +37,8 @@ class Product(Base):
     revision = Column(String(10), default="B")
     asin = Column(String(50), nullable=True) # Amazon ASIN (B08G9M4HXS...)
     product_desc = Column(String(255), nullable=True) # Mô tả cáp đầy đủ trên tem 2
+    factory_item_code = Column(String(50), nullable=True) # Source ITEM code for Erro 04 catalog rows
+    carton_id_prefix = Column(String(1), nullable=True) # Erro 04 Carton ID prefix: H (CAT6A) or K (CAT5E)
     
     customer = relationship("Customer", back_populates="products")
     cartons = relationship("Carton", back_populates="product")

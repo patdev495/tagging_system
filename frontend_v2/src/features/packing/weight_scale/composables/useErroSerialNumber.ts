@@ -11,6 +11,7 @@ export function useErroSerialNumber(selectedProduct: Ref<Product | null>) {
   const isAutoSN = ref<boolean>(true);
   const autoSequence = ref<number>(1);
   const currentYYMM = ref<string>('');
+  const nextCartonSN = ref<string>('');
 
   const fetchNextSN = async () => {
     if (!selectedProduct.value) return;
@@ -19,6 +20,7 @@ export function useErroSerialNumber(selectedProduct: Ref<Product | null>) {
       if (res?.data) {
         autoSequence.value = res.data.next_seq || 1;
         currentYYMM.value = res.data.yymm || '';
+        nextCartonSN.value = res.data.next_sn || '';
       }
     } catch (err) {
       console.warn('Could not fetch next S/N sequence:', err);
@@ -27,6 +29,9 @@ export function useErroSerialNumber(selectedProduct: Ref<Product | null>) {
 
   const currentSNPreview = computed<string>(() => {
     if (!selectedProduct.value) return '-';
+    if (selectedProduct.value.template_type === 'erro_04' && nextCartonSN.value) {
+      return nextCartonSN.value;
+    }
     if (selectedProduct.value.template_type === 'erro_03') {
       const supplierCode = selectedProduct.value.pkg_prefix || '1012665';
       const now = new Date();
@@ -54,12 +59,14 @@ export function useErroSerialNumber(selectedProduct: Ref<Product | null>) {
 
   const advanceSequence = () => {
     autoSequence.value += 1;
+    nextCartonSN.value = '';
   };
 
   return {
     isAutoSN,
     autoSequence,
     currentYYMM,
+    nextCartonSN,
     currentSNPreview,
     fetchNextSN,
     advanceSequence,

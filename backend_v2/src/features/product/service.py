@@ -2,6 +2,8 @@ from typing import Optional, List
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
+from fastapi import HTTPException
+from pydantic import ValidationError
 
 from src.core.models import Carton, Product, Customer
 from src.features.carton.sn_allocator import plan_next_carton_sn
@@ -51,6 +53,29 @@ def update_product(db: Session, product_id: int, product: schemas.ProductUpdate)
     for key, value in update_data.items():
         setattr(db_product, key, value)
 
+    if db_product.template_type == "erro_04":
+        try:
+            schemas.ProductCreate.model_validate({
+                "customer_id": db_product.customer_id,
+                "item_name": db_product.item_name,
+                "upc": db_product.upc,
+                "packed_qty": db_product.packed_qty,
+                "template_type": db_product.template_type,
+                "template_path": db_product.template_path,
+                "packing_mode": db_product.packing_mode,
+                "target_weight": db_product.target_weight,
+                "min_weight": db_product.min_weight,
+                "max_weight": db_product.max_weight,
+                "weight_unit": db_product.weight_unit,
+                "mfr_pn": db_product.mfr_pn,
+                "revision": db_product.revision,
+                "product_desc": db_product.product_desc,
+                "factory_item_code": db_product.factory_item_code,
+                "carton_id_prefix": db_product.carton_id_prefix,
+            })
+        except ValidationError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     db.commit()
     db.refresh(db_product)
     return db_product
@@ -90,6 +115,16 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
             "next_sn": plan.carton_sn,
             "supplier_code": plan.supplier_code,
             "yymmdd": plan.yymmdd,
+        }
+
+    if product.template_type == "erro_04":
+        from src.features.carton.erro_04_sn_allocator import plan_next_erro_04_carton_sn
+        plan = plan_next_erro_04_carton_sn(db, product)
+        return {
+            "next_seq": plan.sequence,
+            "next_sn": plan.carton_sn,
+            "carton_id_prefix": plan.carton_id_prefix,
+            "date_code": plan.date_code,
         }
 
     if product.packing_mode == "weight_scale" or product.template_type == "erro_01":

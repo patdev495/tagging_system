@@ -5,11 +5,11 @@ from src.features.print.domain import BTXMLDocument
 from src.features.print.service import generate_btxml
 
 
-def test_a11_tem3_btxml_contains_all_12_named_substrings():
+def test_erro_03_btxml_contains_all_12_named_substrings():
     product = Product(
         id=30,
         item_name="2M21-00508-0004H",
-        template_type="a11_tem3",
+        template_type="erro_03",
         template_path=r"D:\PAT\Templates\a11_03.btw",
         pkg_prefix="1012665",
         product_desc="CAT5E ETHERNET CABLE",

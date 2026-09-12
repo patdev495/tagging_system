@@ -31,11 +31,13 @@ export function useAgentHealth(options: UseAgentHealthOptions) {
       return;
     }
 
-    const canonicalFallback = product.template_type === 'erro_03'
-      ? 'erro_03.btw'
-      : (product.template_type === 'erro_02'
-        ? 'erro_02.btw'
-        : (product.template_type === 'erro_01' ? 'erro_01.btw' : 'carton_base.btw'));
+    const canonicalFallback = product.template_type === 'erro_04'
+      ? 'erro_04.btw'
+      : (product.template_type === 'erro_03'
+        ? 'erro_03.btw'
+        : (product.template_type === 'erro_02'
+          ? 'erro_02.btw'
+          : (product.template_type === 'erro_01' ? 'erro_01.btw' : 'carton_base.btw')));
     const fullPath = product.template_path || canonicalFallback;
     const filename = fullPath.split(/[\\/]/).pop() || canonicalFallback;
     templateFilename.value = filename;

@@ -109,7 +109,7 @@ def test_seed_erro_data(db_session):
     assert erro is not None
 
     prods = db_session.query(Product).filter(Product.customer_id == erro.id).all()
-    assert len(prods) == 6
+    assert len(prods) == 22
     tem1_prods = [p for p in prods if p.template_type == "erro_01"]
     assert len(tem1_prods) == 3
     tem1_names = {p.item_name for p in tem1_prods}

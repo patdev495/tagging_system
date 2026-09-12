@@ -232,6 +232,14 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             lock=True,
         )
         date_code = plan.yymmdd
+    elif product.template_type == "erro_04":
+        if not (weigh_in.po_number and weigh_in.po_number.strip()):
+            raise HTTPException(status_code=400, detail="PO Number is required for Erro 04 cartons.")
+        if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
+            raise HTTPException(status_code=400, detail="Lot Number is required for Erro 04 cartons.")
+        from src.features.carton.erro_04_sn_allocator import plan_next_erro_04_carton_sn
+        plan = plan_next_erro_04_carton_sn(db, product, lock=True)
+        date_code = plan.date_code
     else:
         plan = plan_next_erro_01_carton_sn(
             db,
