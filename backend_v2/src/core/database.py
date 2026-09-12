@@ -104,15 +104,15 @@ def seed_erro_data(db):
             logger.info("Seeded Customer Erro")
 
         erro_products = [
-            ("840-00083", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
-            ("840-00091", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
-            ("840-00092", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
-            ("G012C1B", 190, "37033907", "NYS5998", "erro_02", r"D:\PAT\Templates\erro_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "852582006785", "1LAE0009D2U004MAAR", "B08G9M4HXS", "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"),
-            ("G112C1B", 190, "37033907", "NYS5996", "erro_02", r"D:\PAT\Templates\erro_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "840268969493", "1LAE0009D2U002MAAS", "B0C32N712K", "ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND"),
-            ("2M21-00508-0004H", 190, "1012665", None, "erro_03", r"D:\PAT\Templates\erro_03.btw", "weight_scale", "/", "kg", 6.000, 5.000, 7.000, None, "1LAE0091C2U011NMES", None, "CAT5E ETHERNET CABLE"),
+            ("840-00083", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None),
+            ("840-00091", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None),
+            ("840-00092", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None),
+            ("G012C1B", 190, "37033907", "NYS5998", "erro_02", r"D:\PAT\Templates\erro_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "852582006785", "B08G9M4HXS", "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"),
+            ("G112C1B", 190, "37033907", "NYS5996", "erro_02", r"D:\PAT\Templates\erro_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "840268969493", "B0C32N712K", "ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND"),
+            ("2M21-00508-0004H", 190, "1012665", None, "erro_03", r"D:\PAT\Templates\erro_03.btw", "weight_scale", "/", "kg", 6.000, 5.000, 7.000, None, None, "CAT5E ETHERNET CABLE"),
         ]
 
-        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w, upc, factory_pn, asin, product_desc in erro_products:
+        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w, upc, asin, product_desc in erro_products:
             prod = db.query(models.Product).filter(
                 models.Product.customer_id == erro_customer.id,
                 models.Product.item_name == item_name
@@ -133,7 +133,6 @@ def seed_erro_data(db):
                     min_weight=min_w,
                     max_weight=max_w,
                     upc=upc,
-                    factory_pn=factory_pn,
                     asin=asin,
                     product_desc=product_desc,
                 )
@@ -141,9 +140,6 @@ def seed_erro_data(db):
                 logger.info(f"Seeded Erro Product: {item_name}")
             else:
                 updated = False
-                if factory_pn and not prod.factory_pn:
-                    prod.factory_pn = factory_pn
-                    updated = True
                 if asin and not prod.asin:
                     prod.asin = asin
                     updated = True
@@ -203,7 +199,6 @@ def init_db():
                     ('mfr_pn', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
                     ('pkg_prefix', 'VARCHAR(20) NULL', 'VARCHAR(20) NULL'),
                     ('revision', 'VARCHAR(10) DEFAULT \'B\'', 'VARCHAR(10) DEFAULT \'B\''),
-                    ('factory_pn', 'VARCHAR(100) NULL', 'VARCHAR(100) NULL'),
                     ('asin', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
                     ('product_desc', 'VARCHAR(255) NULL', 'VARCHAR(255) NULL'),
                 ]
@@ -213,6 +208,23 @@ def init_db():
                         col_type = sqlite_type if is_sqlite else mssql_type
                         conn.execute(text(f"ALTER TABLE products ADD COLUMN {col_name} {col_type}" if is_sqlite else f"ALTER TABLE products ADD {col_name} {col_type}"))
                         conn.commit()
+
+                # Factory P/N was never used by the Erro label formats. Remove
+                # the obsolete storage column and its optional index.
+                if 'factory_pn' in prod_cols:
+                    logger.info("Migrating products table: removing obsolete factory_pn")
+                    if is_sqlite:
+                        conn.execute(text("DROP INDEX IF EXISTS ix_products_factory_pn"))
+                        conn.execute(text("ALTER TABLE products DROP COLUMN factory_pn"))
+                    else:
+                        conn.execute(text(
+                            "IF EXISTS (SELECT 1 FROM sys.indexes "
+                            "WHERE name = 'ix_products_factory_pn' "
+                            "AND object_id = OBJECT_ID('products')) "
+                            "DROP INDEX ix_products_factory_pn ON products"
+                        ))
+                        conn.execute(text("ALTER TABLE products DROP COLUMN factory_pn"))
+                    conn.commit()
 
             # 3. Migrate cartons table for weight & PO/LOT/date_code columns
             if inspector.has_table('cartons'):

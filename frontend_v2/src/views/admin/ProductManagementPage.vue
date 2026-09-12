@@ -73,7 +73,6 @@
             <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-indigo-50/30 transition-colors">
               <td class="p-4">
                 <div class="font-bold text-slate-900 font-mono text-base">{{ product.item_name }}</div>
-                <div v-if="product.factory_pn" class="text-xs text-indigo-700 font-mono font-bold mt-0.5">Xưởng: {{ product.factory_pn }}</div>
                 <div v-if="product.asin" class="text-xs text-amber-700 font-mono font-bold mt-0.5">ASIN: {{ product.asin }}</div>
                 <div v-if="product.upc" class="text-xs text-slate-400 font-mono mt-0.5">UPC: {{ product.upc }}</div>
                 <div v-if="product.product_desc" class="text-[11px] text-slate-500 line-clamp-1 max-w-xs mt-0.5" :title="product.product_desc">{{ product.product_desc }}</div>
@@ -111,7 +110,6 @@
               <td class="p-4">
                 <div v-if="product.template_type === 'erro_03'" class="text-xs font-mono space-y-0.5">
                   <div><span class="text-slate-400">Supplier:</span> <span class="font-bold text-amber-600">{{ product.pkg_prefix || '1012665' }}</span></div>
-                  <div><span class="text-slate-400">Factory:</span> <span class="text-slate-700 font-semibold">{{ product.factory_pn || '-' }}</span></div>
                   <div v-if="product.revision"><span class="text-slate-400">Rev:</span> <span class="font-bold text-purple-700">{{ product.revision }}</span></div>
                 </div>
                 <div v-else-if="product.template_type === 'erro_02'" class="text-xs font-mono space-y-0.5">
@@ -229,7 +227,6 @@ const filteredProducts = computed(() => {
       (p.upc && p.upc.toLowerCase().includes(q)) ||
       (p.pkg_prefix && p.pkg_prefix.toLowerCase().includes(q)) ||
       (p.mfr_pn && p.mfr_pn.toLowerCase().includes(q)) ||
-      (p.factory_pn && p.factory_pn.toLowerCase().includes(q)) ||
       (p.asin && p.asin.toLowerCase().includes(q)) ||
       (p.product_desc && p.product_desc.toLowerCase().includes(q))
     );

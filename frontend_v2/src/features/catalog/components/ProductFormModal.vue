@@ -242,18 +242,7 @@
               <span class="text-[10px] text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded">PD024364 REV.M</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Xưởng (Factory P/N) *</label>
-                <input 
-                  v-model="formData.factory_pn" 
-                  type="text" 
-                  placeholder="1LAE0091C2U011NMES" 
-                  class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-bold"
-                >
-                <p class="text-[10px] text-slate-400">Vendor Part No. (厂内料号).</p>
-              </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div class="space-y-1">
                 <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Nhà Cung Cấp (Supplier Code) *</label>
                 <input 
@@ -299,18 +288,7 @@
               <span class="text-[10px] text-sky-700 font-semibold bg-sky-100 px-2 py-0.5 rounded">PD027504</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Xưởng (Factory P/N) *</label>
-                <input 
-                  v-model="formData.factory_pn" 
-                  type="text" 
-                  placeholder="1LAE0009D2U004MAAR" 
-                  class="w-full p-2.5 rounded-xl border border-sky-200 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-mono text-xs font-bold"
-                >
-                <p class="text-[10px] text-slate-400">厂内料号 để đối soát BOM xưởng.</p>
-              </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div class="space-y-1">
                 <label class="text-[11px] font-bold text-slate-700 uppercase">Amazon ASIN *</label>
                 <input 

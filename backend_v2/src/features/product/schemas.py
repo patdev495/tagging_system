@@ -19,7 +19,6 @@ class ProductBase(BaseModel):
     mfr_pn: Optional[str] = None
     pkg_prefix: Optional[str] = None
     revision: Optional[str] = "B"
-    factory_pn: Optional[str] = None
     asin: Optional[str] = None
     product_desc: Optional[str] = None
 
@@ -44,7 +43,6 @@ class ProductUpdate(BaseModel):
     mfr_pn: Optional[str] = None
     pkg_prefix: Optional[str] = None
     revision: Optional[str] = None
-    factory_pn: Optional[str] = None
     asin: Optional[str] = None
     product_desc: Optional[str] = None
 

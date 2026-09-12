@@ -83,10 +83,8 @@
 
           <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
             <template v-if="selectedProduct.template_type === 'erro_03'">
-              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Supplier/VendorPN:</span>
+              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Supplier:</span>
               <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || '1012665' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.factory_pn || '1LAE0091C2U011NMES' }}</span>
             </template>
             <template v-else-if="selectedProduct.template_type === 'erro_02'">
               <span class="text-xs uppercase font-bold text-slate-400 font-sans">SSCC/P-N:</span>

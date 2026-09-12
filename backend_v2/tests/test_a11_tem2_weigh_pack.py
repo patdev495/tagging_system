@@ -18,20 +18,19 @@ def db_session():
 
 @pytest.fixture
 def tem2_product(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.commit()
 
     product = Product(
         customer_id=customer.id,
         item_name="G012C1B",
-        factory_pn="1LAE0009D2U004MAAR",
         asin="B08G9M4HXS",
         product_desc="ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND",
         packed_qty=190,
         packing_mode="weight_scale",
-        template_type="a11_tem2",
-        template_path=r"D:\PAT\Templates\a11_02.btw",
+        template_type="erro_02",
+        template_path=r"D:\PAT\Templates\erro_02.btw",
         mfr_pn="NYS5998",
         upc="852582006785",
         pkg_prefix="37033907",

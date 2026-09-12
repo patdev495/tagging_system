@@ -21,7 +21,6 @@ export interface ProductFormData {
   mfr_pn: string;
   pkg_prefix: string;
   revision: string;
-  factory_pn?: string;
   asin?: string;
   product_desc?: string;
 }
@@ -102,7 +101,6 @@ export function useProductForm(
     mfr_pn: 'NYS5998',
     pkg_prefix: 'VHK0010237',
     revision: 'B',
-    factory_pn: '',
     asin: '',
     product_desc: '',
   });
@@ -234,7 +232,6 @@ export function useProductForm(
           mfr_pn: p.mfr_pn || 'NYS5998',
           pkg_prefix: p.pkg_prefix || 'VHK0010237',
           revision: p.revision ?? '',
-          factory_pn: p.factory_pn || '',
           asin: p.asin || '',
           product_desc: p.product_desc || '',
         };
@@ -258,7 +255,6 @@ export function useProductForm(
           mfr_pn: 'NYS5998',
           pkg_prefix: 'VHK0010237',
           revision: 'B',
-          factory_pn: '',
           asin: '',
           product_desc: '',
         };

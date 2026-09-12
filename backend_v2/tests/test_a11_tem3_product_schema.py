@@ -31,7 +31,6 @@ def test_template_resolver_supports_erro_03():
 def test_product_schema_supports_tem3_fields():
     data = {
         "item_name": "2M21-00508-0004H",
-        "factory_pn": "1LAE0091C2U011NMES",
         "pkg_prefix": "1012665",
         "revision": "/",
         "product_desc": "CAT5E ETHERNET CABLE",
@@ -46,7 +45,6 @@ def test_product_schema_supports_tem3_fields():
     }
     schema = schemas.ProductCreate(**data)
     assert schema.item_name == "2M21-00508-0004H"
-    assert schema.factory_pn == "1LAE0091C2U011NMES"
     assert schema.pkg_prefix == "1012665"
     assert schema.revision == "/"
     assert schema.template_type == "erro_03"
@@ -60,7 +58,6 @@ def test_product_service_creates_and_searches_tem3(db_session):
     prod_in = schemas.ProductCreate(
         customer_id=customer.id,
         item_name="2M21-00508-0004H",
-        factory_pn="1LAE0091C2U011NMES",
         pkg_prefix="1012665",
         revision="/",
         product_desc="CAT5E ETHERNET CABLE",
@@ -74,10 +71,9 @@ def test_product_service_creates_and_searches_tem3(db_session):
     )
     created = product_service.create_product(db_session, prod_in)
     assert created.id is not None
-    assert created.factory_pn == "1LAE0091C2U011NMES"
     assert created.template_type == "erro_03"
 
-    results = product_service.get_all_products(db_session, search="1LAE0091C2U011NMES")
+    results = product_service.get_all_products(db_session, search="2M21-00508-0004H")
     assert len(results) == 1
     assert results[0].item_name == "2M21-00508-0004H"
 
@@ -88,7 +84,6 @@ def test_seed_a11_data_seeds_tem3_product(db_session):
     p_tem3 = db_session.query(Product).filter(Product.item_name == "2M21-00508-0004H").first()
     assert p_tem3 is not None
     assert p_tem3.template_type == "erro_03"
-    assert p_tem3.factory_pn == "1LAE0091C2U011NMES"
     assert p_tem3.pkg_prefix == "1012665"
     assert p_tem3.packed_qty == 190
     assert p_tem3.packing_mode == "weight_scale"

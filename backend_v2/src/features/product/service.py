@@ -18,7 +18,6 @@ def get_all_products(db: Session, customer_code: Optional[str] = None, search: O
         query = query.filter(
             or_(
                 Product.item_name.ilike(search_filter),
-                Product.factory_pn.ilike(search_filter),
                 Product.asin.ilike(search_filter),
                 Product.mfr_pn.ilike(search_filter),
                 Product.product_desc.ilike(search_filter),

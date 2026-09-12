@@ -19,7 +19,6 @@ def db_session():
 def test_product_schema_supports_tem2_fields():
     data = {
         "item_name": "G012C1B",
-        "factory_pn": "1LAE0009D2U004MAAR",
         "asin": "B08G9M4HXS",
         "product_desc": "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND",
         "packed_qty": 190,
@@ -34,12 +33,11 @@ def test_product_schema_supports_tem2_fields():
         "target_weight": 6.0,
     }
     schema = schemas.ProductCreate(**data)
-    assert schema.factory_pn == "1LAE0009D2U004MAAR"
     assert schema.asin == "B08G9M4HXS"
     assert schema.product_desc == "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"
 
 
-def test_product_service_creates_and_searches_by_factory_pn(db_session):
+def test_product_service_creates_and_searches_by_asin(db_session):
     customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.commit()
@@ -47,7 +45,6 @@ def test_product_service_creates_and_searches_by_factory_pn(db_session):
     prod_in = schemas.ProductCreate(
         customer_id=customer.id,
         item_name="G112C1B",
-        factory_pn="1LAE0009D2U002MAAS",
         asin="B0C32N712K",
         product_desc="ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND",
         packed_qty=190,
@@ -62,12 +59,10 @@ def test_product_service_creates_and_searches_by_factory_pn(db_session):
     )
     created = product_service.create_product(db_session, prod_in)
     assert created.id is not None
-    assert created.factory_pn == "1LAE0009D2U002MAAS"
     assert created.asin == "B0C32N712K"
     assert created.product_desc.startswith("ASSY, BAND WRAPPED")
 
-    # Search by factory_pn
-    results = product_service.get_all_products(db_session, search="1LAE0009D2U002MAAS")
+    results = product_service.get_all_products(db_session, search="B0C32N712K")
     assert len(results) == 1
     assert results[0].item_name == "G112C1B"
 
@@ -84,7 +79,6 @@ def test_seed_a11_data_seeds_both_tem1_and_tem2(db_session):
     g012 = db_session.query(Product).filter(Product.item_name == "G012C1B").first()
     assert g012 is not None
     assert g012.template_type == "erro_02"
-    assert g012.factory_pn == "1LAE0009D2U004MAAR"
     assert g012.asin == "B08G9M4HXS"
     assert g012.mfr_pn == "NYS5998"
     assert g012.upc == "852582006785"
@@ -94,7 +88,6 @@ def test_seed_a11_data_seeds_both_tem1_and_tem2(db_session):
     g112 = db_session.query(Product).filter(Product.item_name == "G112C1B").first()
     assert g112 is not None
     assert g112.template_type == "erro_02"
-    assert g112.factory_pn == "1LAE0009D2U002MAAS"
     assert g112.asin == "B0C32N712K"
     assert g112.mfr_pn == "NYS5996"
     assert g112.upc == "840268969493"

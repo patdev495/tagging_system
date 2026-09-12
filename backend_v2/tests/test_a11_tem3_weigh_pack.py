@@ -20,19 +20,18 @@ def db_session():
 
 @pytest.fixture
 def tem3_product(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.commit()
 
     product = Product(
         customer_id=customer.id,
         item_name="2M21-00508-0004H",
-        factory_pn="1LAE0091C2U011NMES",
         product_desc="CAT5E ETHERNET CABLE",
         packed_qty=190,
         packing_mode="weight_scale",
-        template_type="a11_tem3",
-        template_path=r"D:\PAT\Templates\a11_03.btw",
+        template_type="erro_03",
+        template_path=r"D:\PAT\Templates\erro_03.btw",
         pkg_prefix="1012665",
         revision="/",
         min_weight=5.0,
@@ -64,7 +63,7 @@ def test_weigh_pack_tem3_allows_empty_po_and_default_lot(db_session, tem3_produc
     assert len(carton.carton_sn) == 17
 
     assert btxml is not None
-    assert "a11_03.btw" in btxml
+    assert "erro_03.btw" in btxml
     assert "<NamedSubString Name=\"CartonSN\">" in btxml
     assert f"<Value>{expected_sn}</Value>" in btxml
     assert "<NamedSubString Name=\"SupplierCode\">" in btxml

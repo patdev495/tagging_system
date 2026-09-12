@@ -24,7 +24,6 @@ export interface Product {
   mfr_pn?: string;
   pkg_prefix?: string;
   revision?: string;
-  factory_pn?: string;
   asin?: string;
   product_desc?: string;
   customer?: Customer;
@@ -115,4 +114,3 @@ export interface JobOrderDetails {
   product: Product;
   slots: JobOrderSlot[];
 }
-

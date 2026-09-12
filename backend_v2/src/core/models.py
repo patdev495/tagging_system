@@ -35,7 +35,6 @@ class Product(Base):
     mfr_pn = Column(String(50), nullable=True) # e.g. NYS5998
     pkg_prefix = Column(String(20), nullable=True) # e.g. VHK0010237 hoặc 37033907
     revision = Column(String(10), default="B")
-    factory_pn = Column(String(100), nullable=True, index=True) # Mã nội bộ xưởng 厂内料号 (1LAE...)
     asin = Column(String(50), nullable=True) # Amazon ASIN (B08G9M4HXS...)
     product_desc = Column(String(255), nullable=True) # Mô tả cáp đầy đủ trên tem 2
     
