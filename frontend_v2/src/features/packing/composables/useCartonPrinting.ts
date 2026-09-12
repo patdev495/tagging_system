@@ -226,7 +226,6 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
       const nextPending = options.jobOrderSlots.value.find(s => s.status === 'PENDING');
       if (nextPending) {
         options.awaitingNext.value = true;
-        options.focusScan();
       } else {
         options.awaitingNext.value = false;
         options.selectedSlotId.value = null;

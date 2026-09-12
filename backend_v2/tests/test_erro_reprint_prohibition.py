@@ -92,7 +92,7 @@ def test_reprint_erro_carton_is_strictly_forbidden(db_session, erro_product):
         )
 
     assert exc_info.value.status_code == 400
-    assert "ERRO" in str(exc_info.value.detail)
+    assert "ERRO" in exc_info.value.detail
 
 
 def test_reprint_ui_carton_still_allowed(db_session, ui_product):
@@ -142,7 +142,7 @@ def test_weigh_pack_erro_rejects_custom_sn(db_session, erro_product):
         weigh_pack_carton(weigh_in, db_session)
 
     assert exc_info.value.status_code == 400
-    assert "thủ công" in str(exc_info.value.detail) or "manual" in str(exc_info.value.detail).lower() or "ERRO" in str(exc_info.value.detail)
+    assert "thủ công" in exc_info.value.detail or "manual" in exc_info.value.detail.lower() or "ERRO" in exc_info.value.detail
 
 
 def test_weigh_pack_erro_damaged_label_sop_sequential_increment(db_session, erro_product):

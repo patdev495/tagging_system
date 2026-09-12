@@ -4,16 +4,16 @@
     <div class="flex items-center justify-between px-1 mb-1.5 text-xs font-semibold">
       <div class="flex items-center gap-1.5">
         <span class="relative flex h-2 w-2">
-          <span v-if="!disabled && jobOrder" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span :class="['relative inline-flex rounded-full h-2 w-2', (!disabled && jobOrder) ? 'bg-emerald-500' : 'bg-slate-400']"></span>
+          <span v-if="!isInputDisabled && jobOrder" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span :class="['relative inline-flex rounded-full h-2 w-2', (!isInputDisabled && jobOrder) ? 'bg-emerald-500' : (awaitingNext ? 'bg-amber-500' : 'bg-slate-400')]"></span>
         </span>
-        <span :class="(!disabled && jobOrder) ? 'text-emerald-700 font-bold uppercase tracking-wide' : 'text-slate-500'">
-          {{ (!disabled && jobOrder) ? (awaitingNext ? 'THÙNG ĐÃ ĐỦ - CHỜ ĐỔI THÙNG' : 'SẴN SÀNG QUÉT MÃ') : 'TẠM KHÓA QUÉT' }}
+        <span :class="(!isInputDisabled && jobOrder) ? 'text-emerald-700 font-bold uppercase tracking-wide' : (awaitingNext ? 'text-amber-700 font-bold uppercase tracking-wide' : 'text-slate-500')">
+          {{ (!disabled && jobOrder) ? (awaitingNext ? t('packing.waiting_next_carton_indicator') : 'SẴN SÀNG QUÉT MÃ') : 'TẠM KHÓA QUÉT' }}
         </span>
       </div>
 
       <div class="text-slate-400 text-[11px] font-mono">
-        <span v-if="!disabled && jobOrder">Phím tắt: Enter (Quét) | Space (Đổi thùng)</span>
+        <span v-if="!disabled && jobOrder">{{ awaitingNext ? 'Phím tắt: Space (Đổi thùng)' : 'Phím tắt: Enter (Quét) | Space (Đổi thùng)' }}</span>
       </div>
     </div>
 
@@ -24,25 +24,25 @@
           type="text"
           :value="scanBuffer"
           @input="handleInput"
-          @keydown.enter.prevent="$emit('scan')"
+          @keydown.enter.prevent="!isInputDisabled && $emit('scan')"
           @keydown.space="handleSpace"
-          :placeholder="disabled ? placeholder : (!jobOrder ? t('packing.scan_prompt_job') : (awaitingNext ? t('packing.scan_prompt_overflow') : 'Bắn mã sê-ri con (Item SN) vào đây...'))"
+          :placeholder="disabled ? placeholder : (awaitingNext ? t('packing.scan_prompt_awaiting_next') : (!jobOrder ? t('packing.scan_prompt_job') : 'Bắn mã sê-ri con (Item SN) vào đây...'))"
           ref="scanInput"
-          :disabled="disabled"
+          :disabled="isInputDisabled"
           autocomplete="off"
           autocorrect="off"
           spellcheck="false"
           class="w-full h-12 md:h-14 px-4 bg-white border-2 rounded-xl text-slate-900 text-base md:text-lg font-barcode-mono font-bold text-center transition-all outline-none shadow-xs"
           :class="[
-            disabled 
-              ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' 
-              : (awaitingNext 
-                  ? 'bg-amber-50/60 border-amber-500 text-amber-900 focus:ring-4 focus:ring-amber-500/20' 
-                  : (flashState === 'fail' 
-                      ? 'border-rose-600 bg-rose-50 text-rose-900 animate-scan-fail' 
-                      : (flashState === 'pass' 
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-900 animate-scan-pass' 
-                          : 'border-slate-300 hover:border-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/15 focus:bg-white'))),
+            isInputDisabled 
+              ? (awaitingNext 
+                  ? 'bg-amber-50/70 border-amber-400 text-amber-800 cursor-not-allowed select-none' 
+                  : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed')
+              : (flashState === 'fail' 
+                  ? 'border-rose-600 bg-rose-50 text-rose-900 animate-scan-fail' 
+                  : (flashState === 'pass' 
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-900 animate-scan-pass' 
+                      : 'border-slate-300 hover:border-slate-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/15 focus:bg-white')),
             hasErrors ? 'animate-shake' : ''
           ]"
         />
@@ -144,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -187,6 +187,7 @@ const flashState = ref<'pass' | 'fail' | ''>('');
 let flashTimer: ReturnType<typeof setTimeout> | null = null;
 let focusLockTimer: ReturnType<typeof setInterval> | null = null;
 
+const isInputDisabled = computed(() => props.disabled || props.awaitingNext);
 const hasErrors = computed(() => (props.invalidScans?.length > 0) || (props.overflowScans?.length > 0));
 
 const triggerFlash = (state: 'pass' | 'fail') => {
@@ -222,6 +223,20 @@ const handleSpace = (e: KeyboardEvent) => {
   }
 };
 
+const handleGlobalKeyDown = (e: KeyboardEvent) => {
+  if (props.awaitingNext && (e.code === 'Space' || e.key === ' ')) {
+    const target = e.target as HTMLElement;
+    // Do not intercept if user is typing inside an editable field other than scan input
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      if (target !== scanInput.value) return;
+    }
+    e.preventDefault();
+    if (!hasErrors.value && !props.disabled) {
+      emit('next-carton');
+    }
+  }
+};
+
 const handleNextCartonClick = () => {
   if (!hasErrors.value && !props.disabled) {
     emit('next-carton');
@@ -229,16 +244,25 @@ const handleNextCartonClick = () => {
 };
 
 const focusScan = () => {
-  if (scanInput.value && !props.disabled) {
+  if (scanInput.value && !isInputDisabled.value) {
     scanInput.value.focus({ preventScroll: true });
   }
 };
+
+// When awaitingNext unlocks (switching to new carton), automatically focus the scan input
+watch(isInputDisabled, (disabledNow, wasDisabled) => {
+  if (wasDisabled && !disabledNow) {
+    nextTick(() => {
+      focusScan();
+    });
+  }
+});
 
 // Ergonomic Auto-Focus Lock: Maintain focus for scanner barcode gun
 const handleGlobalClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement;
   const isInteractive = target.closest('button, a, input, select, textarea, [role="dialog"]');
-  if (!isInteractive && !props.disabled && scanInput.value) {
+  if (!isInteractive && !isInputDisabled.value && scanInput.value) {
     setTimeout(focusScan, 100);
   }
 };
@@ -246,9 +270,10 @@ const handleGlobalClick = (e: MouseEvent) => {
 onMounted(() => {
   focusScan();
   window.addEventListener('click', handleGlobalClick);
+  window.addEventListener('keydown', handleGlobalKeyDown);
   focusLockTimer = setInterval(() => {
     // If no active element or active element is body, refocus scan input
-    if (document.activeElement === document.body && !props.disabled) {
+    if (document.activeElement === document.body && !isInputDisabled.value) {
       focusScan();
     }
   }, 2000);
@@ -256,9 +281,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('click', handleGlobalClick);
+  window.removeEventListener('keydown', handleGlobalKeyDown);
   if (focusLockTimer) clearInterval(focusLockTimer);
   if (flashTimer) clearTimeout(flashTimer);
 });
 
-defineExpose({ focusScan, triggerFlash });
+defineExpose({ focusScan, triggerFlash, isInputDisabled });
 </script>
