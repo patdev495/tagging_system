@@ -187,7 +187,7 @@
             :isPrinting="isPrinting"
           />
 
-          <A11SerialControl
+          <ErroSerialControl
             :currentSNPreview="currentSNPreview"
           />
 
@@ -214,7 +214,7 @@
 
         <!-- Right: Session Stats & Last Carton Info (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col h-full gap-2 min-h-0 justify-between">
-          <A11LastCartonCard
+          <ErroLastCartonCard
             :sessionPackedCount="sessionPackedCount"
             :selectedProduct="selectedProduct"
             :lastPackedCarton="lastPackedCarton"
@@ -225,7 +225,7 @@
       </main>
 
       <!-- Modals -->
-      <A11ProductSelectModal
+      <ErroProductSelectModal
         :show="showProductModal"
         :products="erroProducts"
         :selectedProduct="selectedProduct"
@@ -235,7 +235,7 @@
         @reload="loadErroProducts"
       />
 
-      <A11BatchConfigModal
+      <ErroBatchConfigModal
         :show="showBatchModal"
         :po="activePO"
         :lot="activeLot"
@@ -269,14 +269,14 @@ import type { Product } from '../types/api';
 
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import ScaleDigitalGauge from '../features/packing/weight_scale/components/ScaleDigitalGauge.vue';
-import A11SerialControl from '../features/packing/weight_scale/components/A11SerialControl.vue';
-import A11LastCartonCard from '../features/packing/weight_scale/components/A11LastCartonCard.vue';
+import ErroSerialControl from '../features/packing/weight_scale/components/ErroSerialControl.vue';
+import ErroLastCartonCard from '../features/packing/weight_scale/components/ErroLastCartonCard.vue';
 import ScaleToleranceErrorModal from '../features/packing/weight_scale/components/ScaleToleranceErrorModal.vue';
-import A11ProductSelectModal from '../features/packing/weight_scale/components/A11ProductSelectModal.vue';
-import A11BatchConfigModal from '../features/packing/weight_scale/components/A11BatchConfigModal.vue';
+import ErroProductSelectModal from '../features/packing/weight_scale/components/ErroProductSelectModal.vue';
+import ErroBatchConfigModal from '../features/packing/weight_scale/components/ErroBatchConfigModal.vue';
 
 import { useScaleStream } from '../features/packing/weight_scale/composables/useScaleStream';
-import { useA11SerialNumber } from '../features/packing/weight_scale/composables/useA11SerialNumber';
+import { useErroSerialNumber } from '../features/packing/weight_scale/composables/useErroSerialNumber';
 import { useWeighAndPrint } from '../features/packing/weight_scale/composables/useWeighAndPrint';
 import { useAgentHealth } from '../features/packing/composables/useAgentHealth';
 
@@ -311,7 +311,7 @@ const {
   currentSNPreview,
   fetchNextSN,
   advanceSequence,
-} = useA11SerialNumber(selectedProduct);
+} = useErroSerialNumber(selectedProduct);
 
 // 3. Weigh & Print Orchestrator Composable (No Reprint - ADR 0005)
 const {

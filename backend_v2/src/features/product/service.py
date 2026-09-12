@@ -84,8 +84,8 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
         }
 
     if product.template_type == "erro_03":
-        from src.features.carton.a11_tem3_allocator import plan_next_a11_tem3_carton_sn
-        plan = plan_next_a11_tem3_carton_sn(db, product)
+        from src.features.carton.erro_03_sn_allocator import plan_next_erro_03_carton_sn
+        plan = plan_next_erro_03_carton_sn(db, product)
         return {
             "next_seq": plan.sequence,
             "next_sn": plan.carton_sn,
@@ -94,8 +94,8 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
         }
 
     if product.packing_mode == "weight_scale" or product.template_type == "erro_01":
-        from src.features.carton.a11_sn_allocator import plan_next_a11_carton_sn
-        plan = plan_next_a11_carton_sn(db, product, custom_yymm=yymm)
+        from src.features.carton.erro_01_sn_allocator import plan_next_erro_01_carton_sn
+        plan = plan_next_erro_01_carton_sn(db, product, custom_yymm=yymm)
         return {"next_seq": plan.sequence, "next_sn": plan.carton_sn, "prefix": plan.prefix, "yymm": plan.yymm}
 
     plan = plan_next_carton_sn(db, product, custom_yymm=yymm, include_slots=True)

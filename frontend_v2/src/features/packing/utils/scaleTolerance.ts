@@ -69,9 +69,7 @@ export function evaluateScaleTolerance(params: ScaleToleranceParams): ScaleToler
   };
 }
 
-export function generateA11SNPreview(pkgPrefix: string, yymm: string, sequence: number | string): string {
+export function generateErro01SNPreview(pkgPrefix: string, yymm: string, sequence: number | string): string {
   const seqStr = String(sequence).padStart(6, '0');
   return `${pkgPrefix || ''}${yymm || ''}${seqStr}`;
 }
-
-export const generateUXSNPreview = generateA11SNPreview;

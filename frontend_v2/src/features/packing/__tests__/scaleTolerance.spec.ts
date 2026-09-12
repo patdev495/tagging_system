@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   evaluateScaleTolerance,
-  generateA11SNPreview,
-  generateUXSNPreview,
+  generateErro01SNPreview,
 } from '../utils/scaleTolerance';
 
 describe('evaluateScaleTolerance', () => {
@@ -90,18 +89,10 @@ describe('evaluateScaleTolerance', () => {
   });
 });
 
-describe('generateA11SNPreview', () => {
+describe('generateErro01SNPreview', () => {
   it('formats prefix, yymm, and 6-digit sequence', () => {
-    expect(generateA11SNPreview('VHK0010237', '2608', 81)).toBe('VHK00102372608000081');
-    expect(generateA11SNPreview('VHK0010237', '2608', 1)).toBe('VHK00102372608000001');
-    expect(generateA11SNPreview('VHK0010237', '2608', '123456')).toBe('VHK00102372608123456');
-  });
-});
-
-describe('generateUXSNPreview', () => {
-  it('formats prefix, yymm, and 6-digit sequence', () => {
-    expect(generateUXSNPreview('VHK0010237', '2608', 81)).toBe('VHK00102372608000081');
-    expect(generateUXSNPreview('VHK0010237', '2608', 1)).toBe('VHK00102372608000001');
-    expect(generateUXSNPreview('VHK0010237', '2608', '123456')).toBe('VHK00102372608123456');
+    expect(generateErro01SNPreview('VHK0010237', '2608', 81)).toBe('VHK00102372608000081');
+    expect(generateErro01SNPreview('VHK0010237', '2608', 1)).toBe('VHK00102372608000001');
+    expect(generateErro01SNPreview('VHK0010237', '2608', '123456')).toBe('VHK00102372608123456');
   });
 });

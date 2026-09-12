@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import CustomerSelectPage from '../../views/CustomerSelectPage.vue';
 import UIPackingPage from '../../views/UIPackingPage.vue';
-import A11PackingPage from '../../views/A11PackingPage.vue';
+import ErroPackingPage from '../../views/ErroPackingPage.vue';
 import AdminLayout from '../layouts/AdminLayout.vue';
 
 const routes: RouteRecordRaw[] = [
@@ -18,7 +18,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/packing/erro',
     name: 'ErroPacking',
-    component: A11PackingPage,
+    component: ErroPackingPage,
   },
   {
     path: '/packing/a11',

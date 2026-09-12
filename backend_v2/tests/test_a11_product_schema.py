@@ -130,8 +130,8 @@ def test_seed_erro_data(db_session):
     assert tem3_prods[0].item_name == "2M21-00508-0004H"
 
 
-def test_migrate_a11_to_erro_preserves_customer_and_products(db_session):
-    from src.core.database import migrate_a11_to_erro_data
+def test_migrate_legacy_erro_data_preserves_customer_and_products(db_session):
+    from src.core.database import migrate_legacy_erro_data
 
     customer = Customer(code="A11", name="Customer A11")
     db_session.add(customer)
@@ -147,7 +147,7 @@ def test_migrate_a11_to_erro_preserves_customer_and_products(db_session):
     db_session.commit()
 
     original_customer_id = customer.id
-    migrate_a11_to_erro_data(db_session)
+    migrate_legacy_erro_data(db_session)
 
     migrated = db_session.query(Customer).filter(Customer.code == "ERRO").one()
     migrated_product = db_session.query(Product).filter(Product.id == product.id).one()

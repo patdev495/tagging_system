@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ref } from 'vue';
-import { useA11SerialNumber } from '../composables/useA11SerialNumber';
+import { useErroSerialNumber } from '../composables/useErroSerialNumber';
 import catalogApi from '../../../catalog/api';
 import type { Product } from '../../../../types/api';
 
@@ -10,11 +10,11 @@ vi.mock('../../../catalog/api', () => ({
   },
 }));
 
-describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)', () => {
+describe('useErroSerialNumber Composable (Strict Monotonic Sequence - ADR 0006)', () => {
   const mockProduct = ref<Product | null>({
     id: 10,
     customer_id: 2,
-    item_name: 'A11-Product-01',
+    item_name: 'Erro-01',
     packed_qty: 190,
     pkg_prefix: 'VHK0010237',
     template_type: 'erro_01',
@@ -26,7 +26,7 @@ describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)',
   });
 
   it('computes S/N preview with default fallback format and auto mode', () => {
-    const { currentSNPreview, isAutoSN } = useA11SerialNumber(mockProduct);
+    const { currentSNPreview, isAutoSN } = useErroSerialNumber(mockProduct);
 
     expect(isAutoSN.value).toBe(true);
     expect(currentSNPreview.value).toMatch(/^VHK0010237\d{4}000001$/);
@@ -37,7 +37,7 @@ describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)',
       data: { next_seq: 42, yymm: '2608' },
     } as any);
 
-    const { fetchNextSN, currentSNPreview, autoSequence } = useA11SerialNumber(mockProduct);
+    const { fetchNextSN, currentSNPreview, autoSequence } = useErroSerialNumber(mockProduct);
 
     await fetchNextSN();
 
@@ -46,7 +46,7 @@ describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)',
   });
 
   it('strictly advances sequence automatically on advanceSequence without manual mode', () => {
-    const { autoSequence, advanceSequence, isAutoSN } = useA11SerialNumber(mockProduct);
+    const { autoSequence, advanceSequence, isAutoSN } = useErroSerialNumber(mockProduct);
 
     expect(isAutoSN.value).toBe(true);
     autoSequence.value = 10;
@@ -65,7 +65,7 @@ describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)',
       allow_partial: 0,
     });
 
-    const { currentSNPreview, autoSequence } = useA11SerialNumber(tem3Product);
+    const { currentSNPreview, autoSequence } = useErroSerialNumber(tem3Product);
     autoSequence.value = 1;
 
     expect(currentSNPreview.value).toMatch(/^1012665\d{6}0001$/);

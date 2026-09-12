@@ -7,7 +7,7 @@ import type { Product } from '../../../../types/api';
  * Per ADR 0006, Customer Erro strictly mandates automatic, monotonic serial numbers.
  * Manual sequence editing and toggling are completely removed.
  */
-export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
+export function useErroSerialNumber(selectedProduct: Ref<Product | null>) {
   const isAutoSN = ref<boolean>(true);
   const autoSequence = ref<number>(1);
   const currentYYMM = ref<string>('');

@@ -203,7 +203,7 @@ def generate_carton_excel(cartons: List[models.Carton], mode: str = "summary") -
 
                     detail_idx += 1
             else:
-                # Dành cho thùng không có item_sn (như A11 weight_scale)
+                # Dành cho thùng weight_scale không có item_sn.
                 row_vals = [
                     detail_idx,
                     carton.carton_sn,

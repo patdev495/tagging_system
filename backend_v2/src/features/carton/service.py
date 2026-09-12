@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from src.core import models, utils
 from src.features.carton import schemas
 from src.features.carton.sn_allocator import plan_next_carton_sn
-from src.features.carton.a11_sn_allocator import plan_next_a11_carton_sn
+from src.features.carton.erro_01_sn_allocator import plan_next_erro_01_carton_sn
 from src.features.carton import slot_lifecycle
 from src.features.print.service import generate_btxml
 
@@ -223,8 +223,8 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
         )
         date_code = None
     elif product.template_type == "erro_03":
-        from src.features.carton.a11_tem3_allocator import plan_next_a11_tem3_carton_sn
-        plan = plan_next_a11_tem3_carton_sn(
+        from src.features.carton.erro_03_sn_allocator import plan_next_erro_03_carton_sn
+        plan = plan_next_erro_03_carton_sn(
             db,
             product,
             custom_yymmdd=weigh_in.custom_yymm,
@@ -233,7 +233,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
         )
         date_code = plan.yymmdd
     else:
-        plan = plan_next_a11_carton_sn(
+        plan = plan_next_erro_01_carton_sn(
             db,
             product,
             custom_yymm=weigh_in.custom_yymm,

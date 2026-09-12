@@ -59,7 +59,7 @@ def get_db():
     finally:
         db.close()
 
-def migrate_a11_to_erro_data(db):
+def migrate_legacy_erro_data(db):
     """Idempotently preserve the existing Customer ID while canonicalizing Erro data."""
     from src.core import models
 
@@ -252,7 +252,7 @@ def init_db():
 
         # Run seed data
         with SessionLocal() as db:
-            migrate_a11_to_erro_data(db)
+            migrate_legacy_erro_data(db)
             seed_erro_data(db)
             try:
                 from src.features.auth.service import seed_default_users
