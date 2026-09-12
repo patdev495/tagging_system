@@ -43,7 +43,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
 
   const isPrinting = ref(false);
   const sessionPackedCount = ref<number>(
-    Number(sessionStorage.getItem('a11_session_count') || sessionStorage.getItem('ux_session_count') || '0')
+    Number(sessionStorage.getItem('erro_session_count') || '0')
   );
   const lastPackedCarton = ref<Carton | null>(null);
 
@@ -91,8 +91,9 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       return;
     }
 
-    const isTem2 = selectedProduct.value.template_type === 'a11_tem2';
-    if (!isTem2 && (!activePO.value || !activeLot.value)) {
+    const isTem2 = selectedProduct.value.template_type === 'erro_02';
+    const isTem3 = selectedProduct.value.template_type === 'erro_03';
+    if (!isTem2 && !isTem3 && (!activePO.value || !activeLot.value)) {
       notify?.('Vui lòng nhập PO và LOT trước khi in', 'warning');
       openBatchModal?.();
       return;
@@ -118,7 +119,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     const settings = getSettings();
 
     try {
-      // 1. Call Backend API to Allocate A11 SN and generate A11 BTXML (Strict Monotonic)
+      // 1. Call Backend API to allocate the next Erro serial number and generate BTXML.
       const res = await packingApi.weighPackCarton({
         product_id: selectedProduct.value.id,
         weight: currentWeight,
@@ -164,8 +165,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       // 4. Update session and last carton
       lastPackedCarton.value = newCarton;
       sessionPackedCount.value += 1;
-      sessionStorage.setItem('a11_session_count', String(sessionPackedCount.value));
-      sessionStorage.setItem('ux_session_count', String(sessionPackedCount.value));
+      sessionStorage.setItem('erro_session_count', String(sessionPackedCount.value));
 
       // 5. Advance serial number counter
       advanceSequence();
@@ -182,8 +182,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
   const resetSessionCount = () => {
     if (confirm('Bạn có chắc muốn đặt lại bộ đếm số thùng trong ca về 0?')) {
       sessionPackedCount.value = 0;
-      sessionStorage.setItem('a11_session_count', '0');
-      sessionStorage.setItem('ux_session_count', '0');
+      sessionStorage.setItem('erro_session_count', '0');
     }
   };
 

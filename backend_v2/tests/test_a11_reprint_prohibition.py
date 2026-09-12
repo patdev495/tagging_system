@@ -19,7 +19,7 @@ def db_session():
 
 @pytest.fixture
 def a11_product(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
 
@@ -35,8 +35,8 @@ def a11_product(db_session):
         mfr_pn="NYS5998",
         pkg_prefix="VHK0010237",
         revision="B",
-        template_type="a11",
-        template_path=r"D:\PAT\Template\A11.btw",
+        template_type="erro_01",
+        template_path=r"D:\PAT\Template\erro_01.btw",
     )
     db_session.add(product)
     db_session.commit()
@@ -92,7 +92,7 @@ def test_reprint_a11_carton_is_strictly_forbidden(db_session, a11_product):
         )
 
     assert exc_info.value.status_code == 400
-    assert "A11" in str(exc_info.value.detail)
+    assert "ERRO" in str(exc_info.value.detail)
 
 
 def test_reprint_ui_carton_still_allowed(db_session, ui_product):
@@ -142,7 +142,7 @@ def test_weigh_pack_a11_rejects_custom_sn(db_session, a11_product):
         weigh_pack_carton(weigh_in, db_session)
 
     assert exc_info.value.status_code == 400
-    assert "thủ công" in str(exc_info.value.detail) or "manual" in str(exc_info.value.detail).lower() or "A11" in str(exc_info.value.detail)
+    assert "thủ công" in str(exc_info.value.detail) or "manual" in str(exc_info.value.detail).lower() or "ERRO" in str(exc_info.value.detail)
 
 
 def test_weigh_pack_a11_damaged_label_sop_sequential_increment(db_session, a11_product):
@@ -175,6 +175,5 @@ def test_weigh_pack_a11_damaged_label_sop_sequential_increment(db_session, a11_p
     seq_1 = int(str(carton_1.carton_sn)[-6:])
     seq_2 = int(str(carton_2.carton_sn)[-6:])
     assert seq_2 == seq_1 + 1
-
 
 

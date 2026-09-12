@@ -10,12 +10,12 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h1 class="font-black text-base md:text-lg text-slate-900 leading-tight">Trạm Cân Đóng Gói (A11)</h1>
+              <h1 class="font-black text-base md:text-lg text-slate-900 leading-tight">Trạm Cân Đóng Gói (Erro)</h1>
               <span class="px-2 py-0.5 text-[10px] font-black rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wide uppercase">
-                Khách Hàng A11
+                Khách Hàng Erro
               </span>
             </div>
-            <p class="text-[11px] text-slate-500 leading-none">Kiểm soát trọng lượng dung sai và in nhãn BarTender A11</p>
+            <p class="text-[11px] text-slate-500 leading-none">Kiểm soát trọng lượng dung sai và in nhãn BarTender Erro</p>
           </div>
         </div>
 
@@ -82,16 +82,35 @@
           </div>
 
           <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
-            <span class="text-xs uppercase font-bold text-slate-400 font-sans">Mfr/Prefix:</span>
-            <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || 'NYS5998' }}</span>
-            <span class="text-slate-300">|</span>
-            <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || 'VHK0010237' }}</span>
+            <template v-if="selectedProduct.template_type === 'erro_03'">
+              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Supplier/VendorPN:</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || '1012665' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.factory_pn || '1LAE0091C2U011NMES' }}</span>
+            </template>
+            <template v-else-if="selectedProduct.template_type === 'erro_02'">
+              <span class="text-xs uppercase font-bold text-slate-400 font-sans">SSCC/P-N:</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || '37033907' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || '-' }}</span>
+            </template>
+            <template v-else>
+              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Mfr/Prefix:</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || 'NYS5998' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || 'VHK0010237' }}</span>
+            </template>
           </div>
 
           <div class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
             <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <template v-if="selectedProduct?.template_type === 'a11_tem2'">
+            <template v-if="selectedProduct?.template_type === 'erro_02'">
               <span class="font-bold text-xs text-slate-500 italic bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Không áp dụng (Tem 2)</span>
+            </template>
+            <template v-else-if="selectedProduct?.template_type === 'erro_03'">
+              <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || '(Tùy chọn)' }}</span>
+              <span class="text-slate-300">|</span>
+              <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || '92607933' }}</span>
             </template>
             <template v-else>
               <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || 'Chưa nhập' }}</span>
@@ -103,7 +122,7 @@
 
         <div class="flex items-center gap-2 shrink-0">
           <button 
-            v-if="selectedProduct?.template_type !== 'a11_tem2'"
+            v-if="selectedProduct?.template_type !== 'erro_02'"
             @click="showBatchModal = true" 
             class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
           >
@@ -180,7 +199,7 @@
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
               (settings.printMode !== 'centralized' && templateMissing)
                 ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
-                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'a11_tem2' || (activePO && activeLot))
+                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || (activePO && activeLot))
                   ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                   : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
             ]"
@@ -189,7 +208,7 @@
             <i v-else-if="settings.printMode !== 'centralized' && templateMissing" class="fas fa-file-circle-exclamation text-lg"></i>
             <i v-else-if="toleranceResult.canPrint" class="fas fa-print text-lg"></i>
             <i v-else class="fas fa-triangle-exclamation text-lg"></i>
-            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (toleranceResult.canPrint ? 'CÂN & IN TEM A11 [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]')) }}</span>
+            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (toleranceResult.canPrint ? 'CÂN & IN TEM ERRO [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]')) }}</span>
           </button>
         </div>
 
@@ -208,18 +227,19 @@
       <!-- Modals -->
       <A11ProductSelectModal
         :show="showProductModal"
-        :products="a11Products"
+        :products="erroProducts"
         :selectedProduct="selectedProduct"
         :isLoading="isLoadingProducts"
         @close="showProductModal = false"
         @select="selectProduct"
-        @reload="loadA11Products"
+        @reload="loadErroProducts"
       />
 
       <A11BatchConfigModal
         :show="showBatchModal"
         :po="activePO"
         :lot="activeLot"
+        :isTem3="selectedProduct?.template_type === 'erro_03'"
         @close="showBatchModal = false"
         @save="saveBatchConfig"
       />
@@ -270,11 +290,11 @@ const showBatchModal = ref(false);
 const showSettingsModal = ref(false);
 
 // Active Selection State
-const a11Products = ref<Product[]>([]);
+const erroProducts = ref<Product[]>([]);
 const selectedProduct = ref<Product | null>(null);
 const isLoadingProducts = ref(false);
-const activePO = ref<string>(localStorage.getItem('a11_active_po') || localStorage.getItem('ux_active_po') || 'B432-22156381');
-const activeLot = ref<string>(localStorage.getItem('a11_active_lot') || localStorage.getItem('ux_active_lot') || '92608521');
+const activePO = ref<string>(localStorage.getItem('erro_active_po') || 'B432-22156381');
+const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '92608521');
 
 // 1. Scale Stream Composable
 const {
@@ -352,28 +372,23 @@ const switchCustomer = () => {
 const saveBatchConfig = (payload: { po: string; lot: string }) => {
   activePO.value = payload.po;
   activeLot.value = payload.lot;
-  localStorage.setItem('a11_active_po', activePO.value);
-  localStorage.setItem('a11_active_lot', activeLot.value);
-  localStorage.setItem('ux_active_po', activePO.value);
-  localStorage.setItem('ux_active_lot', activeLot.value);
+  localStorage.setItem('erro_active_po', activePO.value);
+  localStorage.setItem('erro_active_lot', activeLot.value);
   showBatchModal.value = false;
   system.showNotification('Đã cập nhật PO & LOT thành công', 'success');
 };
 
-const loadA11Products = async () => {
+const loadErroProducts = async () => {
   isLoadingProducts.value = true;
   try {
-    let res = await catalogApi.getProductsByCustomerCode('A11');
-    if (!res.data || res.data.length === 0) {
-      res = await catalogApi.getProductsByCustomerCode('UX');
-    }
-    a11Products.value = res.data || [];
+    const res = await catalogApi.getProductsByCustomerCode('ERRO');
+    erroProducts.value = res.data || [];
     if (selectedProduct.value) {
-      const refreshed = a11Products.value.find(p => p.id === selectedProduct.value!.id);
+      const refreshed = erroProducts.value.find(p => p.id === selectedProduct.value!.id);
       if (refreshed) selectedProduct.value = refreshed;
     }
   } catch (err) {
-    console.error('Failed to reload A11 products', err);
+    console.error('Failed to reload Erro products', err);
   } finally {
     isLoadingProducts.value = false;
   }
@@ -381,7 +396,7 @@ const loadA11Products = async () => {
 
 const openProductModal = async () => {
   showProductModal.value = true;
-  await loadA11Products();
+  await loadErroProducts();
 };
 
 const selectProduct = async (p: Product) => {
@@ -391,8 +406,12 @@ const selectProduct = async (p: Product) => {
   } catch {
     selectedProduct.value = p;
   }
-  localStorage.setItem('a11_selected_product_id', String(p.id));
-  localStorage.setItem('ux_selected_product_id', String(p.id));
+  if (selectedProduct.value.template_type === 'erro_03') {
+    if (!activeLot.value) {
+      activeLot.value = '92607933';
+    }
+  }
+  localStorage.setItem('erro_selected_product_id', String(p.id));
   showProductModal.value = false;
   system.showNotification(`Đã chọn sản phẩm ${selectedProduct.value.item_name}`, 'success');
   fetchNextSN();
@@ -415,12 +434,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 onMounted(async () => {
-  await loadA11Products();
-  const savedProdId = localStorage.getItem('a11_selected_product_id') || localStorage.getItem('ux_selected_product_id');
+  await loadErroProducts();
+  const savedProdId = localStorage.getItem('erro_selected_product_id');
   if (savedProdId) {
-    selectedProduct.value = a11Products.value.find(p => p.id === Number(savedProdId)) || a11Products.value[0] || null;
-  } else if (a11Products.value.length > 0) {
-    selectedProduct.value = a11Products.value[0];
+    selectedProduct.value = erroProducts.value.find(p => p.id === Number(savedProdId)) || erroProducts.value[0] || null;
+  } else if (erroProducts.value.length > 0) {
+    selectedProduct.value = erroProducts.value[0];
   }
 
   if (selectedProduct.value) {

@@ -5,8 +5,12 @@ Hệ thống quản lý đóng gói và in ấn nhãn thùng hàng (Carton) tíc
 ## Language
 
 **Customer**:
-Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đóng gói và dán nhãn. Mỗi Customer có mã định danh kỹ thuật (`code`, ví dụ: `UI`, `A11`) và tên hiển thị chính thức (`name`, ví dụ: `Universal Instruments`, `Customer A11`).
+Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đóng gói và dán nhãn. Mỗi Customer có mã định danh kỹ thuật (`code`, ví dụ: `UI`, `ERRO`) và tên hiển thị chính thức (`name`, ví dụ: `Universal Instruments`, `Erro`). Erro là Customer duy nhất cho năm mẫu tem `erro_01`–`erro_05`; A11 chỉ là tên lịch sử cần nhận diện khi chuyển dữ liệu, không phải Customer hoặc nhánh cần hiển thị/lọc báo cáo.
 _Avoid_: Client, đối tác, đối tác mua hàng
+
+**Erro Label Template Code**:
+Mã kỹ thuật ổn định xác định một trong năm mẫu tem của Customer Erro: `erro_01`, `erro_02`, `erro_03`, `erro_04`, hoặc `erro_05`. Ba mã đang hoạt động ánh xạ từ hệ thống cũ theo thứ tự: `a11` → `erro_01`, `a11_tem2` → `erro_02`, và `a11_tem3` → `erro_03`. `erro_04` và `erro_05` chưa có cấu hình hoặc mẫu tem. Cả năm mã đều cấm in lại và chỉ được cấp số tem tự động, tăng tuần tự.
+_Avoid_: Tem A11, loại tem A11
 
 **Product**:
 Một loại sản phẩm thuộc về một Customer, định nghĩa các quy tắc đóng gói (như số lượng mỗi thùng, đường dẫn file tem nhãn, tiền tố số sê-ri).
@@ -19,16 +23,17 @@ _Avoid_: Hộp, thùng chứa, kiện hàng
 **Carton SN**:
 Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hình của từng Customer/Product:
 - Với khách hàng UI: Tiền tố `start_part` (mặc định `CN` - Carton Number), theo sau là ngày tháng (`YYMM`), ký tự phân biệt sản phẩm và số thứ tự 5 chữ số reset hàng tháng.
-- Với khách hàng A11 - Tem 1 (`PD014736`): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm (PKG ID).
-- Với khách hàng A11 - Tem 2 (`PD027504`): Mã SSCC 18 chữ số theo chuẩn GS1 `037033907{seq:07d}{cd}` với số thứ tự sê-ri 7 chữ số tăng liên tục không reset, mã kiểm tra tính theo Modulo 10.
-_Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem A11 Tem 1)
+- Với khách hàng Erro - `erro_01` (`PD014736`): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm (PKG ID).
+- Với khách hàng Erro - `erro_02` (`PD027504`): Mã SSCC 18 chữ số theo chuẩn GS1 `037033907{seq:07d}{cd}` với số thứ tự sê-ri 7 chữ số tăng liên tục không reset, mã kiểm tra tính theo Modulo 10.
+- Với khách hàng Erro - `erro_03` (`PD024364`): Mã định danh thùng xuất xưởng Luxshare NME gồm 17 ký tự: mã nhà cung ứng 7 chữ số (mặc định xưởng Việt Nam là `1012665`), thời gian sản xuất 6 chữ số (`YYMMDD`), và số thứ tự 4 chữ số reset theo ngày.
+_Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem Erro 01)
 
 **SSCC**:
-Mã định danh công-ten-nơ vận chuyển duy nhất theo tiêu chuẩn GS1 (Serial Shipping Container Code, 18 chữ số), bắt đầu bằng `(00)`, dùng làm mã định danh Carton SN cho tem thùng xuất xưởng CM của khách hàng A11 (Tem 2).
+Mã định danh công-ten-nơ vận chuyển duy nhất theo tiêu chuẩn GS1 (Serial Shipping Container Code, 18 chữ số), bắt đầu bằng `(00)`, dùng làm mã định danh Carton SN cho tem thùng xuất xưởng CM của khách hàng Erro (`erro_02`).
 _Avoid_: Pallet code, mã công-ten-nơ, mã vận đơn
 
 **ASIN**:
-Mã số định danh tiêu chuẩn của Amazon (Amazon Standard Identification Number) gồm 10 ký tự chữ và số, được cấu hình cố định theo từng Product của khách hàng A11 xuất khẩu cho hệ thống Amazon eero.
+Mã số định danh tiêu chuẩn của Amazon (Amazon Standard Identification Number) gồm 10 ký tự chữ và số, được cấu hình cố định theo từng Product của khách hàng Erro xuất khẩu cho hệ thống Amazon eero.
 _Avoid_: Mã Amazon, mã sàn, product ASIN
 
 **Date Code**:
@@ -76,7 +81,7 @@ Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt 
 _Avoid_: Quốc gia sê-ri
 
 **Reprint**:
-Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng. Quy trình này áp dụng cho Customer UI; đối với Customer A11, hành động Reprint bị cấm hoàn toàn theo quy định kiểm soát tem nhãn chống trùng lặp.
+Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng. Quy trình này áp dụng cho Customer UI; đối với Customer Erro, hành động Reprint bị cấm hoàn toàn theo quy định kiểm soát tem nhãn chống trùng lặp.
 _Avoid_: In bù, in mới, in đè
 
 **Station ID**:
@@ -129,7 +134,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 - Một **Customer** có thể có nhiều **Products** khác nhau.
 - Một **Product** xác định chế độ đóng gói (**Packing Mode**), số lượng đóng gói quy chuẩn (`packed_qty`), mẫu tem nhãn, và quy tắc sinh sê-ri (**Carton SN**).
 - Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước. Sau khi một Carton hoàn tất in tem và xác thực, hệ thống phải dừng ở trạng thái chờ mở thùng mới. Công nhân bắt buộc phải xác nhận chuyển sang Job Order Carton Slot tiếp theo (bấm nút "Thùng tiếp theo" hoặc nhấn phím Space) mới được quét hàng tiếp; nếu trạm đang tồn tại lỗi quét thì không được phép chuyển thùng cho đến khi lỗi được xóa.
-- Với Product ở chế độ `weight_scale` (khách hàng A11), một **Carton** được đóng liên tục trong **Production Run** gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước.
+- Với Product ở chế độ `weight_scale` (khách hàng Erro), một **Carton** được đóng liên tục trong **Production Run** gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước. Đối với `erro_02` và `erro_03`, **PO Number** cho phép để rỗng mặc định và người vận hành có thể tùy chọn chỉnh sửa trên giao diện ca đóng gói.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 - Người dùng đăng nhập vào phân hệ Quản trị (Admin) mang một **Role** (`Admin` hoặc `QA`). Tài khoản `QA` chỉ có quyền đọc và xuất báo cáo; các thao tác tạo/sửa/xóa Customer/Product, xóa Carton và kích hoạt Reprint bị chặn ở cả tầng giao diện lẫn API backend.
 - Mọi mốc thời gian đóng gói (**Carton** `created_at`, **Job Order Carton Slot** `scanned_at`, **Date Code** `YYWW`, sê-ri `YYMM`) đều được ghi nhận theo **Giờ Cục bộ (Local Server Time)** của máy chủ nhà máy để đảm bảo tính nhất quán giữa màn hình vận hành, báo cáo thống kê ca sản xuất và nhãn in BarTender.
@@ -150,4 +155,3 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 
 - **packed_by**: Trường `packed_by` trong bảng cartons thực chất đang lưu tên của **Printer** (Thiết bị in) chứ không phải thông tin của người đóng gói (Packer/Operator).
 - **CN**: Ký tự `CN` ở tiền tố số sê-ri (`start_part`) là viết tắt của **Carton Number**, hoàn toàn độc lập với ký tự `CN` đại diện cho Trung Quốc (China) trong trường quốc gia sản xuất (`Origin Country` / `carton_origin`).
-

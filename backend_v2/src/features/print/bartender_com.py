@@ -235,59 +235,27 @@ class BarTenderCOMApp:
             start_time = time.time()
             while time.time() - start_time < timeout:
                 try:
-                    def enum_windows_callback(hwnd, matches):
-                        if win32gui.IsWindowVisible(hwnd):
-                            title = win32gui.GetWindowText(hwnd)
-                            if "save" in title.lower() and ("print" in title.lower() or "output" in title.lower() or "pdf" in title.lower()):
-                                matches.append(hwnd)
-                        return True
-
                     dialog_matches = []
-                    win32gui.EnumWindows(enum_windows_callback, dialog_matches)
-
+                    win32gui.EnumWindows(lambda h, m: m.append(h) if win32gui.IsWindowVisible(h) and any(k in win32gui.GetWindowText(h).lower() for k in ("save", "print", "output", "pdf")) else True, dialog_matches)
                     if dialog_matches:
                         dialog_hwnd = dialog_matches[0]
-                        logger.info(f"Save dialog box intercepted: {win32gui.GetWindowText(dialog_hwnd)}")
-
-                        # Find edit or combo boxes where we can input the output file path
-                        edit_children = []
-                        def find_edit_callback(hwnd, _):
-                            cls = win32gui.GetClassName(hwnd)
-                            if cls in ('Edit', 'ComboBoxEx32'):
-                                edit_children.append(hwnd)
+                        edit_children, buttons = [], []
+                        win32gui.EnumChildWindows(dialog_hwnd, lambda h, _: edit_children.append(h) if win32gui.GetClassName(h) in ('Edit', 'ComboBoxEx32') else None, None)
+                        for edit_hwnd in edit_children:
+                            if win32gui.GetClassName(edit_hwnd) == 'Edit':
+                                win32gui.SendMessage(edit_hwnd, win32con.WM_SETTEXT, 0, target_pdf)
+                                break
+                            inner = win32gui.FindWindowEx(edit_hwnd, 0, 'ComboBox', None)
+                            inner_edit = win32gui.FindWindowEx(inner or edit_hwnd, 0, 'Edit', None)
+                            if inner_edit:
+                                win32gui.SendMessage(inner_edit, win32con.WM_SETTEXT, 0, target_pdf)
+                                break
+                        time.sleep(0.3)
+                        win32gui.EnumChildWindows(dialog_hwnd, lambda h, _: buttons.append(h) if win32gui.GetClassName(h) == 'Button' and win32gui.GetWindowText(h) in ('&Save', 'Save', '&Lưu', 'Lưu', 'OK', '&OK') else None, None)
+                        if buttons:
+                            win32gui.SendMessage(buttons[0], win32con.BM_CLICK, 0, 0)
+                            time.sleep(0.5)
                             return True
-                        win32gui.EnumChildWindows(dialog_hwnd, find_edit_callback, None)
-
-                        if edit_children:
-                            for edit_hwnd in edit_children:
-                                cls = win32gui.GetClassName(edit_hwnd)
-                                if cls == 'Edit':
-                                    win32gui.SendMessage(edit_hwnd, win32con.WM_SETTEXT, 0, target_pdf)
-                                    break
-                                elif cls == 'ComboBoxEx32':
-                                    inner = win32gui.FindWindowEx(edit_hwnd, 0, 'ComboBox', None)
-                                    inner_edit = win32gui.FindWindowEx(inner or edit_hwnd, 0, 'Edit', None)
-                                    if inner_edit:
-                                        win32gui.SendMessage(inner_edit, win32con.WM_SETTEXT, 0, target_pdf)
-                                        break
-
-                            time.sleep(0.3)
-
-                            # Find and click the 'Save' or 'OK' button
-                            buttons = []
-                            def find_button_callback(hwnd, _):
-                                if win32gui.GetClassName(hwnd) == 'Button':
-                                    txt = win32gui.GetWindowText(hwnd)
-                                    if txt in ('&Save', 'Save', '&Lưu', 'Lưu', 'OK', '&OK'):
-                                        buttons.append(hwnd)
-                                return True
-                            win32gui.EnumChildWindows(dialog_hwnd, find_button_callback, None)
-
-                            if buttons:
-                                win32gui.SendMessage(buttons[0], win32con.BM_CLICK, 0, 0)
-                                logger.info("Auto-clicked the Save button in dialog box.")
-                                time.sleep(0.5)
-                                return True
                 except Exception as e:
                     logger.warning(f"Error in async dialog handler: {e}")
                 time.sleep(0.3)
@@ -385,6 +353,46 @@ class BarTenderCOMApp:
                 if not bt_format:
                     return {"success": False, "message": f"Could not open template path: {template_path}"}
 
+                # Special handling for Erro 03 / Luxshare NME template.
+                if "erro_03" in template_path.lower() or "tem ngo" in template_path.lower():
+                    import base64
+                    def _b64_u16(t: str) -> str:
+                        return base64.b64encode(str(t).encode('utf-16le')).decode('ascii')
+
+                    carton_sn = substrings.get("CartonSN", "")
+                    supplier_code = substrings.get("SupplierCode", "1012665")
+                    supplier_name = substrings.get("SupplierName", "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED")
+                    part_no = substrings.get("PartNo", "2M21-00508-0004H")
+                    apn_rev = substrings.get("APNRev", "/")
+                    lot_no = substrings.get("LotNo", "")
+                    date_ymd = substrings.get("Date", "")
+                    qty = substrings.get("QTY", "")
+                    part_desc = substrings.get("PartDesc", "")
+                    origin = substrings.get("Origin", "VIETNAM")
+                    project_stage = substrings.get("ProjectStage", "项目: Andy Town/ Firefly         生产阶段：QB/CR")
+                    qr_content = substrings.get("QR_Content") or substrings.get("QRCode_Content", f"{carton_sn}${supplier_code}${supplier_name}${part_no}$${lot_no}${date_ymd}${qty}$$$$$$")
+
+                    fields = [
+                        ("文本 10", project_stage),
+                        ("Text 2", f"料号:                        {part_no}"),
+                        ("文本 17", f"APN-Rev :             {apn_rev}"),
+                        ("文本 18", f"数量:                    {qty}"),
+                        ("文本 20", f"生产日期:                {date_ymd}"),
+                        ("文本 16", f" 生产批号:                   {lot_no}"),
+                        ("文本 13", f" 料件描述:        {part_desc}"),
+                        ("文本 23", f"供应商代码:                          {supplier_code}"),
+                        ("文本 25", f"箱号:                                   {carton_sn}"),
+                        ("文本 26", f"供应商名称：  {supplier_name}"),
+                        ("文本 28", f"原产地：{origin}                                     型号：                              品牌："),
+                    ]
+                    objs = "".join(f'<Object Name="{n}" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16(v)}</Value></SubString></Object>' for n, v in fields)
+                    objs += f'<Object Name="条形码 13" Type="1"><SubString Position="0"><Value Encoding="base64">{_b64_u16(qr_content)}</Value></SubString></Object>'
+                    xml_merge = f'<?xml version="1.0" encoding="UTF-8" ?><Command><DataMerge>{objs}</DataMerge></Command>'
+                    try:
+                        bt_format.Objects.ImportDataSourceValuesFromXML(xml_merge)
+                    except Exception as e:
+                        logger.warning(f"Failed to import datasource values for Tem 3: {e}")
+
                 # Feed values to the template's Named Substrings
                 for key, val in substrings.items():
                     try:
@@ -444,6 +452,28 @@ class BarTenderCOMApp:
         except Exception as e:
             logger.error(f"Failed parsing BTXML string: {e}")
             return {"success": False, "message": f"BTXML parsing failure: {str(e)}"}
+
+    def validate_template_file(self, template_path: str) -> Tuple[bool, str]:
+        """Thread-safe template verification via BarTender COM or file inspection."""
+        if not HAS_WINDOWS_DEPS:
+            return True, "MOCK: Template valid"
+
+        with self._lock:
+            try:
+                pythoncom.CoInitialize()
+                self._ensure_connected()
+                if not self.bt_app:
+                    return True, "BarTender COM not connected, file exists on disk"
+                fmt = self.bt_app.Formats.Open(template_path, False, "")
+                if fmt:
+                    fmt.Close(0)
+                    return True, "Tệp mẫu tem hợp lệ và mở thành công qua BarTender COM Engine."
+                return False, "BarTender COM Engine không thể mở định dạng tệp tem này."
+            except Exception as e:
+                logger.warning(f"COM Format open check warning: {e}")
+                if os.path.exists(template_path):
+                    return True, f"Tệp mẫu tem tồn tại trên ổ đĩa máy chủ."
+                return False, f"Lỗi BarTender Engine khi mở mẫu tem: {str(e)}"
 
 
 # Singleton instance

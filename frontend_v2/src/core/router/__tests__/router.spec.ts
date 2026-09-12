@@ -21,18 +21,18 @@ describe('Router Customer Isolation and Navigation', () => {
     expect(router.currentRoute.value.name).toBe('UIPacking');
   });
 
-  it('routes to /packing/a11 for A11 customer weight-scale flow', async () => {
-    localStorage.setItem('selected_customer', 'A11');
-    await router.push('/packing/a11');
-    expect(router.currentRoute.value.path).toBe('/packing/a11');
-    expect(router.currentRoute.value.name).toBe('A11Packing');
+  it('routes to /packing/erro for the Erro weight-scale flow', async () => {
+    localStorage.setItem('selected_customer', 'ERRO');
+    await router.push('/packing/erro');
+    expect(router.currentRoute.value.path).toBe('/packing/erro');
+    expect(router.currentRoute.value.name).toBe('ErroPacking');
   });
 
-  it('redirects /packing/ux to /packing/a11 for backward compatibility', async () => {
-    localStorage.setItem('selected_customer', 'A11');
-    await router.push('/packing/ux');
-    expect(router.currentRoute.value.path).toBe('/packing/a11');
-    expect(router.currentRoute.value.name).toBe('A11Packing');
+  it('redirects the temporary legacy route to /packing/erro', async () => {
+    localStorage.setItem('selected_customer', 'ERRO');
+    await router.push('/packing/a11');
+    expect(router.currentRoute.value.path).toBe('/packing/erro');
+    expect(router.currentRoute.value.name).toBe('ErroPacking');
   });
 
   it('always lands on / (CustomerSelect) on root path', async () => {
@@ -42,4 +42,3 @@ describe('Router Customer Isolation and Navigation', () => {
     expect(router.currentRoute.value.name).toBe('CustomerSelect');
   });
 });
-

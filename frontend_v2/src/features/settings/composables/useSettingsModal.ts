@@ -11,7 +11,7 @@ export interface Printer {
 
 export interface CanonicalTemplate {
   filename: string;
-  customer: 'A11' | 'UI';
+  customer: 'ERRO' | 'UI';
   type: string;
   name: string;
   desc: string;
@@ -19,17 +19,24 @@ export interface CanonicalTemplate {
 
 export const CANONICAL_TEMPLATES: CanonicalTemplate[] = [
   { 
-    filename: 'a11_02.btw', 
-    customer: 'A11', 
-    type: 'a11_tem2', 
-    name: 'A11 Tem 2 (Pallet SSCC & ASIN)', 
+    filename: 'erro_03.btw', 
+    customer: 'ERRO', 
+    type: 'erro_03', 
+    name: 'Erro 03 (Luxshare NME PD024364)', 
+    desc: 'Hàng 2M21-00508-0004H — Tem ngoài Luxshare NME, Supplier Code 1012665 + YYMMDD + 4 số đếm ngày' 
+  },
+  { 
+    filename: 'erro_02.btw', 
+    customer: 'ERRO', 
+    type: 'erro_02', 
+    name: 'Erro 02 (Pallet SSCC & ASIN)', 
     desc: 'Hàng G012C1B, G112C1B — In Pallet SSCC-18, ASIN, factory PN' 
   },
   { 
-    filename: 'a11.btw', 
-    customer: 'A11', 
-    type: 'a11', 
-    name: 'A11 Tem 1 (Thùng Carton SN + Rev)', 
+    filename: 'erro_01.btw', 
+    customer: 'ERRO', 
+    type: 'erro_01', 
+    name: 'Erro 01 (Thùng Carton SN + Rev)', 
     desc: 'Hàng 840-00083, 840-00091, 840-00092 — In Carton S/N năm, Rev, MFR P/N' 
   },
   { 

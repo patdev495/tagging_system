@@ -10,8 +10,8 @@ def test_a11_btxml_document_from_carton_data():
         packed_qty=190,
         mfr_pn="NYS5998",
         revision="B",
-        template_type="a11",
-        template_path=r"D:\PAT\Template\第1.btw",
+        template_type="erro_01",
+        template_path=r"D:\PAT\Template\erro_01.btw",
     )
     carton = Carton(
         id=10,
@@ -47,8 +47,8 @@ def test_a11_btxml_document_from_carton_data():
     assert doc.substrings["QR_Content"] == expected_qr
 
     # XML serialization test
-    xml = doc.to_xml(template_type="a11")
-    assert "<Format>D:\\PAT\\Template\\第1.btw</Format>" in xml
+    xml = doc.to_xml(template_type="erro_01")
+    assert "<Format>D:\\PAT\\Template\\erro_01.btw</Format>" in xml
     assert "<Printer>TSC_TTP_244_Pro</Printer>" in xml
     assert '<NamedSubString Name="CPN"><Value>840-00083</Value></NamedSubString>' in xml
     assert '<NamedSubString Name="CartonSN"><Value>VHK00102372608000081</Value></NamedSubString>' in xml
@@ -64,8 +64,8 @@ def test_a11_btxml_revision_empty_when_no_rev():
         packed_qty=190,
         mfr_pn="NYS5998",
         revision="",       # Sản phẩm không có Rev
-        template_type="a11",
-        template_path=r"D:\PAT\Template\第1.btw",
+        template_type="erro_01",
+        template_path=r"D:\PAT\Template\erro_01.btw",
     )
     carton = Carton(
         id=11,
@@ -88,5 +88,5 @@ def test_a11_btxml_revision_empty_when_no_rev():
     assert doc.substrings["Rev"] == "", \
         f"Expected Rev='', got '{doc.substrings['Rev']}' — fallback 'B' bị áp dụng sai"
 
-    xml = doc.to_xml(template_type="a11")
+    xml = doc.to_xml(template_type="erro_01")
     assert '<NamedSubString Name="Rev"><Value></Value></NamedSubString>' in xml

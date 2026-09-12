@@ -13,7 +13,7 @@ def db_session():
     session.close()
 
 def test_product_model_has_a11_fields(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
 
@@ -29,7 +29,7 @@ def test_product_model_has_a11_fields(db_session):
         mfr_pn="NYS5998",
         pkg_prefix="VHK0010237",
         revision="B",
-        template_type="a11"
+        template_type="erro_01"
     )
     db_session.add(product)
     db_session.commit()
@@ -46,7 +46,7 @@ def test_product_model_has_a11_fields(db_session):
     assert saved.revision == "B"
 
 def test_carton_model_has_a11_weight_fields(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.flush()
 
@@ -101,16 +101,16 @@ def test_ui_customer_backward_compatibility(db_session):
     assert saved_ui.packing_mode == "item_scan"
     assert saved_ui.target_weight is None
 
-def test_seed_a11_data(db_session):
-    from src.core.database import seed_a11_data
-    seed_a11_data(db_session)
+def test_seed_erro_data(db_session):
+    from src.core.database import seed_erro_data
+    seed_erro_data(db_session)
 
-    a11 = db_session.query(Customer).filter(Customer.code == "A11").first()
-    assert a11 is not None
+    erro = db_session.query(Customer).filter(Customer.code == "ERRO").first()
+    assert erro is not None
 
-    prods = db_session.query(Product).filter(Product.customer_id == a11.id).all()
-    assert len(prods) == 5
-    tem1_prods = [p for p in prods if p.template_type == "a11"]
+    prods = db_session.query(Product).filter(Product.customer_id == erro.id).all()
+    assert len(prods) == 6
+    tem1_prods = [p for p in prods if p.template_type == "erro_01"]
     assert len(tem1_prods) == 3
     tem1_names = {p.item_name for p in tem1_prods}
     assert tem1_names == {"840-00083", "840-00091", "840-00092"}
@@ -120,7 +120,39 @@ def test_seed_a11_data(db_session):
         assert p.mfr_pn == "NYS5998"
         assert p.packing_mode == "weight_scale"
 
-    tem2_prods = [p for p in prods if p.template_type == "a11_tem2"]
+    tem2_prods = [p for p in prods if p.template_type == "erro_02"]
     assert len(tem2_prods) == 2
     tem2_names = {p.item_name for p in tem2_prods}
     assert tem2_names == {"G012C1B", "G112C1B"}
+
+    tem3_prods = [p for p in prods if p.template_type == "erro_03"]
+    assert len(tem3_prods) == 1
+    assert tem3_prods[0].item_name == "2M21-00508-0004H"
+
+
+def test_migrate_a11_to_erro_preserves_customer_and_products(db_session):
+    from src.core.database import migrate_a11_to_erro_data
+
+    customer = Customer(code="A11", name="Customer A11")
+    db_session.add(customer)
+    db_session.flush()
+    product = Product(
+        customer_id=customer.id,
+        item_name="840-00083",
+        packed_qty=190,
+        template_type="a11",
+        template_path=r"D:\PAT\Templates\a11.btw",
+    )
+    db_session.add(product)
+    db_session.commit()
+
+    original_customer_id = customer.id
+    migrate_a11_to_erro_data(db_session)
+
+    migrated = db_session.query(Customer).filter(Customer.code == "ERRO").one()
+    migrated_product = db_session.query(Product).filter(Product.id == product.id).one()
+    assert migrated.id == original_customer_id
+    assert migrated.name == "Erro"
+    assert migrated_product.customer_id == original_customer_id
+    assert migrated_product.template_type == "erro_01"
+    assert migrated_product.template_path == r"D:\PAT\Templates\erro_01.btw"

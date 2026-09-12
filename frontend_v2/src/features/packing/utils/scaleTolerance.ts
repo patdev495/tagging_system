@@ -64,7 +64,7 @@ export function evaluateScaleTolerance(params: ScaleToleranceParams): ScaleToler
   return {
     status: 'READY',
     canPrint: true,
-    message: 'Trọng lượng đạt chuẩn. Sẵn sàng in tem A11 [F9]',
+    message: 'Trọng lượng đạt chuẩn. Sẵn sàng in tem Erro [F9]',
     diffFromTarget: target_weight ? weight - target_weight : 0,
   };
 }

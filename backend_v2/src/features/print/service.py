@@ -75,7 +75,7 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
     
     product = original.product or (db.query(models.Product).filter(models.Product.id == original.product_id).first() if original.product_id else None)
     customer_code = product.customer.code if (product and product.customer) else None
-    if customer_code in ("A11", "UX"):
+    if customer_code == "ERRO":
         logger.warning(f"Reprint rejected: Customer {customer_code} does not allow reprint for carton {original.carton_sn}")
         raise HTTPException(
             status_code=400,
@@ -167,27 +167,12 @@ def validate_template(template_name: str, folder: Optional[str] = None) -> dict:
         }
 
     if HAS_WINDOWS_DEPS and bt_com_app.is_initialized and bt_com_app.bt_app is not None:
-        try:
-            format_obj = bt_com_app.bt_app.Formats.Open(resolved_path, False, "")
-            if format_obj:
-                format_obj.Close(0)
-                return {
-                    "valid": True,
-                    "message": "Tệp mẫu tem hợp lệ và mở thành công qua BarTender COM Engine.",
-                    "resolved_path": resolved_path
-                }
-            else:
-                return {
-                    "valid": False,
-                    "message": "BarTender COM Engine không thể mở định dạng tệp tem này.",
-                    "resolved_path": resolved_path
-                }
-        except Exception as e:
-            return {
-                "valid": False,
-                "message": f"Lỗi BarTender khi mở tệp: {str(e)}",
-                "resolved_path": resolved_path
-            }
+        valid, msg = bt_com_app.validate_template_file(resolved_path)
+        return {
+            "valid": valid,
+            "message": msg,
+            "resolved_path": resolved_path if valid else None
+        }
 
     return {
         "valid": True,

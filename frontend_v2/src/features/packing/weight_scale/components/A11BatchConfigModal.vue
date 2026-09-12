@@ -17,13 +17,13 @@
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Mã Đơn Hàng (PO Number) *
+            Mã Đơn Hàng (PO Number) {{ isTem3 ? '(Tùy chọn)' : '*' }}
           </label>
           <input
             v-model="formPo"
             type="text"
-            required
-            placeholder="Ví dụ: B432-22156381"
+            :required="!isTem3"
+            :placeholder="isTem3 ? 'Ví dụ: B432-22156381 (hoặc để trống)' : 'Ví dụ: B432-22156381'"
             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
           />
         </div>
@@ -36,7 +36,7 @@
             v-model="formLot"
             type="text"
             required
-            placeholder="Ví dụ: 92608521"
+            placeholder="Ví dụ: 92607933"
             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
           />
         </div>
@@ -68,6 +68,7 @@ const props = defineProps<{
   show: boolean;
   po: string;
   lot: string;
+  isTem3?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -89,7 +90,8 @@ watch(
 );
 
 const handleSubmit = () => {
-  if (!formPo.value.trim() || !formLot.value.trim()) return;
+  if (!formLot.value.trim()) return;
+  if (!props.isTem3 && !formPo.value.trim()) return;
   emit('save', {
     po: formPo.value.trim(),
     lot: formLot.value.trim(),

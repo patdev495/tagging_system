@@ -63,9 +63,9 @@
           </div>
         </div>
 
-        <!-- Card 2: Khách hàng A11 (weight_scale) -->
+        <!-- Card 2: Khách hàng Erro (weight_scale) -->
         <div
-          @click="selectCustomer('A11')"
+          @click="selectCustomer('ERRO')"
           class="bg-white hover:bg-slate-50 border-2 border-slate-300 hover:border-emerald-600 rounded-xl p-6 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col justify-between min-h-[260px] group active:scale-98"
         >
           <div>
@@ -79,10 +79,10 @@
             </div>
 
             <h2 class="text-xl font-black text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-              {{ a11CustomerName }}
+              {{ erroCustomerName }}
             </h2>
             <p class="text-slate-600 text-xs leading-relaxed mb-4">
-              Quy trình đóng gói theo cân điện tử (RS-232), kiểm soát dung sai trọng lượng, nhập PO/LOT và in tem tiêu chuẩn A11.
+              Quy trình đóng gói theo cân điện tử (RS-232), kiểm soát dung sai trọng lượng, nhập PO/LOT và in tem Erro.
             </p>
           </div>
 
@@ -123,15 +123,15 @@ const uiCustomerName = computed(() => {
   return c ? c.name : 'Khách Hàng Universal Instruments (UI)';
 });
 
-const a11CustomerName = computed(() => {
-  const c = customers.value.find(item => item.code.toUpperCase() === 'A11');
-  return c ? c.name : 'Khách Hàng A11 (Tiêu Chuẩn Tem A11)';
+const erroCustomerName = computed(() => {
+  const c = customers.value.find(item => item.code.toUpperCase() === 'ERRO');
+  return c ? c.name : 'Khách Hàng Erro';
 });
 
 const selectCustomer = (code: string) => {
   localStorage.setItem('selected_customer', code);
-  if (code.toUpperCase() === 'A11') {
-    router.push('/packing/a11');
+  if (code.toUpperCase() === 'ERRO') {
+    router.push('/packing/erro');
   } else {
     router.push('/packing/ui');
   }

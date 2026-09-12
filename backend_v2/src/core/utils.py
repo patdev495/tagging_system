@@ -15,14 +15,16 @@ class TemplateResolver:
     """
     DEFAULT_TEMPLATES_DIR = "D:\\PAT\\Templates"
     CANONICAL_TEMPLATE_MAP = {
-        "a11_tem2": "a11_02.btw",
-        "a11": "a11.btw",
+        "erro_03": "erro_03.btw",
+        "erro_02": "erro_02.btw",
+        "erro_01": "erro_01.btw",
         "standard": "carton_base.btw",
         "detailed": "carton_detail.btw",
     }
     ALL_CANONICAL_TEMPLATES = [
-        {"filename": "a11_02.btw", "customer": "A11", "type": "a11_tem2", "name": "A11 Tem 2 (Pallet SSCC-18 & ASIN)"},
-        {"filename": "a11.btw", "customer": "A11", "type": "a11", "name": "A11 Tem 1 (Thùng Carton SN + Rev)"},
+        {"filename": "erro_03.btw", "customer": "ERRO", "type": "erro_03", "name": "Erro 03 (Luxshare NME PD024364)"},
+        {"filename": "erro_02.btw", "customer": "ERRO", "type": "erro_02", "name": "Erro 02 (Pallet SSCC-18 & ASIN)"},
+        {"filename": "erro_01.btw", "customer": "ERRO", "type": "erro_01", "name": "Erro 01 (Thùng Carton SN + Rev)"},
         {"filename": "carton_base.btw", "customer": "UI", "type": "standard", "name": "UI Tem Thùng Tiêu Chuẩn (Patch Cords)"},
         {"filename": "Carton_45.btw", "customer": "UI", "type": "standard", "name": "UI Tem Thùng Cáp 4.5M/5M/8M (BK Cables)"},
         {"filename": "carton_detail_1M_W.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết Cáp 1M (Lưới 40 S/N)"},

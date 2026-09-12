@@ -21,7 +21,7 @@
             @click="activeTab = 'po_runs'"
             :class="['px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2', activeTab === 'po_runs' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
           >
-            <span>Đợt PO & Lot (A11)</span>
+            <span>Đợt PO & Lot (Erro)</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" :class="activeTab === 'po_runs' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200 text-slate-600'">{{ poRuns.length }}</span>
           </button>
         </div>

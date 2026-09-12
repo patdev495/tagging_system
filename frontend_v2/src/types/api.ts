@@ -13,7 +13,7 @@ export interface Product {
   packed_qty: number;
   start_part?: string;
   middle_part?: string;
-  template_type: 'standard' | 'detailed' | 'a11' | 'a11_tem2';
+  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03';
   template_path?: string;
   allow_partial: number;
   packing_mode?: 'item_scan' | 'weight_scale';
@@ -115,5 +115,4 @@ export interface JobOrderDetails {
   product: Product;
   slots: JobOrderSlot[];
 }
-
 

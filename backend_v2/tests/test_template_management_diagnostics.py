@@ -100,14 +100,15 @@ def test_restart_engine_rbac_and_recovery(test_setup):
 
 
 def test_get_canonical_templates(test_setup):
-    """Test GET /api/v1/print/canonical-templates returns all 7 canonical templates."""
+    """Test GET /api/v1/print/canonical-templates returns all canonical templates."""
     _, client = test_setup
     resp = client.get("/api/v1/print/canonical-templates")
     assert resp.status_code == 200
     data = resp.json()
     assert "templates" in data
-    assert len(data["templates"]) == 7
+    assert len(data["templates"]) == 8
     filenames = [t["filename"] for t in data["templates"]]
+    assert "a11_03.btw" in filenames
     assert "a11.btw" in filenames
     assert "a11_02.btw" in filenames
     assert "carton_base.btw" in filenames

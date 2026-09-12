@@ -17,7 +17,7 @@ describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)',
     item_name: 'A11-Product-01',
     packed_qty: 190,
     pkg_prefix: 'VHK0010237',
-    template_type: 'a11',
+    template_type: 'erro_01',
     allow_partial: 0,
   });
 
@@ -52,5 +52,23 @@ describe('useA11SerialNumber Composable (Strict Monotonic Sequence - ADR 0005)',
     autoSequence.value = 10;
     advanceSequence();
     expect(autoSequence.value).toBe(11);
+  });
+
+  it('formats 17-char serial number for erro_03 products', () => {
+    const tem3Product = ref<Product | null>({
+      id: 30,
+      customer_id: 2,
+      item_name: '2M21-00508-0004H',
+      packed_qty: 190,
+      pkg_prefix: '1012665',
+      template_type: 'erro_03',
+      allow_partial: 0,
+    });
+
+    const { currentSNPreview, autoSequence } = useA11SerialNumber(tem3Product);
+    autoSequence.value = 1;
+
+    expect(currentSNPreview.value).toMatch(/^1012665\d{6}0001$/);
+    expect(currentSNPreview.value.length).toBe(17);
   });
 });

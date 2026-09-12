@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.core.models import Base, Customer, Product
-from src.core.database import seed_a11_data
+from src.core.database import seed_erro_data
 from src.features.product import schemas, service as product_service
 
 
@@ -25,8 +25,8 @@ def test_product_schema_supports_tem2_fields():
         "packed_qty": 190,
         "customer_id": 1,
         "packing_mode": "weight_scale",
-        "template_type": "a11_tem2",
-        "template_path": r"D:\PAT\Templates\a11_02.btw",
+        "template_type": "erro_02",
+        "template_path": r"D:\PAT\Templates\erro_02.btw",
         "mfr_pn": "NYS5998",
         "upc": "852582006785",
         "min_weight": 5.0,
@@ -40,7 +40,7 @@ def test_product_schema_supports_tem2_fields():
 
 
 def test_product_service_creates_and_searches_by_factory_pn(db_session):
-    customer = Customer(code="A11", name="Customer A11")
+    customer = Customer(code="ERRO", name="Erro")
     db_session.add(customer)
     db_session.commit()
 
@@ -52,8 +52,8 @@ def test_product_service_creates_and_searches_by_factory_pn(db_session):
         product_desc="ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND",
         packed_qty=190,
         packing_mode="weight_scale",
-        template_type="a11_tem2",
-        template_path=r"D:\PAT\Templates\a11_02.btw",
+        template_type="erro_02",
+        template_path=r"D:\PAT\Templates\erro_02.btw",
         mfr_pn="NYS5996",
         upc="840268969493",
         min_weight=5.0,
@@ -73,37 +73,37 @@ def test_product_service_creates_and_searches_by_factory_pn(db_session):
 
 
 def test_seed_a11_data_seeds_both_tem1_and_tem2(db_session):
-    seed_a11_data(db_session)
+    seed_erro_data(db_session)
 
     # Check Tem 1 products
     p840 = db_session.query(Product).filter(Product.item_name == "840-00083").first()
     assert p840 is not None
-    assert p840.template_type == "a11"
+    assert p840.template_type == "erro_01"
 
     # Check Tem 2 products
     g012 = db_session.query(Product).filter(Product.item_name == "G012C1B").first()
     assert g012 is not None
-    assert g012.template_type == "a11_tem2"
+    assert g012.template_type == "erro_02"
     assert g012.factory_pn == "1LAE0009D2U004MAAR"
     assert g012.asin == "B08G9M4HXS"
     assert g012.mfr_pn == "NYS5998"
     assert g012.upc == "852582006785"
     assert g012.packed_qty == 190
-    assert g012.template_path == r"D:\PAT\Templates\a11_02.btw"
+    assert g012.template_path == r"D:\PAT\Templates\erro_02.btw"
 
     g112 = db_session.query(Product).filter(Product.item_name == "G112C1B").first()
     assert g112 is not None
-    assert g112.template_type == "a11_tem2"
+    assert g112.template_type == "erro_02"
     assert g112.factory_pn == "1LAE0009D2U002MAAS"
     assert g112.asin == "B0C32N712K"
     assert g112.mfr_pn == "NYS5996"
     assert g112.upc == "840268969493"
     assert g112.packed_qty == 190
-    assert g112.template_path == r"D:\PAT\Templates\a11_02.btw"
+    assert g112.template_path == r"D:\PAT\Templates\erro_02.btw"
 
 
 def test_get_next_sn_returns_sscc_for_a11_tem2(db_session):
-    seed_a11_data(db_session)
+    seed_erro_data(db_session)
     g012 = db_session.query(Product).filter(Product.item_name == "G012C1B").first()
     sn_info = product_service.get_next_sn(g012.id, db_session)
     assert sn_info["next_seq"] == 1

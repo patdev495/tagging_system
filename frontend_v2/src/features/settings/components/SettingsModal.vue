@@ -189,7 +189,7 @@
                         <span 
                           :class="[
                             'text-[9px] font-black uppercase px-1.5 py-0.5 rounded',
-                            tpl.customer === 'A11' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            tpl.customer === 'ERRO' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                           ]"
                         >
                           {{ tpl.customer }}

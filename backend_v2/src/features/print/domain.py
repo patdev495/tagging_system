@@ -4,6 +4,7 @@ Encapsulates Label Schema Invariants, XML Document Generation, and Parsing.
 """
 import os
 import sys
+import datetime
 import logging
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional
@@ -101,7 +102,7 @@ class BTXMLDocument:
             for i in range(MAX_SN_GRID):
                 sn_value = items[i] if i < len(items) else " "
                 substrings[f"SN_{i+1}"] = sn_value
-        elif template_type == "a11":
+        elif template_type == "erro_01":
             cpn = product.item_name or ""
             qty = str(product.packed_qty or actual_qty or 190)
             mfr_pn = getattr(product, 'mfr_pn', '') or ""
@@ -122,7 +123,7 @@ class BTXMLDocument:
             substrings["QR_Content"] = qr_content
             substrings["Rev"] = rev
             substrings["Origin"] = origin_text
-        elif template_type == "a11_tem2":
+        elif template_type == "erro_02":
             product_desc = getattr(product, 'product_desc', '') or ''
             product_name_text = f"Product name:{product_desc}" if product_desc else (product.item_name or "")
             qty = str(product.packed_qty or actual_qty or 190)
@@ -151,6 +152,38 @@ class BTXMLDocument:
             substrings["PN"] = pn
             substrings["ASIN"] = asin
             substrings["UnitUPC"] = unit_upc
+        elif template_type == "erro_03":
+            carton_sn = carton.carton_sn or ""
+            supplier_code = getattr(product, 'pkg_prefix', None) or "1012665"
+            supplier_name = "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED"
+            part_no = product.item_name or ""
+            apn_rev = getattr(product, 'revision', '') or "/"
+            lot_no = getattr(carton, 'lot_number', '') or "92607933"
+            qty = str(product.packed_qty or actual_qty or 190)
+            part_desc = getattr(product, 'product_desc', '') or (product.item_name or "")
+            origin_text = "VIETNAM"
+
+            # Format Date: YYYYMMDD
+            created_at = getattr(carton, 'created_at', None) or datetime.datetime.now()
+            date_ymd = created_at.strftime("%Y%m%d")
+
+            project_stage_text = "项目: Andy Town/ Firefly         生产阶段：QB/CR"
+            qr_apn_rev = "" if apn_rev == "/" else apn_rev
+            qr_code_content = f"{carton_sn}${supplier_code}${supplier_name}${part_no}${qr_apn_rev}${lot_no}${date_ymd}${qty}$$$$$$"
+
+            substrings["CartonSN"] = carton_sn
+            substrings["SupplierCode"] = supplier_code
+            substrings["SupplierName"] = supplier_name
+            substrings["PartNo"] = part_no
+            substrings["APNRev"] = apn_rev
+            substrings["LotNo"] = lot_no
+            substrings["QTY"] = qty
+            substrings["Date"] = date_ymd
+            substrings["PartDesc"] = part_desc
+            substrings["Origin"] = origin_text
+            substrings["ProjectStage"] = project_stage_text
+            substrings["QR_Content"] = qr_code_content
+            substrings["QRCode_Content"] = qr_code_content
 
         return cls(template_path=template_path, printer_name=printer_name, substrings=substrings)
 
@@ -200,6 +233,15 @@ class BTXMLDocument:
             "pn": self.substrings.get("PN", ""),
             "asin": self.substrings.get("ASIN", ""),
             "unit_upc": self.substrings.get("UnitUPC", ""),
+            "project_stage": self.substrings.get("ProjectStage", ""),
+            "part_no": self.substrings.get("PartNo", ""),
+            "apn_rev": self.substrings.get("APNRev", ""),
+            "date": self.substrings.get("Date", ""),
+            "part_desc": self.substrings.get("PartDesc", ""),
+            "supplier_code": self.substrings.get("SupplierCode", ""),
+            "supplier_name": self.substrings.get("SupplierName", ""),
+            "origin": self.substrings.get("Origin", ""),
+            "qr_code_content": self.substrings.get("QR_Content") or self.substrings.get("QRCode_Content", ""),
         }
 
         # Build dynamic detailed grid tags if needed

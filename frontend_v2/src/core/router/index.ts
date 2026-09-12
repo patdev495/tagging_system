@@ -16,13 +16,13 @@ const routes: RouteRecordRaw[] = [
     component: UIPackingPage,
   },
   {
-    path: '/packing/a11',
-    name: 'A11Packing',
+    path: '/packing/erro',
+    name: 'ErroPacking',
     component: A11PackingPage,
   },
   {
-    path: '/packing/ux',
-    redirect: '/packing/a11',
+    path: '/packing/a11',
+    redirect: '/packing/erro',
   },
   {
     path: '/admin',

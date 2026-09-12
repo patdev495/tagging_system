@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0006
+---
+
 # 0005. Cấm In Lại Tem và Cấm Sửa Số Thứ Tự Thùng Đối Với Khách Hàng A11
 
 ## Bối cảnh và Động lực

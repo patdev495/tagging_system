@@ -18,14 +18,14 @@ vi.mock('../../../print/api', () => ({
   },
 }));
 
-describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0005)', () => {
+describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
   const selectedProduct = ref<Product | null>({
     id: 10,
     customer_id: 2,
-    item_name: 'A11-Standard',
+    item_name: 'Erro-01',
     packed_qty: 190,
     pkg_prefix: 'VHK0010237',
-    template_type: 'a11',
+    template_type: 'erro_01',
     allow_partial: 0,
     min_weight: 12.3,
     target_weight: 12.5,
@@ -148,11 +148,11 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0005)', () => {
     expect(notify).toHaveBeenCalledWith(expect.stringContaining('Đã in thành công'), 'success');
   });
 
-  it('sends undefined po_number and lot_number for a11_tem2 products even if activePO has value', async () => {
+  it('sends undefined po_number and lot_number for erro_02 products even if activePO has value', async () => {
     selectedProduct.value = {
       id: 20,
       item_name: 'G012C1B',
-      template_type: 'a11_tem2',
+      template_type: 'erro_02',
       target_weight: 8.0,
       min_weight: 7.5,
       max_weight: 8.5,
@@ -194,5 +194,56 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0005)', () => {
       template_path: undefined,
       station_id: undefined,
     });
+  });
+
+  it('allows empty po_number for erro_03 products and calls packing API', async () => {
+    selectedProduct.value = {
+      id: 30,
+      item_name: '2M21-00508-0004H',
+      template_type: 'erro_03',
+      target_weight: 6.0,
+      min_weight: 5.0,
+      max_weight: 7.0,
+      packed_qty: 190,
+      weight_unit: 'kg',
+    } as any;
+    activePO.value = '';
+    activeLot.value = '92607933';
+    scaleReading.value = { weight: 6.05, unit: 'kg', is_stable: true };
+
+    vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
+      data: {
+        id: 789,
+        carton_sn: '10126652609110001',
+        btxml: '<XML>TEM3</XML>',
+      },
+    } as any);
+    vi.mocked(printApi.agentPrint).mockResolvedValueOnce({ success: true } as any);
+    vi.mocked(printApi.updateCartonStatus).mockResolvedValueOnce({} as any);
+
+    const { triggerWeighAndPrint } = useWeighAndPrint({
+      selectedProduct,
+      activePO,
+      activeLot,
+      isAgentOnline,
+      scaleReading,
+      scaleStatus,
+      advanceSequence,
+      notify,
+      getSettings: () => ({ agentUrl: 'http://127.0.0.1:8080' }),
+    });
+
+    await triggerWeighAndPrint();
+
+    expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
+      product_id: 30,
+      weight: 6.05,
+      po_number: undefined,
+      lot_number: '92607933',
+      printer_name: undefined,
+      template_path: undefined,
+      station_id: undefined,
+    });
+    expect(printApi.agentPrint).toHaveBeenCalled();
   });
 });

@@ -67,11 +67,11 @@
             <div class="space-y-1.5">
               <label class="text-xs font-bold text-slate-700 uppercase">Mẫu Tem BarTender (.btw) *</label>
 
-              <!-- For A11 products: Fixed template -->
-              <div v-if="isA11Product" class="w-full flex items-center gap-2 p-3 rounded-xl border border-purple-200 bg-purple-50/60 text-xs font-mono text-purple-900">
-                <span class="px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-bold uppercase text-[10px] shrink-0">Cố định A11</span>
-                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'a11_tem2' ? 'a11_02.btw' : 'a11.btw' }}</span>
-                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'a11_tem2' ? 'Tem 2 Pallet SSCC & ASIN' : 'Tem 1 Thùng Carton SN' }})</span>
+              <!-- Erro products use their fixed canonical template. -->
+              <div v-if="isErroProduct" class="w-full flex items-center gap-2 p-3 rounded-xl border border-purple-200 bg-purple-50/60 text-xs font-mono text-purple-900">
+                <span class="px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-bold uppercase text-[10px] shrink-0">Cố định Erro</span>
+                <span class="font-bold flex-1 truncate">📄 {{ formData.template_type === 'erro_03' ? 'erro_03.btw' : (formData.template_type === 'erro_02' ? 'erro_02.btw' : 'erro_01.btw') }}</span>
+                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ formData.template_type === 'erro_03' ? 'Erro 03 Luxshare NME' : (formData.template_type === 'erro_02' ? 'Erro 02 Pallet SSCC & ASIN' : 'Erro 01 Thùng Carton SN') }})</span>
               </div>
 
               <!-- For UI products: Select from 5 valid UI templates or retain existing DB value -->
@@ -220,9 +220,10 @@
               @change="onTemplateTypeChange"
               class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-sm"
             >
-              <optgroup label="Khách Hàng A11">
-                <option value="a11">A11 - Tem 1 (PD014736 Carton SN + Rev — a11.btw)</option>
-                <option value="a11_tem2">A11 - Tem 2 (PD027504 Pallet SSCC + ASIN — a11_02.btw)</option>
+              <optgroup label="Khách Hàng Erro">
+                <option value="erro_01">Erro 01 (PD014736 Carton SN + Rev — erro_01.btw)</option>
+                <option value="erro_02">Erro 02 (PD027504 Pallet SSCC + ASIN — erro_02.btw)</option>
+                <option value="erro_03">Erro 03 (Luxshare NME PD024364 — erro_03.btw)</option>
               </optgroup>
               <optgroup label="Khách Hàng UI">
                 <option value="standard">Tiêu chuẩn (Standard - Tem thùng cơ bản)</option>
@@ -231,12 +232,69 @@
             </select>
           </div>
 
-          <!-- Fields for A11 Tem 2 (PD027504) -->
-          <div v-if="formData.template_type === 'a11_tem2'" class="p-4 bg-sky-50/60 rounded-2xl border border-sky-200 space-y-3">
+          <!-- Fields for Erro 03 (PD024364) -->
+          <div v-if="formData.template_type === 'erro_03'" class="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-amber-900 flex items-center gap-1.5">
+                <i class="fas fa-industry text-amber-600"></i>
+                <span>Thông Số Erro 03 (Luxshare NME Ngoại Thùng)</span>
+              </span>
+              <span class="text-[10px] text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded">PD024364 REV.M</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Xưởng (Factory P/N) *</label>
+                <input 
+                  v-model="formData.factory_pn" 
+                  type="text" 
+                  placeholder="1LAE0091C2U011NMES" 
+                  class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-bold"
+                >
+                <p class="text-[10px] text-slate-400">Vendor Part No. (厂内料号).</p>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">Mã Nhà Cung Cấp (Supplier Code) *</label>
+                <input 
+                  v-model="formData.pkg_prefix" 
+                  type="text" 
+                  placeholder="1012665" 
+                  class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-bold"
+                >
+                <p class="text-[10px] text-slate-400">Mặc định VN: 1012665 (7 ký tự).</p>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-700 uppercase">APN-Rev (Bản vẽ)</label>
+                <input 
+                  v-model="formData.revision" 
+                  type="text" 
+                  placeholder="/" 
+                  class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-bold uppercase"
+                >
+                <p class="text-[10px] text-slate-400">Mặc định bản vẽ: /</p>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-700 uppercase">Mô Tả Sản Phẩm (Description) *</label>
+              <textarea 
+                v-model="formData.product_desc" 
+                rows="2"
+                placeholder="CAT5E ETHERNET CABLE" 
+                class="w-full p-2.5 rounded-xl border border-amber-200 bg-white focus:ring-2 focus:ring-amber-500 outline-none font-mono text-xs font-medium"
+              ></textarea>
+              <p class="text-[10px] text-slate-400">Mô tả quy cách in vào trường Description trên tem.</p>
+            </div>
+          </div>
+
+          <!-- Fields for Erro 02 (PD027504) -->
+          <div v-else-if="formData.template_type === 'erro_02'" class="p-4 bg-sky-50/60 rounded-2xl border border-sky-200 space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold uppercase text-sky-900 flex items-center gap-1.5">
                 <i class="fas fa-barcode text-sky-600"></i>
-                <span>Thông Số Tem 2 A11 (Pallet SSCC & Amazon ASIN)</span>
+                <span>Thông Số Erro 02 (Pallet SSCC & Amazon ASIN)</span>
               </span>
               <span class="text-[10px] text-sky-700 font-semibold bg-sky-100 px-2 py-0.5 rounded">PD027504</span>
             </div>
@@ -312,8 +370,8 @@
             </div>
           </div>
 
-          <!-- Fields for A11 Tem 1 or yearly prefix -->
-          <div v-else-if="formData.template_type === 'a11' || formData.packing_mode === 'weight_scale'" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
+          <!-- Fields for Erro 01 or yearly prefix -->
+          <div v-else-if="formData.template_type === 'erro_01' || formData.packing_mode === 'weight_scale'" class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-slate-700 uppercase">PKG Prefix (Carton SN) *</label>
               <input 
@@ -420,7 +478,7 @@ const emit = defineEmits<{
 const {
   formData,
   UI_TEMPLATES,
-  isA11Product,
+  isErroProduct,
   setPackingMode,
   onCustomerChange,
   onTemplateTypeChange,

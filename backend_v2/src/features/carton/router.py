@@ -33,7 +33,7 @@ def rescan_carton(rescan_in: schemas.CartonRescan, request: Request, db: Session
 
 @router.post("/weigh-pack", response_model=CartonDetail)
 def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, request: Request, db: Session = Depends(get_db)):
-    """Đóng gói theo cân và sinh XML nhãn A11 cho khách hàng A11"""
+    """Đóng gói theo cân và sinh XML nhãn Erro cho khách hàng Erro."""
     client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
     if not weigh_in.station_id:
         weigh_in.station_id = client_ip
@@ -42,4 +42,3 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, request: Request,
     response_data = CartonDetail.model_validate(new_carton)
     response_data.btxml = btxml_content
     return response_data
-

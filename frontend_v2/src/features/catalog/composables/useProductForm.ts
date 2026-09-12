@@ -9,7 +9,7 @@ export interface ProductFormData {
   packed_qty: number;
   start_part: string;
   middle_part: string;
-  template_type: 'standard' | 'detailed' | 'a11' | 'a11_tem2';
+  template_type: 'standard' | 'detailed' | 'erro_01' | 'erro_02' | 'erro_03';
   template_path: string;
   allow_partial: number;
   customer_id: number | null;
@@ -43,8 +43,9 @@ export const UI_TEMPLATES = [
 
 export function getCanonicalTemplateName(templateType?: string): string {
   switch (templateType) {
-    case 'a11_tem2': return 'a11_02.btw';
-    case 'a11': return 'a11.btw';
+    case 'erro_03': return 'erro_03.btw';
+    case 'erro_02': return 'erro_02.btw';
+    case 'erro_01': return 'erro_01.btw';
     case 'detailed': return 'carton_detail_1M_W.btw';
     case 'standard':
     default: return 'carton_base.btw';
@@ -139,9 +140,9 @@ export function useProductForm(
     if (!selectedCust) return;
 
     const code = (selectedCust.code || '').toUpperCase();
-    if (code === 'A11') {
+    if (code === 'ERRO') {
       formData.value.packing_mode = 'weight_scale';
-      formData.value.template_type = 'a11';
+      formData.value.template_type = 'erro_01';
       formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
@@ -160,24 +161,33 @@ export function useProductForm(
     }
   };
 
-  const isA11Product = computed(() => {
+  const isErroProduct = computed(() => {
     const currentProps = 'value' in props ? props.value : props;
     const cust = currentProps.customers.find(c => c.id === formData.value.customer_id);
     const code = (cust?.code || '').toUpperCase();
-    return code === 'A11' || formData.value.template_type === 'a11' || formData.value.template_type === 'a11_tem2';
+    return code === 'ERRO' || ['erro_01', 'erro_02', 'erro_03'].includes(formData.value.template_type);
   });
 
   const onTemplateTypeChange = () => {
-    if (formData.value.template_type === 'a11_tem2') {
-      formData.value.template_path = 'a11_02.btw';
+    if (formData.value.template_type === 'erro_03') {
+      formData.value.template_path = 'erro_03.btw';
+      formData.value.packing_mode = 'weight_scale';
+      formData.value.pkg_prefix = formData.value.pkg_prefix || '1012665';
+      formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
+      formData.value.min_weight = formData.value.min_weight ?? 5.0;
+      formData.value.max_weight = formData.value.max_weight ?? 7.0;
+      formData.value.target_weight = formData.value.target_weight ?? 6.0;
+      formData.value.revision = formData.value.revision || '/';
+    } else if (formData.value.template_type === 'erro_02') {
+      formData.value.template_path = 'erro_02.btw';
       formData.value.packing_mode = 'weight_scale';
       formData.value.pkg_prefix = formData.value.pkg_prefix || '37033907';
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.min_weight = formData.value.min_weight ?? 5.0;
       formData.value.max_weight = formData.value.max_weight ?? 7.0;
       formData.value.target_weight = formData.value.target_weight ?? 6.0;
-    } else if (formData.value.template_type === 'a11') {
-      formData.value.template_path = 'a11.btw';
+    } else if (formData.value.template_type === 'erro_01') {
+      formData.value.template_path = 'erro_01.btw';
       formData.value.packing_mode = 'weight_scale';
       formData.value.pkg_prefix = formData.value.pkg_prefix || 'VHK0010237';
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
@@ -262,10 +272,11 @@ export function useProductForm(
 
   const setPackingMode = (mode: 'item_scan' | 'weight_scale') => {
     formData.value.packing_mode = mode;
-    if (mode === 'weight_scale' && formData.value.template_type !== 'a11' && formData.value.template_type !== 'a11_tem2') {
-      formData.value.template_type = 'a11';
-      formData.value.template_path = 'a11.btw';
-    } else if (mode === 'item_scan' && (formData.value.template_type === 'a11' || formData.value.template_type === 'a11_tem2')) {
+    const isErro = ['erro_01', 'erro_02', 'erro_03'].includes(formData.value.template_type);
+    if (mode === 'weight_scale' && !isErro) {
+      formData.value.template_type = 'erro_01';
+      formData.value.template_path = 'erro_01.btw';
+    } else if (mode === 'item_scan' && isErro) {
       formData.value.template_type = 'standard';
       formData.value.template_path = 'carton_base.btw';
     }
@@ -283,7 +294,7 @@ export function useProductForm(
         return;
       }
     }
-    if (isA11Product.value) {
+    if (isErroProduct.value) {
       formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
     } else {
       formData.value.template_path = formData.value.template_path || (formData.value.template_type === 'detailed' ? 'carton_detail_1M_W.btw' : 'carton_base.btw');
@@ -295,7 +306,7 @@ export function useProductForm(
     formData,
     availableTemplates,
     UI_TEMPLATES,
-    isA11Product,
+    isErroProduct,
     isValidating,
     validationStatus,
     formatBytes,

@@ -59,42 +59,67 @@ def get_db():
     finally:
         db.close()
 
-def seed_a11_data(db):
-    """Seed Customer A11 and 3 initial products if not already present."""
+def migrate_a11_to_erro_data(db):
+    """Idempotently preserve the existing Customer ID while canonicalizing Erro data."""
+    from src.core import models
+
+    erro_customer = db.query(models.Customer).filter(models.Customer.code == "ERRO").first()
+    a11_customer = db.query(models.Customer).filter(models.Customer.code == "A11").first()
+    if erro_customer and a11_customer and erro_customer.id != a11_customer.id:
+        raise RuntimeError("Cannot migrate A11 to ERRO because both Customer records already exist")
+
+    customer = erro_customer or a11_customer
+    if not customer:
+        return None
+
+    customer.code = "ERRO"
+    customer.name = "Erro"
+    template_types = {
+        "a11": ("erro_01", "a11.btw", "erro_01.btw"),
+        "a11_tem2": ("erro_02", "a11_02.btw", "erro_02.btw"),
+        "a11_tem3": ("erro_03", "a11_03.btw", "erro_03.btw"),
+    }
+    for product in db.query(models.Product).filter(models.Product.customer_id == customer.id):
+        migration = template_types.get(product.template_type)
+        if migration:
+            new_type, old_filename, new_filename = migration
+            product.template_type = new_type
+            if product.template_path:
+                product.template_path = product.template_path.replace(old_filename, new_filename)
+
+    db.commit()
+    logger.info("Migrated Customer A11 to ERRO and canonicalized Erro template codes")
+    return customer
+
+
+def seed_erro_data(db):
+    """Seed Customer Erro and its three active label templates if absent."""
     from src.core import models
     try:
-        a11_customer = db.query(models.Customer).filter(models.Customer.code == "A11").first()
-        if not a11_customer:
-            # Check if UX exists and migrate inline
-            ux_customer = db.query(models.Customer).filter(models.Customer.code == "UX").first()
-            if ux_customer:
-                ux_customer.code = "A11"
-                ux_customer.name = "Customer A11"
-                a11_customer = ux_customer
-                db.flush()
-                logger.info("Migrated Customer UX to Customer A11")
-            else:
-                a11_customer = models.Customer(code="A11", name="Customer A11")
-                db.add(a11_customer)
-                db.flush()
-                logger.info("Seeded Customer A11")
+        erro_customer = db.query(models.Customer).filter(models.Customer.code == "ERRO").first()
+        if not erro_customer:
+            erro_customer = models.Customer(code="ERRO", name="Erro")
+            db.add(erro_customer)
+            db.flush()
+            logger.info("Seeded Customer Erro")
 
-        a11_products = [
-            ("840-00083", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
-            ("840-00091", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
-            ("840-00092", 190, "VHK0010237", "NYS5998", "a11", r"D:\PAT\Templates\a11.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
-            ("G012C1B", 190, "37033907", "NYS5998", "a11_tem2", r"D:\PAT\Templates\a11_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "852582006785", "1LAE0009D2U004MAAR", "B08G9M4HXS", "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"),
-            ("G112C1B", 190, "37033907", "NYS5996", "a11_tem2", r"D:\PAT\Templates\a11_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "840268969493", "1LAE0009D2U002MAAS", "B0C32N712K", "ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND"),
+        erro_products = [
+            ("840-00083", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
+            ("840-00091", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
+            ("840-00092", 190, "VHK0010237", "NYS5998", "erro_01", r"D:\PAT\Templates\erro_01.btw", "weight_scale", "B", "kg", 12.500, 12.300, 12.700, None, None, None, None),
+            ("G012C1B", 190, "37033907", "NYS5998", "erro_02", r"D:\PAT\Templates\erro_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "852582006785", "1LAE0009D2U004MAAR", "B08G9M4HXS", "ASSY,BAND WRAPPED,CAT5E ETHERNET CABLE 4.0mm OD:91CM,WHITE,RUBBER BAND"),
+            ("G112C1B", 190, "37033907", "NYS5996", "erro_02", r"D:\PAT\Templates\erro_02.btw", "weight_scale", "B", "kg", 6.000, 5.000, 7.000, "840268969493", "1LAE0009D2U002MAAS", "B0C32N712K", "ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND"),
+            ("2M21-00508-0004H", 190, "1012665", None, "erro_03", r"D:\PAT\Templates\erro_03.btw", "weight_scale", "/", "kg", 6.000, 5.000, 7.000, None, "1LAE0091C2U011NMES", None, "CAT5E ETHERNET CABLE"),
         ]
 
-        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w, upc, factory_pn, asin, product_desc in a11_products:
+        for item_name, qty, prefix, mfr_pn, tmpl, tmpl_path, mode, rev, unit, target_w, min_w, max_w, upc, factory_pn, asin, product_desc in erro_products:
             prod = db.query(models.Product).filter(
-                models.Product.customer_id == a11_customer.id,
+                models.Product.customer_id == erro_customer.id,
                 models.Product.item_name == item_name
             ).first()
             if not prod:
                 prod = models.Product(
-                    customer_id=a11_customer.id,
+                    customer_id=erro_customer.id,
                     item_name=item_name,
                     packed_qty=qty,
                     pkg_prefix=prefix,
@@ -113,7 +138,7 @@ def seed_a11_data(db):
                     product_desc=product_desc,
                 )
                 db.add(prod)
-                logger.info(f"Seeded A11 Product: {item_name}")
+                logger.info(f"Seeded Erro Product: {item_name}")
             else:
                 updated = False
                 if factory_pn and not prod.factory_pn:
@@ -134,9 +159,7 @@ def seed_a11_data(db):
         db.commit()
     except Exception as e:
         db.rollback()
-        logger.warning(f"Seed A11 data notice: {e}")
-
-seed_ux_data = seed_a11_data
+        logger.warning(f"Seed Erro data notice: {e}")
 
 def init_db():
     try:
@@ -168,7 +191,7 @@ def init_db():
                         conn.execute(text("ALTER TABLE job_order_carton_slots ADD shipped INT NOT NULL CONSTRAINT DF_job_order_carton_slots_shipped DEFAULT 0 WITH VALUES"))
                     conn.commit()
 
-            # 2. Migrate products table for A11 / UX & weight_scale columns
+            # 2. Migrate products table for weight_scale columns
             if inspector.has_table('products'):
                 prod_cols = [c['name'] for c in inspector.get_columns('products')]
                 new_prod_cols = [
@@ -207,12 +230,7 @@ def init_db():
                         conn.execute(text(f"ALTER TABLE cartons ADD COLUMN {col_name} {col_type}" if is_sqlite else f"ALTER TABLE cartons ADD {col_name} {col_type}"))
                         conn.commit()
 
-            # 4. Migrate Customer UX -> A11
-            if inspector.has_table('customers'):
-                conn.execute(text("UPDATE customers SET code = 'A11', name = 'Customer A11' WHERE code = 'UX'"))
-                conn.commit()
-
-            # 5. Migrate historical UTC timestamps in cartons to Local Time (+7 hours)
+            # 4. Migrate historical UTC timestamps in cartons to Local Time (+7 hours)
             if inspector.has_table('cartons'):
                 conn.execute(text(
                     "CREATE TABLE IF NOT EXISTS schema_migrations (version VARCHAR(100) PRIMARY KEY, applied_at DATETIME)"
@@ -234,7 +252,8 @@ def init_db():
 
         # Run seed data
         with SessionLocal() as db:
-            seed_a11_data(db)
+            migrate_a11_to_erro_data(db)
+            seed_erro_data(db)
             try:
                 from src.features.auth.service import seed_default_users
                 seed_default_users(db)

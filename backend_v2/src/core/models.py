@@ -22,11 +22,11 @@ class Product(Base):
     packed_qty = Column(Integer)
     start_part = Column(String(10)) # E.g., CN (Carton Number)
     middle_part = Column(String(20)) # e.g. 11, 16, A, B
-    template_type = Column(String(50), default="standard") # "standard" | "detailed" | "a11"
+    template_type = Column(String(50), default="standard") # "standard" | "detailed" | "erro_01" ... "erro_03"
     template_path = Column(String(500), nullable=True) # E.g. D:\PAT\Template\carton.btw
     allow_partial = Column(Integer, default=0) # 0 = must be full | 1 = can be partial
     
-    # UX / A11 Customer & Weight-scale additions
+    # Erro Customer & weight-scale additions
     packing_mode = Column(String(50), default="item_scan") # "item_scan" | "weight_scale"
     target_weight = Column(Float, nullable=True)
     min_weight = Column(Float, nullable=True)
@@ -57,7 +57,7 @@ class Carton(Base):
     carton_origin = Column(String(50), default="VN") # Origin country, e.g. CN (China) or VN (Vietnam)
     station_id = Column(String(50), nullable=True) # Station ID derived from MAC address
     
-    # UX Weight-scale additions
+    # Erro weight-scale additions
     weight = Column(Float, nullable=True)
     po_number = Column(String(100), nullable=True)
     lot_number = Column(String(100), nullable=True)
@@ -101,4 +101,3 @@ class User(Base):
     full_name = Column(String(100), nullable=True)
     is_active = Column(Integer, default=1)
     created_at = Column(DateTime, default=datetime.datetime.now)
-

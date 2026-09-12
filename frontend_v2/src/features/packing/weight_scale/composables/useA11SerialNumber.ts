@@ -3,8 +3,8 @@ import catalogApi from '../../../catalog/api';
 import type { Product } from '../../../../types/api';
 
 /**
- * Composable for managing Customer A11 carton serial numbers.
- * Per ADR 0005, Customer A11 strictly mandates automatic, monotonic serial numbers.
+ * Composable for managing Customer Erro carton serial numbers.
+ * Per ADR 0006, Customer Erro strictly mandates automatic, monotonic serial numbers.
  * Manual sequence editing and toggling are completely removed.
  */
 export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
@@ -27,7 +27,16 @@ export function useA11SerialNumber(selectedProduct: Ref<Product | null>) {
 
   const currentSNPreview = computed<string>(() => {
     if (!selectedProduct.value) return '-';
-    if (selectedProduct.value.template_type === 'a11_tem2') {
+    if (selectedProduct.value.template_type === 'erro_03') {
+      const supplierCode = selectedProduct.value.pkg_prefix || '1012665';
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const seqStr = String(autoSequence.value).padStart(4, '0');
+      return `${supplierCode}${yy}${mm}${dd}${seqStr}`;
+    }
+    if (selectedProduct.value.template_type === 'erro_02') {
       const prefix = selectedProduct.value.pkg_prefix || '37033907';
       const seqStr = String(autoSequence.value).padStart(7, '0');
       return `(00) 0 ${prefix} ${seqStr}`;

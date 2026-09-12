@@ -12,8 +12,8 @@ def test_a11_tem2_btxml_document_from_carton_data():
         upc="840268969493",
         asin="B0C32N712K",
         product_desc="ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND",
-        template_type="a11_tem2",
-        template_path=r"D:\PAT\Templates\a11_02.btw",
+        template_type="erro_02",
+        template_path=r"D:\PAT\Templates\erro_02.btw",
     )
     carton = Carton(
         id=20,
@@ -39,8 +39,8 @@ def test_a11_tem2_btxml_document_from_carton_data():
     assert doc.substrings["UnitUPC"] == "840268969493"
 
     # XML serialization test
-    xml = doc.to_xml(template_type="a11_tem2")
-    assert "<Format>D:\\PAT\\Templates\\a11_02.btw</Format>" in xml
+    xml = doc.to_xml(template_type="erro_02")
+    assert "<Format>D:\\PAT\\Templates\\erro_02.btw</Format>" in xml
     assert "<Printer>TSC_TTP_244_Pro</Printer>" in xml
     assert '<NamedSubString Name="ProductName"><Value>Product name:ASSY, BAND WRAPPED, CAT6A ETHERNET CABLE 4.7MM OD, 91CM , WHITE,RUBBER BAND</Value></NamedSubString>' in xml
     assert '<NamedSubString Name="QTY"><Value>190</Value></NamedSubString>' in xml

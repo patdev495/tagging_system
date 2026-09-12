@@ -1,0 +1,87 @@
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.core.database import Base
+from src.core.models import Product, Carton
+from src.features.carton.a11_tem3_allocator import (
+    format_a11_tem3_carton_sn,
+    parse_a11_tem3_sequence,
+    next_a11_tem3_sequence,
+    plan_next_a11_tem3_carton_sn,
+    DEFAULT_A11_TEM3_SUPPLIER_CODE,
+)
+
+
+@pytest.fixture
+def db_session():
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=engine)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    yield session
+    session.close()
+
+
+def test_format_a11_tem3_carton_sn():
+    sn = format_a11_tem3_carton_sn("1012665", "260911", 1)
+    assert sn == "10126652609110001"
+    assert len(sn) == 17
+
+    sn_large = format_a11_tem3_carton_sn("1012665", "260911", 2209)
+    assert sn_large == "10126652609112209"
+    assert len(sn_large) == 17
+
+
+def test_parse_a11_tem3_sequence():
+    assert parse_a11_tem3_sequence("10126652609110001", "1012665", "260911") == 1
+    assert parse_a11_tem3_sequence("10126652609112209", "1012665", "260911") == 2209
+    # Mismatched date should return 0
+    assert parse_a11_tem3_sequence("10126652609110001", "1012665", "260912") == 0
+
+
+def test_next_a11_tem3_sequence_daily_reset(db_session):
+    product = Product(
+        id=1,
+        item_name="2M21-00508-0004H",
+        template_type="a11_tem3",
+        pkg_prefix="1012665",
+        packed_qty=190,
+    )
+    db_session.add(product)
+    db_session.commit()
+
+    # Day 1: 260911 -> First carton sequence should be 1
+    seq1 = next_a11_tem3_sequence(db_session, "1012665", "260911")
+    assert seq1 == 1
+
+    # Simulate saving carton 1 on day 1
+    c1 = Carton(product_id=product.id, carton_sn="10126652609110001", is_reprint=0)
+    db_session.add(c1)
+    db_session.commit()
+
+    # Day 1 second carton -> sequence should be 2
+    seq2 = next_a11_tem3_sequence(db_session, "1012665", "260911")
+    assert seq2 == 2
+
+    # Day 2: 260912 -> Sequence MUST RESET back to 1
+    seq_day2 = next_a11_tem3_sequence(db_session, "1012665", "260912")
+    assert seq_day2 == 1
+
+
+def test_plan_next_a11_tem3_carton_sn(db_session):
+    product = Product(
+        id=2,
+        item_name="2M21-00508-0004H",
+        template_type="a11_tem3",
+        pkg_prefix="1012665",
+        packed_qty=190,
+    )
+    db_session.add(product)
+    db_session.commit()
+
+    plan = plan_next_a11_tem3_carton_sn(db_session, product, custom_yymmdd="260911")
+    assert plan.supplier_code == "1012665"
+    assert plan.yymmdd == "260911"
+    assert plan.sequence == 1
+    assert plan.carton_sn == "10126652609110001"
+    assert len(plan.carton_sn) == 17

@@ -183,3 +183,56 @@ File tem đã được cấu hình và kiểm chứng hoạt động 100% qua Ba
 - **PO Number & Lot Number**: Hệ thống cho phép để rỗng (không bắt buộc nhập) khi đóng gói con hàng Tem 2. Màn hình Cân tự động bỏ qua (bypass) popup bắt buộc nhập Batch PO/Lot, nhưng vẫn cho phép bấm sửa nếu cần.
 - **Trọng lượng (Weight Tolerance)**: Cấu hình ban đầu dải cân giả lập (ví dụ `min_weight = 5.0kg`, `max_weight = 7.0kg`, `target_weight = 6.0kg`) để thông luồng, người dùng có thể điều chỉnh lại trên màn hình Quản trị Sản phẩm.
 - Khi công nhân đặt thùng hàng 190 con lên cân và nhấn In (`F9`), hệ thống xác thực `Weight Tolerance`, cấp phát sê-ri SSCC tiếp theo, tính Check Digit, lưu bản ghi Carton với `carton_sn = "037033907{seq:07d}{cd}"` và gửi lệnh in sang Print Agent.
+
+---
+
+## 6. Đặc Tả Chi Tiết & Thiết Kế Kiến Trúc Tem Số 3 (Bản Vẽ PD024364 - Luxshare NME)
+
+### 6.1. Thông Tin Nhận Diện & Sản Phẩm Đại Diện
+- **Bản vẽ kỹ thuật**: `PD024364 REV.M` (立讯NME外箱贴纸 - Tem thùng ngoài NME Luxshare).
+- **Kích thước tem**: $100 \times 80\text{ mm}$ (in ngang).
+- **Mã sản phẩm đại diện**: `2M21-00508-0004H` (厂内料号: `1LAE0091C2U011NMES`).
+- **Dự án & Giai đoạn sản xuất**: `Andy Town/ Firefly` | `QB/CR` (hoặc `MP`).
+- **Mã nhà cung ứng & Xuất xứ**:
+  - Mã NCC xưởng Việt Nam: **`1012665`** (cấu hình trong `Product.pkg_prefix`).
+  - Tên nhà cung ứng: `NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED`.
+  - Nguyên sản địa (Origin): `VIETNAM`.
+
+### 6.2. Quy Tắc Sinh Mã Thùng (Carton SN)
+Theo đúng Ghi chú G trên bản vẽ `PD024364 REV.M`:
+$$\text{Carton SN (17 ký tự)} = \underbrace{\text{1012665}}_{\text{Supplier Code (7 số)}} + \underbrace{\text{YYMMDD}}_{\text{Thời gian SX (6 số)}} + \underbrace{\text{Seq:04d}}_{\text{Mã sen / Sê-ri (4 số)}}$$
+
+- **Reset sê-ri**: Bộ đếm sê-ri 4 chữ số `{Seq:04d}` (từ `0001` đến `9999`) **tự động reset về `0001` vào 00:00 mỗi ngày mới** (`YYMMDD` theo giờ cục bộ của máy chủ nhà máy).
+- **Chống trùng lặp**: Sử dụng truy vấn `with_for_update()` khóa dòng cấp phát sê-ri theo ngày, bảo đảm an toàn dữ liệu tuyệt đối khi nhiều cân thao tác song song.
+
+### 6.3. Cấu Trúc Mã Vạch 2D QR Code
+Theo đúng quy cách mã hóa phân cách bằng ký tự `$` trên bản vẽ:
+```text
+{CartonSN}${SupplierCode}${SupplierName}${PartNo}${APNRev}${LotNo}${DateYYYYMMDD}${QTY}$$$$$$
+```
+*Ví dụ thực tế*:
+`10126652609110001$1012665$NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED$2M21-00508-0004H$$92607933$20260911$190$$$$$$`
+
+### 6.4. Cấu Hình File BarTender Template (`D:\PAT\Templates\a11_03.btw`)
+- **Tên file chuẩn hóa**: `a11_03.btw` (sao chép và cấu hình từ `第3 2M21-00508-0004 Tem NGOÀI.btw`).
+- **Mã loại tem (`template_type`)**: `"a11_tem3"`.
+- **Danh sách Named SubStrings chuẩn**:
+  1. `ProjectStage`: Dòng tiêu đề dự án & giai đoạn (`项目: Andy Town/ Firefly         生产阶段：QB/CR`)
+  2. `PartNo`: Mã vật liệu Luxshare (`料号: {part_no}`)
+  3. `APNRev`: Phiên bản APN (`APN-Rev : {apn_rev}`)
+  4. `QTY`: Số lượng đóng gói (`数量: {qty}`)
+  5. `Date`: Ngày sản xuất dạng `YYYYMMDD` (`生产日期: {date_ymd}`)
+  6. `LotNo`: Số lô sản xuất (`生产批号: {lot_no}`)
+  7. `PartDesc`: Mô tả linh kiện (`料件描述: {part_desc}`)
+  8. `SupplierCode`: Mã nhà cung ứng (`供应商代码: {supplier_code}`)
+  9. `CartonSN`: Mã định danh thùng 17 ký tự (`箱号: {carton_sn}`)
+  10. `SupplierName`: Tên nhà cung ứng (`供应商名称：{supplier_name}`)
+  11. `Origin`: Xuất xứ (`原产地：{origin}`)
+  12. `QRCode_Content`: Chuỗi nội dung tổng hợp mã 2D truyền trực tiếp vào Barcode QR.
+
+### 6.5. Quy Trình Vận Hành & Cân Đóng Gói (Packing UI)
+- Chế độ đóng gói: **`weight_scale`** (cân điện tử và in nhãn Carton khi đạt dung sai `Weight Tolerance`).
+- **PO Number**: Mặc định cho phép để rỗng (bypass popup bắt buộc PO như Tem 2), cho phép người dùng tùy ý chỉnh sửa nếu có PO cụ thể.
+- **Lot Number**: Mặc định lấy từ metadata sản phẩm/bản vẽ, cho phép người vận hành chỉnh sửa linh hoạt trên giao diện ca đóng gói như Tem 1.
+- **Chính sách In lại (Reprint)**: **Tuyệt đối cấm in lại tem cũ (No Reprint)** theo quyết định kiến trúc `ADR-0005`. Tem lỗi/rách được xử lý bằng thao tác in ngay tem tiếp theo với số thứ tự mới.
+

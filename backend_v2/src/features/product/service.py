@@ -72,7 +72,7 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
     if not product:
         return {"next_seq": 1, "next_sn": None, "prefix": ""}
 
-    if product.template_type == "a11_tem2":
+    if product.template_type == "erro_02":
         from src.features.carton.sscc_allocator import plan_next_sscc_carton_sn
         plan = plan_next_sscc_carton_sn(db, product)
         return {
@@ -83,7 +83,17 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
             "check_digit": plan.check_digit,
         }
 
-    if product.packing_mode == "weight_scale" or product.template_type == "a11":
+    if product.template_type == "erro_03":
+        from src.features.carton.a11_tem3_allocator import plan_next_a11_tem3_carton_sn
+        plan = plan_next_a11_tem3_carton_sn(db, product)
+        return {
+            "next_seq": plan.sequence,
+            "next_sn": plan.carton_sn,
+            "supplier_code": plan.supplier_code,
+            "yymmdd": plan.yymmdd,
+        }
+
+    if product.packing_mode == "weight_scale" or product.template_type == "erro_01":
         from src.features.carton.a11_sn_allocator import plan_next_a11_carton_sn
         plan = plan_next_a11_carton_sn(db, product, custom_yymm=yymm)
         return {"next_seq": plan.sequence, "next_sn": plan.carton_sn, "prefix": plan.prefix, "yymm": plan.yymm}

@@ -13,7 +13,7 @@
             <i class="fas fa-boxes text-sm"></i>
           </div>
           <div>
-            <h2 class="font-bold text-base text-slate-900 leading-tight">Chọn Sản Phẩm Khách Hàng A11</h2>
+            <h2 class="font-bold text-base text-slate-900 leading-tight">Chọn Sản Phẩm Khách Hàng Erro</h2>
             <p class="text-xs text-slate-500 m-0">Chọn mã sản phẩm để thiết lập dải trọng lượng cân</p>
           </div>
         </div>
@@ -41,7 +41,7 @@
         <!-- Loading State -->
         <div v-if="isLoading" class="py-10 flex flex-col items-center justify-center text-slate-500 gap-2">
           <i class="fas fa-spinner fa-spin text-2xl text-emerald-600"></i>
-          <span class="text-xs font-semibold">Đang tải danh sách sản phẩm A11 từ CSDL...</span>
+          <span class="text-xs font-semibold">Đang tải danh sách sản phẩm Erro từ CSDL...</span>
         </div>
 
         <!-- Empty State -->
@@ -49,9 +49,9 @@
           <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 text-slate-400 flex items-center justify-center mx-auto mb-2">
             <i class="fas fa-box-open text-lg"></i>
           </div>
-          <h4 class="font-bold text-sm text-slate-800 mb-1">Chưa có sản phẩm A11 nào</h4>
+          <h4 class="font-bold text-sm text-slate-800 mb-1">Chưa có sản phẩm Erro nào</h4>
           <p class="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed mb-3">
-            Hệ thống chưa tìm thấy sản phẩm nào được gán cho Khách hàng A11 trong cơ sở dữ liệu.
+            Hệ thống chưa tìm thấy sản phẩm nào được gán cho Khách hàng Erro trong cơ sở dữ liệu.
           </p>
           <button 
             @click="$emit('reload')"
