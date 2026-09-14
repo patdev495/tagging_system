@@ -9,12 +9,15 @@ def test_erro_03_btxml_contains_all_12_named_substrings():
     product = Product(
         id=30,
         item_name="2M21-00508-0004H",
+        luxshare_part_number="LLERJ014-NC-R",
         template_type="erro_03",
         template_path=r"D:\PAT\Templates\a11_03.btw",
         pkg_prefix="1012665",
         product_desc="CAT5E ETHERNET CABLE",
         packed_qty=190,
         revision="/",
+        customer_project="Andy Town/ Firefly",
+        production_stage="MP",
     )
     carton = Carton(
         id=60,
@@ -43,14 +46,14 @@ def test_erro_03_btxml_contains_all_12_named_substrings():
     assert substrings["CartonSN"] == "10126652609110001"
     assert substrings["SupplierCode"] == "1012665"
     assert substrings["SupplierName"] == "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED"
-    assert substrings["PartNo"] == "2M21-00508-0004H"
+    assert substrings["LuxsharePartNo"] == "LLERJ014-NC-R"
     assert substrings["APNRev"] == "/"
     assert substrings["QTY"] == "190"
     assert substrings["LotNo"] == "92607933"
     assert substrings["PartDesc"] == "CAT5E ETHERNET CABLE"
     assert substrings["Origin"] == "VIETNAM"
     assert len(substrings["Date"]) == 8
-    assert "Andy Town/ Firefly" in substrings["ProjectStage"]
+    assert substrings["ProjectStage"] == "项目: Andy Town/ Firefly         生产阶段：MP"
     assert "10126652609110001$1012665$" in substrings["QRCode_Content"]
 
 
@@ -65,7 +68,7 @@ def test_bartender_com_export_tem3_product_to_image(tmp_path):
         "CartonSN": "10126652609110001",
         "SupplierCode": "1012665",
         "SupplierName": "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED",
-        "PartNo": "2M21-00508-0004H",
+        "LuxsharePartNo": "LLERJ014-NC-R",
         "APNRev": "/",
         "QTY": "190",
         "Date": "20260911",

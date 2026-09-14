@@ -27,38 +27,50 @@ def format_erro_03_carton_sn(supplier_code: str, yymmdd: str, sequence: int) -> 
     return f"{clean_code}{yymmdd}{seq_str}"
 
 
-def parse_erro_03_sequence(carton_sn: Optional[str], supplier_code: str, yymmdd: str) -> int:
+def parse_erro_03_sequence(carton_sn: Optional[str], supplier_code: str, yy_or_yymmdd: str) -> int:
     """
-    Extracts the 4-digit sequence number from a 17-character Tem 3 carton SN.
+    Extracts the 4-digit sequence number from a 17-character Tem 3 carton SN for the given year (YY).
     Format: supplier_code(7) + yymmdd(6) + sequence(4)
     """
     if not carton_sn:
         return 0
     clean_sn = "".join(c for c in carton_sn if c.isdigit())
     clean_code = "".join(c for c in str(supplier_code) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
-    prefix = f"{clean_code}{yymmdd}"
-    if not clean_sn.startswith(prefix) or len(clean_sn) != (len(clean_code) + len(yymmdd) + ERRO_03_SEQUENCE_WIDTH):
+    yy = str(yy_or_yymmdd)[:2]
+    prefix = f"{clean_code}{yy}"
+    if not clean_sn.startswith(prefix) or len(clean_sn) != (len(clean_code) + 6 + ERRO_03_SEQUENCE_WIDTH):
         return 0
 
-    seq_part = clean_sn[len(prefix) : len(prefix) + ERRO_03_SEQUENCE_WIDTH]
+    seq_part = clean_sn[-ERRO_03_SEQUENCE_WIDTH:]
     try:
         return int(seq_part)
     except ValueError:
         return 0
 
 
-def next_erro_03_sequence(db: Session, supplier_code: str, yymmdd: str, lock: bool = False) -> int:
+def next_erro_03_sequence(
+    db: Session,
+    supplier_code: str,
+    yy_or_yymmdd: str,
+    lock: bool = False,
+    product_id: Optional[int] = None,
+) -> int:
     """
-    Finds the maximum sequence allocated in the day `yymmdd` for the given supplier_code.
-    Sequence starts from 1 (0001) and resets daily.
+    Finds the maximum sequence allocated in the given year (YY) for the specified supplier_code (and product).
+    Sequence starts from 1 (0001) and resets yearly on January 1st.
     """
     clean_code = "".join(c for c in str(supplier_code) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
-    lead_prefix = f"{clean_code}{yymmdd}"
+    yy = str(yy_or_yymmdd)[:2]
+    lead_prefix = f"{clean_code}{yy}"
 
-    query = db.query(models.Carton.carton_sn).filter(
+    filters = [
         models.Carton.carton_sn.like(f"{lead_prefix}%"),
         models.Carton.is_reprint == 0,
-    )
+    ]
+    if product_id is not None:
+        filters.append(models.Carton.product_id == product_id)
+
+    query = db.query(models.Carton.carton_sn).filter(*filters)
     if lock:
         query = query.with_for_update()
 
@@ -68,7 +80,7 @@ def next_erro_03_sequence(db: Session, supplier_code: str, yymmdd: str, lock: bo
 
     max_seq = 0
     for r in rows:
-        seq = parse_erro_03_sequence(r[0], clean_code, yymmdd)
+        seq = parse_erro_03_sequence(r[0], clean_code, yy)
         if seq > max_seq:
             max_seq = seq
 
@@ -84,9 +96,10 @@ def plan_next_erro_03_carton_sn(
 ) -> Erro03CartonPlan:
     """
     Allocates the next Tem 3 carton SN plan for a product.
+    Sequence resets yearly on January 1st.
     """
-    supplier_code = getattr(product, 'pkg_prefix', None) or DEFAULT_ERRO_03_SUPPLIER_CODE
-    clean_code = "".join(c for c in str(supplier_code) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
+    raw_supplier = getattr(product, 'pkg_prefix', None) or DEFAULT_ERRO_03_SUPPLIER_CODE
+    clean_code = "".join(c for c in str(raw_supplier) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
 
     if custom_yymmdd:
         yymmdd = custom_yymmdd
@@ -94,10 +107,20 @@ def plan_next_erro_03_carton_sn(
         now = datetime.datetime.now()
         yymmdd = now.strftime("%y%m%d")
 
+    yy = yymmdd[:2]
+    raw_id = getattr(product, "id", None)
+    prod_id: Optional[int] = int(raw_id) if raw_id is not None else None
+
     if custom_sequence is not None and custom_sequence > 0:
         sequence = custom_sequence
     else:
-        sequence = next_erro_03_sequence(db, clean_code, yymmdd, lock=lock)
+        sequence = next_erro_03_sequence(
+            db,
+            clean_code,
+            yy,
+            lock=lock,
+            product_id=prod_id,
+        )
 
     carton_sn = format_erro_03_carton_sn(clean_code, yymmdd, sequence)
 

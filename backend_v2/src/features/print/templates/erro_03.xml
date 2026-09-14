@@ -5,7 +5,7 @@
             <Format>{template_path}</Format>
             <PrintSetup>{printer_tag}</PrintSetup>
             <NamedSubString Name="ProjectStage"><Value>{project_stage}</Value></NamedSubString>
-            <NamedSubString Name="PartNo"><Value>{part_no}</Value></NamedSubString>
+            <NamedSubString Name="LuxsharePartNo"><Value>{part_no}</Value></NamedSubString>
             <NamedSubString Name="APNRev"><Value>{apn_rev}</Value></NamedSubString>
             <NamedSubString Name="QTY"><Value>{qty}</Value></NamedSubString>
             <NamedSubString Name="Date"><Value>{date}</Value></NamedSubString>

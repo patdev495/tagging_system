@@ -25,6 +25,9 @@ export default {
   getProduct(id: number) {
     return api.get<Product>(`/products/${id}`);
   },
+  resolveErroProductByInternalFactoryPartNumber(value: string) {
+    return api.get<Product>('/products/resolve-internal-factory-part-number', { params: { value } });
+  },
 
   getCustomerProducts(customerId: number) {
     return api.get<Product[]>(`/customers/${customerId}/products`);
@@ -42,6 +45,18 @@ export default {
     return api.get<{ next_seq: number; next_sn: string; prefix: string; yymm?: string }>(`/products/${productId}/next-sn`, {
       params: { yymm: yymm || undefined }
     });
+  },
+
+  getInternalFactoryPartNumbers(productId: number) {
+    return api.get<import('../../types/api').ProductInternalFactoryPartNumber[]>(`/products/${productId}/internal-factory-part-numbers`);
+  },
+  addInternalFactoryPartNumber(productId: number, data: { internal_factory_part_number: string; source_drawing_code: string }) {
+    return api.post<import('../../types/api').ProductInternalFactoryPartNumber>(`/products/${productId}/internal-factory-part-numbers`, data);
+  },
+  batchAddInternalFactoryPartNumbers(productId: number, items: Array<{ internal_factory_part_number: string; source_drawing_code: string }>) {
+    return api.post<import('../../types/api').ProductInternalFactoryPartNumber[]>(`/products/${productId}/internal-factory-part-numbers/batch`, { items });
+  },
+  deleteInternalFactoryPartNumber(productId: number, mappingId: number) {
+    return api.delete<{ message: string }>(`/products/${productId}/internal-factory-part-numbers/${mappingId}`);
   }
 };
-

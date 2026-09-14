@@ -71,12 +71,14 @@
       <!-- Active Product & Batch Bar -->
       <section class="my-2 px-4 py-2.5 rounded-xl bg-slate-50/90 border border-slate-200/90 shadow-xs flex items-center justify-between gap-3 shrink-0">
         <div class="flex items-center gap-5 md:gap-7 flex-wrap">
-          <div @click="openProductModal" class="flex items-center gap-2 cursor-pointer group hover:opacity-80 transition-all" title="Bấm để đổi sản phẩm">
+          <ErroFactoryPartNumberLookup @resolved="selectResolvedProduct" />
+
+          <div v-if="selectedProduct" class="flex items-center gap-2">
             <span class="text-xs uppercase tracking-wider font-bold text-slate-400">CPN:</span>
-            <span class="font-black text-base md:text-lg text-slate-900 font-mono group-hover:text-indigo-600 transition-colors">
-              {{ selectedProduct?.item_name || 'Chưa chọn' }}
+            <span class="font-black text-base md:text-lg text-slate-900 font-mono">
+              {{ selectedProduct.item_name }}
             </span>
-            <span v-if="selectedProduct" class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-xs">
+            <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-xs">
               {{ selectedProduct.packed_qty }} PCS
             </span>
           </div>
@@ -144,9 +146,9 @@
             <i class="fas fa-edit text-indigo-500"></i>
             <span>Đổi PO/LOT</span>
           </button>
-          <button @click="openProductModal" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs shadow-indigo-600/20 cursor-pointer">
+          <button @click="clearSelectedProduct" :disabled="!selectedProduct" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs shadow-indigo-600/20 cursor-pointer">
             <i class="fas fa-boxes"></i>
-            <span>Đổi Sản Phẩm</span>
+            <span>Đổi Mã Hàng</span>
           </button>
         </div>
       </section>
@@ -209,7 +211,7 @@
           <!-- Giant Primary Print Action Button -->
           <button
             @click="triggerWeighAndPrint"
-            :disabled="isPrinting || (settings.printMode !== 'centralized' && templateMissing)"
+            :disabled="isPrinting || !selectedProduct || (settings.printMode !== 'centralized' && templateMissing)"
             :class="[
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
               (settings.printMode !== 'centralized' && templateMissing)
@@ -240,16 +242,6 @@
       </main>
 
       <!-- Modals -->
-      <ErroProductSelectModal
-        :show="showProductModal"
-        :products="erroProducts"
-        :selectedProduct="selectedProduct"
-        :isLoading="isLoadingProducts"
-        @close="showProductModal = false"
-        @select="selectProduct"
-        @reload="loadErroProducts"
-      />
-
       <ErroBatchConfigModal
         :show="showBatchModal"
         :po="activePO"
@@ -279,7 +271,6 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
-import catalogApi from '../features/catalog/api';
 import type { Product } from '../types/api';
 
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
@@ -287,7 +278,7 @@ import ScaleDigitalGauge from '../features/packing/weight_scale/components/Scale
 import ErroSerialControl from '../features/packing/weight_scale/components/ErroSerialControl.vue';
 import ErroLastCartonCard from '../features/packing/weight_scale/components/ErroLastCartonCard.vue';
 import ScaleToleranceErrorModal from '../features/packing/weight_scale/components/ScaleToleranceErrorModal.vue';
-import ErroProductSelectModal from '../features/packing/weight_scale/components/ErroProductSelectModal.vue';
+import ErroFactoryPartNumberLookup from '../features/packing/weight_scale/components/ErroFactoryPartNumberLookup.vue';
 import ErroBatchConfigModal from '../features/packing/weight_scale/components/ErroBatchConfigModal.vue';
 
 import { useScaleStream } from '../features/packing/weight_scale/composables/useScaleStream';
@@ -300,14 +291,11 @@ const settings = useSettingsStore();
 const system = useSystemStore();
 
 // Modals State
-const showProductModal = ref(false);
 const showBatchModal = ref(false);
 const showSettingsModal = ref(false);
 
 // Active Selection State
-const erroProducts = ref<Product[]>([]);
 const selectedProduct = ref<Product | null>(null);
-const isLoadingProducts = ref(false);
 const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
 const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
 
@@ -354,7 +342,7 @@ const {
     stationId: settings.stationId,
     localTemplateDir: settings.localTemplateDir,
   }),
-  openProductModal: () => { showProductModal.value = true; },
+  openProductModal: () => system.showNotification('Vui lòng quét hoặc nhập Factory P/N trước khi in', 'warning'),
   openBatchModal: () => { showBatchModal.value = true; },
 });
 
@@ -393,43 +381,21 @@ const saveBatchConfig = (payload: { po: string; lot: string }) => {
   system.showNotification('Đã cập nhật PO & LOT thành công', 'success');
 };
 
-const loadErroProducts = async () => {
-  isLoadingProducts.value = true;
-  try {
-    const res = await catalogApi.getProductsByCustomerCode('ERRO');
-    erroProducts.value = res.data || [];
-    if (selectedProduct.value) {
-      const refreshed = erroProducts.value.find(p => p.id === selectedProduct.value!.id);
-      if (refreshed) selectedProduct.value = refreshed;
-    }
-  } catch (err) {
-    console.error('Failed to reload Erro products', err);
-  } finally {
-    isLoadingProducts.value = false;
-  }
-};
-
-const openProductModal = async () => {
-  showProductModal.value = true;
-  await loadErroProducts();
-};
-
-const selectProduct = async (p: Product) => {
-  try {
-    const res = await catalogApi.getProduct(p.id);
-    selectedProduct.value = res.data || p;
-  } catch {
-    selectedProduct.value = p;
-  }
+const selectResolvedProduct = async (p: Product) => {
+  selectedProduct.value = p;
   if (selectedProduct.value.template_type === 'erro_03') {
     if (!activeLot.value) {
       activeLot.value = '92607933';
     }
   }
-  localStorage.setItem('erro_selected_product_id', String(p.id));
-  showProductModal.value = false;
   system.showNotification(`Đã chọn sản phẩm ${selectedProduct.value.item_name}`, 'success');
   fetchNextSN();
+};
+
+const clearSelectedProduct = () => {
+  selectedProduct.value = null;
+  localStorage.removeItem('erro_selected_product_id');
+  system.showNotification('Hãy quét hoặc nhập Factory P/N để chọn mã hàng mới', 'info');
 };
 
 // Global Hotkeys Listener (F9, Enter, Esc)
@@ -448,19 +414,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 };
 
-onMounted(async () => {
-  await loadErroProducts();
-  const savedProdId = localStorage.getItem('erro_selected_product_id');
-  if (savedProdId) {
-    selectedProduct.value = erroProducts.value.find(p => p.id === Number(savedProdId)) || erroProducts.value[0] || null;
-  } else if (erroProducts.value.length > 0) {
-    selectedProduct.value = erroProducts.value[0];
-  }
-
-  if (selectedProduct.value) {
-    await fetchNextSN();
-  }
-
+onMounted(() => {
+  localStorage.removeItem('erro_selected_product_id');
   startPolling();
   window.addEventListener('keydown', handleKeyDown, true);
 });

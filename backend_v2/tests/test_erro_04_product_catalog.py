@@ -23,6 +23,7 @@ def _erro_04_payload(**overrides):
         "packing_mode": "weight_scale",
         "mfr_pn": "NYS5896",
         "product_desc": "Accessory, Ethernet Cable CAT6a, 15cm, Black, 1PK, Basic Box",
+        "internal_factory_part_number": "1LAX0015C2U001MAAR",
         "factory_item_code": "115-00020",
         "carton_id_prefix": "H",
         "revision": "B",

@@ -52,6 +52,7 @@ def test_product_service_creates_and_searches_by_asin(db_session):
         packing_mode="weight_scale",
         template_type="erro_02",
         template_path=r"D:\PAT\Templates\erro_02.btw",
+        internal_factory_part_number="1LAE0009D2U002MAAS",
         mfr_pn="NYS5996",
         upc="840268969493",
         min_weight=5.0,

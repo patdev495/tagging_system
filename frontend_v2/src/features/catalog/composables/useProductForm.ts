@@ -23,6 +23,10 @@ export interface ProductFormData {
   revision: string;
   asin?: string;
   product_desc?: string;
+  customer_project?: string;
+  production_stage?: string;
+  luxshare_part_number?: string;
+  internal_factory_part_number?: string;
   factory_item_code?: string;
   carton_id_prefix?: 'H' | 'K' | '';
 }
@@ -107,6 +111,10 @@ export function useProductForm(
     revision: 'B',
     asin: '',
     product_desc: '',
+    customer_project: '',
+    production_stage: '',
+    luxshare_part_number: '',
+    internal_factory_part_number: '',
     factory_item_code: '',
     carton_id_prefix: '',
   });
@@ -255,6 +263,10 @@ export function useProductForm(
           revision: p.revision ?? '',
           asin: p.asin || '',
           product_desc: p.product_desc || '',
+          customer_project: p.customer_project || '',
+          production_stage: p.production_stage || '',
+          luxshare_part_number: p.luxshare_part_number || '',
+          internal_factory_part_number: p.internal_factory_part_number || '',
           factory_item_code: p.factory_item_code || '',
           carton_id_prefix: p.carton_id_prefix || '',
         };
@@ -280,6 +292,10 @@ export function useProductForm(
           revision: 'B',
           asin: '',
           product_desc: '',
+          customer_project: '',
+          production_stage: '',
+          luxshare_part_number: '',
+          internal_factory_part_number: '',
           factory_item_code: '',
           carton_id_prefix: '',
         };

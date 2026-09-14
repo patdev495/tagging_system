@@ -126,3 +126,43 @@ def test_plan_next_erro_01_carton_sn_ignores_reprints(db_session, erro_01_produc
     assert plan.sequence == 6
     assert plan.carton_sn == "VHK00102372608000006"
 
+
+def test_plan_next_erro_01_carton_sn_independent_per_product(db_session, erro_01_product):
+    # Create product B with same customer and same pkg_prefix
+    prod_b = Product(
+        customer_id=erro_01_product.customer_id,
+        item_name="840-00091",
+        packed_qty=190,
+        packing_mode="weight_scale",
+        target_weight=12.500,
+        min_weight=12.300,
+        max_weight=12.700,
+        weight_unit="kg",
+        mfr_pn="NYS5998",
+        pkg_prefix="VHK0010237",
+        revision="B",
+        template_type="erro_01",
+    )
+    db_session.add(prod_b)
+    db_session.commit()
+
+    # Create cartons for product A reaching sequence 50
+    db_session.add(Carton(
+        product_id=erro_01_product.id,
+        carton_sn="VHK00102372608000050",
+        status="SUCCESS",
+        is_reprint=0,
+    ))
+    db_session.commit()
+
+    # Product B starts at sequence 1 despite product A having cartons in the same year
+    plan_b = plan_next_erro_01_carton_sn(db_session, prod_b, custom_yymm="2608")
+    assert plan_b.sequence == 1
+    assert plan_b.carton_sn == "VHK00102372608000001"
+
+    # Product A continues from 51
+    plan_a = plan_next_erro_01_carton_sn(db_session, erro_01_product, custom_yymm="2608")
+    assert plan_a.sequence == 51
+    assert plan_a.carton_sn == "VHK00102372608000051"
+
+

@@ -362,14 +362,14 @@ class BarTenderCOMApp:
                     carton_sn = substrings.get("CartonSN", "")
                     supplier_code = substrings.get("SupplierCode", "1012665")
                     supplier_name = substrings.get("SupplierName", "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED")
-                    part_no = substrings.get("PartNo", "2M21-00508-0004H")
+                    part_no = substrings.get("LuxsharePartNo", "")
                     apn_rev = substrings.get("APNRev", "/")
                     lot_no = substrings.get("LotNo", "")
                     date_ymd = substrings.get("Date", "")
                     qty = substrings.get("QTY", "")
                     part_desc = substrings.get("PartDesc", "")
                     origin = substrings.get("Origin", "VIETNAM")
-                    project_stage = substrings.get("ProjectStage", "项目: Andy Town/ Firefly         生产阶段：QB/CR")
+                    project_stage = substrings.get("ProjectStage", "")
                     qr_content = substrings.get("QR_Content") or substrings.get("QRCode_Content", f"{carton_sn}${supplier_code}${supplier_name}${part_no}$${lot_no}${date_ymd}${qty}$$$$$$")
 
                     fields = [

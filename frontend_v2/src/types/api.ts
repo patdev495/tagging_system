@@ -5,6 +5,15 @@ export interface Customer {
   is_active: boolean;
 }
 
+export interface ProductInternalFactoryPartNumber {
+  id: number;
+  product_id: number;
+  customer_id: number;
+  internal_factory_part_number: string;
+  source_drawing_code: string;
+  created_at?: string;
+}
+
 export interface Product {
   id: number;
   customer_id: number;
@@ -26,9 +35,14 @@ export interface Product {
   revision?: string;
   asin?: string;
   product_desc?: string;
+  customer_project?: string;
+  production_stage?: string;
+  luxshare_part_number?: string;
+  internal_factory_part_number?: string;
   factory_item_code?: string;
   carton_id_prefix?: 'H' | 'K';
   customer?: Customer;
+  internal_factory_part_numbers?: ProductInternalFactoryPartNumber[];
 }
 
 export interface Carton {

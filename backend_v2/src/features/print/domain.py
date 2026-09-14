@@ -156,7 +156,7 @@ class BTXMLDocument:
             carton_sn = carton.carton_sn or ""
             supplier_code = getattr(product, 'pkg_prefix', None) or "1012665"
             supplier_name = "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED"
-            part_no = product.item_name or ""
+            part_no = getattr(product, "luxshare_part_number", None) or ""
             apn_rev = getattr(product, 'revision', '') or "/"
             lot_no = getattr(carton, 'lot_number', '') or "92607933"
             qty = str(product.packed_qty or actual_qty or 190)
@@ -167,14 +167,16 @@ class BTXMLDocument:
             created_at = getattr(carton, 'created_at', None) or datetime.datetime.now()
             date_ymd = created_at.strftime("%Y%m%d")
 
-            project_stage_text = "项目: Andy Town/ Firefly         生产阶段：QB/CR"
+            customer_project = (getattr(product, "customer_project", None) or "").strip()
+            production_stage = (getattr(product, "production_stage", None) or "").strip()
+            project_stage_text = f"项目: {customer_project}         生产阶段：{production_stage}"
             qr_apn_rev = "" if apn_rev == "/" else apn_rev
             qr_code_content = f"{carton_sn}${supplier_code}${supplier_name}${part_no}${qr_apn_rev}${lot_no}${date_ymd}${qty}$$$$$$"
 
             substrings["CartonSN"] = carton_sn
             substrings["SupplierCode"] = supplier_code
             substrings["SupplierName"] = supplier_name
-            substrings["PartNo"] = part_no
+            substrings["LuxsharePartNo"] = part_no
             substrings["APNRev"] = apn_rev
             substrings["LotNo"] = lot_no
             substrings["QTY"] = qty
@@ -275,7 +277,7 @@ class BTXMLDocument:
             "asin": self.substrings.get("ASIN", ""),
             "unit_upc": self.substrings.get("UnitUPC", ""),
             "project_stage": self.substrings.get("ProjectStage", ""),
-            "part_no": self.substrings.get("PartNo", ""),
+            "part_no": self.substrings.get("LuxsharePartNo", ""),
             "apn_rev": self.substrings.get("APNRev", ""),
             "date": self.substrings.get("Date", ""),
             "part_desc": self.substrings.get("PartDesc", ""),

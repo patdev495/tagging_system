@@ -156,6 +156,9 @@ def seed_erro_data(db):
                     upc=upc,
                     asin=asin,
                     product_desc=product_desc,
+                    customer_project="Andy Town/ Firefly" if tmpl == "erro_03" else None,
+                    production_stage="MP" if tmpl == "erro_03" else None,
+                    luxshare_part_number="LLERJ014-NC-R" if tmpl == "erro_03" else None,
                 )
                 db.add(prod)
                 logger.info(f"Seeded Erro Product: {item_name}")
@@ -163,6 +166,15 @@ def seed_erro_data(db):
                 updated = False
                 if asin and not prod.asin:
                     prod.asin = asin
+                    updated = True
+                if tmpl == "erro_03" and not prod.customer_project:
+                    prod.customer_project = "Andy Town/ Firefly"
+                    updated = True
+                if tmpl == "erro_03" and not prod.production_stage:
+                    prod.production_stage = "MP"
+                    updated = True
+                if tmpl == "erro_03" and not prod.luxshare_part_number:
+                    prod.luxshare_part_number = "LLERJ014-NC-R"
                     updated = True
                 if product_desc and not prod.product_desc:
                     prod.product_desc = product_desc
@@ -278,6 +290,80 @@ def seed_erro_data(db):
         db.rollback()
         logger.warning(f"Seed Erro data notice: {e}")
 
+
+def seed_erro_factory_part_number_mappings(db):
+    """Seed Product Internal Factory Part Numbers from staging CSV for READY + HIGH records."""
+    import csv
+    from src.core import models
+
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    candidates = [
+        os.path.join(repo_root, "docs", "data", "erro_factory_part_number_mapping_review.csv"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "erro_factory_part_number_mapping_review.csv"),
+        os.path.abspath("docs/data/erro_factory_part_number_mapping_review.csv"),
+        os.path.abspath("../docs/data/erro_factory_part_number_mapping_review.csv"),
+    ]
+    csv_path = None
+    for p in candidates:
+        if os.path.isfile(p):
+            csv_path = p
+            break
+
+    if not csv_path:
+        logger.info("No erro_factory_part_number_mapping_review.csv found to seed mappings.")
+        return
+
+    try:
+        customer = db.query(models.Customer).filter(models.Customer.code == "ERRO").first()
+        if not customer:
+            logger.warning("Customer ERRO not found, skipping factory part number mapping seed.")
+            return
+
+        with open(csv_path, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            created_count = 0
+            for row in reader:
+                status = (row.get("status") or "").strip().upper()
+                confidence = (row.get("confidence") or "").strip().upper()
+                if status != "READY" or confidence != "HIGH":
+                    continue
+
+                part_no = (row.get("internal_factory_part_number") or "").strip().upper()
+                item_ident = (row.get("source_product_identifier") or "").strip()
+                drawing = (row.get("source_drawing_code") or "").strip().upper()
+
+                if not part_no or not item_ident:
+                    continue
+
+                product = db.query(models.Product).filter(
+                    models.Product.customer_id == customer.id,
+                    models.Product.item_name == item_ident,
+                ).first()
+                if not product:
+                    continue
+
+                existing = db.query(models.ProductInternalFactoryPartNumber).filter(
+                    models.ProductInternalFactoryPartNumber.customer_id == customer.id,
+                    models.ProductInternalFactoryPartNumber.internal_factory_part_number == part_no,
+                ).first()
+
+                if not existing:
+                    mapping = models.ProductInternalFactoryPartNumber(
+                        product_id=product.id,
+                        customer_id=customer.id,
+                        internal_factory_part_number=part_no,
+                        source_drawing_code=drawing,
+                    )
+                    db.add(mapping)
+                    created_count += 1
+
+            if created_count > 0:
+                db.commit()
+                logger.info(f"Seeded {created_count} Erro Factory Part Number mappings (READY + HIGH).")
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Seed Erro Factory Part Number mappings notice: {e}")
+
 def init_db():
     try:
         from src.core import models
@@ -322,6 +408,10 @@ def init_db():
                     ('revision', 'VARCHAR(10) DEFAULT \'B\'', 'VARCHAR(10) DEFAULT \'B\''),
                     ('asin', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
                     ('product_desc', 'VARCHAR(255) NULL', 'VARCHAR(255) NULL'),
+                    ('customer_project', 'VARCHAR(255) NULL', 'VARCHAR(255) NULL'),
+                    ('production_stage', 'VARCHAR(20) NULL', 'VARCHAR(20) NULL'),
+                    ('luxshare_part_number', 'VARCHAR(100) NULL', 'VARCHAR(100) NULL'),
+                    ('internal_factory_part_number', 'VARCHAR(100) NULL', 'VARCHAR(100) NULL'),
                     ('factory_item_code', 'VARCHAR(50) NULL', 'VARCHAR(50) NULL'),
                     ('carton_id_prefix', 'VARCHAR(1) NULL', 'VARCHAR(1) NULL'),
                 ]
@@ -331,6 +421,83 @@ def init_db():
                         col_type = sqlite_type if is_sqlite else mssql_type
                         conn.execute(text(f"ALTER TABLE products ADD COLUMN {col_name} {col_type}" if is_sqlite else f"ALTER TABLE products ADD {col_name} {col_type}"))
                         conn.commit()
+
+                # Drop obsolete unique index on products(customer_id, internal_factory_part_number) to release 1-1 constraint
+                if is_sqlite:
+                    conn.execute(text("DROP INDEX IF EXISTS ux_products_customer_internal_factory_part_number"))
+                else:
+                    conn.execute(text(
+                        "IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_products_customer_internal_factory_part_number' "
+                        "AND object_id = OBJECT_ID('products')) "
+                        "DROP INDEX ux_products_customer_internal_factory_part_number ON products"
+                    ))
+                conn.commit()
+
+                # 5. Migrate product_internal_factory_part_numbers table and copy legacy 1-1 values
+                if is_sqlite:
+                    conn.execute(text("""
+                        CREATE TABLE IF NOT EXISTS product_internal_factory_part_numbers (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+                            customer_id INTEGER NOT NULL REFERENCES customers(id),
+                            internal_factory_part_number VARCHAR(100) NOT NULL,
+                            source_drawing_code VARCHAR(20) NOT NULL,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """))
+                    conn.execute(text(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS ux_pifpn_customer_part_no "
+                        "ON product_internal_factory_part_numbers (customer_id, internal_factory_part_number)"
+                    ))
+                    conn.commit()
+                else:
+                    conn.execute(text("""
+                        IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='product_internal_factory_part_numbers' AND xtype='U')
+                        CREATE TABLE product_internal_factory_part_numbers (
+                            id INT IDENTITY(1,1) PRIMARY KEY,
+                            product_id INT NOT NULL CONSTRAINT FK_pifpn_product FOREIGN KEY REFERENCES products(id) ON DELETE CASCADE,
+                            customer_id INT NOT NULL CONSTRAINT FK_pifpn_customer FOREIGN KEY REFERENCES customers(id),
+                            internal_factory_part_number VARCHAR(100) NOT NULL,
+                            source_drawing_code VARCHAR(20) NOT NULL,
+                            created_at DATETIME DEFAULT GETDATE(),
+                            updated_at DATETIME DEFAULT GETDATE()
+                        )
+                    """))
+                    conn.execute(text("""
+                        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'ux_pifpn_customer_part_no' 
+                        AND object_id = OBJECT_ID('product_internal_factory_part_numbers'))
+                        CREATE UNIQUE INDEX ux_pifpn_customer_part_no 
+                        ON product_internal_factory_part_numbers (customer_id, internal_factory_part_number)
+                    """))
+                    conn.commit()
+
+                # Copy any existing non-empty values from products.internal_factory_part_number into mapping table (idempotently)
+                if inspector.has_table('products') and 'internal_factory_part_number' in [c['name'] for c in inspector.get_columns('products')]:
+                    conn.execute(text("""
+                        INSERT INTO product_internal_factory_part_numbers (product_id, customer_id, internal_factory_part_number, source_drawing_code, created_at, updated_at)
+                        SELECT p.id, p.customer_id, UPPER(TRIM(p.internal_factory_part_number)), 'LEGACY', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        FROM products p
+                        WHERE p.internal_factory_part_number IS NOT NULL 
+                          AND TRIM(p.internal_factory_part_number) != ''
+                          AND NOT EXISTS (
+                              SELECT 1 FROM product_internal_factory_part_numbers m 
+                              WHERE m.customer_id = p.customer_id 
+                                AND UPPER(m.internal_factory_part_number) = UPPER(TRIM(p.internal_factory_part_number))
+                          )
+                    """ if is_sqlite else """
+                        INSERT INTO product_internal_factory_part_numbers (product_id, customer_id, internal_factory_part_number, source_drawing_code, created_at, updated_at)
+                        SELECT p.id, p.customer_id, UPPER(LTRIM(RTRIM(p.internal_factory_part_number))), 'LEGACY', GETDATE(), GETDATE()
+                        FROM products p
+                        WHERE p.internal_factory_part_number IS NOT NULL 
+                          AND LTRIM(RTRIM(p.internal_factory_part_number)) != ''
+                          AND NOT EXISTS (
+                              SELECT 1 FROM product_internal_factory_part_numbers m 
+                              WHERE m.customer_id = p.customer_id 
+                                AND UPPER(m.internal_factory_part_number) = UPPER(LTRIM(RTRIM(p.internal_factory_part_number)))
+                          )
+                    """))
+                    conn.commit()
 
                 # Factory P/N was never used by the Erro label formats. Remove
                 # the obsolete storage column and its optional index.
@@ -389,6 +556,7 @@ def init_db():
         with SessionLocal() as db:
             migrate_legacy_erro_data(db)
             seed_erro_data(db)
+            seed_erro_factory_part_number_mappings(db)
             try:
                 from src.features.auth.service import seed_default_users
                 seed_default_users(db)

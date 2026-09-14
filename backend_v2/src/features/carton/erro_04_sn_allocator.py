@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from src.core import models
@@ -60,7 +61,12 @@ def pd027032_date_code(printed_at: datetime) -> str:
     return f"{year}{ERRO_04_ALPHABET[printed_at.month]}{ERRO_04_ALPHABET[printed_at.day]}"
 
 
-def next_erro_04_sequence(db: Session, lock: bool = False) -> int:
+def next_erro_04_sequence(db: Session, year: Optional[int] = None, lock: bool = False) -> int:
+    current_year = year or datetime.now().year
+    year_code = ERRO_04_YEAR_CODES.get(current_year)
+    if not year_code:
+        raise HTTPException(status_code=400, detail=f"PD027032 does not define a year code for {current_year}.")
+
     if lock:
         # H and K intentionally share one sequence. Lock every Erro 04 Product
         # before reading the latest Carton so allocations from separate products
@@ -72,10 +78,19 @@ def next_erro_04_sequence(db: Session, lock: bool = False) -> int:
             .all()
         )
 
+    filters = [
+        models.Product.template_type == "erro_04",
+        models.Carton.is_reprint == 0,
+        or_(
+            models.Carton.carton_sn.like(f"H{year_code}%"),
+            models.Carton.carton_sn.like(f"K{year_code}%"),
+        ),
+    ]
+
     query = (
         db.query(models.Carton.carton_sn)
         .join(models.Product, models.Carton.product_id == models.Product.id)
-        .filter(models.Product.template_type == "erro_04", models.Carton.is_reprint == 0)
+        .filter(*filters)
     )
     sequences = [parse_erro_04_sequence(row[0]) for row in query.all()]
     return max((sequence for sequence in sequences if sequence is not None), default=0) + 1
@@ -93,7 +108,7 @@ def plan_next_erro_04_carton_sn(
         raise HTTPException(status_code=400, detail="Erro 04 Product requires carton_id_prefix H or K.")
 
     now = printed_at or datetime.now()
-    sequence = next_erro_04_sequence(db, lock=lock)
+    sequence = next_erro_04_sequence(db, year=now.year, lock=lock)
     return Erro04CartonSNPlan(
         carton_sn=f"{prefix}{pd027032_date_code(now)}{format_erro_04_sequence(sequence)}",
         sequence=sequence,

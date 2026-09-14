@@ -394,7 +394,7 @@ class BarTenderCOMApp:
                     carton_sn = substrings.get("CartonSN", "")
                     supplier_code = substrings.get("SupplierCode", "1012665")
                     supplier_name = substrings.get("SupplierName", "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED")
-                    part_no = substrings.get("PartNo", "2M21-00508-0004H")
+                    part_no = substrings.get("LuxsharePartNo", "")
                     apn_rev = substrings.get("APNRev", "/")
                     lot_no = substrings.get("LotNo", "")
                     date_ymd = substrings.get("Date", "")

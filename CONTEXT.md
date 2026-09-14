@@ -16,6 +16,18 @@ _Avoid_: Tem A11, loại tem A11
 Một loại sản phẩm thuộc về một Customer, định nghĩa các quy tắc đóng gói (như số lượng mỗi thùng, đường dẫn file tem nhãn, tiền tố số sê-ri).
 _Avoid_: SKU, mã hàng
 
+**Customer Project**:
+Tên dự án của khách hàng được cấu hình riêng cho một Product Tem 3 của Customer Erro, ví dụ `Andy Town/ Firefly`. Giá trị này được in ở phần dự án trên nhãn Luxshare.
+_Avoid_: Item khách hàng, Project Stage
+
+**Production Stage**:
+Giai đoạn sản xuất được cấu hình riêng cho một Product Tem 3 của Customer Erro, ví dụ `QB/CR` hoặc `MP`. Giá trị này được in cạnh Customer Project trên nhãn Luxshare.
+_Avoid_: Project Stage, giai đoạn mặc định
+
+**Luxshare Part Number**:
+Mã liệu nội bộ của Luxshare, được cấu hình riêng cho Product Tem 3 của Customer Erro và in tại trường `PartNo`, ví dụ `LLERJ014-NC-R`. Giá trị này khác với **APN-Rev**.
+_Avoid_: APN-Rev, mã liệu khách hàng
+
 **Carton**:
 Một thùng hàng vật lý chứa các sản phẩm (Product), được đại diện bởi một mã số sê-ri thùng duy nhất (Carton SN).
 _Avoid_: Hộp, thùng chứa, kiện hàng
@@ -75,7 +87,7 @@ Phiên bản khách hàng áp dụng cho Product, được in tại trường `R
 _Avoid_: Revision mặc định, revision của file tem
 
 **Factory P/N**:
-Mã số thành phẩm hoặc vật tư nội bộ nhà máy (厂内料号, ví dụ: `1LAE0009D2U004MAAR`), dùng để đối chiếu với hệ thống ERP/BOM của Nien Yi và phục vụ tra cứu sản phẩm trên Web UI.
+Mã số thành phẩm hoặc vật tư nội bộ nhà máy (厂内料号, ví dụ: `1LAE0009D2U004MAAR`), được lưu tại trường `internal_factory_part_number` của Product và dùng để đối chiếu với hệ thống ERP/BOM của Nien Yi. Với Customer Erro, Factory P/N là mã nghiệp vụ công nhân nhập để xác định Product và **Erro Label Template Code** theo năm bản vẽ PD; không suy luận mẫu tem từ SKU.
 _Avoid_: Mã xưởng, ERP code, material code, part number nội bộ
 
 **Factory Item Code**:

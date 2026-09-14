@@ -48,15 +48,25 @@ def parse_erro_01_sequence(carton_sn: Optional[str]) -> int:
         return 0
 
 
-def next_erro_01_sequence(db: Session, pkg_prefix: str, yy: str, lock: bool = False) -> int:
+def next_erro_01_sequence(
+    db: Session,
+    pkg_prefix: str,
+    yy: str,
+    lock: bool = False,
+    product_id: Optional[int] = None,
+) -> int:
     """
-    Finds the maximum sequence allocated in the given year (YY) for the specified pkg_prefix.
-    Resets to 1 if no cartons exist for that year.
+    Finds the maximum sequence allocated in the given year (YY) for the specified product (and pkg_prefix).
+    Resets to 1 if no cartons exist for that year for this product.
     """
-    query = db.query(models.Carton.carton_sn).filter(
+    filters = [
         models.Carton.carton_sn.like(f"{pkg_prefix}{yy}%"),
         models.Carton.is_reprint == 0,
-    )
+    ]
+    if product_id is not None:
+        filters.append(models.Carton.product_id == product_id)
+
+    query = db.query(models.Carton.carton_sn).filter(*filters)
     if lock:
         query = query.with_for_update()
     
@@ -75,14 +85,23 @@ def plan_next_erro_01_carton_sn(
     custom_sequence: Optional[int] = None,
     lock: bool = False,
 ) -> Erro01CartonSNPlan:
-    pkg_prefix = product.pkg_prefix or product.start_part or "VHK0010237"
+    raw_prefix = getattr(product, "pkg_prefix", None) or getattr(product, "start_part", None) or "VHK0010237"
+    pkg_prefix: str = str(raw_prefix)
     yymm = custom_yymm or current_yymm()
     yy = yymm[:2]
+    raw_id = getattr(product, "id", None)
+    prod_id: Optional[int] = int(raw_id) if raw_id is not None else None
     
     if custom_sequence is not None and custom_sequence > 0:
         sequence = custom_sequence
     else:
-        sequence = next_erro_01_sequence(db, pkg_prefix=pkg_prefix, yy=yy, lock=lock)
+        sequence = next_erro_01_sequence(
+            db,
+            pkg_prefix=pkg_prefix,
+            yy=yy,
+            lock=lock,
+            product_id=prod_id,
+        )
 
     carton_sn = format_erro_01_carton_sn(pkg_prefix, yymm, sequence)
     date_code = current_iso_date_code()

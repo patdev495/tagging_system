@@ -28,6 +28,9 @@ def tem3_product(db_session):
     product = Product(
         customer_id=customer.id,
         item_name="2M21-00508-0004H",
+        luxshare_part_number="LLERJ014-NC-R",
+        customer_project="Andy Town/ Firefly",
+        production_stage="MP",
         product_desc="CAT5E ETHERNET CABLE",
         packed_qty=190,
         packing_mode="weight_scale",
@@ -69,8 +72,8 @@ def test_weigh_pack_tem3_allows_empty_po_and_default_lot(db_session, tem3_produc
     assert f"<Value>{expected_sn}</Value>" in btxml
     assert "<NamedSubString Name=\"SupplierCode\">" in btxml
     assert "<Value>1012665</Value>" in btxml
-    assert "<NamedSubString Name=\"PartNo\">" in btxml
-    assert "<Value>2M21-00508-0004H</Value>" in btxml
+    assert "<NamedSubString Name=\"LuxsharePartNo\">" in btxml
+    assert "<Value>LLERJ014-NC-R</Value>" in btxml
     assert "<NamedSubString Name=\"QTY\">" in btxml
     assert "<Value>190</Value>" in btxml
     assert "<NamedSubString Name=\"PartDesc\">" in btxml

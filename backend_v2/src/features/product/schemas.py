@@ -1,5 +1,46 @@
-from pydantic import BaseModel, model_validator
-from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel, model_validator, field_validator
+from typing import Optional, List
+
+
+class InternalFactoryPartNumberBase(BaseModel):
+    internal_factory_part_number: str
+    source_drawing_code: str
+
+    @field_validator("internal_factory_part_number")
+    @classmethod
+    def validate_and_normalize_part_number(cls, v: str) -> str:
+        val = (v or "").strip().upper()
+        if not val:
+            raise ValueError("Factory P/N cannot be empty")
+        return val
+
+    @field_validator("source_drawing_code")
+    @classmethod
+    def validate_and_normalize_drawing_code(cls, v: str) -> str:
+        val = (v or "").strip().upper()
+        if not val:
+            raise ValueError("source_drawing_code cannot be empty")
+        return val
+
+
+class InternalFactoryPartNumberCreate(InternalFactoryPartNumberBase):
+    pass
+
+
+class InternalFactoryPartNumberBatchCreate(BaseModel):
+    items: List[InternalFactoryPartNumberCreate]
+
+
+class InternalFactoryPartNumberOut(InternalFactoryPartNumberBase):
+    id: int
+    product_id: int
+    customer_id: int
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 
 class ProductBase(BaseModel):
     item_name: str
@@ -21,11 +62,26 @@ class ProductBase(BaseModel):
     revision: Optional[str] = None
     asin: Optional[str] = None
     product_desc: Optional[str] = None
+    customer_project: Optional[str] = None
+    production_stage: Optional[str] = None
+    luxshare_part_number: Optional[str] = None
+    internal_factory_part_number: Optional[str] = None
     factory_item_code: Optional[str] = None
     carton_id_prefix: Optional[str] = None
 
     @model_validator(mode="after")
-    def validate_erro_04_label_metadata(self):
+    def validate_label_metadata(self):
+        if self.template_type == "erro_03":
+            required = {
+                "customer_project": self.customer_project,
+                "production_stage": self.production_stage,
+                "luxshare_part_number": self.luxshare_part_number,
+            }
+            missing = [name for name, value in required.items() if not (value or "").strip()]
+            if missing:
+                raise ValueError(f"Erro 03 Product requires: {', '.join(missing)}")
+            return self
+
         if self.template_type != "erro_04":
             return self
 
@@ -47,8 +103,10 @@ class ProductBase(BaseModel):
             raise ValueError("Erro 04 Product requires weight_scale packing_mode")
         return self
 
+
 class ProductCreate(ProductBase):
     pass
+
 
 class ProductUpdate(BaseModel):
     item_name: Optional[str] = None
@@ -70,12 +128,17 @@ class ProductUpdate(BaseModel):
     revision: Optional[str] = None
     asin: Optional[str] = None
     product_desc: Optional[str] = None
+    customer_project: Optional[str] = None
+    production_stage: Optional[str] = None
+    luxshare_part_number: Optional[str] = None
+    internal_factory_part_number: Optional[str] = None
     factory_item_code: Optional[str] = None
     carton_id_prefix: Optional[str] = None
 
+
 class Product(ProductBase):
     id: int
+    internal_factory_part_numbers: List[InternalFactoryPartNumberOut] = []
 
     class Config:
         from_attributes = True
-

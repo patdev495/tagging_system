@@ -108,14 +108,26 @@
               </td>
 
               <td class="p-4">
+                <div v-if="['erro_01', 'erro_02', 'erro_03', 'erro_04', 'erro_05'].includes(product.template_type || '')" class="mb-1 text-xs font-mono">
+                  <span class="text-slate-400">Factory P/N:</span>
+                  <span v-if="product.internal_factory_part_numbers && product.internal_factory_part_numbers.length > 0" class="font-semibold text-indigo-700">
+                    {{ product.internal_factory_part_numbers[0].internal_factory_part_number }}
+                    <span v-if="product.internal_factory_part_numbers.length > 1" class="text-[10px] text-indigo-500 font-normal">
+                      (+{{ product.internal_factory_part_numbers.length - 1 }})
+                    </span>
+                  </span>
+                  <span v-else-if="product.internal_factory_part_number" class="font-semibold text-indigo-700">
+                    {{ product.internal_factory_part_number }}
+                  </span>
+                  <span v-else class="text-slate-400 italic">Chưa cấu hình</span>
+                </div>
                 <div v-if="product.template_type === 'erro_05'" class="text-xs font-mono space-y-0.5">
                   <div><span class="text-slate-400">Prefix:</span> <span class="font-bold text-emerald-600">{{ product.pkg_prefix || 'MC220TW1' }}</span></div>
-                  <div><span class="text-slate-400">Factory item:</span> <span class="text-slate-700 font-semibold">{{ product.factory_item_code || '-' }}</span></div>
                   <div class="text-[11px] text-slate-500 truncate max-w-[180px]" :title="product.product_desc">{{ product.product_desc }}</div>
                 </div>
                 <div v-else-if="product.template_type === 'erro_04'" class="text-xs font-mono space-y-0.5">
                   <div><span class="text-slate-400">Carton ID:</span> <span class="font-bold text-rose-600">{{ product.carton_id_prefix || '-' }}...</span></div>
-                  <div><span class="text-slate-400">Factory item:</span> <span class="text-slate-700 font-semibold">{{ product.factory_item_code || '-' }}</span></div>
+                  <div><span class="text-slate-400">Mã nguồn:</span> <span class="text-slate-700 font-semibold">{{ product.factory_item_code || '-' }}</span></div>
                   <div><span class="text-slate-400">P/N:</span> <span class="text-slate-700 font-semibold">{{ product.mfr_pn || '-' }}</span></div>
                   <div><span class="text-slate-400">Rev:</span> <span class="font-bold text-purple-700">{{ product.revision || '-' }}</span></div>
                 </div>

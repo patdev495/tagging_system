@@ -284,3 +284,35 @@ def test_erro_04_base32_sequence_invariants_and_omitted_letters():
     assert format_erro_04_sequence(31) == "000Z"
     assert format_erro_04_sequence(32) == "0010"
     assert parse_erro_04_sequence("K69C0010") == 32
+
+
+def test_erro_04_sequence_resets_yearly_on_new_year(db_session, erro_04_product):
+    from src.features.carton.erro_04_sn_allocator import plan_next_erro_04_carton_sn
+
+    # Year 2026 (year code '6'): create carton sequence 5
+    db_session.add(Carton(
+        product_id=erro_04_product.id,
+        carton_sn="H69E0005",
+        status="SUCCESS",
+        is_reprint=0,
+    ))
+    db_session.commit()
+
+    # Next carton in 2026 should be sequence 6 -> 0006
+    plan_2026 = plan_next_erro_04_carton_sn(
+        db_session,
+        erro_04_product,
+        printed_at=datetime(2026, 9, 15),
+    )
+    assert plan_2026.sequence == 6
+    assert plan_2026.carton_sn == "H69F0006"
+
+    # New Year 2027 (year code '7'): sequence MUST RESET back to 1 -> 0001
+    plan_2027 = plan_next_erro_04_carton_sn(
+        db_session,
+        erro_04_product,
+        printed_at=datetime(2027, 1, 1),
+    )
+    assert plan_2027.sequence == 1
+    assert plan_2027.carton_sn == "H7110001"
+

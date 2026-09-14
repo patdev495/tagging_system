@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, UnicodeText, text
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, UnicodeText, UniqueConstraint, text
 from sqlalchemy.orm import relationship
 from .database import Base
 import datetime
@@ -37,11 +37,38 @@ class Product(Base):
     revision = Column(String(10), default="B")
     asin = Column(String(50), nullable=True) # Amazon ASIN (B08G9M4HXS...)
     product_desc = Column(String(255), nullable=True) # Mô tả cáp đầy đủ trên tem 2
+    customer_project = Column(String(255), nullable=True) # Erro 03 customer project printed on Luxshare label
+    production_stage = Column(String(20), nullable=True) # Erro 03 production stage printed on Luxshare label
+    luxshare_part_number = Column(String(100), nullable=True) # Erro 03 Luxshare material number printed as LuxsharePartNo
+    internal_factory_part_number = Column(String(100), nullable=True) # Legacy Factory P/N reference
     factory_item_code = Column(String(50), nullable=True) # Source ITEM code for Erro 04 catalog rows
     carton_id_prefix = Column(String(1), nullable=True) # Erro 04 Carton ID prefix: H (CAT6A) or K (CAT5E)
     
     customer = relationship("Customer", back_populates="products")
     cartons = relationship("Carton", back_populates="product")
+    internal_factory_part_numbers = relationship(
+        "ProductInternalFactoryPartNumber",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+
+
+class ProductInternalFactoryPartNumber(Base):
+    __tablename__ = "product_internal_factory_part_numbers"
+    __table_args__ = (
+        UniqueConstraint("customer_id", "internal_factory_part_number", name="uq_pifpn_customer_part_no"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
+    internal_factory_part_number = Column(String(100), nullable=False, index=True)
+    source_drawing_code = Column(String(20), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    product = relationship("Product", back_populates="internal_factory_part_numbers")
+    customer = relationship("Customer")
 
 class Carton(Base):
     __tablename__ = "cartons"
