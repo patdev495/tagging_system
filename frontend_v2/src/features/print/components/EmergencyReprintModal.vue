@@ -32,9 +32,10 @@
             <button v-if="result?.product?.packing_mode !== 'weight_scale'" @click="$emit('rescan', result)" class="bg-slate-100 text-slate-600 border border-slate-200 px-5 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2 mr-auto transition-colors hover:bg-slate-200 hover:text-slate-900">
               <i class="fas fa-redo"></i><span>{{ t('print.rescan_items') }}</span>
             </button>
-            <button @click="$emit('reprint', result)" :disabled="loading" class="bg-slate-900 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2.5 transition-all hover:bg-black hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed ml-auto">
-              <i class="fas fa-spinner fa-spin" v-if="loading"></i><i class="fas fa-print" v-else></i><span>{{ t('print.print_label') }}</span>
+            <button v-if="canStationReprint" @click="$emit('reprint', result)" :disabled="loading || isReprinting" class="bg-slate-900 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2.5 transition-all hover:bg-black hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed ml-auto">
+              <i class="fas fa-spinner fa-spin" v-if="loading || isReprinting"></i><i class="fas fa-print" v-else></i><span>{{ t('print.print_label') }}</span>
             </button>
+            <p v-else class="ml-auto text-xs text-slate-500">Tem ERRO chỉ được in lại từ Lịch sử Carton bởi Admin.</p>
           </div>
         </div>
         <div v-else-if="searchSN && !loading && searched" class="text-center p-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 animate-in">
@@ -46,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import printApi from '../api';
 import { useSystemStore } from '../../../core/stores/system';
@@ -55,7 +56,8 @@ import type { Carton } from '../../../types/api';
 const { t } = useI18n();
 
 defineProps<{
-  show: boolean
+  show: boolean;
+  isReprinting?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -69,6 +71,7 @@ const searchSN = ref<string>('');
 const result = ref<Carton | null>(null);
 const loading = ref<boolean>(false);
 const searched = ref<boolean>(false);
+const canStationReprint = computed(() => result.value?.product?.customer?.code?.toUpperCase() === 'UI');
 
 const handleSearch = async () => {
   if (!searchSN.value) return;

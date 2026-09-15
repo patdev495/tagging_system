@@ -141,7 +141,7 @@ def test_weigh_pack_erro_05_sequence_resets_each_month(db_session, erro_05_produ
     assert carton.carton_sn == f"MC220TW12{yy}{ww}50001"
 
 
-def test_reprint_prohibited_for_erro_05(db_session, erro_05_product):
+def test_reprint_allowed_for_erro_05(db_session, erro_05_product):
     carton, _ = carton_service.weigh_pack_carton(
         carton_schemas.CartonWeighPackCreate(
             product_id=cast(int, erro_05_product.id),
@@ -150,11 +150,11 @@ def test_reprint_prohibited_for_erro_05(db_session, erro_05_product):
         db_session,
     )
     from src.features.print.service import reprint_carton
-    with pytest.raises(HTTPException) as exc_info:
-        reprint_carton(
-            carton_id=carton.id,
-            station_id="STATION_TEST",
-            db=db_session,
-        )
-    assert exc_info.value.status_code == 400
-    assert "Reprint prohibited for ERRO" in str(exc_info.value.detail)
+    reprint = reprint_carton(
+        carton_id=carton.id,
+        station_id="STATION_TEST",
+        db=db_session,
+    )
+    assert reprint.id != carton.id
+    assert reprint.carton_sn == carton.carton_sn
+    assert reprint.is_reprint == 1

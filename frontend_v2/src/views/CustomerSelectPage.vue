@@ -1,8 +1,17 @@
 <template>
   <div class="min-h-screen w-full p-4 md:p-8 flex items-center justify-center bg-slate-100 text-slate-900 relative select-none">
     
-    <!-- Top-Right Admin Button -->
-    <div class="absolute top-4 right-4 md:top-6 md:right-8 z-10">
+    <!-- Top-right system controls -->
+    <div class="absolute top-4 right-4 md:top-6 md:right-8 z-10 flex items-center gap-2">
+      <button
+        type="button"
+        @click="showSettings = true"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-blue-700 hover:border-blue-400 font-bold text-xs shadow-xs transition-colors"
+        title="Mở cài đặt trạm đóng gói"
+      >
+        <i class="fas fa-cog text-blue-600 text-xs" aria-hidden="true"></i>
+        <span>Cài Đặt</span>
+      </button>
       <router-link
         to="/admin"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-blue-700 hover:border-blue-400 font-bold text-xs shadow-xs transition-colors"
@@ -53,7 +62,7 @@
               {{ uiCustomerName }}
             </h2>
             <p class="text-slate-600 text-xs leading-relaxed mb-4">
-              Quy trình đóng gói quét từng mã sê-ri sản phẩm con vào thùng theo Job Order ERP. Mẫu tem Standard / Detailed.
+              Quy trình đóng gói quét từng mã sê-ri sản phẩm con vào thùng theo Work Order ERP. Mẫu tem Standard / Detailed.
             </p>
           </div>
 
@@ -94,6 +103,8 @@
       </div>
 
     </div>
+
+    <SettingsModal :show="showSettings" @close="showSettings = false" />
   </div>
 </template>
 
@@ -101,11 +112,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import catalogApi from '../features/catalog/api';
+import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import type { Customer } from '../types/api';
 
 const router = useRouter();
 const customers = ref<Customer[]>([]);
 const loading = ref(true);
+const showSettings = ref(false);
 
 const fetchCustomers = async () => {
   try {

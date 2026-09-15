@@ -14,6 +14,20 @@ logger = logging.getLogger("PrintService")
 
 MAX_SN_GRID = 40  # Maximum SN slots on the detailed label
 
+
+def reprint_requires_admin(carton_id: int, db: Session) -> bool:
+    """Only UI labels may be reprinted directly from a packing station."""
+    carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
+    if not carton:
+        return False
+
+    product = carton.product or (
+        db.query(models.Product).filter(models.Product.id == carton.product_id).first()
+        if carton.product_id else None
+    )
+    customer_code = (product.customer.code if product and product.customer else "").upper()
+    return customer_code != "UI"
+
 def generate_btxml(carton: models.Carton, product: models.Product, items: List[str], template_path: str, printer_name: Optional[str] = None) -> str:
     # Use the unified domain object to build the document applying all validation and schema rules
     doc = BTXMLDocument.from_carton_data(
@@ -74,14 +88,6 @@ def reprint_carton(carton_id: int, printer_name: Optional[str] = None, template_
         raise HTTPException(status_code=404, detail="Original carton not found")
     
     product = original.product or (db.query(models.Product).filter(models.Product.id == original.product_id).first() if original.product_id else None)
-    customer_code = product.customer.code if (product and product.customer) else None
-    if customer_code == "ERRO":
-        logger.warning(f"Reprint rejected: Customer {customer_code} does not allow reprint for carton {original.carton_sn}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Khách hàng {customer_code} không cho phép in lại tem thùng (Reprint prohibited for {customer_code})."
-        )
-
     initial_status = "SUCCESS" if original.status == "SUCCESS" else "PRINTED"
     new_carton = models.Carton(
         product_id=original.product_id,

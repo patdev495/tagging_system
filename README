@@ -9,14 +9,14 @@ npm run build
 cd ..
 ```
 
-### Bước 2: Copy dist lên production server (vào backend_v2/static/)
-```
-scp -r .\frontend_v2\dist\* Admin@192.168.209.62:"D:/projects_production/NY_tagging_sys_new/backend_v2/static/"
-```
-
-### Bước 3: Deploy backend lên production server
+### Bước 2: Deploy backend lên production server
 ```
 ssh Admin@192.168.209.62 "cd /d D:\projects_production\NY_tagging_sys_new && git reset --hard origin/main && git pull origin main && cd backend_v2 && C:\Users\Admin\.local\bin\uv sync && nssm restart ny-tagging-8002"
+```
+
+### Bước 3: Copy dist lên production server (vào backend_v2/static/)
+```
+scp -r .\frontend_v2\dist\* Admin@192.168.209.62:"D:/projects_production/NY_tagging_sys_new/backend_v2/static/"
 ```
 
 ### Bước 4: Hard refresh trình duyệt (Ctrl+Shift+R)

@@ -124,7 +124,7 @@
 
         <!-- Job Order / PO Number -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mã Lệnh / PO (Job Order / PO#)</label>
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Work Order / PO#</label>
           <input 
             v-model="filters.job_order" 
             type="text" 
@@ -216,6 +216,15 @@
                 <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" title="Xem chi tiết">
                   <ExternalLink class="w-4 h-4" />
                 </button>
+                <button
+                  v-if="authStore.isAdmin"
+                  @click="handleReprint(carton)"
+                  :disabled="reprintingCartonId === carton.id"
+                  class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="In lại tem"
+                >
+                  <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': reprintingCartonId === carton.id }" />
+                </button>
                 <button v-if="authStore.isAdmin" @click="handleDelete(carton)" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Xóa thùng (Chỉ Admin)">
                   <Trash2 class="w-4 h-4" />
                 </button>
@@ -269,12 +278,11 @@ import historyApi from '../../features/history/api';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
 import { useAuthStore } from '../../core/stores/auth';
+import { useAdminReprint } from '../../features/print/composables/useAdminReprint';
 import type { Carton, Product, Customer } from '../../types/api';
-
 const { t } = useI18n();
 const system = useSystemStore();
 const authStore = useAuthStore();
-
 const history = ref<Carton[]>([]);
 const products = ref<Product[]>([]);
 const customers = ref<Customer[]>([]);
@@ -288,7 +296,6 @@ const isExporting = ref<boolean>(false);
 const showExportMenu = ref<boolean>(false);
 const startDateInputRef = ref<HTMLInputElement | null>(null);
 const dateError = ref<boolean>(false);
-
 const filters = ref<{
   search: string;
   customer_id: number | null;
@@ -306,7 +313,6 @@ const filters = ref<{
   end_date: '',
   job_order: ''
 });
-
 const filteredProducts = computed(() => {
   if (!filters.value.customer_id) return products.value;
   return products.value.filter(p => p.customer_id === filters.value.customer_id);
@@ -356,6 +362,8 @@ const fetchHistory = async (page: number = 0) => {
     system.showNotification('Không thể tải lịch sử đóng gói', 'error');
   }
 };
+
+const { reprintingCartonId, handleReprint } = useAdminReprint(() => fetchHistory(currentPage.value));
 
 const fetchCatalogData = async () => {
   try {

@@ -5,16 +5,16 @@
         <div class="w-14 h-14 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3 text-blue-600">
           <i class="fas fa-barcode text-2xl"></i>
         </div>
-        <h2 class="text-xl font-black text-slate-900 mb-1.5">{{ t('packing.enter_job_order_title', 'Nhập Số Công Lệnh') }}</h2>
+        <h2 class="text-xl font-black text-slate-900 mb-1.5">{{ t('packing.enter_job_order_title', 'Nhập Work Order') }}</h2>
         <p class="text-slate-500 text-xs leading-relaxed max-w-sm mx-auto">
-          {{ t('packing.enter_job_order_desc', 'Bắn máy quét hoặc nhập số công lệnh sản xuất để bắt đầu đóng thùng.') }}
+          {{ t('packing.enter_job_order_desc', 'Bắn máy quét hoặc nhập mã Work Order để bắt đầu đóng thùng.') }}
         </p>
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 pl-0.5">
-            Mã Công Lệnh (Job Order):
+            Mã Work Order:
           </label>
           <div class="relative">
             <input
@@ -42,7 +42,7 @@
           <i class="fas fa-circle-exclamation text-rose-600 mt-0.5 shrink-0 text-sm"></i>
           <div>
             <strong class="block font-bold text-rose-800">{{ errorText }}</strong>
-            <span class="text-[11px] text-rose-600 mt-0.5 block">Vui lòng kiểm tra lại mã trên phiếu sản xuất hoặc liên hệ Trưởng ca để kích hoạt Job Order.</span>
+            <span class="text-[11px] text-rose-600 mt-0.5 block">Vui lòng kiểm tra lại mã trên phiếu sản xuất hoặc liên hệ Trưởng ca để kích hoạt Work Order.</span>
           </div>
         </div>
 

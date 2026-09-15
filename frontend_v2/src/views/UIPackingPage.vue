@@ -15,7 +15,7 @@
           <span class="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Tiến trình:</span>
           <div class="flex items-center gap-1.5 font-bold">
             <span :class="currentStep === 1 ? 'px-2.5 py-1 rounded bg-blue-600 text-white shadow-xs' : 'px-2 py-0.5 rounded bg-slate-200 text-slate-600'">
-              1. Nhập Công Lệnh
+              1. Nhập Work Order
             </span>
             <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
             <span :class="currentStep === 2 ? 'px-2.5 py-1 rounded bg-blue-600 text-white shadow-xs' : (currentStep > 2 ? 'px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200' : 'px-2 py-0.5 rounded bg-slate-100 text-slate-400')">
@@ -93,7 +93,7 @@
                   <i class="fas fa-list-check"></i> {{ t('packing.view_details', 'Sơ đồ thùng') }}
                 </button>
                 <button @click="changeJobOrder" class="flex-1 sm:flex-none px-3.5 py-1.5 bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-lg font-bold cursor-pointer transition-colors flex items-center justify-center gap-1.5 text-xs shadow-2xs">
-                  <i class="fas fa-arrow-rotate-left"></i> {{ t('packing.change_job_order', 'Đổi công lệnh') }}
+                  <i class="fas fa-arrow-rotate-left"></i> {{ t('packing.change_job_order', 'Đổi Work Order') }}
                 </button>
               </div>
             </div>
@@ -194,6 +194,7 @@
     <SettingsModal :show="showSettings" @close="showSettings = false" />
     <EmergencyReprintModal 
       :show="showEmergencyModal" 
+      :isReprinting="isEmergencyReprinting"
       @close="closeEmergencyModal" 
       @reprint="onEmergencyReprint" 
       @rescan="handleRescan"
@@ -308,16 +309,24 @@ const openEmergencyModal = () => {
   showEmergencyModal.value = true;
 };
 
+const isEmergencyReprinting = ref(false);
+
 const closeEmergencyModal = () => {
   showEmergencyModal.value = false;
   if (!hadJobOrder.value) resetSession();
 };
 
 const onEmergencyReprint = async (carton: Carton) => {
-  const ok = await handleEmergencyReprint(carton);
-  if (ok) {
-    showEmergencyModal.value = false;
-    if (!hadJobOrder.value) resetSession();
+  if (isEmergencyReprinting.value) return;
+  isEmergencyReprinting.value = true;
+  try {
+    const ok = await handleEmergencyReprint(carton);
+    if (ok) {
+      showEmergencyModal.value = false;
+      if (!hadJobOrder.value) resetSession();
+    }
+  } finally {
+    isEmergencyReprinting.value = false;
   }
 };
 

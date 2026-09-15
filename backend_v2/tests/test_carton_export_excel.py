@@ -181,7 +181,7 @@ def test_export_detailed_traceability_excel(test_setup):
 
 
 def test_history_rbac_permissions(test_setup):
-    """Test RBAC on carton operations: QA can export, but blocked from delete/reprint."""
+    """UI reprints are allowed at a station; ERRO reprints require an Admin."""
     from src.features.auth.service import seed_default_users
 
     db, client = test_setup
@@ -198,14 +198,21 @@ def test_history_rbac_permissions(test_setup):
     admin_headers = {"Authorization": f"Bearer {resp_admin.json()['access_token']}"}
 
     # Setup a sample carton
-    cust = models.Customer(code="UI_RBAC", name="Universal")
+    cust = models.Customer(code="UI", name="Universal")
     db.add(cust)
     db.commit()
     prod = models.Product(customer_id=cust.id, item_name="Prod RBAC", packed_qty=5)
     db.add(prod)
     db.commit()
-    carton = models.Carton(product_id=prod.id, carton_sn="SN-RBAC-01", status="SUCCESS")
-    db.add(carton)
+    carton = models.Carton(product_id=prod.id, carton_sn="SN-UI-RBAC-01", status="SUCCESS")
+    erro_customer = models.Customer(code="ERRO", name="Erro")
+    db.add(erro_customer)
+    db.flush()
+    erro_product = models.Product(customer_id=erro_customer.id, item_name="Erro RBAC", packed_qty=5)
+    db.add(erro_product)
+    db.flush()
+    erro_carton = models.Carton(product_id=erro_product.id, carton_sn="SN-ERRO-RBAC-01", status="SUCCESS")
+    db.add_all([carton, erro_carton])
     db.commit()
 
     # 1. QA can export
@@ -216,12 +223,24 @@ def test_history_rbac_permissions(test_setup):
     resp_del_qa = client.delete(f"/api/v1/cartons/{carton.id}", headers=qa_headers)
     assert resp_del_qa.status_code == 403
 
-    # 3. QA cannot reprint (403)
-    resp_reprint_qa = client.post(f"/api/v1/print/carton/{carton.id}/reprint", headers=qa_headers)
-    assert resp_reprint_qa.status_code == 403
+    # 3. UI packing stations may reprint without an Admin session.
+    resp_ui_reprint = client.post(f"/api/v1/print/carton/{carton.id}/reprint")
+    assert resp_ui_reprint.status_code == 200
 
-    # 4. Admin can delete
+    # 4. ERRO requires an authenticated Admin for reprint.
+    resp_erro_reprint_anonymous = client.post(f"/api/v1/print/carton/{erro_carton.id}/reprint")
+    assert resp_erro_reprint_anonymous.status_code == 401
+    resp_erro_reprint_qa = client.post(f"/api/v1/print/carton/{erro_carton.id}/reprint", headers=qa_headers)
+    assert resp_erro_reprint_qa.status_code == 403
+    resp_erro_reprint_admin = client.post(f"/api/v1/print/carton/{erro_carton.id}/reprint", headers=admin_headers)
+    assert resp_erro_reprint_admin.status_code == 200
+
+    # The direct-server print endpoint follows the same ERRO Admin policy.
+    resp_erro_server_print_anonymous = client.post(f"/api/v1/print/carton/{erro_carton.id}/server-print")
+    assert resp_erro_server_print_anonymous.status_code == 401
+    resp_erro_server_print_qa = client.post(f"/api/v1/print/carton/{erro_carton.id}/server-print", headers=qa_headers)
+    assert resp_erro_server_print_qa.status_code == 403
+
+    # 5. Admin can delete
     resp_del_admin = client.delete(f"/api/v1/cartons/{carton.id}", headers=admin_headers)
     assert resp_del_admin.status_code == 200
-
-

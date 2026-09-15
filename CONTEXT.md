@@ -9,7 +9,7 @@ Tổ chức hoặc đối tác sở hữu các sản phẩm cần được đón
 _Avoid_: Client, đối tác, đối tác mua hàng
 
 **Erro Label Template Code**:
-Mã kỹ thuật ổn định xác định một trong năm mẫu tem của Customer Erro: `erro_01`, `erro_02`, `erro_03`, `erro_04`, hoặc `erro_05`. Ba mã đang hoạt động ánh xạ từ hệ thống cũ theo thứ tự: `a11` → `erro_01`, `a11_tem2` → `erro_02`, và `a11_tem3` → `erro_03`. `erro_04` áp dụng cho tem eero Mỹ (PD027032). `erro_05` áp dụng cho tem thùng ngoài PEGATRON (PD016906). Cả năm mã đều cấm in lại và chỉ được cấp số tem tự động, tăng tuần tự.
+Mã kỹ thuật ổn định xác định một trong năm mẫu tem của Customer Erro: `erro_01`, `erro_02`, `erro_03`, `erro_04`, hoặc `erro_05`. Ba mã đang hoạt động ánh xạ từ hệ thống cũ theo thứ tự: `a11` → `erro_01`, `a11_tem2` → `erro_02`, và `a11_tem3` → `erro_03`. `erro_04` áp dụng cho tem eero Mỹ (PD027032). `erro_05` áp dụng cho tem thùng ngoài PEGATRON (PD016906). Mọi Reprint của Erro yêu cầu quyền Admin; số Carton SN gốc được giữ nguyên.
 _Avoid_: Tem A11, loại tem A11
 
 **Product**:
@@ -87,8 +87,8 @@ Phiên bản khách hàng áp dụng cho Product, được in tại trường `R
 _Avoid_: Revision mặc định, revision của file tem
 
 **Factory P/N**:
-Mã số thành phẩm hoặc vật tư nội bộ nhà máy (厂内料号, ví dụ: `1LAE0009D2U004MAAR`), được lưu tại trường `internal_factory_part_number` của Product và dùng để đối chiếu với hệ thống ERP/BOM của Nien Yi. Với Customer Erro, Factory P/N là mã nghiệp vụ công nhân nhập để xác định Product và **Erro Label Template Code** theo năm bản vẽ PD; không suy luận mẫu tem từ SKU.
-_Avoid_: Mã xưởng, ERP code, material code, part number nội bộ
+Mã số thành phẩm hoặc vật tư nội bộ nhà máy (厂内料号, ví dụ: `1LAE0009D2U004MAAR`), được lưu cho Product trong mapping Factory P/N và xuất hiện tại trường `walitm` của công lệnh ShopFloorDW. Đây là khóa duy nhất để xác định chính xác Product và mẫu tem cần in; `wadl01` chỉ là tên/mã khách hàng để đối chiếu hoặc fallback cho dữ liệu lịch sử chưa mapping. Với Customer Erro, Factory P/N xác định **Erro Label Template Code** theo năm bản vẽ PD; không suy luận mẫu tem từ SKU.
+_Avoid_: Mã xưởng, Customer Reference, tên con hàng, Factory Item Code
 
 **Factory Item Code**:
 Mã ITEM nội bộ của nhà máy dùng để đối chiếu Product với bảng nguồn, ví dụ `115-00020` của `erro_04`. Đây là metadata riêng không in trên tem và không đồng nhất với SKU hoặc Supplier PN.
@@ -110,6 +110,10 @@ _Avoid_: Số thùng thứ tự, slot thùng, vị trí hộp
 Ứng dụng chạy cục bộ trên máy tính client kết nối trực tiếp với động cơ BarTender COM để thực hiện lệnh in nhãn vật lý hoặc xuất PDF.
 _Avoid_: Client app, ứng dụng máy in, máy in dịch vụ
 
+**Label Print Preview**:
+Bản mô phỏng trên trạm đóng gói của tem Erro sắp in, thể hiện bố cục và toàn bộ giá trị sẽ được nạp vào mẫu tem; sau khi in thành công, Preview tự chuyển sang tem kế tiếp. Barcode và QR chỉ được thể hiện bằng vùng minh hoạ, không cần quét được. Nếu một trường bắt buộc cho mẫu tem chưa có giá trị, Preview phải chỉ rõ trường đó và trạm đóng gói chặn lệnh in. Đây không phải ảnh hoặc PDF render bởi BarTender.
+_Avoid_: ảnh BarTender, PDF tem, lịch sử thùng gần nhất
+
 **Printer**:
 Thiết bị in nhãn vật lý (hoặc thiết bị ảo xuất PDF) nhận lệnh in từ Print Agent.
 _Avoid_: Máy in, print device
@@ -119,7 +123,7 @@ Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt 
 _Avoid_: Quốc gia sê-ri
 
 **Reprint**:
-Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng. Quy trình này áp dụng cho Customer UI; đối với Customer Erro, hành động Reprint bị cấm hoàn toàn theo quy định kiểm soát tem nhãn chống trùng lặp.
+Hành động in lại nhãn của một Carton đã được đóng gói trước đó. Hệ thống sẽ tạo một bản ghi Carton mới nhân bản từ Carton cũ với cờ `is_reprint` đặt là 1, giữ nguyên số Carton SN ban đầu để không làm tăng số thứ tự tự động của lô hàng. Carton UI được phép Reprint trực tiếp tại trạm bất cứ lúc nào, không yêu cầu đăng nhập Admin. Carton Erro yêu cầu tài khoản mang **Role** `Admin` và được kích hoạt từ Lịch sử Carton.
 _Avoid_: In bù, in mới, in đè
 
 **Station ID**:
@@ -155,7 +159,7 @@ _Avoid_: Mã vạch thùng, barcode sản phẩm
 **Role**:
 Vai trò phân quyền của tài khoản truy cập vào phân hệ Quản trị (Admin):
 - `Admin`: Toàn quyền thao tác hệ thống (tạo/sửa/xóa Customer, Product, xóa Carton, kích hoạt Reprint, cấu hình).
-- `QA`: Quyền chỉ đọc (Read-only). Được phép xem Dashboard, danh mục Customer/Product, theo dõi tiến độ Job Order/PO, tra cứu sê-ri, xem lịch sử và xuất báo cáo dữ liệu. Bị chặn toàn bộ thao tác ghi/sửa/xóa và in lại.
+- `QA`: Quyền chỉ đọc (Read-only). Được phép xem Dashboard, danh mục Customer/Product, theo dõi tiến độ Job Order/PO, tra cứu sê-ri, xem lịch sử và xuất báo cáo dữ liệu. Bị chặn toàn bộ thao tác ghi/sửa/xóa và Reprint Carton Erro.
 _Avoid_: Phân quyền động, user type, level, cấp bậc
 
 **Production Run**:
@@ -174,7 +178,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 - Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước. Sau khi một Carton hoàn tất in tem và xác thực, hệ thống phải dừng ở trạng thái chờ mở thùng mới. Công nhân bắt buộc phải xác nhận chuyển sang Job Order Carton Slot tiếp theo (bấm nút "Thùng tiếp theo" hoặc nhấn phím Space) mới được quét hàng tiếp; nếu trạm đang tồn tại lỗi quét thì không được phép chuyển thùng cho đến khi lỗi được xóa.
 - Với Product ở chế độ `weight_scale` (khách hàng Erro), một **Carton** được đóng liên tục trong **Production Run** gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước. Đối với `erro_02` và `erro_03`, **PO Number** cho phép để rỗng mặc định và người vận hành có thể tùy chọn chỉnh sửa trên giao diện ca đóng gói.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
-- Người dùng đăng nhập vào phân hệ Quản trị (Admin) mang một **Role** (`Admin` hoặc `QA`). Tài khoản `QA` chỉ có quyền đọc và xuất báo cáo; các thao tác tạo/sửa/xóa Customer/Product, xóa Carton và kích hoạt Reprint bị chặn ở cả tầng giao diện lẫn API backend.
+- Người dùng đăng nhập vào phân hệ Quản trị (Admin) mang một **Role** (`Admin` hoặc `QA`). Tài khoản `QA` chỉ có quyền đọc và xuất báo cáo; các thao tác tạo/sửa/xóa Customer/Product, xóa Carton và kích hoạt Reprint Carton Erro bị chặn ở cả tầng giao diện lẫn API backend. Reprint Carton UI là thao tác vận hành tại trạm, không yêu cầu phiên Admin.
 - Mọi mốc thời gian đóng gói (**Carton** `created_at`, **Job Order Carton Slot** `scanned_at`, **Date Code** `YYWW`, sê-ri `YYMM`) đều được ghi nhận theo **Giờ Cục bộ (Local Server Time)** của máy chủ nhà máy để đảm bảo tính nhất quán giữa màn hình vận hành, báo cáo thống kê ca sản xuất và nhãn in BarTender.
 
 ## Example dialogue

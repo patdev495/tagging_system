@@ -12,7 +12,7 @@
               {{ t('packing.carton_slots_title', 'Sơ Đồ Vị Trí Thùng') }}
             </h2>
             <p class="m-0 text-xs text-slate-500">
-              Công lệnh: <strong class="font-mono text-slate-800">{{ jobOrder }}</strong> • Tổng số: <strong>{{ totalCartons }}</strong> thùng
+              Work Order: <strong class="font-mono text-slate-800">{{ jobOrder }}</strong> • Tổng số: <strong>{{ totalCartons }}</strong> thùng
             </p>
           </div>
         </div>

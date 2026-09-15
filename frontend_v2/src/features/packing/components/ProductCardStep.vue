@@ -4,13 +4,13 @@
       <!-- Breadcrumb / Job Order Bar -->
       <div class="flex justify-between items-center px-1">
         <span class="text-xs text-slate-600 font-bold uppercase tracking-wider">
-          {{ t('packing.job_order', 'Công lệnh') }}: <strong class="font-barcode-mono text-slate-900 text-sm">{{ jobOrder }}</strong>
+          {{ t('packing.job_order', 'Work Order') }}: <strong class="font-barcode-mono text-slate-900 text-sm">{{ jobOrder }}</strong>
         </span>
         <button 
           @click="$emit('changeJobOrder')" 
           class="text-blue-600 hover:text-blue-800 border-none bg-transparent font-bold cursor-pointer text-xs flex items-center gap-1.5 hover:underline"
         >
-          <i class="fas fa-arrow-rotate-left"></i> {{ t('packing.change_job_order', 'Đổi công lệnh khác') }}
+          <i class="fas fa-arrow-rotate-left"></i> {{ t('packing.change_job_order', 'Đổi Work Order khác') }}
         </button>
       </div>
 

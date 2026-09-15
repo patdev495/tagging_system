@@ -4,7 +4,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
       <div>
         <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Quản Lý Đợt Sản Xuất</h1>
-        <p class="text-sm text-slate-500 mt-1">Theo dõi tiến độ đóng gói theo Công lệnh (Job Order) và Đợt cân đóng hàng (PO / Lot).</p>
+        <p class="text-sm text-slate-500 mt-1">Theo dõi tiến độ đóng gói theo Work Order và Đợt cân đóng hàng (PO / Lot).</p>
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
@@ -14,7 +14,7 @@
             @click="activeTab = 'job_orders'"
             :class="['px-3.5 py-1.5 rounded-lg transition-all flex items-center gap-2', activeTab === 'job_orders' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900']"
           >
-            <span>Công Lệnh (Job Orders)</span>
+            <span>Work Orders</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" :class="activeTab === 'job_orders' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-200 text-slate-600'">{{ jobOrders.length }}</span>
           </button>
           <button
@@ -43,7 +43,7 @@
       <input
         v-model="searchQuery"
         type="text"
-        :placeholder="activeTab === 'job_orders' ? 'Tìm theo Mã Job Order, Tên Sản Phẩm, Khách Hàng...' : 'Tìm theo PO Number, Lot Number, Sản Phẩm...'"
+        :placeholder="activeTab === 'job_orders' ? 'Tìm theo Mã Work Order, Tên Sản Phẩm, Khách Hàng...' : 'Tìm theo PO Number, Lot Number, Sản Phẩm...'"
         class="w-full text-sm outline-none bg-transparent placeholder:text-slate-400"
       />
       <span v-if="searchQuery" @click="searchQuery = ''" class="cursor-pointer text-xs text-slate-400 hover:text-slate-600">Xóa</span>
@@ -52,14 +52,14 @@
     <!-- Tab 1: Job Orders Table -->
     <div v-if="activeTab === 'job_orders'" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-        <h2 class="text-base font-bold text-slate-900">Danh Sách Công Lệnh Đã Cấp Phát Slot</h2>
-        <span class="text-xs text-slate-400">{{ filteredJobOrders.length }} công lệnh</span>
+        <h2 class="text-base font-bold text-slate-900">Danh Sách Work Order Đã Cấp Phát Slot</h2>
+        <span class="text-xs text-slate-400">{{ filteredJobOrders.length }} Work Order</span>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-100">
             <tr>
-              <th class="py-3.5 px-4">Mã Job Order</th>
+              <th class="py-3.5 px-4">Mã Work Order</th>
               <th class="py-3.5 px-4">Khách Hàng</th>
               <th class="py-3.5 px-4">Sản Phẩm</th>
               <th class="py-3.5 px-4 min-w-[200px]">Tiến Độ Đóng Thùng</th>
@@ -71,7 +71,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-if="filteredJobOrders.length === 0">
-              <td colspan="8" class="py-12 text-center text-slate-400 text-sm">Không tìm thấy công lệnh nào.</td>
+              <td colspan="8" class="py-12 text-center text-slate-400 text-sm">Không tìm thấy Work Order nào.</td>
             </tr>
             <tr v-for="jo in filteredJobOrders" :key="jo.job_order" class="hover:bg-slate-50/80 transition-colors">
               <td class="py-3.5 px-4 font-mono font-bold text-indigo-700">{{ jo.job_order }}</td>

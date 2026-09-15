@@ -133,7 +133,7 @@ def test_weigh_pack_tem3_strictly_forbids_manual_sequence(db_session, tem3_produ
     assert "không cho phép chỉnh sửa số thứ tự" in exc.value.detail
 
 
-def test_tem3_strictly_forbids_reprint(db_session, tem3_product):
+def test_tem3_allows_reprint(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
         product_id=cast(int, tem3_product.id),
         weight=6.000,
@@ -141,7 +141,7 @@ def test_tem3_strictly_forbids_reprint(db_session, tem3_product):
     carton, _ = carton_service.weigh_pack_carton(payload, db_session)
     assert carton.id is not None
 
-    with pytest.raises(HTTPException) as exc:
-        print_service.reprint_carton(carton_id=cast(int, carton.id), db=db_session)
-    assert exc.value.status_code == 400
-    assert "không cho phép in lại tem thùng" in exc.value.detail
+    reprint = print_service.reprint_carton(carton_id=cast(int, carton.id), db=db_session)
+    assert reprint.id != carton.id
+    assert reprint.carton_sn == carton.carton_sn
+    assert reprint.is_reprint == 1

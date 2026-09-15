@@ -58,7 +58,7 @@
             </span>
           </div>
           <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">Công lệnh</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">Work Order</span>
             <span class="text-slate-800 font-barcode-mono font-bold text-xs block">{{ carton?.job_order || 'N/A' }}</span>
           </div>
           <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">

@@ -227,7 +227,7 @@ def test_weigh_pack_erro_04_po_lot_mutation_preserves_carton_snapshot_and_payloa
     assert refreshed_c1.btxml == btxml1
 
 
-def test_weigh_pack_erro_04_reprint_prohibited_and_next_print_allocates_next_sequence(db_session, erro_04_product):
+def test_weigh_pack_erro_04_reprint_keeps_sequence_and_next_print_advances(db_session, erro_04_product):
     from src.features.print.service import reprint_carton
 
     c1, _ = carton_service.weigh_pack_carton(
@@ -240,13 +240,12 @@ def test_weigh_pack_erro_04_reprint_prohibited_and_next_print_allocates_next_seq
         db_session,
     )
 
-    # Reprint attempt must be rejected by API
-    with pytest.raises(HTTPException) as exc_reprint:
-        reprint_carton(carton_id=cast(int, c1.id), db=db_session)
-    assert exc_reprint.value.status_code == 400
-    assert "ERRO" in exc_reprint.value.detail or "Reprint prohibited" in exc_reprint.value.detail
+    reprint = reprint_carton(carton_id=cast(int, c1.id), db=db_session)
+    assert reprint.id != c1.id
+    assert reprint.carton_sn == c1.carton_sn
+    assert reprint.is_reprint == 1
 
-    # Subsequent valid print consumes the next shared sequence instead of reprinting
+    # A subsequent original print consumes the next shared sequence.
     c2, _ = carton_service.weigh_pack_carton(
         carton_schemas.CartonWeighPackCreate(
             product_id=cast(int, erro_04_product.id),
@@ -315,4 +314,3 @@ def test_erro_04_sequence_resets_yearly_on_new_year(db_session, erro_04_product)
     )
     assert plan_2027.sequence == 1
     assert plan_2027.carton_sn == "H7110001"
-

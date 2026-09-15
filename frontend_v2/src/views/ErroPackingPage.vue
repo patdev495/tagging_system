@@ -215,12 +215,12 @@
           <!-- Giant Primary Print Action Button -->
           <button
             @click="triggerWeighAndPrint"
-            :disabled="isPrinting || !selectedProduct || (settings.printMode !== 'centralized' && templateMissing)"
+            :disabled="isPrinting || !selectedProduct || labelPreviewErrors.length > 0 || (settings.printMode !== 'centralized' && templateMissing)"
             :class="[
               'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
               (settings.printMode !== 'centralized' && templateMissing)
                 ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
-                : (toleranceResult.canPrint && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || (activePO?.trim() && activeLot?.trim()))
+              : (toleranceResult.canPrint && labelPreviewErrors.length === 0 && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || (activePO?.trim() && activeLot?.trim()))
                   ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                   : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
             ]"
@@ -229,18 +229,19 @@
             <i v-else-if="settings.printMode !== 'centralized' && templateMissing" class="fas fa-file-circle-exclamation text-lg"></i>
             <i v-else-if="toleranceResult.canPrint" class="fas fa-print text-lg"></i>
             <i v-else class="fas fa-triangle-exclamation text-lg"></i>
-            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (toleranceResult.canPrint ? 'CÂN & IN TEM ERRO [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]')) }}</span>
+            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (labelPreviewErrors.length ? `THIẾU DỮ LIỆU TEM - KIỂM TRA PREVIEW` : (toleranceResult.canPrint ? 'CÂN & IN TEM ERRO [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]'))) }}</span>
           </button>
         </div>
 
         <!-- Right: Session Stats & Last Carton Info (4 Cols) -->
         <div class="lg:col-span-4 flex flex-col h-full gap-2 min-h-0 justify-between">
-          <ErroLastCartonCard
-            :sessionPackedCount="sessionPackedCount"
-            :selectedProduct="selectedProduct"
-            :lastPackedCarton="lastPackedCarton"
-            :isPrinting="isPrinting"
-            @reset-session="resetSessionCount"
+          <ErroLabelPrintPreview
+            :product="selectedProduct"
+            :carton-s-n="currentSNPreview"
+            :po="activePO"
+            :lot="activeLot"
+            :now="previewTime"
+            @validation-change="labelPreviewErrors = $event"
           />
         </div>
       </main>
@@ -281,7 +282,7 @@ import type { Product } from '../types/api';
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import ScaleDigitalGauge from '../features/packing/weight_scale/components/ScaleDigitalGauge.vue';
 import ErroSerialControl from '../features/packing/weight_scale/components/ErroSerialControl.vue';
-import ErroLastCartonCard from '../features/packing/weight_scale/components/ErroLastCartonCard.vue';
+import ErroLabelPrintPreview from '../features/packing/weight_scale/components/ErroLabelPrintPreview.vue';
 import ScaleToleranceErrorModal from '../features/packing/weight_scale/components/ScaleToleranceErrorModal.vue';
 import ErroFactoryPartNumberStep from '../features/packing/weight_scale/components/ErroFactoryPartNumberStep.vue';
 import ErroBatchConfigModal from '../features/packing/weight_scale/components/ErroBatchConfigModal.vue';
@@ -304,6 +305,8 @@ const selectedProduct = ref<Product | null>(null);
 const pendingProduct = ref<Product | null>(null);
 const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
 const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
+const labelPreviewErrors = ref<string[]>([]);
+const previewTime = ref(new Date());
 
 // 1. Scale Stream Composable
 const {
@@ -325,13 +328,11 @@ const {
 // 3. Weigh & Print Orchestrator Composable (No Reprint - ADR 0005)
 const {
   isPrinting,
-  sessionPackedCount,
   lastPackedCarton,
   showToleranceErrorModal,
   toleranceErrorDetails,
   toleranceResult,
   triggerWeighAndPrint,
-  resetSessionCount,
 } = useWeighAndPrint({
   selectedProduct,
   activePO,
@@ -370,6 +371,14 @@ watch([selectedProduct, isAgentOnline], () => {
   if (isAgentOnline.value) {
     checkTemplateExists();
   }
+});
+
+watch(currentSNPreview, () => {
+  previewTime.value = new Date();
+});
+
+watch(lastPackedCarton, async (carton) => {
+  if (carton) await fetchNextSN();
 });
 
 // Navigation & Config Actions

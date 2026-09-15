@@ -251,12 +251,16 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
       const res = await printApi.reprintCarton(carton.id, options.settings.templatePath || '', options.settings.printerName);
       const newCarton = res.data;
       if (!newCarton?.id) throw new Error('Failed to create reprint record');
+      options.lastCarton.value = { ...newCarton, status: 'PRINTING' };
 
       const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn, true, resolveCartonTemplatePath(carton));
       if (printResult === 'Success') { 
+        await printApi.updateCartonStatus(newCarton.id, 'SUCCESS');
+        if (options.lastCarton.value?.id === newCarton.id) options.lastCarton.value.status = 'SUCCESS';
         options.system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
         return true;
       } else {
+        if (options.lastCarton.value?.id === newCarton.id) options.lastCarton.value.status = 'FAILED';
         options.system.showNotification('Reprint failed: ' + printResult, 'error');
         return false;
       }

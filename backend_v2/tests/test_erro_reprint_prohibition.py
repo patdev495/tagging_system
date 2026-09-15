@@ -64,11 +64,8 @@ def ui_product(db_session):
     return product
 
 
-def test_reprint_erro_carton_is_strictly_forbidden(db_session, erro_product):
-    """
-    ADR 0005: Customer Erro strictly forbids carton label reprints
-    to eliminate any risk of duplicate labels and mixed inventory.
-    """
+def test_reprint_erro_carton_is_allowed_for_admin_workflow(db_session, erro_product):
+    """ADR 0009 permits a reprint record for an Erro carton."""
     orig = Carton(
         product_id=erro_product.id,
         carton_sn="VHK00102372608000081",
@@ -84,15 +81,15 @@ def test_reprint_erro_carton_is_strictly_forbidden(db_session, erro_product):
     db_session.add(orig)
     db_session.commit()
 
-    with pytest.raises(HTTPException) as exc_info:
-        reprint_carton(
-            carton_id=cast(int, orig.id),
-            printer_name="TSC_TTP_244_Pro",
-            db=db_session,
-        )
+    reprinted = reprint_carton(
+        carton_id=cast(int, orig.id),
+        printer_name="TSC_TTP_244_Pro",
+        db=db_session,
+    )
 
-    assert exc_info.value.status_code == 400
-    assert "ERRO" in exc_info.value.detail
+    assert cast(int, reprinted.id) != cast(int, orig.id)
+    assert str(reprinted.carton_sn) == "VHK00102372608000081"
+    assert cast(int, reprinted.is_reprint) == 1
 
 
 def test_reprint_ui_carton_still_allowed(db_session, ui_product):
@@ -175,5 +172,4 @@ def test_weigh_pack_erro_damaged_label_sop_sequential_increment(db_session, erro
     seq_1 = int(str(carton_1.carton_sn)[-6:])
     seq_2 = int(str(carton_2.carton_sn)[-6:])
     assert seq_2 == seq_1 + 1
-
 
