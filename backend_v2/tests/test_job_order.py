@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from src.core.database import Base
 from src.core import models
 from src.features.job_order import service, schemas
+from src.features.product import service as product_service
 from src.features.print import service as print_service
 from src.features.print import schemas as print_schemas
 from fastapi import HTTPException
@@ -76,6 +77,44 @@ def test_find_matching_product(db_session):
     p = service.find_matching_product(db_session, "U-Cable-Path-RJ45", "123")
     assert p is not None
     assert p.id == 2
+
+
+def test_get_last_carton_for_job_order_does_not_resume_a_different_job_order(db_session):
+    customer = models.Customer(code="UI", name="UI Customer")
+    db_session.add(customer)
+    db_session.flush()
+    product = models.Product(
+        customer_id=customer.id,
+        item_name="U-Cable-Patch-Outdoor-2M-W",
+        upc="810010077356",
+        packed_qty=20,
+        start_part="CN",
+        middle_part="52",
+        template_type="standard",
+        allow_partial=0,
+    )
+    db_session.add(product)
+    db_session.flush()
+
+    resume_carton = models.Carton(
+        product_id=product.id,
+        carton_sn="CN26095200001",
+        job_order="JO-CURRENT",
+        status="PRINTED",
+    )
+    unrelated_newer_carton = models.Carton(
+        product_id=product.id,
+        carton_sn="CN26095200002",
+        job_order="JO-OTHER",
+        status="PRINTED",
+    )
+    db_session.add_all([resume_carton, unrelated_newer_carton])
+    db_session.commit()
+
+    carton = product_service.get_last_carton(product.id, db_session, job_order="JO-CURRENT")
+
+    assert carton is not None
+    assert carton.id == resume_carton.id
 
 def test_get_or_create_job_order_slots(db_session):
     # Setup product

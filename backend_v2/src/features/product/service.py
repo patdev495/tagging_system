@@ -417,11 +417,14 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
 
 
 
-def get_last_carton(product_id: int, db: Session):
-    carton = db.query(Carton).options(joinedload(Carton.items)).filter(
+def get_last_carton(product_id: int, db: Session, job_order: Optional[str] = None):
+    query = db.query(Carton).options(joinedload(Carton.items)).filter(
         Carton.product_id == product_id,
         Carton.status.in_(["SUCCESS", "PRINTED"]),
-    ).order_by(Carton.id.desc()).first()
+    )
+    if job_order:
+        query = query.filter(Carton.job_order == job_order)
+    carton = query.order_by(Carton.id.desc()).first()
 
     if carton:
         items = getattr(carton, "items", None)

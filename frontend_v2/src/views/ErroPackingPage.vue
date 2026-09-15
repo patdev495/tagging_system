@@ -2,6 +2,12 @@
   <div class="h-screen w-full bg-slate-100 text-slate-800 flex flex-col p-2 md:p-3 overflow-hidden box-border select-none">
     <div class="w-full h-full flex flex-col bg-white border border-slate-200/90 rounded-2xl p-3 md:p-4 shadow-xl overflow-hidden box-border justify-between">
       
+      <ErroFactoryPartNumberStep
+        v-if="!selectedProduct && !pendingProduct"
+        @resolved="resolveFactoryPartNumber"
+      />
+
+      <template v-else>
       <!-- Top Slim Navigation Header -->
       <header class="flex items-center justify-between pb-2 border-b border-slate-200 shrink-0">
         <div class="flex items-center gap-2.5">
@@ -71,8 +77,6 @@
       <!-- Active Product & Batch Bar -->
       <section class="my-2 px-4 py-2.5 rounded-xl bg-slate-50/90 border border-slate-200/90 shadow-xs flex items-center justify-between gap-3 shrink-0">
         <div class="flex items-center gap-5 md:gap-7 flex-wrap">
-          <ErroFactoryPartNumberLookup @resolved="selectResolvedProduct" />
-
           <div v-if="selectedProduct" class="flex items-center gap-2">
             <span class="text-xs uppercase tracking-wider font-bold text-slate-400">CPN:</span>
             <span class="font-black text-base md:text-lg text-slate-900 font-mono">
@@ -246,8 +250,8 @@
         :show="showBatchModal"
         :po="activePO"
         :lot="activeLot"
-        :isTem3="selectedProduct?.template_type === 'erro_03'"
-        @close="showBatchModal = false"
+        :isTem3="(pendingProduct || selectedProduct)?.template_type === 'erro_03'"
+        @close="cancelBatchConfig"
         @save="saveBatchConfig"
       />
 
@@ -261,6 +265,7 @@
         :details="toleranceErrorDetails"
         @close="showToleranceErrorModal = false"
       />
+      </template>
 
     </div>
   </div>
@@ -278,7 +283,7 @@ import ScaleDigitalGauge from '../features/packing/weight_scale/components/Scale
 import ErroSerialControl from '../features/packing/weight_scale/components/ErroSerialControl.vue';
 import ErroLastCartonCard from '../features/packing/weight_scale/components/ErroLastCartonCard.vue';
 import ScaleToleranceErrorModal from '../features/packing/weight_scale/components/ScaleToleranceErrorModal.vue';
-import ErroFactoryPartNumberLookup from '../features/packing/weight_scale/components/ErroFactoryPartNumberLookup.vue';
+import ErroFactoryPartNumberStep from '../features/packing/weight_scale/components/ErroFactoryPartNumberStep.vue';
 import ErroBatchConfigModal from '../features/packing/weight_scale/components/ErroBatchConfigModal.vue';
 
 import { useScaleStream } from '../features/packing/weight_scale/composables/useScaleStream';
@@ -296,6 +301,7 @@ const showSettingsModal = ref(false);
 
 // Active Selection State
 const selectedProduct = ref<Product | null>(null);
+const pendingProduct = ref<Product | null>(null);
 const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
 const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
 
@@ -372,28 +378,58 @@ const switchCustomer = () => {
   router.push('/');
 };
 
+const clearPackingSession = () => {
+  activePO.value = '';
+  activeLot.value = '';
+  localStorage.removeItem('erro_active_po');
+  localStorage.removeItem('erro_active_lot');
+};
+
+const activateProduct = (product: Product) => {
+  selectedProduct.value = product;
+  if (product.template_type === 'erro_03' && !activeLot.value) {
+    activeLot.value = '92607933';
+  }
+  system.showNotification(`Đã chọn sản phẩm ${product.item_name}`, 'success');
+  fetchNextSN();
+};
+
 const saveBatchConfig = (payload: { po: string; lot: string }) => {
   activePO.value = payload.po;
   activeLot.value = payload.lot;
   localStorage.setItem('erro_active_po', activePO.value);
   localStorage.setItem('erro_active_lot', activeLot.value);
   showBatchModal.value = false;
+  if (pendingProduct.value) {
+    const product = pendingProduct.value;
+    pendingProduct.value = null;
+    activateProduct(product);
+  }
   system.showNotification('Đã cập nhật PO & LOT thành công', 'success');
 };
 
-const selectResolvedProduct = async (p: Product) => {
-  selectedProduct.value = p;
-  if (selectedProduct.value.template_type === 'erro_03') {
-    if (!activeLot.value) {
-      activeLot.value = '92607933';
-    }
+const cancelBatchConfig = () => {
+  showBatchModal.value = false;
+  if (pendingProduct.value) {
+    pendingProduct.value = null;
+    clearPackingSession();
   }
-  system.showNotification(`Đã chọn sản phẩm ${selectedProduct.value.item_name}`, 'success');
-  fetchNextSN();
+};
+
+const resolveFactoryPartNumber = (product: Product) => {
+  clearPackingSession();
+  if (product.template_type === 'erro_01' || product.template_type === 'erro_04') {
+    pendingProduct.value = product;
+    showBatchModal.value = true;
+    return;
+  }
+  activateProduct(product);
 };
 
 const clearSelectedProduct = () => {
   selectedProduct.value = null;
+  pendingProduct.value = null;
+  clearPackingSession();
   localStorage.removeItem('erro_selected_product_id');
   system.showNotification('Hãy quét hoặc nhập Factory P/N để chọn mã hàng mới', 'info');
 };

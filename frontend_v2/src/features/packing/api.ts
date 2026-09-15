@@ -13,8 +13,10 @@ export default {
   }) {
     return api.post<Carton>('/cartons', data);
   },
-  getLastCarton(productId: number) {
-    return api.get<Carton>(`/products/${productId}/last-carton`);
+  getLastCarton(productId: number, jobOrder?: string) {
+    return api.get<Carton>(`/products/${productId}/last-carton`, {
+      params: { job_order: jobOrder || undefined },
+    });
   },
   getNextSN(productId: number, yymm?: string) {
     return api.get<{ next_seq: number; next_sn?: string | null; prefix?: string }>(`/products/${productId}/next-sn`, { params: { yymm } });

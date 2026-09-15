@@ -92,6 +92,13 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     isLoadingJobOrder.value = true;
     hasJobOrderError.value = false;
     jobOrderErrorText.value = '';
+    // A new Job Order must never inherit partially scanned items from a prior browser session.
+    scannedItems.value = [];
+    backupScannedItems.value = [];
+    lastCarton.value = null;
+    cartonToVerify.value = null;
+    showVerificationModal.value = false;
+    selectedSlotId.value = null;
     try {
       const res = await jobOrderApi.getJobOrderDetails(jo);
       jobOrderDetails.value = res.data;
@@ -103,7 +110,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
       
       if (res.data.product) {
         try {
-          const lastCartonRes = await packingApi.getLastCarton(res.data.product.id);
+          const lastCartonRes = await packingApi.getLastCarton(res.data.product.id, res.data.job_order);
           if (lastCartonRes.data) {
             lastCarton.value = lastCartonRes.data;
             if (lastCartonRes.data.status === 'FAILED' && lastCartonRes.data.items) {
@@ -160,6 +167,13 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
   const enterScanning = async () => {
     currentStep.value = 3;
     await refreshJobOrderDetails();
+    // A resumed Carton may already be verified. Keep its scanned items visible
+    // until the operator explicitly starts the next Carton; do not switch slots.
+    if (awaitingNext.value) {
+      options.checkTemplateExists();
+      options.focusScan();
+      return;
+    }
     const firstPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
     if (firstPending) selectSlot(firstPending);
     else if (jobOrderSlots.value.length > 0) selectSlot(jobOrderSlots.value[0]);

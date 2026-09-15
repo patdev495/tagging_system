@@ -66,9 +66,9 @@ def get_next_sn(product_id: int, yymm: Optional[str] = None, db: Session = Depen
     return service.get_next_sn(product_id, db, yymm)
 
 @router.get("/products/{product_id}/last-carton", response_model=Optional[CartonDetail])
-def get_last_carton(product_id: int, db: Session = Depends(get_db)):
-    """Lấy thông tin thùng hàng cuối cùng của sản phẩm"""
-    return service.get_last_carton(product_id, db)
+def get_last_carton(product_id: int, job_order: Optional[str] = None, db: Session = Depends(get_db)):
+    """Lấy Carton cuối của Product, có thể giới hạn trong một Công Lệnh."""
+    return service.get_last_carton(product_id, db, job_order=job_order)
 
 
 @router.get(
@@ -120,4 +120,3 @@ def delete_product_internal_factory_part_number(
     """Xóa một Factory P/N khỏi sản phẩm (Chỉ dành cho Admin)."""
     service.delete_product_factory_part_number(product_id, mapping_id, db)
     return {"message": "Factory P/N mapping deleted successfully"}
-
