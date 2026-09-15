@@ -116,6 +116,41 @@ def test_get_last_carton_for_job_order_does_not_resume_a_different_job_order(db_
     assert carton is not None
     assert carton.id == resume_carton.id
 
+
+def test_get_last_carton_for_job_order_ignores_newer_reprints(db_session):
+    customer = models.Customer(code="UI", name="UI Customer")
+    db_session.add(customer)
+    db_session.flush()
+    product = models.Product(
+        customer_id=customer.id,
+        item_name="U-Cable-Patch-Outdoor-2M-W",
+        packed_qty=20,
+    )
+    db_session.add(product)
+    db_session.flush()
+
+    original = models.Carton(
+        product_id=product.id,
+        carton_sn="CN26095200001",
+        job_order="WO-CURRENT",
+        status="SUCCESS",
+        is_reprint=0,
+    )
+    newer_reprint = models.Carton(
+        product_id=product.id,
+        carton_sn="CN26095200001",
+        job_order="WO-CURRENT",
+        status="SUCCESS",
+        is_reprint=1,
+    )
+    db_session.add_all([original, newer_reprint])
+    db_session.commit()
+
+    carton = product_service.get_last_carton(product.id, db_session, job_order="WO-CURRENT")
+
+    assert carton is not None
+    assert carton.id == original.id
+
 def test_get_or_create_job_order_slots(db_session):
     # Setup product
     customer = models.Customer(id=1, code="UI", name="UI Customer")

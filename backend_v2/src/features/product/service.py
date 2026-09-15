@@ -421,6 +421,7 @@ def get_last_carton(product_id: int, db: Session, job_order: Optional[str] = Non
     query = db.query(Carton).options(joinedload(Carton.items)).filter(
         Carton.product_id == product_id,
         Carton.status.in_(["SUCCESS", "PRINTED"]),
+        Carton.is_reprint == 0,
     )
     if job_order:
         query = query.filter(Carton.job_order == job_order)
