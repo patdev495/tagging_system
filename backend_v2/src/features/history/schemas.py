@@ -50,14 +50,16 @@ class CartonBase(BaseModel):
     lot_number: str | None = None
     date_code: str | None = None
 
-class Carton(CartonBase):
+class CartonListItem(CartonBase):
     id: int
     product_id: int
-    btxml: str | None = None
     product: ProductInfo | None = None
     
     class Config:
         from_attributes = True
+
+class Carton(CartonListItem):
+    btxml: str | None = None
 
 class CartonDetail(Carton):
     items: list[CartonItem] = []
@@ -65,7 +67,7 @@ class CartonDetail(Carton):
 
 class CartonListResponse(BaseModel):
     total: int
-    items: list[Carton]
+    items: list[CartonListItem]
 
 class DailyStat(BaseModel):
     date: str

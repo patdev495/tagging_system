@@ -233,9 +233,10 @@ def resolve_erro_job_order(db: Session, job_order: str) -> schemas.ErroJobOrderR
     from src.features.product.service import resolve_erro_product_by_internal_factory_part_number
     product = resolve_erro_product_by_internal_factory_part_number(factory_part_number, db)
     if not product:
+        item_hint = f" (Item: {customer_ref})" if customer_ref else ""
         raise HTTPException(
             status_code=404,
-            detail=f"Factory P/N '{factory_part_number}' từ công lệnh '{clean_job_order}' chưa được cấu hình cho khách hàng Erro."
+            detail=f"Factory P/N '{factory_part_number}'{item_hint} từ công lệnh '{clean_job_order}' chưa được cấu hình cho khách hàng Erro."
         )
 
     # 3. Ensure product belongs to Customer ERRO

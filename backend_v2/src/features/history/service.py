@@ -3,7 +3,7 @@ from typing import cast as typing_cast
 
 from fastapi import HTTPException
 from sqlalchemy import Date, case, cast, func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, defer
 
 from src.core import models
 from src.features.carton import print_attempts, slot_lifecycle
@@ -97,14 +97,52 @@ def get_cartons(
     )
         
     total = base_query.count()
-    results = base_query.order_by(models.Carton.id.desc()).offset(skip).limit(limit).all()
-    
+    results = (
+        base_query.options(defer(models.Carton.btxml))
+        .order_by(models.Carton.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    # Batch calculate items_count in 1 query instead of N+1 queries
+    reprint_cartons = [c for c, _ in results if c.is_reprint == 1]
+    orig_carton_map: dict[str, int] = {}
+    if reprint_cartons:
+        reprint_sns = [c.carton_sn for c in reprint_cartons if c.carton_sn]
+        if reprint_sns:
+            orig_rows = (
+                db.query(models.Carton.carton_sn, models.Carton.id)
+                .filter(models.Carton.carton_sn.in_(reprint_sns), models.Carton.is_reprint == 0)
+                .all()
+            )
+            for sn, orig_id in orig_rows:
+                if sn and orig_id and sn not in orig_carton_map:
+                    orig_carton_map[sn] = orig_id
+
+    carton_target_ids: dict[int, int] = {}
+    for carton, _ in results:
+        target_id = orig_carton_map.get(carton.carton_sn) if carton.is_reprint == 1 else None
+        carton_target_ids[carton.id] = target_id or carton.id
+
+    all_target_ids = list(set(carton_target_ids.values()))
+    counts_map: dict[int, int] = {}
+    if all_target_ids:
+        counts = (
+            db.query(models.CartonItem.carton_id, func.count(models.CartonItem.id))
+            .filter(models.CartonItem.carton_id.in_(all_target_ids))
+            .group_by(models.CartonItem.carton_id)
+            .all()
+        )
+        counts_map = {cid: cnt for cid, cnt in counts if cid is not None}
+
     items = []
     for carton, print_count in results:
         carton.reprint_count = max((print_count or 1) - 1, 0)
-        carton.items_count = print_attempts.item_count_for_group(db, carton)
+        target_id = carton_target_ids.get(carton.id, carton.id)
+        carton.items_count = counts_map.get(target_id, 0)
         items.append(carton)
-        
+
     return {"total": total, "items": items}
 
 def export_cartons_to_excel(
@@ -120,7 +158,7 @@ def export_cartons_to_excel(
     po_number: str | None = None,
 ) -> bytes:
     from .excel_export import generate_carton_excel
-    
+
     base_query = build_carton_query(
         db=db,
         search=search,
@@ -131,8 +169,8 @@ def export_cartons_to_excel(
         customer_id=customer_id,
         job_order=job_order,
         po_number=po_number,
-    )
-    
+    ).options(defer(models.Carton.btxml))
+
     if mode == "detailed":
         base_query = base_query.options(joinedload(models.Carton.items))
 

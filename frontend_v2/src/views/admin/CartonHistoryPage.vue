@@ -27,18 +27,12 @@
         <div v-if="showExportMenu && !isExporting" class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in duration-150">
           <button @click="handleExport('summary')" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent">
             <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600 mt-0.5"><FileSpreadsheet class="w-4 h-4" /></div>
-            <div>
-              <p class="font-bold text-slate-800 text-sm m-0">1. Xuất Tổng Hợp (Summary)</p>
-              <span class="text-xs text-slate-400 block mt-0.5">Báo cáo cấp thùng: STT, Mã thùng, Khách hàng, Cân nặng, Lô</span>
-            </div>
+            <div><p class="font-bold text-slate-800 text-sm m-0">1. Xuất Tổng Hợp (Summary)</p><span class="text-xs text-slate-400 block mt-0.5">Báo cáo cấp thùng: STT, Mã thùng, Khách hàng, Cân nặng, Lô</span></div>
           </button>
           <div class="border-t border-slate-100 my-1"></div>
           <button @click="handleExport('detailed')" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent">
             <div class="p-2 rounded-lg bg-indigo-50 text-indigo-600 mt-0.5"><Download class="w-4 h-4" /></div>
-            <div>
-              <p class="font-bold text-slate-800 text-sm m-0">2. Bảng Kê Chi Tiết (Traceability)</p>
-              <span class="text-xs text-slate-400 block mt-0.5">File 2 Sheet: Tổng hợp & Toàn bộ sê-ri con đối soát giao hàng</span>
-            </div>
+            <div><p class="font-bold text-slate-800 text-sm m-0">2. Bảng Kê Chi Tiết (Traceability)</p><span class="text-xs text-slate-400 block mt-0.5">File 2 Sheet: Tổng hợp & Toàn bộ sê-ri con đối soát giao hàng</span></div>
           </button>
         </div>
       </div>
@@ -151,9 +145,11 @@
         <div class="flex gap-2">
           <button 
             @click="fetchHistory(0)" 
-            class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            :disabled="isLoading"
+            class="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-60 transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Filter class="w-4 h-4" />
+            <div v-if="isLoading" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <Filter v-else class="w-4 h-4" />
             <span>{{ t('admin.filter_data') }}</span>
           </button>
           <button 
@@ -183,57 +179,74 @@
           </tr>
         </thead>
         <tbody class="text-sm divide-y divide-slate-100">
-          <tr v-for="carton in history" :key="carton.id" class="hover:bg-slate-50 transition-colors">
-            <td class="p-4 text-slate-500 font-mono text-xs">{{ formatDate(carton.created_at) }}</td>
-            <td class="p-4 font-bold text-indigo-900 font-mono">
-              <div class="flex items-center gap-2">
-                <span>{{ carton.carton_sn }}</span>
-                <span v-if="carton.is_reprint" class="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">{{ t('print.reprint') }}</span>
-              </div>
-            </td>
-            <td class="p-4">
-              <div class="font-bold text-slate-700">{{ carton.product?.item_name || 'N/A' }}</div>
-              <div class="text-[11px] text-slate-400">{{ getCustomerName(carton.product) }}</div>
-            </td>
-            <td class="p-4 text-slate-600 font-mono text-xs">
-              <div>{{ carton.job_order || carton.po_number || '-' }}</div>
-              <div v-if="carton.lot_number" class="text-[10px] text-slate-400">Lot: {{ carton.lot_number }}</div>
-            </td>
-            <td class="p-4 text-slate-600 font-mono text-xs">
-              <span v-if="carton.weight !== null && carton.weight !== undefined" class="font-bold text-emerald-700">
-                {{ carton.weight.toFixed(3) }} kg
-              </span>
-              <span v-else class="text-slate-300">-</span>
-            </td>
-            <td class="p-4">
-              <span :class="['px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider', carton.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
-                {{ carton.status }}
-              </span>
-            </td>
-            <td class="p-4 text-[11px] font-mono text-slate-400">{{ carton.station_id || '-' }}</td>
-            <td class="p-4 text-right">
-              <div class="flex justify-end gap-1.5">
-                <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" title="Xem chi tiết">
-                  <ExternalLink class="w-4 h-4" />
-                </button>
-                <button
-                  v-if="authStore.isAdmin"
-                  @click="handleReprint(carton)"
-                  :disabled="reprintingCartonId === carton.id"
-                  class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="In lại tem"
-                >
-                  <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': reprintingCartonId === carton.id }" />
-                </button>
-                <button v-if="authStore.isAdmin" @click="handleDelete(carton)" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Xóa thùng (Chỉ Admin)">
-                  <Trash2 class="w-4 h-4" />
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="history.length === 0">
-            <td colspan="8" class="p-12 text-center text-slate-400 italic">{{ t('admin.no_data') }}</td>
-          </tr>
+          <!-- Skeleton Loading State -->
+          <template v-if="isLoading">
+            <tr v-for="i in 6" :key="`sk-${i}`" class="animate-pulse">
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-24"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-36"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-28 mb-1"></div><div class="h-2.5 bg-slate-100 rounded w-16"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-20"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-16"></div></td>
+              <td class="p-4"><div class="h-5 bg-slate-200 rounded-full w-14"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-12"></div></td>
+              <td class="p-4 text-right"><div class="h-8 bg-slate-100 rounded-lg w-20 ml-auto"></div></td>
+            </tr>
+          </template>
+
+          <!-- Actual Records -->
+          <template v-else>
+            <tr v-for="carton in history" :key="carton.id" class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 text-slate-500 font-mono text-xs">{{ formatDate(carton.created_at) }}</td>
+              <td class="p-4 font-bold text-indigo-900 font-mono">
+                <div class="flex items-center gap-2">
+                  <span>{{ carton.carton_sn }}</span>
+                  <span v-if="carton.is_reprint" class="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">{{ t('print.reprint') }}</span>
+                </div>
+              </td>
+              <td class="p-4">
+                <div class="font-bold text-slate-700">{{ carton.product?.item_name || 'N/A' }}</div>
+                <div class="text-[11px] text-slate-400">{{ getCustomerName(carton.product) }}</div>
+              </td>
+              <td class="p-4 text-slate-600 font-mono text-xs">
+                <div>{{ carton.job_order || carton.po_number || '-' }}</div>
+                <div v-if="carton.lot_number" class="text-[10px] text-slate-400">Lot: {{ carton.lot_number }}</div>
+              </td>
+              <td class="p-4 text-slate-600 font-mono text-xs">
+                <span v-if="carton.weight !== null && carton.weight !== undefined" class="font-bold text-emerald-700">
+                  {{ carton.weight.toFixed(3) }} kg
+                </span>
+                <span v-else class="text-slate-300">-</span>
+              </td>
+              <td class="p-4">
+                <span :class="['px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider', carton.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
+                  {{ carton.status }}
+                </span>
+              </td>
+              <td class="p-4 text-[11px] font-mono text-slate-400">{{ carton.station_id || '-' }}</td>
+              <td class="p-4 text-right">
+                <div class="flex justify-end gap-1.5">
+                  <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" title="Xem chi tiết">
+                    <ExternalLink class="w-4 h-4" />
+                  </button>
+                  <button
+                    v-if="authStore.isAdmin"
+                    @click="handleReprint(carton)"
+                    :disabled="reprintingCartonId === carton.id"
+                    class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="In lại tem"
+                  >
+                    <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': reprintingCartonId === carton.id }" />
+                  </button>
+                  <button v-if="authStore.isAdmin" @click="handleDelete(carton)" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Xóa thùng (Chỉ Admin)">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="history.length === 0">
+              <td colspan="8" class="p-12 text-center text-slate-400 italic">{{ t('admin.no_data') }}</td>
+            </tr>
+          </template>
         </tbody>
       </table>
 
@@ -241,8 +254,8 @@
       <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
         <span class="text-xs text-slate-500 font-medium">{{ t('admin.showing_records', { current: history.length, total: totalCount }) }}</span>
         <div class="flex gap-2">
-          <button @click="fetchHistory(currentPage - 1)" :disabled="currentPage === 0" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer">{{ t('admin.previous') }}</button>
-          <button @click="fetchHistory(currentPage + 1)" :disabled="(currentPage + 1) * 50 >= totalCount" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer">{{ t('admin.next') }}</button>
+          <button @click="fetchHistory(currentPage - 1)" :disabled="currentPage === 0 || isLoading" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer">{{ t('admin.previous') }}</button>
+          <button @click="fetchHistory(currentPage + 1)" :disabled="(currentPage + 1) * 50 >= totalCount || isLoading" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-30 hover:bg-slate-50 text-xs font-semibold cursor-pointer">{{ t('admin.next') }}</button>
         </div>
       </div>
     </div>
@@ -291,28 +304,20 @@ const currentPage = ref<number>(0);
 const selectedCarton = ref<Carton | null>(null);
 const cartonItems = ref<{ id: number, item_sn: string }[]>([]);
 const isLoadingItems = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 const isExporting = ref<boolean>(false);
 const showExportMenu = ref<boolean>(false);
 const startDateInputRef = ref<HTMLInputElement | null>(null);
 const dateError = ref<boolean>(false);
-const filters = ref<{
-  search: string;
-  customer_id: number | null;
-  product_id: number | null;
-  status: string | null;
-  start_date: string;
-  end_date: string;
-  job_order: string;
-}>({
-  search: '',
-  customer_id: null,
-  product_id: null,
-  status: null,
-  start_date: '',
-  end_date: '',
-  job_order: ''
+interface HistoryFilters {
+  search: string; customer_id: number | null; product_id: number | null;
+  status: string | null; start_date: string; end_date: string; job_order: string;
+}
+const initFilters = (): HistoryFilters => ({
+  search: '', customer_id: null, product_id: null, status: null, start_date: '', end_date: '', job_order: ''
 });
+const filters = ref<HistoryFilters>(initFilters());
 const filteredProducts = computed(() => {
   if (!filters.value.customer_id) return products.value;
   return products.value.filter(p => p.customer_id === filters.value.customer_id);
@@ -321,27 +326,18 @@ const filteredProducts = computed(() => {
 const onCustomerChange = () => {
   if (filters.value.product_id) {
     const prod = products.value.find(p => p.id === filters.value.product_id);
-    if (prod && prod.customer_id !== filters.value.customer_id) {
-      filters.value.product_id = null;
-    }
+    if (prod && prod.customer_id !== filters.value.customer_id) filters.value.product_id = null;
   }
   fetchHistory(0);
 };
 
 const resetFilters = () => {
-  filters.value = {
-    search: '',
-    customer_id: null,
-    product_id: null,
-    status: null,
-    start_date: '',
-    end_date: '',
-    job_order: ''
-  };
+  filters.value = initFilters();
   fetchHistory(0);
 };
 
 const fetchHistory = async (page: number = 0) => {
+  isLoading.value = true;
   try {
     currentPage.value = page;
     const res = await historyApi.getCartons({
@@ -360,6 +356,8 @@ const fetchHistory = async (page: number = 0) => {
     totalCount.value = res.data.total;
   } catch (err) {
     system.showNotification('Không thể tải lịch sử đóng gói', 'error');
+  } finally {
+    isLoading.value = false;
   }
 };
 
