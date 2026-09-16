@@ -34,6 +34,7 @@
       <div>
         <select 
           v-model="selectedCustomerId" 
+          @change="onCustomerChange"
           class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white font-medium text-slate-700"
         >
           <option :value="null">Tất cả Khách hàng (All Customers)</option>
@@ -43,12 +44,11 @@
 
       <div>
         <select 
-          v-model="selectedPackingMode" 
+          v-model="selectedTemplateType" 
           class="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white font-medium text-slate-700"
         >
-          <option :value="null">Tất cả Chế độ đóng gói (All Modes)</option>
-          <option value="item_scan">📦 Quét mã con (Barcode Scan)</option>
-          <option value="weight_scale">⚖️ Đóng gói cân (Weight Scale)</option>
+          <option :value="null">Tất cả Mẫu tem (All Templates)</option>
+          <option v-for="t in availableTemplates" :key="t" :value="t">{{ getTemplateLabel(t) }}</option>
         </select>
       </div>
     </div>
@@ -230,20 +230,50 @@ const products = ref<Product[]>([]);
 const customers = ref<Customer[]>([]);
 const searchQuery = ref<string>('');
 const selectedCustomerId = ref<number | null>(null);
-const selectedPackingMode = ref<string | null>(null);
+const selectedTemplateType = ref<string | null>(null);
 const showModal = ref<boolean>(false);
 const isEdit = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const currentId = ref<number | null>(null);
 const selectedProduct = ref<Product | null>(null);
 
+const templateLabels: Record<string, string> = {
+  standard: 'Standard (Tiêu chuẩn)',
+  detailed: 'Detailed (Chi tiết)',
+  erro_01: 'Erro 01',
+  erro_02: 'Erro 02',
+  erro_03: 'Erro 03 (Luxshare)',
+  erro_04: 'Erro 04 (CAT5E/6A)',
+  erro_05: 'Erro 05 (Dây nhảy)',
+};
+
+const getTemplateLabel = (type: string) => templateLabels[type] || type;
+
+const availableTemplates = computed(() => {
+  let list = products.value;
+  if (selectedCustomerId.value) {
+    list = list.filter(p => p.customer_id === selectedCustomerId.value);
+  }
+  const set = new Set<string>();
+  list.forEach(p => {
+    if (p.template_type) set.add(p.template_type);
+  });
+  return Array.from(set).sort();
+});
+
+const onCustomerChange = () => {
+  if (selectedTemplateType.value && !availableTemplates.value.includes(selectedTemplateType.value)) {
+    selectedTemplateType.value = null;
+  }
+};
+
 const filteredProducts = computed(() => {
   let list = products.value;
   if (selectedCustomerId.value) {
     list = list.filter(p => p.customer_id === selectedCustomerId.value);
   }
-  if (selectedPackingMode.value) {
-    list = list.filter(p => p.packing_mode === selectedPackingMode.value);
+  if (selectedTemplateType.value) {
+    list = list.filter(p => p.template_type === selectedTemplateType.value);
   }
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
