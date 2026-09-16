@@ -69,6 +69,8 @@
               :customYYMM="customYYMM"
               :hasCartonNumberError="hasCartonNumberError"
               :cartonNumberErrorText="cartonNumberErrorText"
+              :isOpeningTemplate="isOpeningTemplate"
+              @open-template="handleOpenTemplate"
               @back="currentStep = 2"
               @focus-scan="focusScan"
               @submit-carton-number="handleCartonNumberSubmit"
@@ -116,9 +118,34 @@
                 <span><strong>{{ t('packing.agent_offline') }}</strong></span>
               </div>
 
-              <div v-if="settings.printMode === 'local' && agentConnected && templateMissing" class="bg-amber-50 border border-amber-300 rounded-lg p-2.5 mb-2.5 text-amber-800 text-xs flex items-center gap-2 animate-in">
-                <i class="fas fa-file-circle-exclamation text-amber-600 text-base"></i>
-                <span><strong>{{ t('packing.template_missing', { file: templateFilename }) }}</strong></span>
+              <div v-if="settings.printMode === 'local' && agentConnected && templateMissing" class="bg-amber-50 border border-amber-300 rounded-lg p-2.5 mb-2.5 text-amber-800 text-xs flex items-center justify-between gap-2 animate-in">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-file-circle-exclamation text-amber-600 text-base"></i>
+                  <span><strong>{{ t('packing.template_missing', { file: templateFilename }) }}</strong></span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    @click="openTemplateFolder()"
+                    :disabled="isOpeningFolder"
+                    class="px-2 py-1 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+                    :title="t('packing.open_folder_btn', 'Mở Thư Mục')"
+                  >
+                    <i v-if="isOpeningFolder" class="fas fa-spinner fa-spin text-xs"></i>
+                    <i v-else class="fas fa-folder-open text-xs"></i>
+                    <span>{{ t('packing.open_folder_btn', 'Mở Thư Mục') }}</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="handleOpenTemplate"
+                    :disabled="isOpeningTemplate"
+                    class="px-2 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <i v-if="isOpeningTemplate" class="fas fa-spinner fa-spin text-xs"></i>
+                    <i v-else class="fas fa-rotate-right text-xs"></i>
+                    <span>{{ t('common.retry', 'Thử Lại') }}</span>
+                  </button>
+                </div>
               </div>
 
               <div class="flex justify-between items-end mb-1.5">
@@ -199,6 +226,18 @@
       @reprint="onEmergencyReprint" 
       @rescan="handleRescan"
     />
+
+    <TemplateMissingModal
+      :show="showTemplateMissingModal"
+      :filename="templateViewerMissingFilename"
+      :folder="templateViewerTargetFolder"
+      :errorMessage="viewerErrorMessage"
+      :isOpeningFolder="isOpeningFolder"
+      :isRetrying="isOpeningTemplate"
+      @close="closeTemplateMissingModal"
+      @openFolder="openTemplateFolder()"
+      @retry="handleOpenTemplate"
+    />
   </div>
 </template>
 
@@ -221,8 +260,10 @@ import JobOrderInputStep from '../features/packing/components/JobOrderInputStep.
 import ProductCardStep from '../features/packing/components/ProductCardStep.vue';
 import CartonSlotsModal from '../features/packing/components/CartonSlotsModal.vue';
 import CartonVerificationModal from '../features/packing/components/CartonVerificationModal.vue';
+import TemplateMissingModal from '../features/packing/components/TemplateMissingModal.vue';
 
 import { useAgentHealth } from '../features/packing/composables/useAgentHealth';
+import { useTemplateViewer } from '../features/packing/composables/useTemplateViewer';
 import { usePackingAudio } from '../features/packing/composables/usePackingAudio';
 import { useJobOrderWorkflow } from '../features/packing/composables/useJobOrderWorkflow';
 import { useCartonPrinting } from '../features/packing/composables/useCartonPrinting';
@@ -250,6 +291,29 @@ const {
   settings,
   currentProduct,
 });
+
+const {
+  isOpening: isOpeningTemplate,
+  isOpeningFolder,
+  showMissingModal: showTemplateMissingModal,
+  missingFilename: templateViewerMissingFilename,
+  targetFolder: templateViewerTargetFolder,
+  viewerErrorMessage,
+  openProductTemplate,
+  openTemplateFolder,
+  closeMissingModal: closeTemplateMissingModal,
+} = useTemplateViewer({
+  getAgentUrl: () => settings.agentUrl || 'http://127.0.0.1:8080',
+  getLocalTemplateDir: () => settings.localTemplateDir || 'D:\\PAT\\Templates',
+  onTemplateFound: () => {
+    checkTemplateExists();
+  },
+  notify: (msg, type) => system.showNotification(msg, type),
+});
+
+const handleOpenTemplate = () => {
+  openProductTemplate(currentProduct.value);
+};
 
 const { isAudioActive, initAudio, playSuccessSound, playScanAlert, toggleAudio } = usePackingAudio({
   audioDeviceId: settings.audioDeviceId,

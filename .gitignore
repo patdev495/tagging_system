@@ -48,3 +48,4 @@ tmp/
 temp_pdf/
 *.zip
 *.db
+templates/

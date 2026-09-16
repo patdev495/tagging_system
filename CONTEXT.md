@@ -134,6 +134,10 @@ _Avoid_: MAC ID (trừ phi nói về phần cứng), IP máy, Terminal ID
 Kiểu định dạng nhãn in được cấu hình cho Product. Hệ thống hỗ trợ hai loại chính: `standard` (chỉ hiển thị thông tin Carton và mã vạch chung) và `detailed` (hiển thị lưới sê-ri chi tiết của từng Carton Item bên trong, tối đa 40 dòng).
 _Avoid_: Cấu hình tem, kiểu mẫu
 
+**Template File**:
+Tệp thiết kế định dạng nhãn in BarTender vật lý (`.btw`), được lưu trữ trong thư mục tem cục bộ trên máy trạm Windows (`localTemplateDir`, mặc định `D:\PAT\Templates`). Khác với **Template Type** (phân loại nhãn) và **Label Print Preview** (bản mô phỏng web). Trạm đóng gói hỗ trợ kỹ sư và công nhân thao tác mở trực tiếp tệp này trên ứng dụng BarTender của máy tính trạm thông qua **Print Agent** mà không yêu cầu phiên Admin để kiểm tra đối chiếu thiết kế tem.
+_Avoid_: File nhãn, tệp BarTender, template nguồn
+
 **Packing Mode**:
 Chế độ xác thực và đóng gói của Product để kích hoạt in tem Carton:
 - `item_scan`: Quét từng mã sê-ri con (Carton Item) cho đến khi đủ số lượng `packed_qty`.
@@ -180,6 +184,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 - Người dùng đăng nhập vào phân hệ Quản trị (Admin) mang một **Role** (`Admin` hoặc `QA`). Tài khoản `QA` chỉ có quyền đọc và xuất báo cáo; các thao tác tạo/sửa/xóa Customer/Product, xóa Carton và kích hoạt Reprint Carton Erro bị chặn ở cả tầng giao diện lẫn API backend. Reprint Carton UI là thao tác vận hành tại trạm, không yêu cầu phiên Admin.
 - Mọi mốc thời gian đóng gói (**Carton** `created_at`, **Job Order Carton Slot** `scanned_at`, **Date Code** `YYWW`, sê-ri `YYMM`) đều được ghi nhận theo **Giờ Cục bộ (Local Server Time)** của máy chủ nhà máy để đảm bảo tính nhất quán giữa màn hình vận hành, báo cáo thống kê ca sản xuất và nhãn in BarTender.
+- Người vận hành hoặc kỹ sư tại trạm đóng gói (cả UI và Erro) được phép kích hoạt mở **Template File** trực tiếp qua **Print Agent** trên máy trạm để kiểm tra mẫu tem. Nếu tệp không tồn tại trong thư mục cục bộ, hệ thống cảnh báo rõ tên tệp và đường dẫn, đồng thời hỗ trợ mở nhanh thư mục lưu trữ qua trình quản lý tệp tin (File Explorer).
 
 ## Example dialogue
 

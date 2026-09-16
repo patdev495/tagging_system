@@ -69,6 +69,13 @@ class ScaleConfigRequest(BaseModel):
     hotkey: Optional[str] = None
     auto_connect: Optional[bool] = None
 
+class OpenTemplateRequest(BaseModel):
+    folder: Optional[str] = None
+    filename: str
+
+class OpenDirRequest(BaseModel):
+    folder: Optional[str] = None
+
 # === Endpoints ===
 
 @app.get("/status")
@@ -100,6 +107,105 @@ def check_file(folder: str, filename: str):
     full_path = os.path.normpath(os.path.join(folder, filename))
     exists = os.path.exists(full_path) and os.path.isfile(full_path)
     return {"exists": exists, "path": full_path}
+
+def _find_bartend_executable() -> Optional[str]:
+    """Tìm đường dẫn tệp thực thi BarTender (bartend.exe) trên máy trạm Windows."""
+    # 1. Kiểm tra Windows Registry App Paths
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\bartend.exe") as key:
+            val, _ = winreg.QueryValueEx(key, "")
+            if val and os.path.isfile(val):
+                return str(val)
+    except Exception:
+        pass
+
+    # 2. Kiểm tra các thư mục cài đặt tiêu chuẩn của Seagull BarTender
+    candidates = [
+        r"C:\Program Files\Seagull\BarTender Suite\bartend.exe",
+        r"C:\Program Files (x86)\Seagull\BarTender Suite\bartend.exe",
+        r"C:\Program Files\Seagull\BarTender 2016\bartend.exe",
+        r"C:\Program Files (x86)\Seagull\BarTender 2016\bartend.exe",
+    ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+
+    import shutil
+    return shutil.which("bartend.exe") or shutil.which("bartend")
+
+@app.post("/open-template")
+def open_template(req: OpenTemplateRequest):
+    """Mở file mẫu tem .btw trực tiếp trên máy tính trạm qua BarTender Designer GUI."""
+    folder = req.folder or "D:\\PAT\\Templates"
+    filename = req.filename.strip() if req.filename else ""
+    if not filename:
+        raise HTTPException(status_code=400, detail="Filename must be provided")
+
+    full_path = os.path.normpath(os.path.join(folder, filename))
+    if not os.path.exists(full_path) or not os.path.isfile(full_path):
+        return {
+            "success": False,
+            "exists": False,
+            "message": f"Tệp mẫu tem '{filename}' không tồn tại trong thư mục '{folder}'",
+            "path": full_path,
+            "folder": folder,
+            "filename": filename,
+        }
+
+    try:
+        bartend_exe = _find_bartend_executable()
+        if bartend_exe and os.path.isfile(bartend_exe):
+            logger.info(f"Opening template with BarTender Designer: {bartend_exe} /F={full_path} /MAX")
+            subprocess.Popen([bartend_exe, f"/F={full_path}", "/MAX"])
+        elif hasattr(os, "startfile"):
+            logger.info(f"Opening template with os.startfile fallback: {full_path}")
+            os.startfile(full_path)
+        else:
+            logger.info(f"[DEV MOCK] Simulated open template for '{full_path}'")
+        return {
+            "success": True,
+            "exists": True,
+            "message": f"Đã mở tệp '{filename}'",
+            "path": full_path,
+            "folder": folder,
+            "filename": filename,
+        }
+    except Exception as e:
+        logger.error(f"Lỗi khi mở tệp {full_path}: {e}")
+        return {
+            "success": False,
+            "exists": True,
+            "message": f"Không thể mở tệp: {str(e)}",
+            "path": full_path,
+            "folder": folder,
+            "filename": filename,
+        }
+
+@app.post("/open-dir")
+def open_directory(req: OpenDirRequest):
+    """Mở thư mục trên máy tính trạm qua Windows File Explorer."""
+    folder = req.folder or "D:\\PAT\\Templates"
+    folder = os.path.normpath(folder)
+
+    try:
+        os.makedirs(folder, exist_ok=True)
+        if hasattr(os, "startfile"):
+            os.startfile(folder)
+        else:
+            logger.info(f"[DEV MOCK] Simulated os.startfile('{folder}')")
+        return {
+            "success": True,
+            "message": f"Đã mở thư mục '{folder}'",
+            "path": folder,
+        }
+    except Exception as e:
+        logger.error(f"Lỗi khi mở thư mục {folder}: {e}")
+        return {
+            "success": False,
+            "message": f"Không thể mở thư mục: {str(e)}",
+            "path": folder,
+        }
 
 # === Scale Endpoints ===
 

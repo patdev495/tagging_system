@@ -24,6 +24,21 @@
           </div>
         </div>
       </div>
+
+      <!-- Open Template Button -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          @click="$emit('open-template')"
+          :disabled="isOpeningTemplate"
+          class="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:border-indigo-300 disabled:opacity-50"
+          :title="t('packing.open_template_tooltip', 'Mở file mẫu tem BarTender (.btw) trên máy trạm')"
+        >
+          <i v-if="isOpeningTemplate" class="fas fa-spinner fa-spin text-indigo-600 text-xs"></i>
+          <i v-else class="fas fa-file-lines text-indigo-600 text-xs"></i>
+          <span>{{ t('packing.open_template_btn', 'Mở Mẫu Tem') }}</span>
+        </button>
+      </div>
     </div>
     
     <!-- Bottom Row: Operational Inputs -->
@@ -139,6 +154,7 @@ const props = defineProps<{
   customYYMM?: string;
   hasCartonNumberError?: boolean;
   cartonNumberErrorText?: string;
+  isOpeningTemplate?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -149,6 +165,7 @@ const emit = defineEmits<{
   (e: 'focus-scan'): void;
   (e: 'submit-carton-number'): void;
   (e: 'clear-carton-error'): void;
+  (e: 'open-template'): void;
 }>();
 
 const { t } = useI18n();
