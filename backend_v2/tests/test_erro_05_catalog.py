@@ -1,8 +1,9 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product
+
 from src.core.database import seed_erro_data
+from src.core.models import Base, Customer, Product
 
 
 @pytest.fixture
@@ -120,8 +121,8 @@ def test_seed_erro_05_38_products_catalog(db_session):
 
 
 def test_admin_update_erro_05_product(db_session):
-    from src.features.product.service import update_product, get_all_products
     from src.features.product.schemas import ProductUpdate
+    from src.features.product.service import get_all_products, update_product
 
     seed_erro_data(db_session)
     db_session.commit()

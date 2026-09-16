@@ -1,15 +1,16 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy.orm import Session
+
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
 from src.core import models, utils
-from src.features.carton import schemas
-from src.features.carton.sn_allocator import plan_next_carton_sn
+from src.features.carton import schemas, slot_lifecycle
 from src.features.carton.erro_01_sn_allocator import plan_next_erro_01_carton_sn
-from src.features.carton import slot_lifecycle
+from src.features.carton.sn_allocator import plan_next_carton_sn
 from src.features.print.service import generate_btxml
 
-def get_next_carton_sn(db: Session, product: models.Product, custom_sn: Optional[int] = None, custom_yymm: Optional[str] = None) -> str:
+
+def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int | None = None, custom_yymm: str | None = None) -> str:
     return plan_next_carton_sn(
         db,
         product,
@@ -29,13 +30,14 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
 
     # Validation: Check capacity and partial packing
-    if len(carton_in.items) > product.packed_qty:
+    packed_qty = product.packed_qty or 0
+    if packed_qty and len(carton_in.items) > packed_qty:
         raise HTTPException(
             status_code=400,
             detail=f"Carton capacity exceeded. Maximum is {product.packed_qty} items, but got {len(carton_in.items)}."
         )
     allow_partial = getattr(product, 'allow_partial', 0) or 0
-    if not allow_partial and len(carton_in.items) < product.packed_qty:
+    if not allow_partial and packed_qty and len(carton_in.items) < packed_qty:
         raise HTTPException(
             status_code=400, 
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(carton_in.items)}."
@@ -62,9 +64,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
                 and getattr(existing, "product_id", None) == carton_in.product_id
             ):
                 # Reuse and update existing failed carton attempt
-                setattr(existing, "packed_by", carton_in.printer_name or "System")
-                setattr(existing, "carton_origin", carton_in.carton_origin)
-                setattr(existing, "station_id", carton_in.station_id)
+                existing.packed_by = carton_in.printer_name or "System"
+                existing.carton_origin = carton_in.carton_origin
+                existing.station_id = carton_in.station_id
                 
                 existing_id = getattr(existing, "id", None)
                 db.query(models.CartonItem).filter(models.CartonItem.carton_id == existing_id).delete()
@@ -80,7 +82,7 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
                     path_to_use, 
                     carton_in.printer_name
                 )
-                setattr(existing, "btxml", btxml_content)
+                existing.btxml = btxml_content
                 db.commit()
                 db.refresh(existing)
                 return existing, btxml_content
@@ -125,7 +127,7 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
     except Exception as e:
         db.rollback()
         # You could use logger here
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e!s}")
 
 def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
     carton = db.query(models.Carton).filter(models.Carton.carton_sn == rescan_in.carton_sn).order_by(models.Carton.id.desc()).first()
@@ -140,13 +142,14 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         raise HTTPException(status_code=400, detail="Duplicate item S/Ns found in scan")
         
     # Validation: Check capacity and partial packing
-    if len(rescan_in.items) > product.packed_qty:
+    packed_qty = product.packed_qty or 0
+    if packed_qty and len(rescan_in.items) > packed_qty:
         raise HTTPException(
             status_code=400,
             detail=f"Carton capacity exceeded. Maximum is {product.packed_qty} items, but got {len(rescan_in.items)}."
         )
     allow_partial = getattr(product, 'allow_partial', 0) or 0
-    if not allow_partial and len(rescan_in.items) < product.packed_qty:
+    if not allow_partial and packed_qty and len(rescan_in.items) < packed_qty:
         raise HTTPException(
             status_code=400, 
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(rescan_in.items)}."
@@ -186,7 +189,7 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e!s}")
 
 def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
     product = db.query(models.Product).filter(models.Product.id == weigh_in.product_id).with_for_update().first()
@@ -274,6 +277,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             carton_sn=plan.carton_sn,
             packed_by=weigh_in.printer_name or "System",
             status="FAILED",
+            job_order=weigh_in.job_order,
             carton_origin=weigh_in.carton_origin,
             station_id=weigh_in.station_id,
             weight=weigh_in.weight,
@@ -295,7 +299,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             path_to_use,
             weigh_in.printer_name
         )
-        setattr(new_carton, "btxml", btxml_content)
+        new_carton.btxml = btxml_content
 
         db.commit()
         db.refresh(new_carton)
@@ -303,4 +307,4 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
 
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {e!s}")

@@ -1,11 +1,11 @@
-from typing import Optional, List, Any
+from typing import Any
 
-from sqlalchemy import func, or_
-from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException
 from pydantic import ValidationError
+from sqlalchemy import func, or_
+from sqlalchemy.orm import Session, joinedload
 
-from src.core.models import Carton, Product, Customer, ProductInternalFactoryPartNumber
+from src.core.models import Carton, Customer, Product, ProductInternalFactoryPartNumber
 from src.features.carton.sn_allocator import plan_next_carton_sn
 
 from . import schemas
@@ -54,7 +54,7 @@ def _validate_erro_internal_factory_part_number(db: Session, product: Product, *
         raise HTTPException(status_code=409, detail="Factory P/N đã được gán cho một Product Erro khác.")
 
 
-def get_all_products(db: Session, customer_code: Optional[str] = None, search: Optional[str] = None):
+def get_all_products(db: Session, customer_code: str | None = None, search: str | None = None):
     query = db.query(Product).options(joinedload(Product.internal_factory_part_numbers))
     if customer_code:
         query = query.join(Customer).filter(Customer.code == customer_code)
@@ -139,7 +139,7 @@ def resolve_erro_product_by_internal_factory_part_number(value: str, db: Session
     return None
 
 
-def get_product_factory_part_numbers(product_id: int, db: Session) -> List[ProductInternalFactoryPartNumber]:
+def get_product_factory_part_numbers(product_id: int, db: Session) -> list[ProductInternalFactoryPartNumber]:
     return (
         db.query(ProductInternalFactoryPartNumber)
         .filter(ProductInternalFactoryPartNumber.product_id == product_id)
@@ -187,9 +187,9 @@ def add_product_factory_part_number(
 
 def batch_add_product_factory_part_numbers(
     product_id: int,
-    items: List[schemas.InternalFactoryPartNumberCreate],
+    items: list[schemas.InternalFactoryPartNumberCreate],
     db: Session,
-) -> List[ProductInternalFactoryPartNumber]:
+) -> list[ProductInternalFactoryPartNumber]:
     product = get_product_by_id(product_id, db)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -361,7 +361,7 @@ def delete_product(db: Session, product_id: int):
     return True
 
 
-def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
+def get_next_sn(product_id: int, db: Session, yymm: str | None = None):
     product = get_product_by_id(product_id, db)
     if not product:
         return {"next_seq": 1, "next_sn": None, "prefix": ""}
@@ -417,7 +417,7 @@ def get_next_sn(product_id: int, db: Session, yymm: Optional[str] = None):
 
 
 
-def get_last_carton(product_id: int, db: Session, job_order: Optional[str] = None):
+def get_last_carton(product_id: int, db: Session, job_order: str | None = None):
     query = db.query(Carton).options(joinedload(Carton.items)).filter(
         Carton.product_id == product_id,
         Carton.status.in_(["SUCCESS", "PRINTED"]),

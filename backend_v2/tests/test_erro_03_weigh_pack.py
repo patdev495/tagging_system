@@ -1,11 +1,14 @@
-import pytest
-from typing import cast
 from datetime import datetime
+from typing import cast
+
+import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product, Carton
-from src.features.carton import schemas as carton_schemas, service as carton_service
+
+from src.core.models import Base, Customer, Product
+from src.features.carton import schemas as carton_schemas
+from src.features.carton import service as carton_service
 from src.features.print import service as print_service
 
 

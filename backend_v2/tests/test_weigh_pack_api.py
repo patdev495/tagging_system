@@ -1,13 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
-from main import app
-from src.core.database import get_db, Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from main import app
+from src.core.database import Base, get_db
 from src.core.models import Customer, Product
 
-
-from sqlalchemy.pool import StaticPool
 
 @pytest.fixture
 def client():

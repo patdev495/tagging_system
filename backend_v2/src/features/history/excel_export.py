@@ -3,16 +3,15 @@ Excel Export Deep Module — Generates professional styled Excel workbooks for c
 Supports Summary mode (single sheet) and Detailed Traceability mode (2-sheet workbook).
 """
 import io
-import datetime
-from typing import List, Optional
+
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 from src.core import models
 
 
-def style_header_row(ws, headers: List[str], header_fill_color: str = "1E1B4B"):
+def style_header_row(ws, headers: list[str], header_fill_color: str = "1E1B4B"):
     """Styles the header row with dark background, bold white text, and borders."""
     header_font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color=header_fill_color, end_color=header_fill_color, fill_type="solid")
@@ -47,7 +46,7 @@ def auto_fit_columns(ws, max_cols: int):
         ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
 
 
-def generate_carton_excel(cartons: List[models.Carton], mode: str = "summary") -> bytes:
+def generate_carton_excel(cartons: list[models.Carton], mode: str = "summary") -> bytes:
     """
     Generates an Excel workbook binary from a list of Carton models.
     
@@ -57,7 +56,8 @@ def generate_carton_excel(cartons: List[models.Carton], mode: str = "summary") -
     """
     wb = openpyxl.Workbook()
     # Remove default sheet
-    wb.remove(wb.active)
+    if wb.active is not None:
+        wb.remove(wb.active)
 
     # 1. Sheet 1: Tổng hợp Carton
     ws_summary = wb.create_sheet(title="Tong_Hop_Carton")

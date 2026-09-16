@@ -1,14 +1,16 @@
+from typing import cast as typing_cast
+
 from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
-from typing import Optional, cast as typing_cast
+
 from src.core.database import get_db
-from src.features.history.schemas import Carton
-from src.features.carton import print_attempts
 from src.features.auth.dependencies import get_current_user, require_admin
+from src.features.carton import print_attempts
+from src.features.history.schemas import Carton
+
 from . import schemas, service
 from .bartender_engine import bt_engine
-
 
 router = APIRouter(prefix="/print", tags=["Print"])
 
@@ -45,7 +47,7 @@ def validate_template(request: schemas.TemplateValidateRequest):
     return service.validate_template(request.template_name, folder=request.folder)
 
 @router.get("/canonical-templates", response_model=schemas.CanonicalTemplatesResponse)
-def get_canonical_templates(folder: Optional[str] = None):
+def get_canonical_templates(folder: str | None = None):
     """Lấy danh sách 7 mẫu tem chuẩn và trạng thái tồn tại trên máy chủ."""
     return service.get_canonical_templates(folder=folder)
 
@@ -62,7 +64,7 @@ def update_carton_status(carton_id: int, status_update: schemas.CartonStatusUpda
     return service.update_status(carton_id, status_update, db)
 
 @router.get("/carton/{carton_id}/btxml")
-def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, db: Session = Depends(get_db)):
+def download_carton_btxml(carton_id: int, template_path: str | None = None, db: Session = Depends(get_db)):
     """Tải file .xml của thùng để in thủ công"""
     carton_sn, btxml_content = service.download_carton_btxml(carton_id, template_path, db)
     return Response(
@@ -72,7 +74,7 @@ def download_carton_btxml(carton_id: int, template_path: Optional[str] = None, d
     )
 
 @router.post("/carton/{carton_id}/reprint", response_model=Carton)
-def reprint_carton(carton_id: int, request: Request, template_path: Optional[str] = None, printer_name: Optional[str] = None, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+def reprint_carton(carton_id: int, request: Request, template_path: str | None = None, printer_name: str | None = None, authorization: str | None = Header(None), db: Session = Depends(get_db)):
     """UI may reprint at a station; ERRO and other customers require Admin."""
     if service.reprint_requires_admin(carton_id, db):
         require_admin(get_current_user(authorization, db))
@@ -80,7 +82,7 @@ def reprint_carton(carton_id: int, request: Request, template_path: Optional[str
     return service.reprint_carton(carton_id, printer_name, template_path, client_ip, db)
 
 @router.post("/carton/{carton_id}/server-print")
-def server_print_carton(carton_id: int, request: Request, printer_name: Optional[str] = None, fallback_template_path: Optional[str] = None, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+def server_print_carton(carton_id: int, request: Request, printer_name: str | None = None, fallback_template_path: str | None = None, authorization: str | None = Header(None), db: Session = Depends(get_db)):
     """UI may print at a station; ERRO and other customers require Admin."""
     if service.reprint_requires_admin(carton_id, db):
         require_admin(get_current_user(authorization, db))

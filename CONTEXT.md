@@ -163,7 +163,7 @@ Vai trò phân quyền của tài khoản truy cập vào phân hệ Quản tr�
 _Avoid_: Phân quyền động, user type, level, cấp bậc
 
 **Production Run**:
-Đợt sản xuất gom nhóm các Carton được đóng trong ca làm việc, được nhận diện qua **Job Order** (ở chế độ `item_scan`) hoặc bộ đôi **PO Number** & **Lot Number** (ở chế độ `weight_scale`). Với `erro_04`, người vận hành có thể sửa PO Number và Lot Number trong khi chạy; mỗi Carton giữ snapshot của hai giá trị tại lúc in, không hồi tố các Carton đã in.
+Đợt sản xuất gom nhóm các Carton được đóng trong ca làm việc, được nhận diện qua **Job Order** (ở chế độ `item_scan` hoặc trạm cân Erro kết hợp bộ đôi **PO Number** & **Lot Number**). Với `erro_04`, người vận hành có thể sửa PO Number và Lot Number trong khi chạy; mỗi Carton giữ snapshot của các giá trị này và Job Order tại lúc in, không hồi tố các Carton đã in.
 _Avoid_: Phiên làm việc, ca chạy, mẻ hàng
 
 **Shipped Job Order Carton Slot**:
@@ -176,7 +176,7 @@ _Avoid_: Carton đã in, Carton đã quét, Carton hoàn tất
 - Một **Customer** có thể có nhiều **Products** khác nhau.
 - Một **Product** xác định chế độ đóng gói (**Packing Mode**), số lượng đóng gói quy chuẩn (`packed_qty`), mẫu tem nhãn, và quy tắc sinh sê-ri (**Carton SN**).
 - Với Product ở chế độ `item_scan` (khách hàng UI), một **Carton** thuộc về một **Job Order** thông qua một **Job Order Carton Slot** đã được cấp phát trước. Sau khi một Carton hoàn tất in tem và xác thực, hệ thống phải dừng ở trạng thái chờ mở thùng mới. Công nhân bắt buộc phải xác nhận chuyển sang Job Order Carton Slot tiếp theo (bấm nút "Thùng tiếp theo" hoặc nhấn phím Space) mới được quét hàng tiếp; nếu trạm đang tồn tại lỗi quét thì không được phép chuyển thùng cho đến khi lỗi được xóa.
-- Với Product ở chế độ `weight_scale` (khách hàng Erro), một **Carton** được đóng liên tục trong **Production Run** gắn với **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước. Đối với `erro_02` và `erro_03`, **PO Number** cho phép để rỗng mặc định và người vận hành có thể tùy chọn chỉnh sửa trên giao diện ca đóng gói.
+- Với Product ở chế độ `weight_scale` (khách hàng Erro), trạm đóng gói nhận diện Product thông qua **Job Order** (tra cứu **Factory P/N** từ `ShopFloorDW.DBO.F4801`); một **Carton** được đóng liên tục trong **Production Run** gắn với **Job Order**, **PO Number** và **Lot Number** mà không bắt buộc phải cấp phát Job Order Carton Slot trước. Đối với `erro_02` và `erro_03`, **PO Number** cho phép để rỗng mặc định và người vận hành có thể tùy chọn chỉnh sửa trên giao diện ca đóng gói.
 - Một **Carton** gắn với **Shipped Job Order Carton Slot** không được phép xóa.
 - Người dùng đăng nhập vào phân hệ Quản trị (Admin) mang một **Role** (`Admin` hoặc `QA`). Tài khoản `QA` chỉ có quyền đọc và xuất báo cáo; các thao tác tạo/sửa/xóa Customer/Product, xóa Carton và kích hoạt Reprint Carton Erro bị chặn ở cả tầng giao diện lẫn API backend. Reprint Carton UI là thao tác vận hành tại trạm, không yêu cầu phiên Admin.
 - Mọi mốc thời gian đóng gói (**Carton** `created_at`, **Job Order Carton Slot** `scanned_at`, **Date Code** `YYWW`, sê-ri `YYMM`) đều được ghi nhận theo **Giờ Cục bộ (Local Server Time)** của máy chủ nhà máy để đảm bảo tính nhất quán giữa màn hình vận hành, báo cáo thống kê ca sản xuất và nhãn in BarTender.

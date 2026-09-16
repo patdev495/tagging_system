@@ -1,14 +1,12 @@
 """Carton ID allocation for the PD016906 Erro 05 (Pegatron NN9) label."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.core import models
-
 
 ERRO_05_SEQUENCE_WIDTH = 5
 ERRO_05_MIN_SEQUENCE = 50001
@@ -24,7 +22,7 @@ class Erro05CartonSNPlan:
     pkg_prefix: str
 
 
-def parse_erro_05_sequence(carton_sn: Optional[str]) -> Optional[int]:
+def parse_erro_05_sequence(carton_sn: str | None) -> int | None:
     if not carton_sn or len(carton_sn) < ERRO_05_SEQUENCE_WIDTH:
         return None
 
@@ -89,7 +87,7 @@ def plan_next_erro_05_carton_sn(
     db: Session,
     product: models.Product,
     *,
-    printed_at: Optional[datetime] = None,
+    printed_at: datetime | None = None,
     lock: bool = False,
 ) -> Erro05CartonSNPlan:
     now = printed_at or datetime.now()

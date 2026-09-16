@@ -14,6 +14,7 @@ export interface WeighAndPrintSettings {
 
 export interface UseWeighAndPrintOptions {
   selectedProduct: Ref<Product | null>;
+  activeJobOrder?: Ref<string>;
   activePO: Ref<string>;
   activeLot: Ref<string>;
   isAgentOnline: Ref<boolean>;
@@ -29,6 +30,7 @@ export interface UseWeighAndPrintOptions {
 export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
   const {
     selectedProduct,
+    activeJobOrder,
     activePO,
     activeLot,
     isAgentOnline,
@@ -124,6 +126,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       const res = await packingApi.weighPackCarton({
         product_id: selectedProduct.value.id,
         weight: currentWeight,
+        job_order: activeJobOrder?.value?.trim() || undefined,
         po_number: isTem2 ? undefined : (activePO.value?.trim() || undefined),
         lot_number: isTem2 ? undefined : (activeLot.value?.trim() || undefined),
         printer_name: settings.printerName || undefined,

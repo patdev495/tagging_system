@@ -1,4 +1,4 @@
-from typing import Optional, cast as typing_cast
+from typing import cast as typing_cast
 
 from sqlalchemy.orm import Session
 
@@ -25,7 +25,7 @@ def get_carton_attempt_ids(db: Session, carton: models.Carton) -> list[int]:
     return [typing_cast(int, attempt.id) for attempt in get_carton_attempts(db, carton)]
 
 
-def get_original_carton(db: Session, carton: models.Carton) -> Optional[models.Carton]:
+def get_original_carton(db: Session, carton: models.Carton) -> models.Carton | None:
     if typing_cast(int, carton.is_reprint) != 1:
         return carton
     return db.query(models.Carton).filter(
@@ -34,14 +34,14 @@ def get_original_carton(db: Session, carton: models.Carton) -> Optional[models.C
     ).first()
 
 
-def get_original_carton_id(db: Session, carton: models.Carton) -> Optional[int]:
+def get_original_carton_id(db: Session, carton: models.Carton) -> int | None:
     original = get_original_carton(db, carton)
     if original is None:
         return None
     return typing_cast(int, original.id)
 
 
-def get_original_carton_id_for_group(db: Session, carton: models.Carton) -> Optional[int]:
+def get_original_carton_id_for_group(db: Session, carton: models.Carton) -> int | None:
     return db.query(models.Carton.id).filter(
         *carton_group_filters(carton),
         models.Carton.is_reprint == 0,
@@ -52,7 +52,7 @@ def item_sns_for_attempt(db: Session, carton: models.Carton) -> list[str]:
     original = get_original_carton(db, carton)
     if original is None:
         return []
-    return [item.item_sn for item in original.items]
+    return [item.item_sn for item in original.items if item.item_sn is not None]
 
 
 def item_count_for_group(db: Session, carton: models.Carton) -> int:

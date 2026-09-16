@@ -1,7 +1,8 @@
 import datetime
 from dataclasses import dataclass
-from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from src.core import models
 
 DEFAULT_ERRO_03_SUPPLIER_CODE = "1012665"
@@ -22,12 +23,12 @@ def format_erro_03_carton_sn(supplier_code: str, yymmdd: str, sequence: int) -> 
     supplier_code(7 chars) + yymmdd(6 chars) + sequence(4 digits)
     Example: '1012665' + '260911' + '0001' = '10126652609110001'
     """
-    clean_code = "".join(c for c in str(supplier_code) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
+    clean_code = "".join(c for c in supplier_code if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
     seq_str = str(sequence).zfill(ERRO_03_SEQUENCE_WIDTH)
     return f"{clean_code}{yymmdd}{seq_str}"
 
 
-def parse_erro_03_sequence(carton_sn: Optional[str], supplier_code: str, yy_or_yymmdd: str) -> int:
+def parse_erro_03_sequence(carton_sn: str | None, supplier_code: str, yy_or_yymmdd: str) -> int:
     """
     Extracts the 4-digit sequence number from a 17-character Tem 3 carton SN for the given year (YY).
     Format: supplier_code(7) + yymmdd(6) + sequence(4)
@@ -35,8 +36,8 @@ def parse_erro_03_sequence(carton_sn: Optional[str], supplier_code: str, yy_or_y
     if not carton_sn:
         return 0
     clean_sn = "".join(c for c in carton_sn if c.isdigit())
-    clean_code = "".join(c for c in str(supplier_code) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
-    yy = str(yy_or_yymmdd)[:2]
+    clean_code = "".join(c for c in supplier_code if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
+    yy = yy_or_yymmdd[:2]
     prefix = f"{clean_code}{yy}"
     if not clean_sn.startswith(prefix) or len(clean_sn) != (len(clean_code) + 6 + ERRO_03_SEQUENCE_WIDTH):
         return 0
@@ -53,14 +54,14 @@ def next_erro_03_sequence(
     supplier_code: str,
     yy_or_yymmdd: str,
     lock: bool = False,
-    product_id: Optional[int] = None,
+    product_id: int | None = None,
 ) -> int:
     """
     Finds the maximum sequence allocated in the given year (YY) for the specified supplier_code (and product).
     Sequence starts from 1 (0001) and resets yearly on January 1st.
     """
-    clean_code = "".join(c for c in str(supplier_code) if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
-    yy = str(yy_or_yymmdd)[:2]
+    clean_code = "".join(c for c in supplier_code if c.isdigit()) or DEFAULT_ERRO_03_SUPPLIER_CODE
+    yy = yy_or_yymmdd[:2]
     lead_prefix = f"{clean_code}{yy}"
 
     filters = [
@@ -81,8 +82,7 @@ def next_erro_03_sequence(
     max_seq = 0
     for r in rows:
         seq = parse_erro_03_sequence(r[0], clean_code, yy)
-        if seq > max_seq:
-            max_seq = seq
+        max_seq = max(max_seq, seq)
 
     return max_seq + 1
 
@@ -90,8 +90,8 @@ def next_erro_03_sequence(
 def plan_next_erro_03_carton_sn(
     db: Session,
     product: models.Product,
-    custom_yymmdd: Optional[str] = None,
-    custom_sequence: Optional[int] = None,
+    custom_yymmdd: str | None = None,
+    custom_sequence: int | None = None,
     lock: bool = False,
 ) -> Erro03CartonPlan:
     """
@@ -109,7 +109,7 @@ def plan_next_erro_03_carton_sn(
 
     yy = yymmdd[:2]
     raw_id = getattr(product, "id", None)
-    prod_id: Optional[int] = int(raw_id) if raw_id is not None else None
+    prod_id: int | None = int(raw_id) if raw_id is not None else None
 
     if custom_sequence is not None and custom_sequence > 0:
         sequence = custom_sequence

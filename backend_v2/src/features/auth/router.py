@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from src.core.database import get_db
+
 from src.core import models
-from . import schemas, service, security, dependencies
+from src.core.database import get_db
+
+from . import dependencies, schemas, security, service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -19,7 +21,7 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     
     token_data = {
         "sub": str(user.username),
-        "user_id": int(getattr(user, "id")),
+        "user_id": int(user.id),
         "role": str(user.role),
     }
     # Token valid for 24 hours

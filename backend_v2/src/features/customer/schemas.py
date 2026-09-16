@@ -1,5 +1,6 @@
+
 from pydantic import BaseModel
-from typing import Optional
+
 
 class CustomerBase(BaseModel):
     code: str
@@ -9,8 +10,8 @@ class CustomerCreate(CustomerBase):
     pass
 
 class CustomerUpdate(BaseModel):
-    code: Optional[str] = None
-    name: Optional[str] = None
+    code: str | None = None
+    name: str | None = None
 
 class Customer(CustomerBase):
     id: int

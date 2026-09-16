@@ -1,13 +1,14 @@
 import datetime
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product, Carton
+
+from src.core.models import Base, Carton, Customer, Product
 from src.features.carton.erro_01_sn_allocator import (
     current_iso_date_code,
-    plan_next_erro_01_carton_sn,
     format_erro_01_carton_sn,
-    ERRO_01_SEQUENCE_WIDTH,
+    plan_next_erro_01_carton_sn,
 )
 
 

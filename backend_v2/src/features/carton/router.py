@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
+
 from src.core.database import get_db
 from src.features.history.schemas import CartonDetail  # Import CartonDetail for Output
+
 from . import schemas, service
 
 router = APIRouter(prefix="/cartons", tags=["Carton"])

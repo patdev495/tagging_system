@@ -4,8 +4,9 @@ Encapsulates Template Path Resolution and Environment Detection.
 """
 import os
 import sys
-from typing import Optional
+
 from src.core.config import settings
+
 
 class TemplateResolver:
     """
@@ -37,13 +38,13 @@ class TemplateResolver:
     ]
 
     @classmethod
-    def get_canonical_template_filename(cls, template_type: Optional[str]) -> str:
+    def get_canonical_template_filename(cls, template_type: str | None) -> str:
         """Return canonical BarTender template filename (.btw) for a template_type."""
         normalized_type = (template_type or "standard").strip().lower()
         return cls.CANONICAL_TEMPLATE_MAP.get(normalized_type, "carton_base.btw")
 
     @classmethod
-    def check_template_exists(cls, template_name_or_path: str, custom_dir: Optional[str] = None) -> dict:
+    def check_template_exists(cls, template_name_or_path: str, custom_dir: str | None = None) -> dict:
         """Verify whether a template file exists in the given directory or standard directories."""
         filename = os.path.basename(template_name_or_path)
         root = cls.get_execution_root()
@@ -77,7 +78,7 @@ class TemplateResolver:
         return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     @classmethod
-    def resolve(cls, path: Optional[str], fallback_path: Optional[str] = None, local_dir: Optional[str] = None, default_filename: str = "carton.ui.btw") -> str:
+    def resolve(cls, path: str | None, fallback_path: str | None = None, local_dir: str | None = None, default_filename: str = "carton.ui.btw") -> str:
         """
         Resolves a BTW template path using structured search strategies.
         Checks local directory overrides first, then database settings, then resource fallback directories.
@@ -98,7 +99,7 @@ class TemplateResolver:
             if os.path.exists(standard_path):
                 return standard_path
             
-        def evaluate_path(p: Optional[str]) -> Optional[str]:
+        def evaluate_path(p: str | None) -> str | None:
             if not p:
                 return None
             
@@ -145,6 +146,6 @@ def get_backend_root() -> str:
     """Get backend execution root directory."""
     return TemplateResolver.get_execution_root()
 
-def resolve_template_path(primary_path: Optional[str] = None, fallback_path: Optional[str] = None) -> str:
+def resolve_template_path(primary_path: str | None = None, fallback_path: str | None = None) -> str:
     """Resolve BarTender label template path."""
     return TemplateResolver.resolve(primary_path, fallback_path)

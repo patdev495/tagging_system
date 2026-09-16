@@ -2,9 +2,9 @@
   <div class="h-screen w-full bg-slate-100 text-slate-800 flex flex-col p-2 md:p-3 overflow-hidden box-border select-none">
     <div class="w-full h-full flex flex-col bg-white border border-slate-200/90 rounded-2xl p-3 md:p-4 shadow-xl overflow-hidden box-border justify-between">
       
-      <ErroFactoryPartNumberStep
-        v-if="!selectedProduct && !pendingProduct"
-        @resolved="resolveFactoryPartNumber"
+      <ErroJobOrderStep
+        v-if="!selectedProduct && !pendingResolution"
+        @resolved="handleJobOrderResolved"
       />
 
       <template v-else>
@@ -28,10 +28,7 @@
         <div class="flex items-center gap-2">
           <!-- Agent Status -->
           <div 
-            :class="[
-              'px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 cursor-help',
-              isAgentOnline ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs' : 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
-            ]"
+            :class="['px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0 cursor-help', isAgentOnline ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs' : 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse']"
             :title="isAgentOnline ? `Print Agent đang chạy (${settings.agentUrl || 'http://127.0.0.1:8080'})` : 'Chưa bật phần mềm NY Print Agent trên máy tính'"
           >
             <span class="relative flex h-2 w-2">
@@ -44,10 +41,7 @@
 
           <!-- Scale Status -->
           <div 
-            :class="[
-              'px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0',
-              (isAgentOnline && scaleStatus.connected) ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs' : 'bg-rose-50 text-rose-700 border-rose-200'
-            ]"
+            :class="['px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-bold transition-all shrink-0', (isAgentOnline && scaleStatus.connected) ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-xs' : 'bg-rose-50 text-rose-700 border-rose-200']"
             :title="(isAgentOnline && scaleStatus.connected) ? `Cân đang kết nối cổng ${scaleStatus.port}` : 'Cân chưa kết nối hoặc mất tín hiệu COM'"
           >
             <span class="relative flex h-2 w-2">
@@ -60,26 +54,36 @@
 
           <!-- Actions -->
           <button @click="showSettingsModal = true" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
-            <i class="fas fa-cog text-slate-500"></i>
-            <span>Cài Đặt</span>
+            <i class="fas fa-cog text-slate-500"></i><span>Cài Đặt</span>
           </button>
           <button @click="switchCustomer" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs">
-            <i class="fas fa-exchange-alt"></i>
-            <span>Đổi Khách</span>
+            <i class="fas fa-exchange-alt"></i><span>Đổi Khách</span>
           </button>
           <router-link to="/admin" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs" title="Trang quản trị hệ thống (Admin)">
-            <i class="fas fa-user-shield text-indigo-600"></i>
-            <span>Admin</span>
+            <i class="fas fa-user-shield text-indigo-600"></i><span>Admin</span>
           </router-link>
         </div>
       </header>
 
+
       <!-- Active Product & Batch Bar -->
       <section class="my-2 px-4 py-2.5 rounded-xl bg-slate-50/90 border border-slate-200/90 shadow-xs flex items-center justify-between gap-3 shrink-0">
-        <div class="flex items-center gap-5 md:gap-7 flex-wrap">
-          <div v-if="selectedProduct" class="flex items-center gap-2">
-            <span class="text-xs uppercase tracking-wider font-bold text-slate-400">CPN:</span>
-            <span class="font-black text-base md:text-lg text-slate-900 font-mono">
+        <div class="flex items-center gap-4 md:gap-6 flex-wrap">
+          <!-- Job Order & Factory P/N -->
+          <div v-if="activeJobOrder" class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-bold text-slate-400">Công Lệnh:</span>
+            <span class="font-black text-base md:text-lg text-indigo-900 font-mono">
+              {{ activeJobOrder }}
+            </span>
+            <span class="font-mono text-xs font-bold text-slate-500">
+              ({{ activeFactoryPartNumber }})
+            </span>
+          </div>
+
+          <!-- CPN -->
+          <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-4 font-mono">
+            <span class="text-xs uppercase tracking-wider font-bold text-slate-400 font-sans">CPN:</span>
+            <span class="font-black text-base md:text-lg text-slate-900">
               {{ selectedProduct.item_name }}
             </span>
             <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-xs">
@@ -87,57 +91,31 @@
             </span>
           </div>
 
-          <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
-            <template v-if="selectedProduct.template_type === 'erro_05'">
-              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Prefix:</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || 'MC220TW1' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.factory_item_code || '-' }}</span>
-            </template>
-            <template v-else-if="selectedProduct.template_type === 'erro_04'">
-              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Carton ID:</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.carton_id_prefix || '-' }}...</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || '-' }}</span>
-            </template>
-            <template v-else-if="selectedProduct.template_type === 'erro_03'">
-              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Supplier:</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || '1012665' }}</span>
-            </template>
-            <template v-else-if="selectedProduct.template_type === 'erro_02'">
-              <span class="text-xs uppercase font-bold text-slate-400 font-sans">SSCC/P-N:</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || '37033907' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || '-' }}</span>
-            </template>
-            <template v-else>
-              <span class="text-xs uppercase font-bold text-slate-400 font-sans">Mfr/Prefix:</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.mfr_pn || 'NYS5998' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-slate-700">{{ selectedProduct.pkg_prefix || 'VHK0010237' }}</span>
-            </template>
+          <!-- Progress (Clickable) -->
+          <div v-if="selectedProduct && jobOrderPlannedCartons > 0" class="flex items-center gap-2 border-l border-slate-200 pl-4 font-mono">
+            <span class="text-xs uppercase font-bold text-slate-400 font-sans">Tiến Độ:</span>
+            <button 
+              type="button"
+              @click="showCartonsModal = true"
+              title="Bấm để xem danh sách thùng đã đóng của công lệnh này"
+              :class="['px-2.5 py-0.5 rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all', jobOrderPackedCartonsCount >= jobOrderPlannedCartons ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-50 text-emerald-800 border border-emerald-200']"
+            >
+              <span>{{ jobOrderPackedCartonsCount }} / {{ jobOrderPlannedCartons }} Thùng</span>
+              <span class="text-slate-400">({{ (jobOrderPackedCartonsCount * selectedProduct.packed_qty).toLocaleString() }} / {{ jobOrderTotalQty.toLocaleString() }} PCS)</span>
+              <i class="fas fa-list-check text-indigo-600 text-[11px] ml-0.5"></i>
+              <span v-if="jobOrderPackedCartonsCount >= jobOrderPlannedCartons" class="text-[10px] font-black text-amber-700 uppercase ml-0.5">⚠️ Vượt Kế Hoạch</span>
+            </button>
           </div>
 
-          <div class="flex items-center gap-2 border-l border-slate-200 pl-5 font-mono">
+          <!-- PO & LOT -->
+          <div class="flex items-center gap-2 border-l border-slate-200 pl-4 font-mono">
             <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <template v-if="selectedProduct?.template_type === 'erro_05'">
-              <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || '(Tùy chọn)' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || 'Tự động' }}</span>
-            </template>
-            <template v-else-if="selectedProduct?.template_type === 'erro_02'">
-              <span class="font-bold text-xs text-slate-500 italic bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Không áp dụng (Tem 2)</span>
-            </template>
-            <template v-else-if="selectedProduct?.template_type === 'erro_03'">
-              <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || '(Tùy chọn)' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || '92607933' }}</span>
-            </template>
-            <template v-else>
-              <span class="font-bold text-sm text-indigo-900">PO: {{ activePO || 'Chưa nhập' }}</span>
-              <span class="text-slate-300">|</span>
-              <span class="font-bold text-sm text-indigo-900">LOT: {{ activeLot || 'Chưa nhập' }}</span>
-            </template>
+            <span v-if="selectedProduct?.template_type === 'erro_02'" class="font-bold text-xs text-slate-500 italic bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Không áp dụng (Tem 2)</span>
+            <span v-else class="font-bold text-sm text-indigo-900">
+              PO: {{ activePO || (['erro_03', 'erro_05'].includes(selectedProduct?.template_type || '') ? '(Tùy chọn)' : 'Chưa nhập') }}
+              <span class="text-slate-300 mx-1">|</span>
+              LOT: {{ activeLot || (selectedProduct?.template_type === 'erro_05' ? 'Tự động' : selectedProduct?.template_type === 'erro_03' ? '92607933' : 'Chưa nhập') }}
+            </span>
           </div>
         </div>
 
@@ -152,10 +130,11 @@
           </button>
           <button @click="clearSelectedProduct" :disabled="!selectedProduct" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs shadow-indigo-600/20 cursor-pointer">
             <i class="fas fa-boxes"></i>
-            <span>Đổi Mã Hàng</span>
+            <span>Đổi Công Lệnh</span>
           </button>
         </div>
       </section>
+
 
       <!-- Offline Warning Banner -->
       <div v-if="!isAgentOnline" class="mb-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in">
@@ -247,25 +226,19 @@
       </main>
 
       <!-- Modals -->
-      <ErroBatchConfigModal
-        :show="showBatchModal"
-        :po="activePO"
-        :lot="activeLot"
-        :isTem3="(pendingProduct || selectedProduct)?.template_type === 'erro_03'"
-        @close="cancelBatchConfig"
-        @save="saveBatchConfig"
+      <ErroJobOrderConfirmModal
+        :show="showJobOrderConfirmModal"
+        :resolution="pendingResolution"
+        :initial-po="activePO"
+        :initial-lot="activeLot"
+        @close="cancelJobOrderConfirm"
+        @confirm="confirmJobOrderResolution"
       />
 
-      <SettingsModal 
-        :show="showSettingsModal"
-        @close="showSettingsModal = false"
-      />
-
-      <ScaleToleranceErrorModal
-        :show="showToleranceErrorModal"
-        :details="toleranceErrorDetails"
-        @close="showToleranceErrorModal = false"
-      />
+      <ErroBatchConfigModal :show="showBatchModal" :po="activePO" :lot="activeLot" :isTem3="selectedProduct?.template_type === 'erro_03'" @close="cancelBatchConfig" @save="saveBatchConfig" />
+      <SettingsModal :show="showSettingsModal" @close="showSettingsModal = false" />
+      <ScaleToleranceErrorModal :show="showToleranceErrorModal" :details="toleranceErrorDetails" @close="showToleranceErrorModal = false" />
+      <ErroJobOrderCartonsModal :show="showCartonsModal" :job-order="activeJobOrder" :product="selectedProduct" :planned-cartons="jobOrderPlannedCartons" :total-qty="jobOrderTotalQty" @close="showCartonsModal = false" />
       </template>
 
     </div>
@@ -277,15 +250,17 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
-import type { Product } from '../types/api';
+import type { ErroJobOrderResolution, Product } from '../types/api';
 
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import ScaleDigitalGauge from '../features/packing/weight_scale/components/ScaleDigitalGauge.vue';
 import ErroSerialControl from '../features/packing/weight_scale/components/ErroSerialControl.vue';
 import ErroLabelPrintPreview from '../features/packing/weight_scale/components/ErroLabelPrintPreview.vue';
 import ScaleToleranceErrorModal from '../features/packing/weight_scale/components/ScaleToleranceErrorModal.vue';
-import ErroFactoryPartNumberStep from '../features/packing/weight_scale/components/ErroFactoryPartNumberStep.vue';
+import ErroJobOrderStep from '../features/packing/weight_scale/components/ErroJobOrderStep.vue';
+import ErroJobOrderConfirmModal from '../features/packing/weight_scale/components/ErroJobOrderConfirmModal.vue';
 import ErroBatchConfigModal from '../features/packing/weight_scale/components/ErroBatchConfigModal.vue';
+import ErroJobOrderCartonsModal from '../features/packing/weight_scale/components/ErroJobOrderCartonsModal.vue';
 
 import { useScaleStream } from '../features/packing/weight_scale/composables/useScaleStream';
 import { useErroSerialNumber } from '../features/packing/weight_scale/composables/useErroSerialNumber';
@@ -299,10 +274,20 @@ const system = useSystemStore();
 // Modals State
 const showBatchModal = ref(false);
 const showSettingsModal = ref(false);
+const showJobOrderConfirmModal = ref(false);
+const showCartonsModal = ref(false);
 
 // Active Selection State
 const selectedProduct = ref<Product | null>(null);
-const pendingProduct = ref<Product | null>(null);
+const pendingResolution = ref<ErroJobOrderResolution | null>(null);
+
+const activeJobOrder = ref<string>(localStorage.getItem('erro_active_job_order') || '');
+const activeFactoryPartNumber = ref<string>(localStorage.getItem('erro_active_factory_pn') || '');
+const activeCustomerRef = ref<string>(localStorage.getItem('erro_active_customer_ref') || '');
+const jobOrderTotalQty = ref<number>(Number(localStorage.getItem('erro_job_order_total_qty') || '0'));
+const jobOrderPlannedCartons = ref<number>(Number(localStorage.getItem('erro_job_order_planned_cartons') || '0'));
+const jobOrderPackedCartonsCount = ref<number>(Number(localStorage.getItem('erro_job_order_packed_count') || '0'));
+
 const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
 const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
 const labelPreviewErrors = ref<string[]>([]);
@@ -335,6 +320,7 @@ const {
   triggerWeighAndPrint,
 } = useWeighAndPrint({
   selectedProduct,
+  activeJobOrder,
   activePO,
   activeLot,
   isAgentOnline,
@@ -349,8 +335,9 @@ const {
     stationId: settings.stationId,
     localTemplateDir: settings.localTemplateDir,
   }),
-  openProductModal: () => system.showNotification('Vui lòng quét hoặc nhập Factory P/N trước khi in', 'warning'),
+  openProductModal: () => system.showNotification('Vui lòng quét hoặc nhập Công Lệnh trước khi in', 'warning'),
   openBatchModal: () => { showBatchModal.value = true; },
+
 });
 
 // 4. Agent & Template Health Composable
@@ -378,7 +365,11 @@ watch(currentSNPreview, () => {
 });
 
 watch(lastPackedCarton, async (carton) => {
-  if (carton) await fetchNextSN();
+  if (carton) {
+    jobOrderPackedCartonsCount.value += 1;
+    localStorage.setItem('erro_job_order_packed_count', String(jobOrderPackedCartonsCount.value));
+    await fetchNextSN();
+  }
 });
 
 // Navigation & Config Actions
@@ -387,18 +378,28 @@ const switchCustomer = () => {
   router.push('/');
 };
 
+const SESSION_KEYS = [
+  'erro_active_po', 'erro_active_lot', 'erro_active_job_order',
+  'erro_active_factory_pn', 'erro_active_customer_ref',
+  'erro_job_order_total_qty', 'erro_job_order_planned_cartons',
+  'erro_job_order_packed_count', 'erro_selected_product_id',
+];
+
 const clearPackingSession = () => {
   activePO.value = '';
   activeLot.value = '';
-  localStorage.removeItem('erro_active_po');
-  localStorage.removeItem('erro_active_lot');
+  activeJobOrder.value = '';
+  activeFactoryPartNumber.value = '';
+  activeCustomerRef.value = '';
+  jobOrderTotalQty.value = 0;
+  jobOrderPlannedCartons.value = 0;
+  jobOrderPackedCartonsCount.value = 0;
+  SESSION_KEYS.forEach((k) => localStorage.removeItem(k));
 };
 
 const activateProduct = (product: Product) => {
   selectedProduct.value = product;
-  if (product.template_type === 'erro_03' && !activeLot.value) {
-    activeLot.value = '92607933';
-  }
+  if (product.template_type === 'erro_03' && !activeLot.value) activeLot.value = '92607933';
   system.showNotification(`Đã chọn sản phẩm ${product.item_name}`, 'success');
   fetchNextSN();
 };
@@ -409,51 +410,63 @@ const saveBatchConfig = (payload: { po: string; lot: string }) => {
   localStorage.setItem('erro_active_po', activePO.value);
   localStorage.setItem('erro_active_lot', activeLot.value);
   showBatchModal.value = false;
-  if (pendingProduct.value) {
-    const product = pendingProduct.value;
-    pendingProduct.value = null;
-    activateProduct(product);
-  }
   system.showNotification('Đã cập nhật PO & LOT thành công', 'success');
 };
 
-const cancelBatchConfig = () => {
-  showBatchModal.value = false;
-  if (pendingProduct.value) {
-    pendingProduct.value = null;
-    clearPackingSession();
-  }
+const cancelBatchConfig = () => { showBatchModal.value = false; };
+
+const handleJobOrderResolved = (resolution: ErroJobOrderResolution) => {
+  pendingResolution.value = resolution;
+  showJobOrderConfirmModal.value = true;
 };
 
-const resolveFactoryPartNumber = (product: Product) => {
+const cancelJobOrderConfirm = () => {
+  showJobOrderConfirmModal.value = false;
+  pendingResolution.value = null;
+};
+
+const confirmJobOrderResolution = (payload: { po: string; lot: string }) => {
+  if (!pendingResolution.value) return;
+  const resolution = pendingResolution.value;
+  showJobOrderConfirmModal.value = false;
+  pendingResolution.value = null;
+
   clearPackingSession();
-  if (product.template_type === 'erro_01' || product.template_type === 'erro_04') {
-    pendingProduct.value = product;
-    showBatchModal.value = true;
-    return;
-  }
-  activateProduct(product);
+  activeJobOrder.value = resolution.job_order;
+  activeFactoryPartNumber.value = resolution.factory_part_number;
+  activeCustomerRef.value = resolution.customer_ref;
+  jobOrderTotalQty.value = resolution.total_qty;
+  jobOrderPlannedCartons.value = resolution.planned_cartons;
+  jobOrderPackedCartonsCount.value = resolution.packed_cartons_count;
+  activePO.value = payload.po;
+  activeLot.value = payload.lot;
+
+  const stateMap: Record<string, string> = {
+    erro_active_job_order: activeJobOrder.value, erro_active_factory_pn: activeFactoryPartNumber.value,
+    erro_active_customer_ref: activeCustomerRef.value, erro_job_order_total_qty: String(jobOrderTotalQty.value),
+    erro_job_order_planned_cartons: String(jobOrderPlannedCartons.value), erro_job_order_packed_count: String(jobOrderPackedCartonsCount.value),
+    erro_active_po: activePO.value, erro_active_lot: activeLot.value,
+  };
+  Object.entries(stateMap).forEach(([k, v]) => localStorage.setItem(k, v));
+
+  activateProduct(resolution.product);
 };
 
 const clearSelectedProduct = () => {
   selectedProduct.value = null;
-  pendingProduct.value = null;
+  pendingResolution.value = null;
   clearPackingSession();
-  localStorage.removeItem('erro_selected_product_id');
-  system.showNotification('Hãy quét hoặc nhập Factory P/N để chọn mã hàng mới', 'info');
+  system.showNotification('Hãy quét hoặc nhập Công Lệnh để bắt đầu ca đóng mới', 'info');
 };
 
 // Global Hotkeys Listener (F9, Enter, Esc)
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (showToleranceErrorModal.value) {
-    if (['Enter', 'Escape', ' ', 'Space'].includes(event.key) || ['Enter', 'Escape', 'Space'].includes(event.code)) {
-      event.preventDefault();
-      showToleranceErrorModal.value = false;
-      return;
-    }
+  if (showToleranceErrorModal.value && ['Enter', 'Escape', ' ', 'Space'].includes(event.key)) {
+    event.preventDefault();
+    showToleranceErrorModal.value = false;
+    return;
   }
-
-  if (event.key === 'F9' || event.code === 'F9' || event.keyCode === 120 || event.which === 120) {
+  if (event.key === 'F9' || event.code === 'F9' || event.keyCode === 120) {
     event.preventDefault();
     triggerWeighAndPrint();
   }

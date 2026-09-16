@@ -1,9 +1,11 @@
-import math
 import logging
+import math
 from typing import cast
-from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+
 from fastapi import HTTPException
+from sqlalchemy import func, text
+from sqlalchemy.orm import Session
+
 from src.core import models
 from src.features.carton.sn_allocator import plan_job_order_slots
 from src.features.job_order import schemas
@@ -36,9 +38,9 @@ def get_job_order_from_erp(db: Session, job_order: str):
         if not row:
             raise HTTPException(status_code=400, detail=f"Không tìm thấy công lệnh '{job_order}' trên hệ thống ShopFloorDW.")
             
-        wadoco = str(row[0]).strip()
-        walitm = str(row[1]).strip()
-        wadl01 = str(row[2]).strip()
+        wadoco = str(row[0] or "").strip()
+        walitm = str(row[1] or "").strip()
+        wadl01 = str(row[2] or "").strip()
         try:
             qty = int(row[3])
         except Exception:
@@ -56,7 +58,7 @@ def get_job_order_from_erp(db: Session, job_order: str):
         logger.error(f"Linked Server query failed: {e}. Raising HTTP error.")
         raise HTTPException(
             status_code=400, 
-            detail=f"Không thể kết nối cơ sở dữ liệu ShopFloor hoặc công lệnh không hợp lệ. Chi tiết: {str(e)}"
+            detail=f"Không thể kết nối cơ sở dữ liệu ShopFloor hoặc công lệnh không hợp lệ. Chi tiết: {e!s}"
         )
 
 def get_mocked_job_order(db: Session, job_order: str):
@@ -75,44 +77,66 @@ def get_mocked_job_order(db: Session, job_order: str):
             "quantity": 750
         }
         
-    ref_name = "UACC-Cable-Patch-Outdoor-2M-BK" if "Outdoor-2M-BK" in cast(str, product.item_name) else cast(str, product.item_name)
+    ref_name = "UACC-Cable-Patch-Outdoor-2M-BK"
+    if product and product.item_name:
+        if "Outdoor-2M-BK" not in product.item_name:
+            ref_name = product.item_name
     return {
         "job_order": job_order,
         "product_code": "1CAD2420D2BK01NX9",
         "customer_ref": ref_name,
-        "quantity": 15 * cast(int, product.packed_qty)
+        "quantity": 15 * (product.packed_qty or 1) if product else 750
     }
 
 
-def find_matching_product(db: Session, customer_ref: str, product_code: str):
+def find_matching_product(db: Session, customer_ref: str | None, product_code: str | None = None):
     """
     Search for a Product matching either the Customer Ref (wadl01) or Product Code (walitm).
     Supports matching typos like Path vs Patch.
     """
+    clean_ref = (customer_ref or "").strip()
+    clean_code = (product_code or "").strip()
+
+    if not clean_ref:
+        if clean_code:
+            return db.query(models.Product).filter(
+                (models.Product.internal_factory_part_number == clean_code) |
+                (models.Product.item_name == clean_code)
+            ).first()
+        return None
+
     # 1. Match by item_name exactly
-    product = db.query(models.Product).filter(models.Product.item_name == customer_ref).first()
+    product = db.query(models.Product).filter(models.Product.item_name == clean_ref).first()
     if product:
         return product
         
     # 2. Match by item_name case-insensitively
-    product = db.query(models.Product).filter(func.lower(models.Product.item_name) == customer_ref.lower()).first()
+    product = db.query(models.Product).filter(func.lower(models.Product.item_name) == clean_ref.lower()).first()
     if product:
         return product
         
     # 3. Typo handling: Replace 'Patch' with 'Path' in the search ref
-    if 'Patch' in customer_ref:
-        path_ref = customer_ref.replace('Patch', 'Path')
+    if 'Patch' in clean_ref:
+        path_ref = clean_ref.replace('Patch', 'Path')
         product = db.query(models.Product).filter(func.lower(models.Product.item_name) == path_ref.lower()).first()
         if product:
             return product
             
     # 4. Typo handling: Replace 'Path' with 'Patch' in the search ref
-    if 'Path' in customer_ref:
-        patch_ref = customer_ref.replace('Path', 'Patch')
+    if 'Path' in clean_ref:
+        patch_ref = clean_ref.replace('Path', 'Patch')
         product = db.query(models.Product).filter(func.lower(models.Product.item_name) == patch_ref.lower()).first()
         if product:
             return product
             
+    if clean_code:
+        product = db.query(models.Product).filter(
+            (models.Product.internal_factory_part_number == clean_code) |
+            (models.Product.item_name == clean_code)
+        ).first()
+        if product:
+            return product
+
     return None
 
 def get_or_create_job_order_slots(db: Session, job_order: str):
@@ -120,12 +144,15 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
     erp_data = get_job_order_from_erp(db, job_order)
     
     # 2. Find matching product
-    product = find_matching_product(db, cast(str, erp_data["customer_ref"]), cast(str, erp_data["product_code"]))
+    cust_ref = str(erp_data.get("customer_ref") or "").strip()
+    prod_code = str(erp_data.get("product_code") or "").strip()
+    product = find_matching_product(db, cust_ref, prod_code)
 
     if not product:
+        ref_display = cust_ref or prod_code or job_order
         raise HTTPException(
             status_code=400, 
-            detail=f"Không tìm thấy con hàng '{erp_data['customer_ref']}' tương ứng trong cơ sở dữ liệu."
+            detail=f"Không tìm thấy con hàng '{ref_display}' tương ứng trong cơ sở dữ liệu."
         )
         
     # 3. Calculate total cartons
@@ -173,7 +200,7 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
             db.refresh(s)
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Không thể lưu danh sách cấp phát thùng: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Không thể lưu danh sách cấp phát thùng: {e!s}")
         
     return schemas.JobOrderDetailsResponse(
         job_order=job_order,
@@ -189,3 +216,58 @@ def get_job_order_slots_list(db: Session, job_order: str):
     ).order_by(models.JobOrderCartonSlot.carton_number).all()
     
     return [schemas.JobOrderSlotResponse.model_validate(s) for s in slots]
+
+
+def resolve_erro_job_order(db: Session, job_order: str) -> schemas.ErroJobOrderResolutionResponse:
+    clean_job_order = job_order.strip()
+    if not clean_job_order:
+        raise HTTPException(status_code=400, detail="Mã công lệnh không được để trống.")
+
+    # 1. Fetch ERP Job Order details
+    erp_data = get_job_order_from_erp(db, clean_job_order)
+    factory_part_number = str(erp_data.get("product_code") or "").strip()
+    customer_ref = str(erp_data.get("customer_ref") or "").strip()
+    total_qty = int(erp_data.get("quantity") or 0)
+
+    # 2. Resolve Erro product by internal factory part number
+    from src.features.product.service import resolve_erro_product_by_internal_factory_part_number
+    product = resolve_erro_product_by_internal_factory_part_number(factory_part_number, db)
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Factory P/N '{factory_part_number}' từ công lệnh '{clean_job_order}' chưa được cấu hình cho khách hàng Erro."
+        )
+
+    # 3. Ensure product belongs to Customer ERRO
+    if not product.customer or product.customer.code != "ERRO":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Công lệnh '{clean_job_order}' thuộc khách hàng khác, không thể mở trên trạm cân Erro."
+        )
+
+    # 4. Calculate planned cartons
+    packed_qty = cast(int, product.packed_qty) or 1
+    planned_cartons = math.ceil(total_qty / packed_qty) if total_qty > 0 else 0
+
+    # 5. Count existing cartons already packed for this job order
+    packed_cartons_count = db.query(models.Carton).filter(
+        models.Carton.job_order == clean_job_order,
+        models.Carton.is_reprint == 0,
+        models.Carton.status == "SUCCESS"
+    ).count()
+
+    # 6. Check for name mismatch
+    item_name = (product.item_name or "").strip()
+    name_mismatch = (customer_ref.lower() != item_name.lower()) if (customer_ref and item_name) else False
+
+    return schemas.ErroJobOrderResolutionResponse(
+        job_order=clean_job_order,
+        factory_part_number=factory_part_number,
+        customer_ref=customer_ref,
+        total_qty=total_qty,
+        planned_cartons=planned_cartons,
+        packed_cartons_count=packed_cartons_count,
+        name_mismatch=name_mismatch,
+        product=product,
+    )
+

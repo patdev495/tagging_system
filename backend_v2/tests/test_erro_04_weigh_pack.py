@@ -261,9 +261,9 @@ def test_weigh_pack_erro_04_reprint_keeps_sequence_and_next_print_advances(db_se
 
 def test_erro_04_base32_sequence_invariants_and_omitted_letters():
     from src.features.carton.erro_04_sn_allocator import (
+        ERRO_04_ALPHABET,
         format_erro_04_sequence,
         parse_erro_04_sequence,
-        ERRO_04_ALPHABET,
     )
 
     # 32 characters: 0-9 and uppercase letters excluding I, L, O, U

@@ -1,16 +1,17 @@
-from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from src.core.database import get_db
 from src.core.models import User
 from src.features.auth.dependencies import get_current_user
-from .schemas import JobOrderSummary, JobOrderSlotDetail, POLotRunSummary
+
 from . import service
+from .schemas import JobOrderSlotDetail, JobOrderSummary, POLotRunSummary
 
 router = APIRouter(prefix="/admin/production-runs", tags=["Production Runs"])
 
-@router.get("/job-orders", response_model=List[JobOrderSummary])
+@router.get("/job-orders", response_model=list[JobOrderSummary])
 def list_job_orders_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -21,7 +22,7 @@ def list_job_orders_summary(
     """
     return service.get_job_orders_summary(db)
 
-@router.get("/job-orders/{job_order}/slots", response_model=List[JobOrderSlotDetail])
+@router.get("/job-orders/{job_order}/slots", response_model=list[JobOrderSlotDetail])
 def list_job_order_slots(
     job_order: str,
     db: Session = Depends(get_db),
@@ -33,7 +34,7 @@ def list_job_order_slots(
     """
     return service.get_job_order_slots(db, job_order)
 
-@router.get("/po-runs", response_model=List[POLotRunSummary])
+@router.get("/po-runs", response_model=list[POLotRunSummary])
 def list_po_lot_runs(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

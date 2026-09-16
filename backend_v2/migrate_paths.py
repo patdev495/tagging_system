@@ -1,5 +1,6 @@
-import pyodbc
 import os
+
+import pyodbc
 from dotenv import load_dotenv
 
 # Load env

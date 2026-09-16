@@ -1,5 +1,6 @@
 import datetime
-from typing import Iterable, Optional, cast as typing_cast
+from collections.abc import Iterable
+from typing import cast as typing_cast
 
 from fastapi import HTTPException
 from sqlalchemy import or_
@@ -12,8 +13,8 @@ from src.features.carton import print_attempts
 def get_pending_slot_for_carton_creation(
     db: Session,
     *,
-    slot_id: Optional[int],
-    job_order: Optional[str],
+    slot_id: int | None,
+    job_order: str | None,
     product_id: int,
 ) -> models.JobOrderCartonSlot:
     if not job_order:

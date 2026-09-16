@@ -1,5 +1,6 @@
+
 from pydantic import BaseModel
-from typing import Optional, List
+
 
 class CartonStatusUpdate(BaseModel):
     status: str # SUCCESS or FAILED
@@ -11,16 +12,16 @@ class TemplateInfo(BaseModel):
     updated_at: str
 
 class TemplateListResponse(BaseModel):
-    templates: List[TemplateInfo]
+    templates: list[TemplateInfo]
 
 class TemplateValidateRequest(BaseModel):
     template_name: str
-    folder: Optional[str] = None
+    folder: str | None = None
 
 class TemplateValidateResponse(BaseModel):
     valid: bool
     message: str
-    resolved_path: Optional[str] = None
+    resolved_path: str | None = None
 
 class CanonicalTemplateItem(BaseModel):
     filename: str
@@ -28,10 +29,10 @@ class CanonicalTemplateItem(BaseModel):
     type: str
     name: str
     exists: bool = False
-    resolved_path: Optional[str] = None
+    resolved_path: str | None = None
 
 class CanonicalTemplatesResponse(BaseModel):
-    templates: List[CanonicalTemplateItem]
+    templates: list[CanonicalTemplateItem]
     templates_dir: str
 
 class EngineRestartResponse(BaseModel):

@@ -1,4 +1,3 @@
-import pytest
 
 def test_password_hash_and_verify():
     from src.features.auth.security import hash_password, verify_password
@@ -17,8 +16,8 @@ def test_password_hash_and_verify():
     assert verify_password("WrongPassword", hashed) is False
 
 def test_create_and_decode_token():
+
     from src.features.auth.security import create_access_token, decode_access_token
-    import time
 
     payload = {"sub": "admin", "user_id": 1, "role": "admin"}
     token = create_access_token(payload, expires_delta_seconds=3600)
@@ -43,9 +42,10 @@ def test_create_and_decode_token():
 def test_user_seeding_and_authentication():
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    from src.core.database import Base
+
     from src.core import models
-    from src.features.auth.service import seed_default_users, authenticate_user
+    from src.core.database import Base
+    from src.features.auth.service import authenticate_user, seed_default_users
 
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=engine)
@@ -92,10 +92,10 @@ def test_auth_api_login_and_me():
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.pool import StaticPool
-    from src.core.database import Base, get_db
-    from src.core import models
-    from src.features.auth.service import seed_default_users
+
     from main import app
+    from src.core.database import Base, get_db
+    from src.features.auth.service import seed_default_users
 
     # Create shared memory test DB with StaticPool
     engine = create_engine(
@@ -167,9 +167,10 @@ def test_rbac_enforcement_blocks_qa():
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.pool import StaticPool
+
+    from main import app
     from src.core.database import Base, get_db
     from src.features.auth.service import seed_default_users
-    from main import app
 
     engine = create_engine(
         "sqlite:///:memory:",

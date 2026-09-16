@@ -1,10 +1,12 @@
+import datetime
+
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
-import datetime
+
 from src.core.database import get_db
 from src.features.auth.dependencies import require_admin
+
 from . import schemas, service
-from typing import Optional
 
 router = APIRouter(prefix="/cartons", tags=["History"])
 
@@ -12,14 +14,14 @@ router = APIRouter(prefix="/cartons", tags=["History"])
 def list_cartons(
     skip: int = 0, 
     limit: int = 50, 
-    search: Optional[str] = None,
-    product_id: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    customer_id: Optional[int] = Query(None),
-    job_order: Optional[str] = Query(None),
-    po_number: Optional[str] = Query(None),
+    search: str | None = None,
+    product_id: int | None = Query(None),
+    status: str | None = Query(None),
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
+    customer_id: int | None = Query(None),
+    job_order: str | None = Query(None),
+    po_number: str | None = Query(None),
     db: Session = Depends(get_db)
 ):
     """Lấy danh sách lịch sử thùng hàng (có phân trang và lọc đa chiều)"""
@@ -40,14 +42,14 @@ def list_cartons(
 @router.get("/export")
 def export_cartons(
     mode: str = Query("summary", pattern="^(summary|detailed)$"),
-    search: Optional[str] = None,
-    product_id: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
-    customer_id: Optional[int] = Query(None),
-    job_order: Optional[str] = Query(None),
-    po_number: Optional[str] = Query(None),
+    search: str | None = None,
+    product_id: int | None = Query(None),
+    status: str | None = Query(None),
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
+    customer_id: int | None = Query(None),
+    job_order: str | None = Query(None),
+    po_number: str | None = Query(None),
     db: Session = Depends(get_db)
 ):
     """Xuất báo cáo danh sách thùng ra file Excel (chế độ summary hoặc detailed)"""

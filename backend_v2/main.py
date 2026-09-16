@@ -1,10 +1,11 @@
+import logging
 import os
 import sys
-import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging to show debug info in console
 logging.basicConfig(
@@ -14,15 +15,16 @@ logging.basicConfig(
 
 from src.core.config import settings
 from src.core.exceptions import custom_http_exception_handler
-from src.features.customer.router import router as customer_router
-from src.features.product.router import router as product_router
-from src.features.history.router import router as history_router
-from src.features.carton.router import router as carton_router
-from src.features.print.router import router as print_router
-from src.features.job_order.router import router as job_order_router
 from src.features.auth.router import router as auth_router
+from src.features.carton.router import router as carton_router
+from src.features.customer.router import router as customer_router
 from src.features.dashboard.router import router as dashboard_router
+from src.features.history.router import router as history_router
+from src.features.job_order.router import router as job_order_router
+from src.features.print.router import router as print_router
+from src.features.product.router import router as product_router
 from src.features.production_run.router import router as production_run_router
+
 
 def create_app() -> FastAPI:
     @asynccontextmanager
@@ -99,8 +101,8 @@ def create_app() -> FastAPI:
     logging.getLogger("main").info(f"Frontend directory: {frontend_dist}")
 
     if os.path.exists(frontend_dist):
-        from fastapi.staticfiles import StaticFiles
         from fastapi.responses import FileResponse
+        from fastapi.staticfiles import StaticFiles
         
         # Mount assets specifically first (if they exist in a subfolder)
         assets_path = os.path.join(frontend_dist, "assets")
@@ -126,6 +128,7 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     from src.core.config import settings
     
     # Check if running as EXE

@@ -1,6 +1,8 @@
 import os
 import sys
+
 from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     API_PORT: int = 8000

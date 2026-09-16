@@ -1,11 +1,13 @@
-import pytest
 from typing import cast
+
+import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product, Carton
-from src.features.carton.schemas import CartonWeighPackCreate
+
+from src.core.models import Base, Customer, Product
 from src.features.carton import service as carton_service
+from src.features.carton.schemas import CartonWeighPackCreate
 
 
 @pytest.fixture
@@ -118,3 +120,16 @@ def test_weigh_pack_sequential_sn(db_session, erro_01_product):
     sn1_seq = int(str(c1.carton_sn)[-6:])
     sn2_seq = int(str(c2.carton_sn)[-6:])
     assert sn2_seq == sn1_seq + 1
+
+
+def test_weigh_pack_saves_job_order(db_session, erro_01_product):
+    payload = CartonWeighPackCreate(
+        product_id=cast(int, erro_01_product.id),
+        weight=12.500,
+        job_order="1259487",
+        po_number="PO-123",
+        lot_number="LOT-456",
+    )
+    carton, _ = carton_service.weigh_pack_carton(payload, db_session)
+    assert carton.job_order == "1259487"
+

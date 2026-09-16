@@ -2,12 +2,13 @@
 Tests for Carton Service — S/N generation logic.
 This is the most critical business logic in the system.
 """
-import pytest
 from unittest.mock import MagicMock, patch
-from src.core import models
-from src.features.carton import service, schemas
+
+import pytest
 from fastapi import HTTPException
 
+from src.core import models
+from src.features.carton import schemas, service
 
 # ============================================================
 # get_next_carton_sn — Pure S/N generation

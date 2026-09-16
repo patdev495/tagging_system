@@ -1,14 +1,15 @@
 import logging
-from typing import List
+
+from sqlalchemy import case, desc, func
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case, desc
 
 from src.core import models
-from .schemas import JobOrderSummary, JobOrderSlotDetail, POLotRunSummary
+
+from .schemas import JobOrderSlotDetail, JobOrderSummary, POLotRunSummary
 
 logger = logging.getLogger("ProductionRunService")
 
-def get_job_orders_summary(db: Session) -> List[JobOrderSummary]:
+def get_job_orders_summary(db: Session) -> list[JobOrderSummary]:
     results = db.query(
         models.JobOrderCartonSlot.job_order,
         models.JobOrderCartonSlot.product_id,
@@ -57,14 +58,14 @@ def get_job_orders_summary(db: Session) -> List[JobOrderSummary]:
         )
     return summaries
 
-def get_job_order_slots(db: Session, job_order: str) -> List[JobOrderSlotDetail]:
+def get_job_order_slots(db: Session, job_order: str) -> list[JobOrderSlotDetail]:
     slots = db.query(models.JobOrderCartonSlot).filter(
         models.JobOrderCartonSlot.job_order == job_order
     ).order_by(models.JobOrderCartonSlot.carton_number.asc()).all()
 
     return [JobOrderSlotDetail.model_validate(s) for s in slots]
 
-def get_po_lot_runs(db: Session) -> List[POLotRunSummary]:
+def get_po_lot_runs(db: Session) -> list[POLotRunSummary]:
     results = db.query(
         models.Carton.po_number,
         models.Carton.lot_number,

@@ -3,9 +3,8 @@ import hashlib
 import hmac
 import json
 import os
-import secrets
 import time
-from typing import Optional
+
 from src.core.config import settings
 
 SECRET_KEY = getattr(settings, "SECRET_KEY", "ny_tagging_system_super_secret_key_2026_production")
@@ -39,7 +38,7 @@ def create_access_token(data: dict, expires_delta_seconds: int = 86400) -> str:
     signature = hmac.new(SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).hexdigest()
     return f"{payload_b64}.{signature}"
 
-def decode_access_token(token: str) -> Optional[dict]:
+def decode_access_token(token: str) -> dict | None:
     """Decodes and verifies an HMAC-SHA256 signed access token."""
     try:
         parts = token.split(".")

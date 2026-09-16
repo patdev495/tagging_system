@@ -1,16 +1,18 @@
 import datetime
 import logging
-from typing import List, Tuple, Dict, Optional, cast as typing_cast
+from typing import cast as typing_cast
+
+from sqlalchemy import case, desc, func
 from sqlalchemy.orm import Session, joinedload, selectinload
-from sqlalchemy import func, desc, case
 
 from src.core import models
+
 from .schemas import (
     DashboardStatsResponse,
-    KPIStats,
     HourlyStat,
-    ProductStat,
+    KPIStats,
     LiveCartonFeed,
+    ProductStat,
     SystemHealth,
 )
 
@@ -18,9 +20,9 @@ logger = logging.getLogger("DashboardService")
 
 def get_time_boundary(
     time_range: str,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-) -> Tuple[datetime.datetime, datetime.datetime]:
+    start_date: str | None = None,
+    end_date: str | None = None
+) -> tuple[datetime.datetime, datetime.datetime]:
     now = datetime.datetime.now()
     today_start = datetime.datetime.combine(now.date(), datetime.time.min)
     today_end = datetime.datetime.combine(now.date(), datetime.time.max)
@@ -70,7 +72,7 @@ def calculate_hourly_throughput(
     start_dt: datetime.datetime,
     end_dt: datetime.datetime,
     time_range: str
-) -> List[HourlyStat]:
+) -> list[HourlyStat]:
     span_days = (end_dt.date() - start_dt.date()).days
     is_hourly = time_range in ("today", "yesterday") or (time_range == "custom" and span_days <= 1)
 
@@ -112,7 +114,7 @@ def calculate_hourly_throughput(
                     extra_keys.add(h_key)
         all_keys = sorted(list(set(hour_keys).union(extra_keys)))
 
-        stats_map: Dict[str, Dict[str, int]] = {
+        stats_map: dict[str, dict[str, int]] = {
             k: {"total": 0, "success": 0, "failed": 0, "total_items": 0} for k in all_keys
         }
         for c_id, created_at, status, packed_qty in cartons:
@@ -177,7 +179,7 @@ def calculate_top_products(
     start_dt: datetime.datetime,
     end_dt: datetime.datetime,
     total_cartons: int
-) -> List[ProductStat]:
+) -> list[ProductStat]:
     results = db.query(
         models.Product.id.label("product_id"),
         models.Product.item_name,
@@ -247,8 +249,8 @@ def calculate_top_products(
 def get_dashboard_stats(
     db: Session,
     time_range: str = "today",
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
+    start_date: str | None = None,
+    end_date: str | None = None
 ) -> DashboardStatsResponse:
     start_dt, end_dt = get_time_boundary(time_range, start_date=start_date, end_date=end_date)
 
@@ -302,7 +304,7 @@ def get_dashboard_stats(
         selectinload(models.Carton.items)
     ).order_by(models.Carton.id.desc()).limit(15).all()
 
-    live_feed: List[LiveCartonFeed] = []
+    live_feed: list[LiveCartonFeed] = []
     for c in recent_cartons:
         p_name = c.product.item_name if c.product else "N/A"
         c_code = c.product.customer.code if (c.product and c.product.customer) else "N/A"

@@ -1,7 +1,9 @@
 import logging
-from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from src.core import models
+
 from .security import hash_password, verify_password
 
 logger = logging.getLogger("AuthService")
@@ -37,7 +39,7 @@ def seed_default_users(db: Session):
             logger.info(f"Seeded default user '{user_info['username']}' with role '{user_info['role']}'.")
     db.commit()
 
-def authenticate_user(db: Session, username: str, password: str) -> Optional[models.User]:
+def authenticate_user(db: Session, username: str, password: str) -> models.User | None:
     """Verifies credentials and returns the active User object if valid, else None."""
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user:
@@ -48,6 +50,6 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[mod
         return None
     return user
 
-def get_user_by_username(db: Session, username: str) -> Optional[models.User]:
+def get_user_by_username(db: Session, username: str) -> models.User | None:
     """Finds user by username."""
     return db.query(models.User).filter(models.User.username == username).first()

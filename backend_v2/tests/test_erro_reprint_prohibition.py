@@ -1,9 +1,11 @@
 from typing import cast
+
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product, Carton
+
+from src.core.models import Base, Carton, Customer, Product
 from src.features.print.service import reprint_carton
 
 
@@ -124,8 +126,8 @@ def test_weigh_pack_erro_rejects_custom_sn(db_session, erro_product):
     ADR 0005: Customer Erro strictly forbids manual sequence manipulation.
     Passing custom_sn must be rejected by the API.
     """
-    from src.features.carton.service import weigh_pack_carton
     from src.features.carton.schemas import CartonWeighPackCreate
+    from src.features.carton.service import weigh_pack_carton
 
     weigh_in = CartonWeighPackCreate(
         product_id=cast(int, erro_product.id),
@@ -148,8 +150,8 @@ def test_weigh_pack_erro_damaged_label_sop_sequential_increment(db_session, erro
     If a label is torn/damaged, worker prints the next sequence (F9).
     The system allocates N then N+1 without conflict.
     """
-    from src.features.carton.service import weigh_pack_carton
     from src.features.carton.schemas import CartonWeighPackCreate
+    from src.features.carton.service import weigh_pack_carton
 
     weigh_1 = CartonWeighPackCreate(
         product_id=cast(int, erro_product.id),

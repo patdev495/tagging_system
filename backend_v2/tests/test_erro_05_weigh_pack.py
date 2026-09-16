@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import cast
+
 import pytest
-from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

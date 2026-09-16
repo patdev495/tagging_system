@@ -1,5 +1,4 @@
-import pytest
-from src.core.models import Product, Carton
+from src.core.models import Carton, Product
 from src.features.print.domain import BTXMLDocument
 
 

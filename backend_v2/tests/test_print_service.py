@@ -1,11 +1,12 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.features.print import service
-from src.features.print import schemas
+
 from src.core import models
 from src.core.database import Base
+from src.features.print import schemas, service
 
 
 @pytest.fixture

@@ -1,23 +1,25 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
+
 from src.core.database import get_db
-from src.core.models import Product, Customer
-from src.features.history.schemas import CartonDetail
 from src.features.auth.dependencies import require_admin
+from src.features.history.schemas import CartonDetail
+
 from . import schemas, service
 
 router = APIRouter(tags=["Products"])
 
-@router.get("/customers/{customer_id}/products", response_model=List[schemas.Product])
+@router.get("/customers/{customer_id}/products", response_model=list[schemas.Product])
 def get_products_by_customer(customer_id: int, db: Session = Depends(get_db)):
     """Lấy danh sách sản phẩm theo khách hàng"""
     return service.get_products_by_customer(customer_id, db)
 
-@router.get("/products", response_model=List[schemas.Product])
+@router.get("/products", response_model=list[schemas.Product])
 def get_all_products(
-    customer_code: Optional[str] = None,
-    search: Optional[str] = None,
+    customer_code: str | None = None,
+    search: str | None = None,
     db: Session = Depends(get_db)
 ):
     """Lấy tất cả sản phẩm (cho trang Admin hoặc lọc theo customer_code / search)"""
@@ -61,19 +63,19 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     return {"message": "Product deleted successfully"}
 
 @router.get("/products/{product_id}/next-sn")
-def get_next_sn(product_id: int, yymm: Optional[str] = None, db: Session = Depends(get_db)):
+def get_next_sn(product_id: int, yymm: str | None = None, db: Session = Depends(get_db)):
     """Lấy S/N tiếp theo cho sản phẩm"""
     return service.get_next_sn(product_id, db, yymm)
 
 @router.get("/products/{product_id}/last-carton", response_model=Optional[CartonDetail])
-def get_last_carton(product_id: int, job_order: Optional[str] = None, db: Session = Depends(get_db)):
+def get_last_carton(product_id: int, job_order: str | None = None, db: Session = Depends(get_db)):
     """Lấy Carton cuối của Product, có thể giới hạn trong một Công Lệnh."""
     return service.get_last_carton(product_id, db, job_order=job_order)
 
 
 @router.get(
     "/products/{product_id}/internal-factory-part-numbers",
-    response_model=List[schemas.InternalFactoryPartNumberOut],
+    response_model=list[schemas.InternalFactoryPartNumberOut],
 )
 def get_product_internal_factory_part_numbers(product_id: int, db: Session = Depends(get_db)):
     """Lấy danh sách Factory P/N (1-N mapping) đã cấu hình cho sản phẩm."""
@@ -96,7 +98,7 @@ def add_product_internal_factory_part_number(
 
 @router.post(
     "/products/{product_id}/internal-factory-part-numbers/batch",
-    response_model=List[schemas.InternalFactoryPartNumberOut],
+    response_model=list[schemas.InternalFactoryPartNumberOut],
     dependencies=[Depends(require_admin)],
 )
 def batch_add_product_internal_factory_part_numbers(

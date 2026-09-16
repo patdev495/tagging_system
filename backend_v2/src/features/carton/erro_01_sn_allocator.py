@@ -1,10 +1,10 @@
 import datetime
 import re
 from dataclasses import dataclass
-from typing import Optional
-from sqlalchemy.orm import Session
-from src.core import models
 
+from sqlalchemy.orm import Session
+
+from src.core import models
 
 ERRO_01_SEQUENCE_WIDTH = 6
 
@@ -36,7 +36,7 @@ def format_erro_01_carton_sn(pkg_prefix: str, yymm: str, sequence: int) -> str:
     return f"{pkg_prefix}{yymm}{str(sequence).zfill(ERRO_01_SEQUENCE_WIDTH)}"
 
 
-def parse_erro_01_sequence(carton_sn: Optional[str]) -> int:
+def parse_erro_01_sequence(carton_sn: str | None) -> int:
     if not carton_sn:
         return 0
     sequence_text = carton_sn[-ERRO_01_SEQUENCE_WIDTH:]
@@ -53,7 +53,7 @@ def next_erro_01_sequence(
     pkg_prefix: str,
     yy: str,
     lock: bool = False,
-    product_id: Optional[int] = None,
+    product_id: int | None = None,
 ) -> int:
     """
     Finds the maximum sequence allocated in the given year (YY) for the specified product (and pkg_prefix).
@@ -81,8 +81,8 @@ def next_erro_01_sequence(
 def plan_next_erro_01_carton_sn(
     db: Session,
     product: models.Product,
-    custom_yymm: Optional[str] = None,
-    custom_sequence: Optional[int] = None,
+    custom_yymm: str | None = None,
+    custom_sequence: int | None = None,
     lock: bool = False,
 ) -> Erro01CartonSNPlan:
     raw_prefix = getattr(product, "pkg_prefix", None) or getattr(product, "start_part", None) or "VHK0010237"
@@ -90,7 +90,7 @@ def plan_next_erro_01_carton_sn(
     yymm = custom_yymm or current_yymm()
     yy = yymm[:2]
     raw_id = getattr(product, "id", None)
-    prod_id: Optional[int] = int(raw_id) if raw_id is not None else None
+    prod_id: int | None = int(raw_id) if raw_id is not None else None
     
     if custom_sequence is not None and custom_sequence > 0:
         sequence = custom_sequence

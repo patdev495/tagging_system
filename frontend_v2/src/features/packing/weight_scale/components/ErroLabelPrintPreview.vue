@@ -138,7 +138,6 @@ const errors = computed(() => {
 });
 
 const dateYYYYMMDD = computed(() => `${props.now.getFullYear()}${String(props.now.getMonth() + 1).padStart(2, '0')}${String(props.now.getDate()).padStart(2, '0')}`);
-const dateYYMM = computed(() => `${String(props.now.getFullYear()).slice(-2)}${String(props.now.getMonth() + 1).padStart(2, '0')}`);
 const dateCode = computed(() => {
   const date = new Date(Date.UTC(props.now.getFullYear(), props.now.getMonth(), props.now.getDate()));
   const day = date.getUTCDay() || 7;
@@ -150,7 +149,7 @@ const fields = computed(() => {
   const product = props.product;
   if (!product) return [];
   if (product.template_type === 'erro_01') return [
-    { label: 'CPN', value: product.item_name }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Mfr P/N', value: product.mfr_pn || '' }, { label: 'Date Code', value: dateYYMM.value }, { label: 'Lot No.', value: props.lot }, { label: 'PO No.', value: props.po }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Rev', value: product.revision || '' }, { label: 'Origin', value: 'MADE IN VIETNAM' },
+    { label: 'CPN', value: product.item_name }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Mfr P/N', value: product.mfr_pn || '' }, { label: 'Date Code', value: dateCode.value }, { label: 'Lot No.', value: props.lot }, { label: 'PO No.', value: props.po }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Rev', value: product.revision || '' }, { label: 'Origin', value: 'MADE IN VIETNAM' },
   ];
   if (product.template_type === 'erro_03') return [
     { label: 'Project / Stage', value: `项目: ${product.customer_project || ''} | 生产阶段：${product.production_stage || ''}` }, { label: 'Luxshare Part No.', value: product.luxshare_part_number || '' }, { label: 'APN Rev', value: product.revision || '/' }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Date', value: dateYYYYMMDD.value }, { label: 'Lot No.', value: props.lot || '92607933' }, { label: 'Part Description', value: product.product_desc || product.item_name }, { label: 'Supplier Code', value: product.pkg_prefix || '1012665' }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Supplier Name', value: 'NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED' }, { label: 'Origin', value: 'VIETNAM' },

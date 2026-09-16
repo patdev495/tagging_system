@@ -1,10 +1,11 @@
 import os
-import pytest
 from unittest.mock import MagicMock, patch
-from src.core.utils import TemplateResolver
-from src.features.print.domain import BTXMLDocument
-from src.features.print.bartender_com import BarTenderCOMApp
 
+import pytest
+
+from src.core.utils import TemplateResolver
+from src.features.print.bartender_com import BarTenderCOMApp
+from src.features.print.domain import BTXMLDocument
 
 # ==========================================
 # 1. TESTS FOR TEMPLATERESOLVER

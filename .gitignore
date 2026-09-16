@@ -43,5 +43,8 @@ backend_v2/shopee_affiliate_commission.py
 outputs/
 .codegraph/
 print_agent_v2/pdf_output/
-
-
+.uv-cache/
+tmp/
+temp_pdf/
+*.zip
+*.db

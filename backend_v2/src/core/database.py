@@ -1,8 +1,8 @@
-import os
 import logging
+import os
+
 from sqlalchemy import create_engine, inspect, text
-from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from src.core.config import settings
 
@@ -36,7 +36,7 @@ if "sqlite" in DATABASE_URL.lower():
 else:
     print(f"DEBUG: Using non-SQLite engine (URL starts with {DATABASE_URL[:10]}...)")
     try:
-        import pyodbc 
+        import pyodbc
         engine = create_engine(
             DATABASE_URL,
             pool_pre_ping=True,
@@ -50,7 +50,8 @@ else:
         engine = create_engine("sqlite:///:memory:") 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 def get_db():
     db = SessionLocal()
@@ -294,6 +295,7 @@ def seed_erro_data(db):
 def seed_erro_factory_part_number_mappings(db):
     """Seed Product Internal Factory Part Numbers from staging CSV for READY + HIGH records."""
     import csv
+
     from src.core import models
 
     repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -366,7 +368,6 @@ def seed_erro_factory_part_number_mappings(db):
 
 def init_db():
     try:
-        from src.core import models
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables initialized successfully (if not existed).")
         

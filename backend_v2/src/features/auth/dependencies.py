@@ -1,12 +1,15 @@
-from fastapi import Depends, HTTPException, status, Header
+
+from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Optional
-from src.core.database import get_db
+
 from src.core import models
+from src.core.database import get_db
+
 from .security import decode_access_token
 
+
 def get_current_user(
-    authorization: Optional[str] = Header(None),
+    authorization: str | None = Header(None),
     db: Session = Depends(get_db)
 ) -> models.User:
     """Extracts and verifies the current authenticated user from Bearer token."""

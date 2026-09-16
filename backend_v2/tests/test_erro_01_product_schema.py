@@ -1,7 +1,9 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product, Carton
+
+from src.core.models import Base, Carton, Customer, Product
+
 
 @pytest.fixture
 def db_session():

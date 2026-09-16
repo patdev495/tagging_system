@@ -1,5 +1,6 @@
-import io
 import datetime
+import io
+
 import openpyxl
 import pytest
 from fastapi.testclient import TestClient
@@ -7,9 +8,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from src.core.database import Base, get_db
-from src.core import models
 from main import app
+from src.core import models
+from src.core.database import Base, get_db
+
 
 @pytest.fixture
 def test_setup():

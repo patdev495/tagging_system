@@ -1,11 +1,12 @@
 from datetime import datetime
+
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.core.database import seed_erro_data
-from src.core.models import Base, Product, Carton
+from src.core.models import Base, Carton, Product
 from src.features.carton import schemas as carton_schemas
 from src.features.carton import service as carton_service
 from src.features.product.service import get_next_sn

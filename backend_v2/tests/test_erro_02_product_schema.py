@@ -1,10 +1,13 @@
-import pytest
 from typing import cast
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product
+
 from src.core.database import seed_erro_data
-from src.features.product import schemas, service as product_service
+from src.core.models import Base, Customer, Product
+from src.features.product import schemas
+from src.features.product import service as product_service
 
 
 @pytest.fixture

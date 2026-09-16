@@ -5,15 +5,16 @@ import sys
 os.environ["DATABASE_URL"] = "sqlite:///database.db"
 
 import pyodbc
-from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 # Add current dir to path to import backend modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.core.config import settings
-from src.core.database import Base, engine as sqlite_engine
-from src.core.models import Customer, Product, Carton, CartonItem
+from src.core.database import Base
+from src.core.database import engine as sqlite_engine
+from src.core.models import Carton, CartonItem, Customer, Product
+
 
 def migrate():
     # 1. Setup MSSQL Connection
@@ -76,7 +77,7 @@ def migrate():
     
     for product_id in sqlite_product_ids:
         # Get top 5 latest cartons for this product from MSSQL
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT TOP 5 id, product_id, carton_sn, created_at, packed_by, job_order, status, btxml, is_reprint, carton_origin, station_id 
             FROM cartons 
             WHERE product_id = ? 

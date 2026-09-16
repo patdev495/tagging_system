@@ -1,10 +1,11 @@
-from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.core.database import get_db
 from src.core.models import User
 from src.features.auth.dependencies import get_current_user
+
 from .schemas import DashboardStatsResponse
 from .service import get_dashboard_stats
 
@@ -13,8 +14,8 @@ router = APIRouter(prefix="/admin/dashboard", tags=["Dashboard"])
 @router.get("/stats", response_model=DashboardStatsResponse)
 def get_dashboard_statistics(
     time_range: str = Query("today", pattern="^(today|yesterday|7d|30d|custom)$"),
-    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
-    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    start_date: str | None = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="End date (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

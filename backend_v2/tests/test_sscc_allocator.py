@@ -1,16 +1,15 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product, Carton
+
+from src.core.models import Base, Carton, Customer, Product
 from src.features.carton.sscc_allocator import (
     calculate_gs1_check_digit,
     format_sscc_18,
     format_sscc_display_text,
-    parse_sscc_sequence,
     next_sscc_sequence,
+    parse_sscc_sequence,
     plan_next_sscc_carton_sn,
-    DEFAULT_SSCC_COMPANY_PREFIX,
-    SSCC_SEQUENCE_WIDTH,
 )
 
 

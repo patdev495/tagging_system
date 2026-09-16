@@ -93,6 +93,7 @@ export interface ScaleStatus {
 export interface CartonWeighPackPayload {
   product_id: number;
   weight: number;
+  job_order?: string;
   po_number?: string;
   lot_number?: string;
   printer_name?: string;
@@ -130,3 +131,15 @@ export interface JobOrderDetails {
   product: Product;
   slots: JobOrderSlot[];
 }
+
+export interface ErroJobOrderResolution {
+  job_order: string;
+  factory_part_number: string;
+  customer_ref: string;
+  total_qty: number;
+  planned_cartons: number;
+  packed_cartons_count: number;
+  name_mismatch: boolean;
+  product: Product;
+}
+

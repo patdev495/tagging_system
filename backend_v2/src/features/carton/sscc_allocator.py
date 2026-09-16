@@ -1,7 +1,7 @@
-import re
 from dataclasses import dataclass
-from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from src.core import models
 
 DEFAULT_SSCC_COMPANY_PREFIX = "37033907"
@@ -56,7 +56,7 @@ def format_sscc_display_text(company_prefix: str, sequence: int) -> str:
     return f"(00) 0 {clean_prefix} {seq_str}"
 
 
-def parse_sscc_sequence(carton_sn: Optional[str], company_prefix: str = DEFAULT_SSCC_COMPANY_PREFIX) -> int:
+def parse_sscc_sequence(carton_sn: str | None, company_prefix: str = DEFAULT_SSCC_COMPANY_PREFIX) -> int:
     """
     Extracts the 7-digit sequence number from an 18-digit SSCC string.
     Format: 0 + company_prefix(8) + sequence(7) + check_digit(1)
@@ -98,8 +98,7 @@ def next_sscc_sequence(db: Session, company_prefix: str = DEFAULT_SSCC_COMPANY_P
     max_seq = 0
     for r in rows:
         seq = parse_sscc_sequence(r[0], clean_prefix)
-        if seq > max_seq:
-            max_seq = seq
+        max_seq = max(max_seq, seq)
 
     return max_seq + 1
 
@@ -107,7 +106,7 @@ def next_sscc_sequence(db: Session, company_prefix: str = DEFAULT_SSCC_COMPANY_P
 def plan_next_sscc_carton_sn(
     db: Session,
     product: models.Product,
-    custom_sequence: Optional[int] = None,
+    custom_sequence: int | None = None,
     lock: bool = False,
 ) -> SSCCCartonPlan:
     """

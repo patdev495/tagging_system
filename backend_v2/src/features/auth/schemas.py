@@ -1,5 +1,6 @@
+
 from pydantic import BaseModel
-from typing import Optional
+
 
 class LoginRequest(BaseModel):
     username: str
@@ -9,7 +10,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     role: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     is_active: int = 1
 
     class Config:

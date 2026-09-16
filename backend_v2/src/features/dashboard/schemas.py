@@ -1,6 +1,7 @@
-from typing import List, Optional
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
+
 
 class KPIStats(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -28,9 +29,9 @@ class ProductStat(BaseModel):
 
     item_name: str
     customer_code: str
-    customer_name: Optional[str] = None
-    upc: Optional[str] = None
-    packed_qty: Optional[int] = None
+    customer_name: str | None = None
+    upc: str | None = None
+    packed_qty: int | None = None
     count: int = 0  # Số thùng
     total_items: int = 0  # Tổng số con
     percentage: float = 0.0
@@ -46,8 +47,8 @@ class LiveCartonFeed(BaseModel):
     created_at: datetime
     status: str
     is_reprint: int
-    weight: Optional[float] = None
-    station_id: Optional[str] = None
+    weight: float | None = None
+    station_id: str | None = None
     items_count: int = 0
 
 class SystemHealth(BaseModel):
@@ -61,7 +62,7 @@ class DashboardStatsResponse(BaseModel):
 
     time_range: str
     kpis: KPIStats
-    hourly_throughput: List[HourlyStat] = []
-    top_products: List[ProductStat] = []
-    live_feed: List[LiveCartonFeed] = []
+    hourly_throughput: list[HourlyStat] = []
+    top_products: list[ProductStat] = []
+    live_feed: list[LiveCartonFeed] = []
     system: SystemHealth = SystemHealth()

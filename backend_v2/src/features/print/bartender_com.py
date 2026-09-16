@@ -3,26 +3,28 @@ BarTender COM Integration Module — Unified & Thread-Safe.
 Handles Windows COM Automation, printing lifecycle, PDF export, and automatic process recovery.
 Works out of the box on Windows, and falls back to a mock mode on other operating systems.
 """
-import os
-import sys
-import time
 import logging
-import threading
-import traceback
+import os
 import subprocess
-import xml.etree.ElementTree as ET
-from typing import List, Dict, Optional, Tuple, Any
+import sys
+import threading
+import time
+from typing import Any
 
 logger = logging.getLogger("BarTenderCOM")
 
 # Try to import Windows-specific COM libraries safely
 try:
-    import win32com.client
-    import pythoncom
-    import win32print
+    import pythoncom  # type: ignore
+    import win32com.client  # type: ignore
+    import win32com.client.dynamic  # type: ignore
+    import win32print  # type: ignore
     HAS_WINDOWS_DEPS = True
 except ImportError:
     HAS_WINDOWS_DEPS = False
+    pythoncom: Any = None
+    win32com: Any = None
+    win32print: Any = None
     logger.warning("Windows COM or Win32Print libraries not found. BarTender running in MOCK mode.")
 
 
@@ -38,7 +40,7 @@ class BarTenderCOMApp:
         """Ensure thread-safe Singleton instantiation."""
         with cls._instance_lock:
             if cls._instance is None:
-                cls._instance = super(BarTenderCOMApp, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
                 cls._instance._initialized = False
             return cls._instance
 
@@ -134,7 +136,7 @@ class BarTenderCOMApp:
                 if not self._create_dispatch_instance():
                     raise RuntimeError("Reconnection to BarTender COM failed.")
 
-    def get_printers(self) -> List[Dict[str, Any]]:
+    def get_printers(self) -> list[dict[str, Any]]:
         """Fetch all available Windows physical/network printers, excluding typical virtual ones."""
         printers = [{"name": "PDF", "driver": "Virtual PDF Export", "port": "VIRTUAL", "status": 0}]
 
@@ -168,7 +170,7 @@ class BarTenderCOMApp:
 
         return printers
 
-    def _export_to_pdf(self, bt_format, substrings: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    def _export_to_pdf(self, bt_format, substrings: dict[str, str] | None = None) -> dict[str, Any]:
         """
         Executes print-to-PDF using native BarTender ExportToFile or Windows print interception.
         Returns a base64 encoded string of the generated PDF document.
@@ -229,8 +231,8 @@ class BarTenderCOMApp:
         # Strategy 2: Fallback to Print Setup + Windows Dialog Auto-Interceptor
         def handle_save_dialog_asynchronously(target_pdf, timeout=15):
             """Runs on a background thread to wait for, fill, and click the Windows Save dialog box."""
-            import win32gui
             import win32con
+            import win32gui
 
             start_time = time.time()
             while time.time() - start_time < timeout:
@@ -291,7 +293,7 @@ class BarTenderCOMApp:
 
         except Exception as e:
             logger.error(f"PDF export crashed: {e}")
-            return {"success": False, "message": f"PDF export crashed: {str(e)}"}
+            return {"success": False, "message": f"PDF export crashed: {e!s}"}
         finally:
             if not is_agent:
                 def cleanup():
@@ -302,7 +304,7 @@ class BarTenderCOMApp:
                     except Exception: pass
                 threading.Thread(target=cleanup, daemon=True).start()
 
-    def print_label(self, template_path: str, printer_name: str, substrings: Dict[str, str]) -> Dict[str, Any]:
+    def print_label(self, template_path: str, printer_name: str, substrings: dict[str, str]) -> dict[str, Any]:
         """
         Prints a label using structured parameters (Template Path, Target Printer, Substring Dictionary).
         This is the preferred, robust, and deep interface.
@@ -416,7 +418,7 @@ class BarTenderCOMApp:
 
             except Exception as e:
                 logger.error(f"Print job encountered an error: {e}")
-                return {"success": False, "message": f"Print failure: {str(e)}"}
+                return {"success": False, "message": f"Print failure: {e!s}"}
             finally:
                 if bt_format:
                     try:
@@ -424,14 +426,14 @@ class BarTenderCOMApp:
                     except Exception: pass
                 pythoncom.CoUninitialize()
 
-    def print_xml(self, xml_content: str, printer_name_override: Optional[str] = None, fallback_path: Optional[str] = None, local_template_dir: Optional[str] = None) -> Dict[str, Any]:
+    def print_xml(self, xml_content: str, printer_name_override: str | None = None, fallback_path: str | None = None, local_template_dir: str | None = None) -> dict[str, Any]:
         """
         Fallback parser that accepts a raw BTXML string, parses it, and maps it to print_label.
         Ensures 100% backward compatibility with legacy routes.
         """
         try:
-            from src.features.print.domain import BTXMLDocument
             from src.core.utils import TemplateResolver
+            from src.features.print.domain import BTXMLDocument
             doc = BTXMLDocument.from_xml(xml_content)
             
             # Apply overrides/fallbacks
@@ -451,9 +453,9 @@ class BarTenderCOMApp:
             return self.print_label(doc.template_path, doc.printer_name, doc.substrings)
         except Exception as e:
             logger.error(f"Failed parsing BTXML string: {e}")
-            return {"success": False, "message": f"BTXML parsing failure: {str(e)}"}
+            return {"success": False, "message": f"BTXML parsing failure: {e!s}"}
 
-    def validate_template_file(self, template_path: str) -> Tuple[bool, str]:
+    def validate_template_file(self, template_path: str) -> tuple[bool, str]:
         """Thread-safe template verification via BarTender COM or file inspection."""
         if not HAS_WINDOWS_DEPS:
             return True, "MOCK: Template valid"
@@ -472,8 +474,8 @@ class BarTenderCOMApp:
             except Exception as e:
                 logger.warning(f"COM Format open check warning: {e}")
                 if os.path.exists(template_path):
-                    return True, f"Tệp mẫu tem tồn tại trên ổ đĩa máy chủ."
-                return False, f"Lỗi BarTender Engine khi mở mẫu tem: {str(e)}"
+                    return True, "Tệp mẫu tem tồn tại trên ổ đĩa máy chủ."
+                return False, f"Lỗi BarTender Engine khi mở mẫu tem: {e!s}"
 
 
 # Singleton instance

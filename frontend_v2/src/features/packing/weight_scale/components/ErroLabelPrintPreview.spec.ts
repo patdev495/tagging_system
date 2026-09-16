@@ -95,4 +95,36 @@ describe('ErroLabelPrintPreview', () => {
     expect(wrapper.text()).toContain('20260915');
     expect(wrapper.find('[data-testid="preview-errors"]').exists()).toBe(false);
   });
+
+  it('renders Erro 01 preview values with ISO week date code YYWW', () => {
+    const product: Product = {
+      id: 1,
+      customer_id: 1,
+      item_name: '840-00092',
+      packed_qty: 190,
+      template_type: 'erro_01',
+      allow_partial: 0,
+      mfr_pn: 'NYS5998',
+      revision: 'B',
+    };
+
+    const wrapper = mount(ErroLabelPrintPreview, {
+      props: {
+        product,
+        cartonSN: 'VHK00102372609000001',
+        po: 'PO-1234',
+        lot: 'LOT-5678',
+        now: new Date('2026-09-16T10:00:00'),
+      },
+    });
+
+    expect(wrapper.text()).toContain('840-00092');
+    expect(wrapper.text()).toContain('190');
+    expect(wrapper.text()).toContain('NYS5998');
+    expect(wrapper.text()).toContain('2638');
+    expect(wrapper.text()).toContain('PO-1234');
+    expect(wrapper.text()).toContain('LOT-5678');
+    expect(wrapper.text()).toContain('VHK00102372609000001');
+    expect(wrapper.text()).toContain('MADE IN VIETNAM');
+  });
 });

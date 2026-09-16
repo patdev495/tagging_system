@@ -1,11 +1,10 @@
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from main import app
-from src.core.database import get_db, init_db
+from src.core.database import get_db
 from src.core.models import Base, Customer, Product, ProductInternalFactoryPartNumber
 from src.features.auth.service import seed_default_users
 
@@ -258,8 +257,9 @@ def test_legacy_migration_copies_products_internal_factory_part_number_idempoten
 
 def test_import_erro_factory_part_numbers_logic(tmp_path):
     import csv
-    from scripts.import_erro_factory_part_numbers import run_import
     from unittest.mock import patch
+
+    from scripts.import_erro_factory_part_numbers import run_import
 
     engine = create_engine(
         "sqlite:///:memory:",

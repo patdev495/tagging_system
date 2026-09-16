@@ -1,5 +1,7 @@
 import os
+
 import pytest
+
 from src.core.models import Carton, Product
 from src.features.print.domain import BTXMLDocument
 from src.features.print.service import generate_btxml

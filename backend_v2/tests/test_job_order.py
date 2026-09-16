@@ -1,15 +1,14 @@
+
 import pytest
-import math
-from unittest.mock import MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.database import Base
+
 from src.core import models
-from src.features.job_order import service, schemas
-from src.features.product import service as product_service
-from src.features.print import service as print_service
+from src.core.database import Base
+from src.features.job_order import service
 from src.features.print import schemas as print_schemas
-from fastapi import HTTPException
+from src.features.print import service as print_service
+from src.features.product import service as product_service
 
 # Create in-memory SQLite database for testing
 DATABASE_URL = "sqlite:///:memory:"
@@ -77,6 +76,11 @@ def test_find_matching_product(db_session):
     p = service.find_matching_product(db_session, "U-Cable-Path-RJ45", "123")
     assert p is not None
     assert p.id == 2
+
+    # Test None handling (prevents AttributeError: 'NoneType' object has no attribute 'lower')
+    assert service.find_matching_product(db_session, None, None) is None
+    assert service.find_matching_product(db_session, "", None) is None
+    assert service.find_matching_product(db_session, None, "UNKNOWN_CODE") is None
 
 
 def test_get_last_carton_for_job_order_does_not_resume_a_different_job_order(db_session):

@@ -1,6 +1,8 @@
 import datetime
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+
 from src.core import models
 from src.core.database import Base, init_db
 

@@ -1,11 +1,13 @@
 import datetime
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from src.core.database import Base
 from src.core import models
+from src.core.database import Base
+
 
 @pytest.fixture
 def db_session():
@@ -232,8 +234,9 @@ def test_dashboard_live_feed_and_system_health(db_session):
 
 def test_dashboard_api_endpoint_access():
     from fastapi.testclient import TestClient
+
     from main import create_app
-    from src.core.database import get_db, Base
+    from src.core.database import Base, get_db
     from src.features.auth.service import seed_default_users
 
     engine = create_engine(

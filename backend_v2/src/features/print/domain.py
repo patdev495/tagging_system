@@ -2,12 +2,11 @@
 Domain Layer for BarTender Printing Feature.
 Encapsulates Label Schema Invariants, XML Document Generation, and Parsing.
 """
-import os
-import sys
 import datetime
 import logging
+import os
+import sys
 import xml.etree.ElementTree as ET
-from typing import Dict, List, Optional
 
 logger = logging.getLogger("BarTenderDomain")
 
@@ -31,7 +30,7 @@ class BTXMLDocument:
     Encapsulates template-specific rules, path remapping, and XML serialization/deserialization.
     """
 
-    def __init__(self, template_path: str, printer_name: Optional[str] = None, substrings: Optional[Dict[str, str]] = None):
+    def __init__(self, template_path: str, printer_name: str | None = None, substrings: dict[str, str] | None = None):
         self.template_path = template_path or ""
         self.printer_name = printer_name or ""
         self.substrings = substrings or {}
@@ -67,10 +66,10 @@ class BTXMLDocument:
             return cls(template_path=template_path, printer_name=printer_name, substrings=substrings)
         except Exception as e:
             logger.error(f"Failed to parse BTXML document: {e}")
-            raise ValueError(f"Error parsing BTXML: {str(e)}")
+            raise ValueError(f"Error parsing BTXML: {e!s}")
 
     @classmethod
-    def from_carton_data(cls, carton, product, items: List[str], template_path: str, printer_name: Optional[str] = None) -> "BTXMLDocument":
+    def from_carton_data(cls, carton, product, items: list[str], template_path: str, printer_name: str | None = None) -> "BTXMLDocument":
         """
         Creates a BTXMLDocument from Carton domain data, automatically applying schema invariants
         and template-specific rules (like the detailed SN grid).

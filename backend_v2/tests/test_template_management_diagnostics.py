@@ -4,9 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from main import app
 from src.core.database import Base, get_db
 from src.features.auth.service import seed_default_users
-from main import app
+
 
 @pytest.fixture
 def test_setup():

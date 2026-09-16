@@ -1,6 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel, model_validator, field_validator
-from typing import Optional, List
+
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class InternalFactoryPartNumberBase(BaseModel):
@@ -29,14 +29,14 @@ class InternalFactoryPartNumberCreate(InternalFactoryPartNumberBase):
 
 
 class InternalFactoryPartNumberBatchCreate(BaseModel):
-    items: List[InternalFactoryPartNumberCreate]
+    items: list[InternalFactoryPartNumberCreate]
 
 
 class InternalFactoryPartNumberOut(InternalFactoryPartNumberBase):
     id: int
     product_id: int
     customer_id: int
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -44,30 +44,30 @@ class InternalFactoryPartNumberOut(InternalFactoryPartNumberBase):
 
 class ProductBase(BaseModel):
     item_name: str
-    upc: Optional[str] = None
+    upc: str | None = None
     packed_qty: int
-    start_part: Optional[str] = "VN"
-    middle_part: Optional[str] = ""
-    template_type: Optional[str] = "standard"
-    template_path: Optional[str] = None
-    allow_partial: Optional[int] = 0
+    start_part: str | None = "VN"
+    middle_part: str | None = ""
+    template_type: str | None = "standard"
+    template_path: str | None = None
+    allow_partial: int | None = 0
     customer_id: int
-    packing_mode: Optional[str] = "item_scan"
-    target_weight: Optional[float] = None
-    min_weight: Optional[float] = None
-    max_weight: Optional[float] = None
-    weight_unit: Optional[str] = "kg"
-    mfr_pn: Optional[str] = None
-    pkg_prefix: Optional[str] = None
-    revision: Optional[str] = None
-    asin: Optional[str] = None
-    product_desc: Optional[str] = None
-    customer_project: Optional[str] = None
-    production_stage: Optional[str] = None
-    luxshare_part_number: Optional[str] = None
-    internal_factory_part_number: Optional[str] = None
-    factory_item_code: Optional[str] = None
-    carton_id_prefix: Optional[str] = None
+    packing_mode: str | None = "item_scan"
+    target_weight: float | None = None
+    min_weight: float | None = None
+    max_weight: float | None = None
+    weight_unit: str | None = "kg"
+    mfr_pn: str | None = None
+    pkg_prefix: str | None = None
+    revision: str | None = None
+    asin: str | None = None
+    product_desc: str | None = None
+    customer_project: str | None = None
+    production_stage: str | None = None
+    luxshare_part_number: str | None = None
+    internal_factory_part_number: str | None = None
+    factory_item_code: str | None = None
+    carton_id_prefix: str | None = None
 
     @model_validator(mode="after")
     def validate_label_metadata(self):
@@ -109,36 +109,36 @@ class ProductCreate(ProductBase):
 
 
 class ProductUpdate(BaseModel):
-    item_name: Optional[str] = None
-    upc: Optional[str] = None
-    packed_qty: Optional[int] = None
-    start_part: Optional[str] = None
-    middle_part: Optional[str] = None
-    template_type: Optional[str] = None
-    template_path: Optional[str] = None
-    allow_partial: Optional[int] = None
-    customer_id: Optional[int] = None
-    packing_mode: Optional[str] = None
-    target_weight: Optional[float] = None
-    min_weight: Optional[float] = None
-    max_weight: Optional[float] = None
-    weight_unit: Optional[str] = None
-    mfr_pn: Optional[str] = None
-    pkg_prefix: Optional[str] = None
-    revision: Optional[str] = None
-    asin: Optional[str] = None
-    product_desc: Optional[str] = None
-    customer_project: Optional[str] = None
-    production_stage: Optional[str] = None
-    luxshare_part_number: Optional[str] = None
-    internal_factory_part_number: Optional[str] = None
-    factory_item_code: Optional[str] = None
-    carton_id_prefix: Optional[str] = None
+    item_name: str | None = None
+    upc: str | None = None
+    packed_qty: int | None = None
+    start_part: str | None = None
+    middle_part: str | None = None
+    template_type: str | None = None
+    template_path: str | None = None
+    allow_partial: int | None = None
+    customer_id: int | None = None
+    packing_mode: str | None = None
+    target_weight: float | None = None
+    min_weight: float | None = None
+    max_weight: float | None = None
+    weight_unit: str | None = None
+    mfr_pn: str | None = None
+    pkg_prefix: str | None = None
+    revision: str | None = None
+    asin: str | None = None
+    product_desc: str | None = None
+    customer_project: str | None = None
+    production_stage: str | None = None
+    luxshare_part_number: str | None = None
+    internal_factory_part_number: str | None = None
+    factory_item_code: str | None = None
+    carton_id_prefix: str | None = None
 
 
 class Product(ProductBase):
     id: int
-    internal_factory_part_numbers: List[InternalFactoryPartNumberOut] = []
+    internal_factory_part_numbers: list[InternalFactoryPartNumberOut] = []
 
     class Config:
         from_attributes = True

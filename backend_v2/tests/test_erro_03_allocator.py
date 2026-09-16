@@ -1,14 +1,14 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from src.core.database import Base
-from src.core.models import Product, Carton
+from src.core.models import Carton, Product
 from src.features.carton.erro_03_sn_allocator import (
     format_erro_03_carton_sn,
-    parse_erro_03_sequence,
     next_erro_03_sequence,
+    parse_erro_03_sequence,
     plan_next_erro_03_carton_sn,
-    DEFAULT_ERRO_03_SUPPLIER_CODE,
 )
 
 

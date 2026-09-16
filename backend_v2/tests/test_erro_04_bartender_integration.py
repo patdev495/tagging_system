@@ -1,6 +1,8 @@
 import os
-import pytest
 from datetime import datetime
+
+import pytest
+
 from src.core.models import Carton, Product
 from src.features.print.domain import BTXMLDocument
 from src.features.print.service import generate_btxml
@@ -82,7 +84,7 @@ def test_erro_04_scanner_acceptance_data_fidelity():
     }
 
     for field, expected_value in scanned_barcodes.items():
-        assert scanned_barcodes[field] == stored_data[field]
+        assert expected_value == stored_data[field]
 
 
 @pytest.mark.skipif(

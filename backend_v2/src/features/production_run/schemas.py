@@ -1,6 +1,7 @@
-from typing import Optional, List
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
+
 
 class JobOrderSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -14,7 +15,7 @@ class JobOrderSummary(BaseModel):
     pending_slots: int
     shipped_slots: int
     completion_rate: float
-    latest_scan_at: Optional[datetime] = None
+    latest_scan_at: datetime | None = None
 
 class JobOrderSlotDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -23,8 +24,8 @@ class JobOrderSlotDetail(BaseModel):
     carton_number: int
     carton_sn: str
     status: str
-    scanned_at: Optional[datetime] = None
-    carton_id: Optional[int] = None
+    scanned_at: datetime | None = None
+    carton_id: int | None = None
     shipped: int = 0
 
 class POLotRunSummary(BaseModel):
@@ -34,7 +35,7 @@ class POLotRunSummary(BaseModel):
     lot_number: str
     product_name: str
     customer_code: str
-    date_code: Optional[str] = None
+    date_code: str | None = None
     total_cartons: int
     total_weight: float
-    latest_packed_at: Optional[datetime] = None
+    latest_packed_at: datetime | None = None

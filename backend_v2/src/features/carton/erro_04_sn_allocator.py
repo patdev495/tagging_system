@@ -2,14 +2,12 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from src.core import models
-
 
 ERRO_04_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 ERRO_04_SEQUENCE_WIDTH = 4
@@ -39,7 +37,7 @@ def format_erro_04_sequence(sequence: int) -> str:
     return "".join(reversed(chars))
 
 
-def parse_erro_04_sequence(carton_sn: Optional[str]) -> Optional[int]:
+def parse_erro_04_sequence(carton_sn: str | None) -> int | None:
     if not carton_sn or len(carton_sn) < ERRO_04_SEQUENCE_WIDTH:
         return None
 
@@ -61,7 +59,7 @@ def pd027032_date_code(printed_at: datetime) -> str:
     return f"{year}{ERRO_04_ALPHABET[printed_at.month]}{ERRO_04_ALPHABET[printed_at.day]}"
 
 
-def next_erro_04_sequence(db: Session, year: Optional[int] = None, lock: bool = False) -> int:
+def next_erro_04_sequence(db: Session, year: int | None = None, lock: bool = False) -> int:
     current_year = year or datetime.now().year
     year_code = ERRO_04_YEAR_CODES.get(current_year)
     if not year_code:
@@ -100,7 +98,7 @@ def plan_next_erro_04_carton_sn(
     db: Session,
     product: models.Product,
     *,
-    printed_at: Optional[datetime] = None,
+    printed_at: datetime | None = None,
     lock: bool = False,
 ) -> Erro04CartonSNPlan:
     prefix = (getattr(product, "carton_id_prefix", None) or "").strip().upper()

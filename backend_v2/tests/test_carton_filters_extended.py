@@ -1,12 +1,14 @@
 import datetime
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from src.core.database import Base
 from src.core import models
+from src.core.database import Base
 from src.features.history import service
+
 
 @pytest.fixture
 def db_session():

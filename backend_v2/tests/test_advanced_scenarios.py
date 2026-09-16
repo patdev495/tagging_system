@@ -1,12 +1,11 @@
-import pytest
-import threading
-from sqlalchemy import create_mock_engine
-from sqlalchemy.orm import sessionmaker
-from src.core import models
-from src.features.carton import service, schemas
-from src.features.print import service as print_service
-from fastapi import HTTPException
 from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi import HTTPException
+
+from src.core import models
+from src.features.carton import schemas, service
+from src.features.print import service as print_service
 
 # ============================================================
 # Scenario 1: Concurrency (Tranh chấp dữ liệu)

@@ -1,12 +1,15 @@
-import pytest
-from typing import cast
 from datetime import datetime
+from typing import cast
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.core.models import Base, Customer, Product
+
 from src.core.database import seed_erro_data
+from src.core.models import Base, Customer, Product
 from src.core.utils import TemplateResolver
-from src.features.product import schemas, service as product_service
+from src.features.product import schemas
+from src.features.product import service as product_service
 
 
 @pytest.fixture
@@ -35,6 +38,9 @@ def test_product_schema_supports_tem3_fields():
         "pkg_prefix": "1012665",
         "revision": "/",
         "product_desc": "CAT5E ETHERNET CABLE",
+        "customer_project": "Andy Town/ Firefly",
+        "production_stage": "MP",
+        "luxshare_part_number": "LLERJ014-NC-R",
         "packed_qty": 190,
         "customer_id": 1,
         "packing_mode": "weight_scale",
@@ -62,6 +68,9 @@ def test_product_service_creates_and_searches_tem3(db_session):
         pkg_prefix="1012665",
         revision="/",
         product_desc="CAT5E ETHERNET CABLE",
+        customer_project="Andy Town/ Firefly",
+        production_stage="MP",
+        luxshare_part_number="LLERJ014-NC-R",
         packed_qty=190,
         packing_mode="weight_scale",
         template_type="erro_03",

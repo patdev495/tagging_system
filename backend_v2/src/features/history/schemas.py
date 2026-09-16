@@ -1,6 +1,7 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
+
+from pydantic import BaseModel
+
 
 class CartonItem(BaseModel):
     id: int
@@ -19,52 +20,52 @@ class CustomerInfo(BaseModel):
 
 class ProductInfo(BaseModel):
     id: int
-    customer_id: Optional[int] = None
+    customer_id: int | None = None
     item_name: str
-    upc: Optional[str] = None
-    packed_qty: Optional[int] = 1
-    allow_partial: Optional[int] = 0
-    start_part: Optional[str] = ""
-    middle_part: Optional[str] = ""
-    template_type: Optional[str] = "standard"
-    template_path: Optional[str] = None
-    customer: Optional[CustomerInfo] = None
+    upc: str | None = None
+    packed_qty: int | None = 1
+    allow_partial: int | None = 0
+    start_part: str | None = ""
+    middle_part: str | None = ""
+    template_type: str | None = "standard"
+    template_path: str | None = None
+    customer: CustomerInfo | None = None
     
     class Config:
         from_attributes = True
 
 class CartonBase(BaseModel):
     carton_sn: str
-    job_order: Optional[str] = None
-    packed_by: Optional[str] = None
+    job_order: str | None = None
+    packed_by: str | None = None
     status: str
     created_at: datetime
-    carton_origin: Optional[str] = "VN"
-    station_id: Optional[str] = None
-    items_count: Optional[int] = 0
-    is_reprint: Optional[int] = 0
-    reprint_count: Optional[int] = 0
-    weight: Optional[float] = None
-    po_number: Optional[str] = None
-    lot_number: Optional[str] = None
-    date_code: Optional[str] = None
+    carton_origin: str | None = "VN"
+    station_id: str | None = None
+    items_count: int | None = 0
+    is_reprint: int | None = 0
+    reprint_count: int | None = 0
+    weight: float | None = None
+    po_number: str | None = None
+    lot_number: str | None = None
+    date_code: str | None = None
 
 class Carton(CartonBase):
     id: int
     product_id: int
-    btxml: Optional[str] = None
-    product: Optional[ProductInfo] = None
+    btxml: str | None = None
+    product: ProductInfo | None = None
     
     class Config:
         from_attributes = True
 
 class CartonDetail(Carton):
-    items: List[CartonItem] = []
-    print_history: List[CartonBase] = []
+    items: list[CartonItem] = []
+    print_history: list[CartonBase] = []
 
 class CartonListResponse(BaseModel):
     total: int
-    items: List[Carton]
+    items: list[Carton]
 
 class DailyStat(BaseModel):
     date: str
@@ -83,8 +84,8 @@ class PackagingStatisticsResponse(BaseModel):
     failed_cartons: int
     reprint_cartons: int
     total_items: int
-    daily_breakdown: List[DailyStat]
-    product_breakdown: List[ProductStat]
+    daily_breakdown: list[DailyStat]
+    product_breakdown: list[ProductStat]
 
 
 class JobOrderProductStat(BaseModel):
@@ -103,7 +104,7 @@ class JobOrderStatisticsResponse(BaseModel):
     total_attempts: int
     reprint_attempts: int
     total_items: int
-    product_breakdown: List[JobOrderProductStat]
-    cartons: List[Carton]
+    product_breakdown: list[JobOrderProductStat]
+    cartons: list[Carton]
 
 

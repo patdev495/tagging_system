@@ -1,21 +1,24 @@
-from sqlalchemy.orm import Session, joinedload
-from fastapi import HTTPException
-from src.core import models
-from typing import Optional, cast as typing_cast
 import datetime
-from sqlalchemy import cast, Date, func, case
+from typing import cast as typing_cast
+
+from fastapi import HTTPException
+from sqlalchemy import Date, case, cast, func
+from sqlalchemy.orm import Session, joinedload
+
+from src.core import models
 from src.features.carton import print_attempts, slot_lifecycle
+
 
 def build_carton_query(
     db: Session,
-    search: Optional[str] = None,
-    product_id: Optional[int] = None,
-    status: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    customer_id: Optional[int] = None,
-    job_order: Optional[str] = None,
-    po_number: Optional[str] = None,
+    search: str | None = None,
+    product_id: int | None = None,
+    status: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    customer_id: int | None = None,
+    job_order: str | None = None,
+    po_number: str | None = None,
 ):
     # Subquery to get the latest (max) ID for each unique carton_sn
     max_id_sub = db.query(
@@ -72,14 +75,14 @@ def get_cartons(
     db: Session, 
     skip: int = 0, 
     limit: int = 50, 
-    search: Optional[str] = None,
-    product_id: Optional[int] = None,
-    status: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    customer_id: Optional[int] = None,
-    job_order: Optional[str] = None,
-    po_number: Optional[str] = None,
+    search: str | None = None,
+    product_id: int | None = None,
+    status: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    customer_id: int | None = None,
+    job_order: str | None = None,
+    po_number: str | None = None,
 ):
     base_query = build_carton_query(
         db=db,
@@ -107,14 +110,14 @@ def get_cartons(
 def export_cartons_to_excel(
     db: Session,
     mode: str = "summary",
-    search: Optional[str] = None,
-    product_id: Optional[int] = None,
-    status: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-    customer_id: Optional[int] = None,
-    job_order: Optional[str] = None,
-    po_number: Optional[str] = None,
+    search: str | None = None,
+    product_id: int | None = None,
+    status: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    customer_id: int | None = None,
+    job_order: str | None = None,
+    po_number: str | None = None,
 ) -> bytes:
     from .excel_export import generate_carton_excel
     
