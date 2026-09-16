@@ -1,14 +1,8 @@
 <template>
   <div class="h-screen w-full bg-slate-100 text-slate-800 flex flex-col p-2 md:p-3 overflow-hidden box-border select-none">
-    <div class="w-full h-full flex flex-col bg-white border border-slate-200/90 rounded-2xl p-3 md:p-4 shadow-xl overflow-hidden box-border justify-between">
+    <div :class="['w-full h-full flex flex-col bg-white border border-slate-200/90 rounded-2xl p-2 md:p-3 shadow-xl box-border', currentStep === 3 ? 'overflow-hidden justify-between' : 'overflow-y-auto justify-start gap-2']">
       
-      <ErroJobOrderStep
-        v-if="!selectedProduct && !pendingResolution"
-        @resolved="handleJobOrderResolved"
-      />
-
-      <template v-else>
-      <!-- Top Slim Navigation Header -->
+      <!-- Top Slim Navigation Header (Always Visible) -->
       <ErroHeader
         :isAgentOnline="isAgentOnline"
         :agentUrl="settings.agentUrl || 'http://127.0.0.1:8080'"
@@ -17,199 +11,154 @@
         @switchCustomer="switchCustomer"
       />
 
-      <!-- Active Product & Batch Bar -->
-      <section class="my-2 px-4 py-2.5 rounded-xl bg-slate-50/90 border border-slate-200/90 shadow-xs flex items-center justify-between gap-3 shrink-0">
-        <div class="flex items-center gap-4 md:gap-6 flex-wrap">
-          <!-- Job Order & Factory P/N -->
-          <div v-if="activeJobOrder" class="flex items-center gap-2">
-            <span class="text-xs uppercase tracking-wider font-bold text-slate-400">Công Lệnh:</span>
-            <span class="font-black text-base md:text-lg text-indigo-900 font-mono">
-              {{ activeJobOrder }}
-            </span>
-            <span class="font-mono text-xs font-bold text-slate-500">
-              ({{ activeFactoryPartNumber }})
-            </span>
-          </div>
+      <!-- Workflow Stepper Bar (Always Visible) -->
+      <ErroStepperBar
+        :currentStep="currentStep"
+        :jobOrder="activeJobOrder || pendingResolution?.job_order"
+        :factoryPartNumber="activeFactoryPartNumber || pendingResolution?.factory_part_number"
+        :productItemName="selectedProduct?.item_name || pendingResolution?.product.item_name"
+      />
 
-          <!-- CPN -->
-          <div v-if="selectedProduct" class="flex items-center gap-2 border-l border-slate-200 pl-4 font-mono">
-            <span class="text-xs uppercase tracking-wider font-bold text-slate-400 font-sans">CPN:</span>
-            <span class="font-black text-base md:text-lg text-slate-900">
-              {{ selectedProduct.item_name }}
-            </span>
-            <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-bold text-xs">
-              {{ selectedProduct.packed_qty }} PCS
-            </span>
-          </div>
+      <!-- Bước 1: Nhập Công Lệnh -->
+      <ErroJobOrderStep
+        v-if="currentStep === 1"
+        @resolved="handleJobOrderResolved"
+      />
 
-          <!-- Progress (Clickable) -->
-          <div v-if="selectedProduct && jobOrderPlannedCartons > 0" class="flex items-center gap-2 border-l border-slate-200 pl-4 font-mono">
-            <span class="text-xs uppercase font-bold text-slate-400 font-sans">Tiến Độ:</span>
-            <button 
-              type="button"
-              @click="showCartonsModal = true"
-              title="Bấm để xem danh sách thùng đã đóng của công lệnh này"
-              :class="['px-2.5 py-0.5 rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all', jobOrderPackedCartonsCount >= jobOrderPlannedCartons ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-50 text-emerald-800 border border-emerald-200']"
-            >
-              <span>{{ jobOrderPackedCartonsCount }} / {{ jobOrderPlannedCartons }} Thùng</span>
-              <span class="text-slate-400">({{ (jobOrderPackedCartonsCount * selectedProduct.packed_qty).toLocaleString() }} / {{ jobOrderTotalQty.toLocaleString() }} PCS)</span>
-              <i class="fas fa-list-check text-indigo-600 text-[11px] ml-0.5"></i>
-              <span v-if="jobOrderPackedCartonsCount >= jobOrderPlannedCartons" class="text-[10px] font-black text-amber-700 uppercase ml-0.5">⚠️ Vượt Kế Hoạch</span>
-            </button>
-          </div>
-
-          <!-- PO & LOT -->
-          <div class="flex items-center gap-2 border-l border-slate-200 pl-4 font-mono">
-            <span class="text-xs uppercase font-bold text-slate-400 font-sans">PO/LOT:</span>
-            <span v-if="selectedProduct?.template_type === 'erro_02'" class="font-bold text-xs text-slate-500 italic bg-slate-100 px-2 py-0.5 rounded border border-slate-200">Không áp dụng (Tem 2)</span>
-            <span v-else class="font-bold text-sm text-indigo-900">
-              PO: {{ activePO || (['erro_03', 'erro_05'].includes(selectedProduct?.template_type || '') ? '(Tùy chọn)' : 'Chưa nhập') }}
-              <span class="text-slate-300 mx-1">|</span>
-              LOT: {{ activeLot || (selectedProduct?.template_type === 'erro_05' ? 'Tự động' : selectedProduct?.template_type === 'erro_03' ? '92607933' : 'Chưa nhập') }}
-            </span>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 shrink-0">
-          <button 
-            type="button"
-            @click="handleOpenTemplate"
-            :disabled="isOpeningTemplate || !selectedProduct"
-            class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 disabled:bg-slate-100 disabled:text-slate-400 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs hover:border-indigo-300 cursor-pointer disabled:cursor-not-allowed"
-            title="Mở file mẫu tem BarTender (.btw) trên máy trạm"
-          >
-            <i v-if="isOpeningTemplate" class="fas fa-spinner fa-spin text-indigo-600 text-xs"></i>
-            <i v-else class="fas fa-file-lines text-indigo-600 text-xs"></i>
-            <span>Mở Mẫu Tem</span>
-          </button>
-          <button 
-            v-if="selectedProduct?.template_type !== 'erro_02'"
-            @click="showBatchModal = true" 
-            class="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
-          >
-            <i class="fas fa-edit text-indigo-500"></i>
-            <span>Đổi PO/LOT</span>
-          </button>
-          <button @click="clearSelectedProduct" :disabled="!selectedProduct" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs shadow-indigo-600/20 cursor-pointer">
-            <i class="fas fa-boxes"></i>
-            <span>Đổi Công Lệnh</span>
-          </button>
-        </div>
-      </section>
-
-
-      <!-- Offline Warning Banner -->
-      <div v-if="!isAgentOnline" class="mb-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in">
-        <div class="flex items-center gap-2.5">
-          <div class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0">
-            <i class="fas fa-exclamation-triangle text-xs"></i>
-          </div>
-          <div>
-            <span class="font-black text-rose-900">Chưa kết nối phần mềm Print Agent!</span>
-            <span class="text-rose-700 ml-1.5 text-[11px]">
-              Vui lòng bật phần mềm <strong>NY Print Agent</strong> trên máy tính hoặc kiểm tra cổng <code>{{ settings.agentUrl || 'http://127.0.0.1:8080' }}</code> trong Cài Đặt.
-            </span>
-          </div>
-        </div>
-        <button @click="pollScaleStatus" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
-          <i class="fas fa-rotate-right text-[10px]"></i>
-          <span>Thử Lại</span>
-        </button>
-      </div>
-
-      <!-- Template Missing Warning Banner (Pre-flight Check) -->
-      <div v-if="settings.printMode !== 'centralized' && isAgentOnline && templateMissing" class="mb-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in">
-        <div class="flex items-center gap-2.5">
-          <div class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
-            <i class="fas fa-file-circle-exclamation text-xs"></i>
-          </div>
-          <div>
-            <span class="font-black text-amber-900">Chưa có file mẫu tem trên máy trạm: <code>{{ templateFilename }}</code>!</span>
-            <span class="text-amber-700 ml-1.5 text-[11px]">
-              Vui lòng sao chép file <strong>{{ templateFilename }}</strong> vào thư mục <code>{{ settings.localTemplateDir || 'D:\\PAT\\Templates' }}</code> trên máy tính này.
-            </span>
-          </div>
-        </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            @click="openTemplateFolder()"
-            :disabled="isOpeningFolder"
-            class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs transition-all flex items-center gap-1 cursor-pointer"
-            title="Mở thư mục tem trong Windows Explorer"
-          >
-            <i v-if="isOpeningFolder" class="fas fa-spinner fa-spin text-xs"></i>
-            <i v-else class="fas fa-folder-open text-xs"></i>
-            <span>Mở Thư Mục</span>
-          </button>
-          <button @click="checkTemplateExists" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
-            <i class="fas fa-rotate-right text-[10px]"></i>
-            <span>Kiểm Tra Lại</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Main Packing Station Cockpit Grid -->
-      <main class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
-        <!-- Left: Live Scale Gauge & Action Controls (8 Cols) -->
-        <div class="lg:col-span-8 flex flex-col justify-between h-full gap-2 min-h-0">
-          <ScaleDigitalGauge
-            :scaleReading="scaleReading"
-            :scaleStatus="scaleStatus"
-            :isAgentOnline="isAgentOnline"
-            :toleranceResult="toleranceResult"
-            :selectedProduct="selectedProduct"
-            :isPrinting="isPrinting"
-          />
-
-          <ErroSerialControl
-            :currentSNPreview="currentSNPreview"
-          />
-
-          <!-- Giant Primary Print Action Button -->
-          <button
-            @click="triggerWeighAndPrint"
-            :disabled="isPrinting || !selectedProduct || labelPreviewErrors.length > 0 || (settings.printMode !== 'centralized' && templateMissing)"
-            :class="[
-              'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
-              (settings.printMode !== 'centralized' && templateMissing)
-                ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
-              : (toleranceResult.canPrint && labelPreviewErrors.length === 0 && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || (activePO?.trim() && activeLot?.trim()))
-                  ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
-                  : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
-            ]"
-          >
-            <i v-if="isPrinting" class="fas fa-spinner fa-spin text-lg"></i>
-            <i v-else-if="settings.printMode !== 'centralized' && templateMissing" class="fas fa-file-circle-exclamation text-lg"></i>
-            <i v-else-if="toleranceResult.canPrint" class="fas fa-print text-lg"></i>
-            <i v-else class="fas fa-triangle-exclamation text-lg"></i>
-            <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (labelPreviewErrors.length ? `THIẾU DỮ LIỆU TEM - KIỂM TRA PREVIEW` : (toleranceResult.canPrint ? 'CÂN & IN TEM ERRO [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]'))) }}</span>
-          </button>
-        </div>
-
-        <!-- Right: Session Stats & Last Carton Info (4 Cols) -->
-        <div class="lg:col-span-4 flex flex-col h-full gap-2 min-h-0 justify-between">
-          <ErroLabelPrintPreview
-            :product="selectedProduct"
-            :carton-s-n="currentSNPreview"
-            :po="activePO"
-            :lot="activeLot"
-            :now="previewTime"
-            @validation-change="labelPreviewErrors = $event"
-          />
-        </div>
-      </main>
-
-      <!-- Modals -->
-      <ErroJobOrderConfirmModal
-        :show="showJobOrderConfirmModal"
+      <!-- Bước 2: Xác Nhận Đơn Hàng & PO/LOT -->
+      <ErroProductCardStep
+        v-else-if="currentStep === 2"
+        :jobOrder="activeJobOrder || pendingResolution?.job_order || ''"
         :resolution="pendingResolution"
-        :initial-po="activePO"
-        :initial-lot="activeLot"
-        @close="cancelJobOrderConfirm"
+        :initialPo="activePO"
+        :initialLot="activeLot"
+        @changeJobOrder="changeJobOrder"
         @confirm="confirmJobOrderResolution"
       />
 
+      <!-- Bước 3: Trạm Cân & Đóng Thùng -->
+      <template v-else-if="currentStep === 3">
+        <!-- Active Product & Batch Bar -->
+        <ErroActiveProductBar
+          :activeJobOrder="activeJobOrder"
+          :activeFactoryPartNumber="activeFactoryPartNumber"
+          :selectedProduct="selectedProduct"
+          :jobOrderPlannedCartons="jobOrderPlannedCartons"
+          :jobOrderPackedCartonsCount="jobOrderPackedCartonsCount"
+          :jobOrderTotalQty="jobOrderTotalQty"
+          :activePO="activePO"
+          :activeLot="activeLot"
+          :isOpeningTemplate="isOpeningTemplate"
+          @showCartons="showCartonsModal = true"
+          @openTemplate="handleOpenTemplate"
+          @editBatch="showBatchModal = true"
+          @changeJobOrder="clearSelectedProduct"
+        />
+
+        <!-- Offline Warning Banner -->
+        <div v-if="!isAgentOnline" class="mb-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0">
+              <i class="fas fa-exclamation-triangle text-xs"></i>
+            </div>
+            <div>
+              <span class="font-black text-rose-900">Chưa kết nối phần mềm Print Agent!</span>
+              <span class="text-rose-700 ml-1.5 text-[11px]">
+                Vui lòng bật phần mềm <strong>NY Print Agent</strong> trên máy tính hoặc kiểm tra cổng <code>{{ settings.agentUrl || 'http://127.0.0.1:8080' }}</code> trong Cài Đặt.
+              </span>
+            </div>
+          </div>
+          <button @click="pollScaleStatus" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
+            <i class="fas fa-rotate-right text-[10px]"></i>
+            <span>Thử Lại</span>
+          </button>
+        </div>
+
+        <!-- Template Missing Warning Banner (Pre-flight Check) -->
+        <div v-if="settings.printMode !== 'centralized' && isAgentOnline && templateMissing" class="mb-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold flex items-center justify-between gap-3 shadow-xs animate-in">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+              <i class="fas fa-file-circle-exclamation text-xs"></i>
+            </div>
+            <div>
+              <span class="font-black text-amber-900">Chưa có file mẫu tem trên máy trạm: <code>{{ templateFilename }}</code>!</span>
+              <span class="text-amber-700 ml-1.5 text-[11px]">
+                Vui lòng sao chép file <strong>{{ templateFilename }}</strong> vào thư mục <code>{{ settings.localTemplateDir || 'D:\\PAT\\Templates' }}</code> trên máy tính này.
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              @click="openTemplateFolder()"
+              :disabled="isOpeningFolder"
+              class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs transition-all flex items-center gap-1 cursor-pointer"
+              title="Mở thư mục tem trong Windows Explorer"
+            >
+              <i v-if="isOpeningFolder" class="fas fa-spinner fa-spin text-xs"></i>
+              <i v-else class="fas fa-folder-open text-xs"></i>
+              <span>Mở Thư Mục</span>
+            </button>
+            <button @click="checkTemplateExists" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
+              <i class="fas fa-rotate-right text-[10px]"></i>
+              <span>Kiểm Tra Lại</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Packing Station Cockpit Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
+          <!-- Left: Live Scale Gauge & Action Controls (8 Cols) -->
+          <div class="lg:col-span-8 flex flex-col justify-between h-full gap-2 min-h-0">
+            <ScaleDigitalGauge
+              :scaleReading="scaleReading"
+              :scaleStatus="scaleStatus"
+              :isAgentOnline="isAgentOnline"
+              :toleranceResult="toleranceResult"
+              :selectedProduct="selectedProduct"
+              :isPrinting="isPrinting"
+            />
+
+            <ErroSerialControl
+              :currentSNPreview="currentSNPreview"
+            />
+
+            <!-- Giant Primary Print Action Button -->
+            <button
+              @click="triggerWeighAndPrint"
+              :disabled="isPrinting || !selectedProduct || labelPreviewErrors.length > 0 || (settings.printMode !== 'centralized' && templateMissing)"
+              :class="[
+                'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
+                (settings.printMode !== 'centralized' && templateMissing)
+                  ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
+                : (toleranceResult.canPrint && labelPreviewErrors.length === 0 && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || (activePO?.trim() && activeLot?.trim()))
+                    ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
+                    : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
+              ]"
+            >
+              <i v-if="isPrinting" class="fas fa-spinner fa-spin text-lg"></i>
+              <i v-else-if="settings.printMode !== 'centralized' && templateMissing" class="fas fa-file-circle-exclamation text-lg"></i>
+              <i v-else-if="toleranceResult.canPrint" class="fas fa-print text-lg"></i>
+              <i v-else class="fas fa-triangle-exclamation text-lg"></i>
+              <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (labelPreviewErrors.length ? `THIẾU DỮ LIỆU TEM - KIỂM TRA PREVIEW` : (toleranceResult.canPrint ? 'CÂN & IN TEM ERRO [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]'))) }}</span>
+            </button>
+          </div>
+
+          <!-- Right: Session Stats & Last Carton Info (4 Cols) -->
+          <div class="lg:col-span-4 flex flex-col h-full gap-2 min-h-0 justify-between">
+            <ErroLabelPrintPreview
+              :product="selectedProduct"
+              :carton-s-n="currentSNPreview"
+              :po="activePO"
+              :lot="activeLot"
+              :now="previewTime"
+              @validation-change="labelPreviewErrors = $event"
+            />
+          </div>
+        </main>
+      </template>
+
+      <!-- Modals -->
       <ErroBatchConfigModal :show="showBatchModal" :po="activePO" :lot="activeLot" :isTem3="selectedProduct?.template_type === 'erro_03'" @close="cancelBatchConfig" @save="saveBatchConfig" />
       <SettingsModal :show="showSettingsModal" @close="showSettingsModal = false" />
       <ScaleToleranceErrorModal :show="showToleranceErrorModal" :details="toleranceErrorDetails" @close="showToleranceErrorModal = false" />
@@ -225,8 +174,6 @@
         @openFolder="openTemplateFolder()"
         @retry="handleOpenTemplate"
       />
-      </template>
-
     </div>
   </div>
 </template>
@@ -240,12 +187,14 @@ import type { ErroJobOrderResolution, Product } from '../types/api';
 
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
 import ErroHeader from '../features/packing/weight_scale/components/ErroHeader.vue';
+import ErroStepperBar from '../features/packing/weight_scale/components/ErroStepperBar.vue';
+import ErroProductCardStep from '../features/packing/weight_scale/components/ErroProductCardStep.vue';
+import ErroActiveProductBar from '../features/packing/weight_scale/components/ErroActiveProductBar.vue';
 import ScaleDigitalGauge from '../features/packing/weight_scale/components/ScaleDigitalGauge.vue';
 import ErroSerialControl from '../features/packing/weight_scale/components/ErroSerialControl.vue';
 import ErroLabelPrintPreview from '../features/packing/weight_scale/components/ErroLabelPrintPreview.vue';
 import ScaleToleranceErrorModal from '../features/packing/weight_scale/components/ScaleToleranceErrorModal.vue';
 import ErroJobOrderStep from '../features/packing/weight_scale/components/ErroJobOrderStep.vue';
-import ErroJobOrderConfirmModal from '../features/packing/weight_scale/components/ErroJobOrderConfirmModal.vue';
 import ErroBatchConfigModal from '../features/packing/weight_scale/components/ErroBatchConfigModal.vue';
 import ErroJobOrderCartonsModal from '../features/packing/weight_scale/components/ErroJobOrderCartonsModal.vue';
 import TemplateMissingModal from '../features/packing/components/TemplateMissingModal.vue';
@@ -260,10 +209,12 @@ const router = useRouter();
 const settings = useSettingsStore();
 const system = useSystemStore();
 
+// Workflow Step State (1: Nhập Công Lệnh, 2: Xác Nhận Đơn Hàng, 3: Cân & Đóng Thùng)
+const currentStep = ref<1 | 2 | 3>(1);
+
 // Modals State
 const showBatchModal = ref(false);
 const showSettingsModal = ref(false);
-const showJobOrderConfirmModal = ref(false);
 const showCartonsModal = ref(false);
 
 // Active Selection State
@@ -430,18 +381,17 @@ const cancelBatchConfig = () => { showBatchModal.value = false; };
 
 const handleJobOrderResolved = (resolution: ErroJobOrderResolution) => {
   pendingResolution.value = resolution;
-  showJobOrderConfirmModal.value = true;
+  currentStep.value = 2;
 };
 
-const cancelJobOrderConfirm = () => {
-  showJobOrderConfirmModal.value = false;
+const changeJobOrder = () => {
+  currentStep.value = 1;
   pendingResolution.value = null;
 };
 
 const confirmJobOrderResolution = (payload: { po: string; lot: string }) => {
   if (!pendingResolution.value) return;
   const resolution = pendingResolution.value;
-  showJobOrderConfirmModal.value = false;
   pendingResolution.value = null;
 
   clearPackingSession();
@@ -463,17 +413,20 @@ const confirmJobOrderResolution = (payload: { po: string; lot: string }) => {
   Object.entries(stateMap).forEach(([k, v]) => localStorage.setItem(k, v));
 
   activateProduct(resolution.product);
+  currentStep.value = 3;
 };
 
 const clearSelectedProduct = () => {
   selectedProduct.value = null;
   pendingResolution.value = null;
+  currentStep.value = 1;
   clearPackingSession();
   system.showNotification('Hãy quét hoặc nhập Công Lệnh để bắt đầu ca đóng mới', 'info');
 };
 
 // Global Hotkeys Listener (F9, Enter, Esc)
 const handleKeyDown = (event: KeyboardEvent) => {
+  if (currentStep.value !== 3) return;
   if (showToleranceErrorModal.value && ['Enter', 'Escape', ' ', 'Space'].includes(event.key)) {
     event.preventDefault();
     showToleranceErrorModal.value = false;
