@@ -26,7 +26,7 @@
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Tìm theo tên sản phẩm, mã CPN, UPC..." 
+          placeholder="Tìm theo tên sản phẩm, Factory P/N, CPN, UPC..."
           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
         >
       </div>
@@ -276,14 +276,18 @@ const filteredProducts = computed(() => {
     list = list.filter(p => p.template_type === selectedTemplateType.value);
   }
   if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase();
+    const q = searchQuery.value.trim().toLowerCase();
     list = list.filter(p => 
       p.item_name.toLowerCase().includes(q) || 
       (p.upc && p.upc.toLowerCase().includes(q)) ||
       (p.pkg_prefix && p.pkg_prefix.toLowerCase().includes(q)) ||
       (p.mfr_pn && p.mfr_pn.toLowerCase().includes(q)) ||
       (p.asin && p.asin.toLowerCase().includes(q)) ||
-      (p.product_desc && p.product_desc.toLowerCase().includes(q))
+      (p.product_desc && p.product_desc.toLowerCase().includes(q)) ||
+      (p.internal_factory_part_number && p.internal_factory_part_number.toLowerCase() === q) ||
+      p.internal_factory_part_numbers?.some(mapping =>
+        mapping.internal_factory_part_number.toLowerCase() === q
+      )
     );
   }
   return list;
