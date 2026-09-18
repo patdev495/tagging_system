@@ -39,4 +39,13 @@ export default {
     if (!res.ok) throw new Error('Failed to update scale config');
     return res.json();
   },
+  async reconnectScale(agentUrl: string = 'http://127.0.0.1:8080') {
+    const res = await fetch(`${agentUrl}/scale/reconnect`, {
+      method: 'POST',
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) throw new Error('Failed to reconnect scale');
+    return res.json();
+  },
 };
+

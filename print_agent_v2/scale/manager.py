@@ -166,11 +166,14 @@ class ScaleManager:
     def get_status(self) -> dict:
         ports = list_com_ports()
         engine_status = self._serial_engine.status.value if self._serial_engine else ("connected" if self._is_connected else "disconnected")
-        is_streaming = self._serial_engine.is_streaming(threshold_seconds=1.5) if self._serial_engine else self._is_connected
-        is_connected = self._is_connected and is_streaming
+        engine_msg = self._serial_engine.status_message if self._serial_engine else ""
+        is_streaming = self._serial_engine.is_streaming(threshold_seconds=2.0) if self._serial_engine else False
+        is_connected = self._is_connected
         return {
             "connected": is_connected,
-            "status": engine_status if is_connected else "disconnected",
+            "status": engine_status,
+            "message": engine_msg,
+            "port_opened": self._is_connected,
             "port": self._port,
             "baudrate": self._baudrate,
             "hotkey": self._hotkey,
@@ -179,10 +182,10 @@ class ScaleManager:
         }
 
     def get_current_reading(self) -> dict:
-        is_streaming = self._serial_engine.is_streaming(threshold_seconds=1.5) if self._serial_engine else self._is_connected
-        is_connected = self._is_connected and is_streaming
-        info = self._latest_packet_info if is_streaming else None
-
+        is_streaming = self._serial_engine.is_streaming(threshold_seconds=2.0) if self._serial_engine else False
+        is_connected = self._is_connected
+        # In stable or manual push mode, retain latest packet info as long as port is open
+        info = self._latest_packet_info if is_connected else None
 
         if info is None:
             return {
@@ -217,6 +220,8 @@ class ScaleManager:
             "is_streaming": is_streaming,
             "timestamp": time.time(),
         }
+
+
 
 
     def tare(self) -> bool:

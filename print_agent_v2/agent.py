@@ -253,9 +253,18 @@ def update_scale_config(cfg: ScaleConfigRequest):
         scale_manager._auto_connect = cfg.auto_connect
     
     scale_manager.save_config()
-    if port_changed:
+    current_status = scale_manager.get_status()
+    # Reconnect if port/baudrate changed OR if currently disconnected/not streaming
+    if port_changed or not current_status.get("connected"):
         scale_manager.reconnect()
     return {"success": True, "config": scale_manager.get_status()}
+
+@app.post("/scale/reconnect")
+def reconnect_scale():
+    """Chủ động kết nối lại cổng COM cân điện tử"""
+    scale_manager.reconnect()
+    return {"success": True, "config": scale_manager.get_status()}
+
 
 @app.post("/print")
 async def process_print(req: PrintRequest):

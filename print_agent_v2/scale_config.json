@@ -1,5 +1,5 @@
 {
-  "port": "COM4",
+  "port": "COM6",
   "baudrate": 9600,
   "hotkey": "NONE",
   "auto_connect": true
