@@ -10,6 +10,8 @@ from src.features.carton.erro_01_sn_allocator import (
     format_erro_01_carton_sn,
     plan_next_erro_01_carton_sn,
 )
+from src.features.carton.schemas import AdminCartonCreate
+from src.features.carton.service import create_admin_erro_carton
 
 
 @pytest.fixture
@@ -128,7 +130,7 @@ def test_plan_next_erro_01_carton_sn_ignores_reprints(db_session, erro_01_produc
     assert plan.carton_sn == "VHK00102372608000006"
 
 
-def test_plan_next_erro_01_carton_sn_independent_per_product(db_session, erro_01_product):
+def test_plan_next_erro_01_carton_sn_is_independent_per_product(db_session, erro_01_product):
     # Create product B with same customer and same pkg_prefix
     prod_b = Product(
         customer_id=erro_01_product.customer_id,
@@ -156,14 +158,35 @@ def test_plan_next_erro_01_carton_sn_independent_per_product(db_session, erro_01
     ))
     db_session.commit()
 
-    # Product B starts at sequence 1 despite product A having cartons in the same year
+    # Tem 1 maintains a sequence namespace per Product, even with the same prefix.
     plan_b = plan_next_erro_01_carton_sn(db_session, prod_b, custom_yymm="2608")
     assert plan_b.sequence == 1
     assert plan_b.carton_sn == "VHK00102372608000001"
 
-    # Product A continues from 51
+    # Product A continues from its own high-water mark.
     plan_a = plan_next_erro_01_carton_sn(db_session, erro_01_product, custom_yymm="2608")
     assert plan_a.sequence == 51
     assert plan_a.carton_sn == "VHK00102372608000051"
 
 
+def test_admin_can_create_the_same_erro_01_carton_sn_for_different_products(db_session, erro_01_product):
+    product_b = Product(
+        customer_id=erro_01_product.customer_id,
+        item_name="840-00091",
+        packed_qty=190,
+        packing_mode="weight_scale",
+        target_weight=12.5,
+        min_weight=12.3,
+        max_weight=12.7,
+        pkg_prefix="VHK0010237",
+        template_type="erro_01",
+        template_path="erro_01.btw",
+    )
+    db_session.add(product_b)
+    db_session.commit()
+
+    common = dict(sequence=3, reason="Khởi tạo", weight=12.5, job_order="JO-01")
+    carton_a, _ = create_admin_erro_carton(AdminCartonCreate(product_id=erro_01_product.id, **common), "admin", db_session)
+    carton_b, _ = create_admin_erro_carton(AdminCartonCreate(product_id=product_b.id, **common), "admin", db_session)
+
+    assert carton_a.carton_sn == carton_b.carton_sn == "VHK0010237" + datetime.datetime.now().strftime("%y%m") + "000003"

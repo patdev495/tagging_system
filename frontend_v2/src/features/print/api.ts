@@ -51,6 +51,11 @@ export default {
       throw err;
     }
   },
+  async agentHealth(agentUrl: string) {
+    const response = await fetch(`${agentUrl}/health`);
+    if (!response.ok) throw new Error('AGENT_CONNECTION_FAILED');
+    return response.json() as Promise<{ bartender_ready: boolean }>;
+  },
   /** Lấy danh sách máy in khả dụng từ Server/Agent */
   getAvailablePrinters() {
     return api.get<string[]>('/print/printers');

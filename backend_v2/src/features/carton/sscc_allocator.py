@@ -84,6 +84,19 @@ def next_sscc_sequence(db: Session, company_prefix: str = DEFAULT_SSCC_COMPANY_P
     clean_prefix = "".join(c for c in company_prefix if c.isdigit()) or DEFAULT_SSCC_COMPANY_PREFIX
     lead_prefix = f"0{clean_prefix}"
 
+    if lock:
+        # Multiple Erro 02 Products may share one GS1 company prefix. Lock the
+        # full namespace rather than only the selected Product.
+        (
+            db.query(models.Product.id)
+            .filter(
+                models.Product.template_type == "erro_02",
+                models.Product.pkg_prefix == clean_prefix,
+            )
+            .with_for_update()
+            .all()
+        )
+
     query = db.query(models.Carton.carton_sn).filter(
         models.Carton.carton_sn.like(f"{lead_prefix}%"),
         models.Carton.is_reprint == 0,

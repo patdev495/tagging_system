@@ -111,6 +111,7 @@ class Carton(Base):
     po_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     lot_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
     date_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    admin_creation_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     product: Mapped[Optional["Product"]] = relationship("Product", back_populates="cartons")
     items: Mapped[list["CartonItem"]] = relationship("CartonItem", back_populates="carton")

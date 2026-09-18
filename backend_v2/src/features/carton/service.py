@@ -10,6 +10,93 @@ from src.features.carton.sn_allocator import plan_next_carton_sn
 from src.features.print.service import generate_btxml
 
 
+def _plan_admin_erro_carton_sn(db: Session, product: models.Product, sequence: int):
+    if sequence < 1:
+        raise HTTPException(status_code=400, detail="Số thứ tự phải lớn hơn 0.")
+    if product.template_type == "erro_02":
+        from src.features.carton.sscc_allocator import plan_next_sscc_carton_sn
+        return plan_next_sscc_carton_sn(db, product, custom_sequence=sequence, lock=True), None
+    if product.template_type == "erro_03":
+        from src.features.carton.erro_03_sn_allocator import plan_next_erro_03_carton_sn
+        plan = plan_next_erro_03_carton_sn(db, product, custom_sequence=sequence, lock=True)
+        return plan, plan.yymmdd
+    if product.template_type == "erro_04":
+        from src.features.carton.erro_04_sn_allocator import Erro04CartonSNPlan, format_erro_04_sequence, pd027032_date_code
+        now = datetime.now()
+        prefix = (product.carton_id_prefix or "").strip().upper()
+        if prefix not in {"H", "K"}:
+            raise HTTPException(status_code=400, detail="Erro 04 Product requires carton_id_prefix H or K.")
+        return Erro04CartonSNPlan(
+            carton_sn=f"{prefix}{pd027032_date_code(now)}{format_erro_04_sequence(sequence)}",
+            sequence=sequence,
+            date_code=now.strftime("%y%m%d"),
+            carton_id_prefix=prefix,
+        ), now.strftime("%y%m%d")
+    if product.template_type == "erro_05":
+        from src.features.carton.erro_05_sn_allocator import ERRO_05_DEFAULT_PREFIX, ERRO_05_MAX_SEQUENCE, ERRO_05_MIN_SEQUENCE, Erro05CartonSNPlan
+        if not ERRO_05_MIN_SEQUENCE <= sequence <= ERRO_05_MAX_SEQUENCE:
+            raise HTTPException(status_code=400, detail="Erro 05 sequence must be between 50001 and 99999.")
+        now = datetime.now()
+        prefix = (product.pkg_prefix or ERRO_05_DEFAULT_PREFIX).strip()
+        date_code = f"{now.strftime('%y')}{now.isocalendar()[1]:02d}"
+        return Erro05CartonSNPlan(
+            carton_sn=f"{prefix}2{date_code}{sequence:05d}",
+            sequence=sequence,
+            date_code=date_code,
+            pkg_prefix=prefix,
+        ), date_code
+    plan = plan_next_erro_01_carton_sn(db, product, custom_sequence=sequence, lock=True)
+    return plan, plan.date_code
+
+
+def create_admin_erro_carton(carton_in: schemas.AdminCartonCreate, admin_username: str, db: Session):
+    product = db.query(models.Product).filter(models.Product.id == carton_in.product_id).with_for_update().first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if not product.customer or product.customer.code != "ERRO":
+        raise HTTPException(status_code=400, detail="Tạo Carton Admin chỉ áp dụng cho khách hàng Erro.")
+    if not carton_in.reason.strip():
+        raise HTTPException(status_code=400, detail="Lý do tạo Carton Admin là bắt buộc.")
+    if product.min_weight is not None and carton_in.weight < product.min_weight:
+        raise HTTPException(status_code=400, detail=f"Weight {carton_in.weight}kg is below minimum tolerance {product.min_weight}kg.")
+    if product.max_weight is not None and carton_in.weight > product.max_weight:
+        raise HTTPException(status_code=400, detail=f"Weight {carton_in.weight}kg is above maximum tolerance {product.max_weight}kg.")
+    if product.template_type == "erro_04" and not (carton_in.po_number and carton_in.po_number.strip()):
+        raise HTTPException(status_code=400, detail="PO Number is required for Erro 04 cartons.")
+    if product.template_type == "erro_04" and not (carton_in.lot_number and carton_in.lot_number.strip()):
+        raise HTTPException(status_code=400, detail="Lot Number is required for Erro 04 cartons.")
+
+    plan, date_code = _plan_admin_erro_carton_sn(db, product, carton_in.sequence)
+    duplicate_filters = [models.Carton.carton_sn == plan.carton_sn, models.Carton.is_reprint == 0]
+    if product.template_type == "erro_01":
+        duplicate_filters.append(models.Carton.product_id == product.id)
+    existing = db.query(models.Carton).filter(*duplicate_filters).first()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Sê-ri thùng {plan.carton_sn} đã tồn tại trong hệ thống.")
+    try:
+        carton = models.Carton(
+            product_id=product.id, carton_sn=plan.carton_sn, packed_by=admin_username,
+            status="FAILED", job_order=carton_in.job_order, carton_origin=carton_in.carton_origin,
+            station_id="ADMIN", weight=carton_in.weight, po_number=carton_in.po_number,
+            lot_number=carton_in.lot_number or (datetime.now().strftime("%Y%m%d") if product.template_type == "erro_05" else None),
+            date_code=date_code, admin_creation_reason=carton_in.reason.strip(), is_reprint=0,
+        )
+        db.add(carton)
+        db.flush()
+        template_path = utils.resolve_template_path(getattr(product, "template_path", None), carton_in.template_path)
+        btxml_content = generate_btxml(carton, product, [], template_path, carton_in.printer_name)
+        carton.btxml = btxml_content
+        db.commit()
+        db.refresh(carton)
+        return carton, btxml_content
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as error:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {error!s}") from error
+
+
 def get_next_carton_sn(db: Session, product: models.Product, custom_sn: int | None = None, custom_yymm: str | None = None) -> str:
     return plan_next_carton_sn(
         db,

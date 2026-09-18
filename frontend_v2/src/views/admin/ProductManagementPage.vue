@@ -173,6 +173,14 @@
 
               <td v-if="authStore.isAdmin" class="p-4 text-right">
                 <div class="flex justify-end gap-1.5">
+                  <button
+                    v-if="getCustomerCode(product.customer_id) === 'ERRO'"
+                    @click="openAdminCartonModal(product)"
+                    class="p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all cursor-pointer"
+                    title="Tạo Carton Admin"
+                  >
+                    <i class="fas fa-print"></i>
+                  </button>
                   <button 
                     @click="openEditModal(product)" 
                     class="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all cursor-pointer" 
@@ -212,6 +220,7 @@
       @close="showModal = false"
       @submit="handleSaveProduct"
     />
+    <AdminCartonModal :show="showAdminCartonModal" :product="adminCartonProduct" :submitting="isAdminCartonSubmitting" @close="showAdminCartonModal = false" @submit="handleAdminCartonCreate" />
   </div>
 </template>
 
@@ -220,12 +229,16 @@ import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-vue-next';
 import catalogApi from '../../features/catalog/api';
 import ProductFormModal, { type ProductFormData } from '../../features/catalog/components/ProductFormModal.vue';
+import AdminCartonModal from '../../features/catalog/components/AdminCartonModal.vue';
+import printApi from '../../features/print/api';
+import { useSettingsStore } from '../../core/stores/settings';
 import { useSystemStore } from '../../core/stores/system';
 import { useAuthStore } from '../../core/stores/auth';
 import type { Product, Customer } from '../../types/api';
 
 const system = useSystemStore();
 const authStore = useAuthStore();
+const settings = useSettingsStore();
 const products = ref<Product[]>([]);
 const customers = ref<Customer[]>([]);
 const searchQuery = ref<string>('');
@@ -236,6 +249,9 @@ const isEdit = ref<boolean>(false);
 const isSubmitting = ref<boolean>(false);
 const currentId = ref<number | null>(null);
 const selectedProduct = ref<Product | null>(null);
+const showAdminCartonModal = ref(false);
+const adminCartonProduct = ref<Product | null>(null);
+const isAdminCartonSubmitting = ref(false);
 
 const templateLabels: Record<string, string> = {
   standard: 'Standard (Tiêu chuẩn)',
@@ -309,6 +325,47 @@ const fetchData = async () => {
 const getCustomerName = (id: number) => {
   const c = customers.value.find(c => c.id === id);
   return c ? c.name : 'Unknown';
+};
+const getCustomerCode = (id: number) => customers.value.find(c => c.id === id)?.code || '';
+
+const openAdminCartonModal = (product: Product) => {
+  adminCartonProduct.value = product;
+  showAdminCartonModal.value = true;
+};
+
+const handleAdminCartonCreate = async (form: { sequence: number; reason: string; job_order: string; weight: number; po_number?: string; lot_number?: string }) => {
+  if (!adminCartonProduct.value || !settings.printerName) {
+    system.showNotification('Vui lòng chọn máy in tem trong Cài đặt trước khi in', 'error');
+    return;
+  }
+  isAdminCartonSubmitting.value = true;
+  try {
+    const agentHealth = await printApi.agentHealth(settings.agentUrl);
+    if (!agentHealth.bartender_ready) throw new Error('BarTender trên Print Agent chưa sẵn sàng');
+    const response = await catalogApi.createAdminCarton({ product_id: adminCartonProduct.value.id, ...form, printer_name: settings.printerName || undefined, template_path: settings.templatePath || undefined });
+    const carton: any = response.data;
+    const printResult = await printApi.agentPrint(settings.agentUrl, carton.btxml, settings.printerName, settings.localTemplateDir);
+    if (!printResult?.success || !['print', 'pdf'].includes(printResult.type)) {
+      throw new Error(printResult?.message || 'Print Agent không xác nhận kết quả in');
+    }
+    if (printResult.type === 'pdf' && printResult.data) {
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${printResult.data}`;
+      link.download = `${carton.carton_sn || 'label'}.pdf`;
+      link.click();
+    }
+    await printApi.updateCartonStatus(carton.id, 'SUCCESS');
+    system.showNotification(`Đã in Carton ${carton.carton_sn}`, 'success');
+    showAdminCartonModal.value = false;
+  } catch (err: any) {
+    const apiError = err.response?.data?.error || err.response?.data?.detail;
+    const errorMessage = Array.isArray(apiError)
+      ? apiError.map((item) => item.msg || item.message || String(item)).join('; ')
+      : apiError || err.message || 'Tạo Carton Admin thất bại';
+    system.showNotification(errorMessage, 'error');
+  } finally {
+    isAdminCartonSubmitting.value = false;
+  }
 };
 
 const openCreateModal = () => {

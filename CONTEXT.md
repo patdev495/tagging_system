@@ -35,12 +35,16 @@ _Avoid_: Hộp, thùng chứa, kiện hàng
 **Carton SN**:
 Mã số sê-ri duy nhất của Carton, được sinh theo quy tắc cấu hình của từng Customer/Product:
 - Với khách hàng UI: Tiền tố `start_part` (mặc định `CN` - Carton Number), theo sau là ngày tháng (`YYMM`), ký tự phân biệt sản phẩm và số thứ tự 5 chữ số reset hàng tháng.
-- Với khách hàng Erro - `erro_01` (`PD014736`): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm (PKG ID).
+- Với khách hàng Erro - `erro_01` (`PD014736`): Tiền tố định danh sản phẩm (VD: `VHK0010237`), theo sau là ngày tháng (`YYMM`) và số thứ tự 6 chữ số reset hàng năm (PKG ID). Bộ đếm là riêng theo Product; Carton SN Tem 1 có thể trùng giữa các Product khác nhau.
 - Với khách hàng Erro - `erro_02` (`PD027504`): Mã SSCC 18 chữ số theo chuẩn GS1 `037033907{seq:07d}{cd}` với số thứ tự sê-ri 7 chữ số tăng liên tục không reset, mã kiểm tra tính theo Modulo 10.
 - Với khách hàng Erro - `erro_03` (`PD024364`): Mã định danh thùng xuất xưởng Luxshare NME gồm 17 ký tự: mã nhà cung ứng 7 chữ số (mặc định xưởng Việt Nam là `1012665`), thời gian sản xuất 6 chữ số (`YYMMDD`), và số thứ tự 4 chữ số reset theo ngày.
 - Với khách hàng Erro - `erro_04` (`PD027032`): Mã định danh thùng xuất eero Mỹ gồm 8 ký tự: tiền tố cáp (`H` hoặc `K`), ngày sản xuất mã hóa base-32 (`YMD`), và chuỗi base-32 4 ký tự không reset dùng chung cho toàn bộ Product erro_04.
 - Với khách hàng Erro - `erro_05` (`PD016906`): Mã định danh thùng PEGATRON gồm 18 ký tự: mã nhà cung ứng (`MC220TW1`), số cố định `2`, năm (`YY`), tuần (`WW`) và số thứ tự 5 chữ số dùng chung cho mọi Product erro_05, reset về `50001` vào đầu mỗi tháng đối với xưởng Việt Nam (dải `50001`–`99999`).
 _Avoid_: Box SN, mã vạch thùng, PKG ID (trừ phi gọi theo tên trường trên tem Erro 01)
+
+**Admin Carton Creation**:
+Thao tác chỉ dành cho Admin để tạo, in và lưu một Carton Erro thật với đầy đủ dữ liệu nhằm thiết lập hoặc bổ sung lịch sử Carton SN cho Product Erro. Admin chỉ nhập số thứ tự chưa tồn tại và lý do; hệ thống dựng Carton SN và các trường tem từ Product cùng quy tắc của mẫu để Admin xác nhận. Carton này được xử lý như Carton thông thường, gồm quyền Reprint của Admin; nếu in thất bại, Carton vẫn giữ số đã cấp để Admin Reprint. Client cấp phát tự động theo số thứ tự hợp lệ lớn nhất trong phạm vi bộ đếm. Hệ thống lưu Admin thực hiện, thời điểm và lý do để truy vết; đây không phải cơ chế sửa số thứ tự thủ công trong quá trình đóng gói.
+_Avoid_: Nhập số tay khi in, reset tùy ý, chỉnh số theo ca
 
 **Erro 04 Carton Sequence**:
 Bộ đếm chung, tăng đơn điệu và không reset cho mọi Product dùng Erro Label Template Code `erro_04`. Bộ đếm được biểu diễn bằng bốn ký tự base-32 từ `0001` đến `ZZZZ`, dùng `0`-`9` và chữ cái trừ `I`, `L`, `O`, `U`; tiền tố `H` (CAT6A) hoặc `K` (CAT5E) không tạo bộ đếm riêng.
@@ -127,7 +131,7 @@ Hành động in lại nhãn của một Carton đã được đóng gói trư�
 _Avoid_: In bù, in mới, in đè
 
 **Station ID**:
-Mã định danh duy nhất của máy tính client hoặc trạm đóng gói thực hiện lệnh in (thường được lưu dưới dạng địa chỉ MAC hoặc địa chỉ IP của Client).
+Mã định danh duy nhất của máy tính client hoặc trạm đóng gói thực hiện lệnh in (thường được lưu dưới dạng địa chỉ MAC hoặc địa chỉ IP của Client). Giá trị hệ thống `ADMIN` là ngoại lệ dành riêng cho Carton được tạo từ màn Admin, biểu thị nguồn tạo quản trị chứ không phải máy trạm vật lý.
 _Avoid_: MAC ID (trừ phi nói về phần cứng), IP máy, Terminal ID
 
 **Template Type**:

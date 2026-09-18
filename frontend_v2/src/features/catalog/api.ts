@@ -46,6 +46,13 @@ export default {
       params: { yymm: yymm || undefined }
     });
   },
+  createAdminCarton(data: {
+    product_id: number; sequence: number; reason: string; weight: number;
+    po_number?: string; lot_number?: string; job_order: string;
+    printer_name?: string; template_path?: string;
+  }) {
+    return api.post('/cartons/admin-create', data);
+  },
 
   getInternalFactoryPartNumbers(productId: number) {
     return api.get<import('../../types/api').ProductInternalFactoryPartNumber[]>(`/products/${productId}/internal-factory-part-numbers`);

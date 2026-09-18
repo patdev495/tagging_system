@@ -385,47 +385,6 @@ class BarTenderCOMApp:
                 if not bt_format:
                     return {"success": False, "message": f"Could not open template path: {template_path}"}
 
-                # Special handling for Erro 03 / Luxshare NME template
-                if "erro_03" in template_path.lower() or "tem ngo" in template_path.lower():
-                    import base64
-                    def _b64_u16(t: str) -> str:
-                        return base64.b64encode(str(t).encode('utf-16le')).decode('ascii')
-
-                    carton_sn = substrings.get("CartonSN", "")
-                    supplier_code = substrings.get("SupplierCode", "1012665")
-                    supplier_name = substrings.get("SupplierName", "NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED")
-                    part_no = substrings.get("LuxsharePartNo", "")
-                    apn_rev = substrings.get("APNRev", "/")
-                    lot_no = substrings.get("LotNo", "")
-                    date_ymd = substrings.get("Date", "")
-                    qty = substrings.get("QTY", "")
-                    part_desc = substrings.get("PartDesc", "")
-                    origin = substrings.get("Origin", "VIETNAM")
-                    project_stage = substrings.get("ProjectStage", "项目: Andy Town/ Firefly         生产阶段：QB/CR")
-                    qr_content = substrings.get("QR_Content") or substrings.get("QRCode_Content", f"{carton_sn}${supplier_code}${supplier_name}${part_no}$${lot_no}${date_ymd}${qty}$$$$$$")
-
-                    xml_merge = f'''<?xml version="1.0" encoding="UTF-8" ?>
-<Command>
-   <DataMerge>
-      <Object Name="文本 10" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16(project_stage)}</Value></SubString></Object>
-      <Object Name="Text 2" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("料号:                        " + part_no)}</Value></SubString></Object>
-      <Object Name="文本 17" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("APN-Rev :             " + apn_rev)}</Value></SubString></Object>
-      <Object Name="文本 18" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("数量:                    " + qty)}</Value></SubString></Object>
-      <Object Name="文本 20" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("生产日期:                " + date_ymd)}</Value></SubString></Object>
-      <Object Name="文本 16" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16(" 生产批号:                   " + lot_no)}</Value></SubString></Object>
-      <Object Name="文本 13" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16(" 料件描述:        " + part_desc)}</Value></SubString></Object>
-      <Object Name="文本 23" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("供应商代码:                          " + supplier_code)}</Value></SubString></Object>
-      <Object Name="文本 25" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("箱号:                                   " + carton_sn)}</Value></SubString></Object>
-      <Object Name="文本 26" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("供应商名称：  " + supplier_name)}</Value></SubString></Object>
-      <Object Name="文本 28" Type="2"><SubString Position="0"><Value Encoding="base64">{_b64_u16("原产地：" + origin + "                                     型号：                              品牌：")}</Value></SubString></Object>
-      <Object Name="条形码 13" Type="1"><SubString Position="0"><Value Encoding="base64">{_b64_u16(qr_content)}</Value></SubString></Object>
-   </DataMerge>
-</Command>'''
-                    try:
-                        bt_format.Objects.ImportDataSourceValuesFromXML(xml_merge)
-                    except Exception as e:
-                        logger.warning(f"Failed to import datasource values for Tem 3: {e}")
-
                 # Feed values to the template's Named Substrings
                 for key, val in substrings.items():
                     try:

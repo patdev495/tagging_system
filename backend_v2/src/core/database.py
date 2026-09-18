@@ -525,6 +525,7 @@ def init_db():
                     ('po_number', 'VARCHAR(100) NULL', 'VARCHAR(100) NULL'),
                     ('lot_number', 'VARCHAR(100) NULL', 'VARCHAR(100) NULL'),
                     ('date_code', 'VARCHAR(20) NULL', 'VARCHAR(20) NULL'),
+                    ('admin_creation_reason', 'VARCHAR(500) NULL', 'VARCHAR(500) NULL'),
                 ]
                 for col_name, sqlite_type, mssql_type in new_carton_cols:
                     if col_name not in carton_cols:

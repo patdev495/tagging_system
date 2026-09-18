@@ -49,6 +49,7 @@ class CartonBase(BaseModel):
     po_number: str | None = None
     lot_number: str | None = None
     date_code: str | None = None
+    admin_creation_reason: str | None = None
 
 class CartonListItem(CartonBase):
     id: int

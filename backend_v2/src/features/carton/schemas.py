@@ -35,3 +35,15 @@ class CartonWeighPackCreate(BaseModel):
     custom_yymm: str | None = None
     custom_sn: int | None = None
 
+
+class AdminCartonCreate(BaseModel):
+    product_id: int
+    sequence: int
+    reason: str
+    weight: float
+    job_order: str
+    po_number: str | None = None
+    lot_number: str | None = None
+    printer_name: str | None = None
+    template_path: str | None = None
+    carton_origin: str = "VN"

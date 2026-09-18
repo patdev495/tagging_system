@@ -171,7 +171,9 @@
             <th class="p-4">{{ t('admin.created_at') }}</th>
             <th class="p-4">{{ t('admin.carton_sn') }}</th>
             <th class="p-4">{{ t('admin.product') }}</th>
-            <th class="p-4">{{ t('packing.job_order') }} / PO#</th>
+            <th class="p-4">{{ t('packing.job_order') }}</th>
+            <th class="p-4">PO#</th>
+            <th class="p-4">Lot</th>
             <th class="p-4">Trọng Lượng</th>
             <th class="p-4">{{ t('admin.status') }}</th>
             <th class="p-4">{{ t('admin.station_id') }}</th>
@@ -185,6 +187,8 @@
               <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-24"></div></td>
               <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-36"></div></td>
               <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-28 mb-1"></div><div class="h-2.5 bg-slate-100 rounded w-16"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-20"></div></td>
+              <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-20"></div></td>
               <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-20"></div></td>
               <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-16"></div></td>
               <td class="p-4"><div class="h-5 bg-slate-200 rounded-full w-14"></div></td>
@@ -207,10 +211,9 @@
                 <div class="font-bold text-slate-700">{{ carton.product?.item_name || 'N/A' }}</div>
                 <div class="text-[11px] text-slate-400">{{ getCustomerName(carton.product) }}</div>
               </td>
-              <td class="p-4 text-slate-600 font-mono text-xs">
-                <div>{{ carton.job_order || carton.po_number || '-' }}</div>
-                <div v-if="carton.lot_number" class="text-[10px] text-slate-400">Lot: {{ carton.lot_number }}</div>
-              </td>
+              <td class="p-4 text-slate-600 font-mono text-xs">{{ carton.job_order || '-' }}</td>
+              <td class="p-4 text-slate-600 font-mono text-xs">{{ carton.po_number || '-' }}</td>
+              <td class="p-4 text-slate-600 font-mono text-xs">{{ carton.lot_number || '-' }}</td>
               <td class="p-4 text-slate-600 font-mono text-xs">
                 <span v-if="carton.weight !== null && carton.weight !== undefined" class="font-bold text-emerald-700">
                   {{ carton.weight.toFixed(3) }} kg
@@ -244,7 +247,7 @@
               </td>
             </tr>
             <tr v-if="history.length === 0">
-              <td colspan="8" class="p-12 text-center text-slate-400 italic">{{ t('admin.no_data') }}</td>
+              <td colspan="10" class="p-12 text-center text-slate-400 italic">{{ t('admin.no_data') }}</td>
             </tr>
           </template>
         </tbody>

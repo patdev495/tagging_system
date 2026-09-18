@@ -56,8 +56,7 @@ def next_erro_01_sequence(
     product_id: int | None = None,
 ) -> int:
     """
-    Finds the maximum sequence allocated in the given year (YY) for the specified product (and pkg_prefix).
-    Resets to 1 if no cartons exist for that year for this product.
+    Finds the maximum sequence allocated in the given year (YY) for the specified Product and pkg_prefix.
     """
     filters = [
         models.Carton.carton_sn.like(f"{pkg_prefix}{yy}%"),
