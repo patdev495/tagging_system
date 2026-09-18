@@ -63,8 +63,6 @@ def create_admin_erro_carton(carton_in: schemas.AdminCartonCreate, admin_usernam
         raise HTTPException(status_code=400, detail=f"Weight {carton_in.weight}kg is above maximum tolerance {product.max_weight}kg.")
     if product.template_type == "erro_04" and not (carton_in.po_number and carton_in.po_number.strip()):
         raise HTTPException(status_code=400, detail="PO Number is required for Erro 04 cartons.")
-    if product.template_type == "erro_04" and not (carton_in.lot_number and carton_in.lot_number.strip()):
-        raise HTTPException(status_code=400, detail="Lot Number is required for Erro 04 cartons.")
 
     plan, date_code = _plan_admin_erro_carton_sn(db, product, carton_in.sequence)
     duplicate_filters = [models.Carton.carton_sn == plan.carton_sn, models.Carton.is_reprint == 0]
@@ -78,7 +76,7 @@ def create_admin_erro_carton(carton_in: schemas.AdminCartonCreate, admin_usernam
             product_id=product.id, carton_sn=plan.carton_sn, packed_by=admin_username,
             status="FAILED", job_order=carton_in.job_order, carton_origin=carton_in.carton_origin,
             station_id="ADMIN", weight=carton_in.weight, po_number=carton_in.po_number,
-            lot_number=carton_in.lot_number or (datetime.now().strftime("%Y%m%d") if product.template_type == "erro_05" else None),
+            lot_number=(carton_in.lot_number.strip() if carton_in.lot_number else None) or ("92607933" if product.template_type == "erro_03" else (datetime.now().strftime("%Y%m%d") if product.template_type == "erro_05" else None)),
             date_code=date_code, admin_creation_reason=carton_in.reason.strip(), is_reprint=0,
         )
         db.add(carton)
