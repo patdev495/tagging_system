@@ -187,6 +187,8 @@ const initDefaults = () => {
 
   if (props.initialLot) {
     formLot.value = props.initialLot;
+  } else if (templateType.value === 'erro_01') {
+    formLot.value = props.resolution.lot_number_default || '';
   } else if (templateType.value === 'erro_03') {
     formLot.value = '92607933';
   } else if (templateType.value === 'erro_05') {

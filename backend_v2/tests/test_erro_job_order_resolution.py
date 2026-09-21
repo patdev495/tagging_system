@@ -75,6 +75,7 @@ def test_resolve_erro_job_order_tracer_bullet_success():
             assert data["total_qty"] == 22800
             assert data["planned_cartons"] == 120  # ceil(22800 / 190) = 120
             assert data["name_mismatch"] is False
+            assert data["lot_number_default"] and len(data["lot_number_default"]) == 8
             assert data["product"]["id"] == product.id
             assert data["product"]["item_name"] == "840-00092"
             assert data["product"]["template_type"] == "erro_01"
@@ -203,4 +204,3 @@ def test_resolve_erro_job_order_counts_existing_cartons():
         client.close()
         app.dependency_overrides.clear()
         db.close()
-

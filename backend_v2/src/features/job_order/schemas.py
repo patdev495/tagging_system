@@ -48,6 +48,7 @@ class ErroJobOrderResolutionResponse(BaseModel):
     planned_cartons: int
     packed_cartons_count: int = 0
     name_mismatch: bool = False
+    lot_number_default: str | None = None
     product: Product
 
     class Config:

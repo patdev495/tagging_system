@@ -111,6 +111,19 @@ describe('ErroProductCardStep', () => {
     expect(lotInput.element.value).toBe('92607933');
   });
 
+  it('uses the server-supplied LOT default for template erro_01', () => {
+    const wrapper = mount(ErroProductCardStep, {
+      props: {
+        jobOrder: '1259487',
+        resolution: { ...sampleResolution, lot_number_default: '20260921' },
+        initialPo: '',
+        initialLot: '',
+      },
+    });
+
+    expect(wrapper.find<HTMLInputElement>('input#batch-lot').element.value).toBe('20260921');
+  });
+
   it('emits confirm when form submitted with valid inputs', async () => {
     const wrapper = mount(ErroProductCardStep, {
       props: {

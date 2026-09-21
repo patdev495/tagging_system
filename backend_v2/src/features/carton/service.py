@@ -336,6 +336,8 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
         if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
             weigh_in.lot_number = datetime.now().strftime("%Y%m%d")
     else:
+        if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
+            raise HTTPException(status_code=400, detail="Lot Number is required for Erro 01 cartons.")
         plan = plan_next_erro_01_carton_sn(
             db,
             product,

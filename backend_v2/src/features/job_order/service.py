@@ -1,5 +1,6 @@
 import logging
 import math
+from datetime import datetime
 from typing import cast
 
 from fastapi import HTTPException
@@ -269,6 +270,6 @@ def resolve_erro_job_order(db: Session, job_order: str) -> schemas.ErroJobOrderR
         planned_cartons=planned_cartons,
         packed_cartons_count=packed_cartons_count,
         name_mismatch=name_mismatch,
+        lot_number_default=datetime.now().strftime("%Y%m%d") if product.template_type == "erro_01" else None,
         product=product,
     )
-

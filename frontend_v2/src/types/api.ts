@@ -140,6 +140,6 @@ export interface ErroJobOrderResolution {
   planned_cartons: number;
   packed_cartons_count: number;
   name_mismatch: boolean;
+  lot_number_default?: string | null;
   product: Product;
 }
-

@@ -75,7 +75,7 @@ Ngày sản xuất của Carton, lấy theo Local Server Time tại thời đi�
 _Avoid_: Date Code, ngày nhập tay, ngày đơn hàng
 
 **Lot Number**:
-Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô. Với `erro_04`, Lot Number là bắt buộc cho Production Run để phục vụ truy xuất nguồn gốc, nhưng không được in trên tem. Với `erro_05`, Lot Number (trường `Lot Code` trên tem) mặc định tự động sinh theo ngày sản xuất `YYYYMMDD` của máy chủ, cho phép người vận hành chỉnh sửa lại nếu cần.
+Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập hoặc xác nhận một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô. Với `erro_01` và `erro_05`, Lot Number mặc định tự động sinh theo ngày sản xuất `YYYYMMDD` theo **Local Server Time**; người vận hành được phép chỉnh sửa nhưng không được để trống khi in `erro_01`. API phải từ chối yêu cầu in `erro_01` có Lot Number trống. Khi bắt đầu một Job Order mới, `erro_01` phải bỏ Lot Number của Job Order trước và gợi ý lại giá trị ngày máy chủ hiện tại. Khi người vận hành đổi Lot Number trong cùng Job Order, chỉ Carton được in sau thay đổi; Carton đã in giữ snapshot Lot Number tại lúc in. Với `erro_04`, Lot Number là bắt buộc cho Production Run để phục vụ truy xuất nguồn gốc, nhưng không được in trên tem. Với `erro_05`, Lot Number được in tại trường `Lot Code`.
 _Avoid_: Mã mẻ, mã batch, số lô con
 
 **PO Number**:

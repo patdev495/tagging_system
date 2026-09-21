@@ -86,3 +86,14 @@ def test_weigh_pack_api_out_of_tolerance(client):
     })
     assert res.status_code == 400
     assert "below minimum tolerance" in res.json()["error"]
+
+
+def test_weigh_pack_api_rejects_erro_01_without_lot_number(client):
+    res = client.post("/api/v1/cartons/weigh-pack", json={
+        "product_id": 1,
+        "weight": 12.520,
+        "po_number": "PO-API-123",
+        "lot_number": " ",
+    })
+    assert res.status_code == 400
+    assert "Lot Number is required for Erro 01 cartons" in res.json()["error"]

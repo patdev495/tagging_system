@@ -380,6 +380,10 @@ const saveBatchConfig = (payload: { po: string; lot: string }) => {
 const cancelBatchConfig = () => { showBatchModal.value = false; };
 
 const handleJobOrderResolved = (resolution: ErroJobOrderResolution) => {
+  if (resolution.product.template_type === 'erro_01' && resolution.job_order !== activeJobOrder.value) {
+    activeLot.value = '';
+    localStorage.removeItem('erro_active_lot');
+  }
   pendingResolution.value = resolution;
   currentStep.value = 2;
 };
