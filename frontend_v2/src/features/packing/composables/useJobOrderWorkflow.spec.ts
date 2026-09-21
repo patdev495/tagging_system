@@ -24,6 +24,29 @@ describe('useJobOrderWorkflow', () => {
     vi.stubGlobal('confirm', vi.fn(() => true));
   });
 
+  it('defaults the editable UI scan pattern to AS', () => {
+    const currentProduct = ref(null);
+    const workflowRef = shallowRef<ReturnType<typeof useJobOrderWorkflow> | null>(null);
+
+    mount(defineComponent({
+      setup() {
+        workflowRef.value = useJobOrderWorkflow({
+          system: { showNotification: vi.fn() },
+          currentProduct,
+          focusScan: vi.fn(),
+          checkTemplateExists: vi.fn(),
+          startPolling: vi.fn(),
+          stopPolling: vi.fn(),
+          playScanAlert: vi.fn(),
+        });
+        return {};
+      },
+      template: '<div />',
+    }), { global: { plugins: [i18n] } });
+
+    expect(workflowRef.value!.snPattern.value).toBe('AS');
+  });
+
   it('keeps a resumed, verified carton waiting for the next-carton action without switching slots', async () => {
     const currentProduct = ref({ id: 1, item_name: 'UI Cable', packed_qty: 20 } as any);
     const workflowRef = shallowRef<ReturnType<typeof useJobOrderWorkflow> | null>(null);

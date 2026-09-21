@@ -28,7 +28,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
   const jobOrder = ref<string>('');
   const cartonOrigin = ref<string>('VN');
   const customSN = ref<string>('');
-  const snPattern = ref<string>('');
+  const snPattern = ref<string>('AS');
   const customYYMM = ref<string>('');
   const awaitingNext = ref<boolean>(false);
   const suggestedSNValue = ref<number>(1);
@@ -147,6 +147,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     customSN.value = '';
     suggestedSNPreview.value = '';
     customYYMM.value = '';
+    snPattern.value = 'AS';
     isSNManual.value = false;
     showCartonSlotsModal.value = false;
     nextTick(() => { if (options.jobOrderInputRef?.value) options.jobOrderInputRef.value.focusInput(); });
@@ -360,6 +361,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     awaitingNext.value = false; 
     isRescanMode.value = false;
     rescanCartonSN.value = '';
+    snPattern.value = 'AS';
     scanBuffer.value = ''; 
     showVerificationModal.value = false;
     cartonToVerify.value = null;
