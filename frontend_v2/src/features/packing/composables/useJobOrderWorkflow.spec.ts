@@ -62,4 +62,36 @@ describe('useJobOrderWorkflow', () => {
     expect(workflow.selectedSlotId.value).toBeNull();
     expect(workflow.scannedItems.value).toEqual(['ITEM-FROM-VERIFIED-CARTON']);
   });
+
+  it('defaults the editable rescan pattern to AS for UI cartons', () => {
+    const currentProduct = ref(null);
+    const workflowRef = shallowRef<ReturnType<typeof useJobOrderWorkflow> | null>(null);
+    vi.stubGlobal('scrollTo', vi.fn());
+
+    mount(defineComponent({
+      setup() {
+        workflowRef.value = useJobOrderWorkflow({
+          system: { showNotification: vi.fn() },
+          currentProduct,
+          focusScan: vi.fn(),
+          checkTemplateExists: vi.fn(),
+          startPolling: vi.fn(),
+          stopPolling: vi.fn(),
+          playScanAlert: vi.fn(),
+        });
+        return {};
+      },
+      template: '<div />',
+    }), { global: { plugins: [i18n] } });
+
+    const workflow = workflowRef.value!;
+    workflow.handleRescan({
+      carton_sn: 'CN260900001',
+      job_order: 'JO-UI-1',
+      carton_origin: 'VN',
+      product: { id: 1, item_name: 'UI Cable', packed_qty: 20 },
+    } as any);
+
+    expect(workflow.snPattern.value).toBe('AS');
+  });
 });

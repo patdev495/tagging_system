@@ -281,7 +281,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     lastCarton.value = carton;
     customSN.value = '';
     suggestedSNPreview.value = '';
-    snPattern.value = '';
+    snPattern.value = 'AS';
     jobOrder.value = carton.job_order || 'EMERGENCY_RESCAN';
     cartonOrigin.value = carton.carton_origin || 'VN';
     isRescanMode.value = true;
