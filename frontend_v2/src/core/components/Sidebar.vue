@@ -33,11 +33,13 @@
       <button
         @click="showSettings = true"
         class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/10 group text-white text-left cursor-pointer border-none bg-transparent"
-        :title="isCollapsed ? 'Settings' : ''"
+        :title="isCollapsed ? t('nav.settings') : ''"
       >
         <Settings class="w-6 h-6 flex-shrink-0" />
-        <span v-if="!isCollapsed" class="font-medium whitespace-nowrap">Settings</span>
+        <span v-if="!isCollapsed" class="font-medium whitespace-nowrap">{{ t('nav.settings') }}</span>
       </button>
+
+      <LanguageSwitch variant="sidebar" :is-collapsed="isCollapsed" />
     </nav>
 
     <!-- User Profile & Logout -->
@@ -56,7 +58,7 @@
       <button 
         @click="handleLogout"
         class="p-2 rounded-lg hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 transition-colors cursor-pointer border-none bg-transparent flex-shrink-0"
-        title="Đăng xuất"
+        :title="t('nav.logout')"
       >
         <LogOut class="w-5 h-5" />
       </button>
@@ -79,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { 
   Package, 
   LayoutDashboard, 
@@ -98,7 +100,9 @@ import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import type { Component } from 'vue';
+import { useI18n } from 'vue-i18n';
 import SettingsModal from '../../features/settings/components/SettingsModal.vue';
+import LanguageSwitch from './LanguageSwitch.vue';
 
 const systemStore = useSystemStore();
 const authStore = useAuthStore();
@@ -106,6 +110,8 @@ const router = useRouter();
 
 const { isSidebarCollapsed: isCollapsed } = storeToRefs(systemStore);
 const showSettings = ref(false);
+
+const { t } = useI18n();
 
 const handleLogout = () => {
   authStore.logout();
@@ -118,14 +124,14 @@ interface MenuItem {
   icon: Component;
 }
 
-const menuItems: MenuItem[] = [
-  { label: 'Packing Station', path: '/', icon: Box },
-  { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-  { label: 'Production Runs', path: '/admin/production-runs', icon: Layers },
-  { label: 'Customers', path: '/admin/customers', icon: Users },
-  { label: 'Products', path: '/admin/products', icon: Package },
-  { label: 'Carton History', path: '/admin/history', icon: ClipboardList },
-  { label: 'S/N Lookup', path: '/admin/stats', icon: BarChart3 },
-];
+const menuItems = computed<MenuItem[]>(() => [
+  { label: t('nav.packingStation'), path: '/', icon: Box },
+  { label: t('nav.dashboard'), path: '/admin', icon: LayoutDashboard },
+  { label: t('nav.productionRuns'), path: '/admin/production-runs', icon: Layers },
+  { label: t('nav.customers'), path: '/admin/customers', icon: Users },
+  { label: t('nav.products'), path: '/admin/products', icon: Package },
+  { label: t('nav.cartonHistory'), path: '/admin/history', icon: ClipboardList },
+  { label: t('nav.snLookup'), path: '/admin/stats', icon: BarChart3 },
+]);
 </script>
 

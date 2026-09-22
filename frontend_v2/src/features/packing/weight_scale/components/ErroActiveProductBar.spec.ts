@@ -7,16 +7,10 @@ describe('ErroActiveProductBar', () => {
   const sampleProduct: Product = {
     id: 1,
     customer_id: 1,
-    customer_name: 'Erro',
     item_name: '840-00092',
-    customer_part_number: '840-00092',
     template_type: 'erro_01',
     packed_qty: 190,
-    net_weight: 10.0,
-    tolerance_percentage: 5.0,
-    gross_weight_min: 9.5,
-    gross_weight_max: 10.5,
-    unit: 'PCS',
+    allow_partial: 0,
   };
 
   it('renders job order, CPN and carton progress', () => {
@@ -37,7 +31,7 @@ describe('ErroActiveProductBar', () => {
     expect(wrapper.text()).toContain('WO-12345');
     expect(wrapper.text()).toContain('1LAE0091');
     expect(wrapper.text()).toContain('840-00092');
-    expect(wrapper.text()).toContain('25 / 100 Thùng');
+    expect(wrapper.text()).toContain('25 / 100 thùng');
     expect(wrapper.text()).toContain('PO: PO-TEST');
     expect(wrapper.text()).toContain('LOT: LOT-TEST');
   });
@@ -73,7 +67,7 @@ describe('ErroActiveProductBar', () => {
     expect(wrapper.emitted('changeJobOrder')).toBeTruthy();
 
     // Click Progress button
-    const progressBtn = wrapper.findAll('button').find(b => b.text().includes('25 / 100 Thùng'));
+    const progressBtn = wrapper.findAll('button').find(b => b.text().includes('25 / 100 thùng'));
     await progressBtn?.trigger('click');
     expect(wrapper.emitted('showCartons')).toBeTruthy();
   });

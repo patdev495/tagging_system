@@ -109,10 +109,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2, X } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
 import { useAuthStore } from '../../core/stores/auth';
 import type { Customer } from '../../types/api';
+
+const { t } = useI18n();
 
 const system = useSystemStore();
 const authStore = useAuthStore();
@@ -146,7 +149,7 @@ const fetchCustomers = async () => {
     const res = await catalogApi.getCustomers();
     customers.value = res.data;
   } catch (err) {
-    system.showNotification('Could not load customer list', 'error');
+    system.showNotification(t('customers.load_failed'), 'error');
   }
 };
 
@@ -169,10 +172,10 @@ const saveCustomer = async () => {
   try {
     if (isEdit.value && currentId.value !== null) {
       await catalogApi.updateCustomer(currentId.value, form.value);
-      system.showNotification('Customer updated successfully', 'success');
+      system.showNotification(t('customers.update_success'), 'success');
     } else {
       await catalogApi.createCustomer(form.value);
-      system.showNotification('Customer added successfully', 'success');
+      system.showNotification(t('customers.create_success'), 'success');
     }
     showModal.value = false;
     await fetchCustomers();
@@ -188,7 +191,7 @@ const confirmDelete = async (customer: Customer) => {
   if (confirm(`Are you sure you want to delete customer "${customer.name}"? This action cannot be undone.`)) {
     try {
       await catalogApi.deleteCustomer(customer.id);
-      system.showNotification('Customer deleted', 'success');
+      system.showNotification(t('customers.delete_success'), 'success');
       await fetchCustomers();
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Could not delete this customer (possibly due to related data)';

@@ -1,27 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { createI18n } from 'vue-i18n';
+import i18n from '../../../i18n';
 import ScanBuffer from '../components/ScanBuffer.vue';
-
-const i18n = createI18n({
-  legacy: false,
-  locale: 'vi',
-  messages: {
-    vi: {
-      packing: {
-        waiting_next_carton_indicator: 'TẠM KHÓA — CHỜ ĐỔI THÙNG',
-        scan_prompt_awaiting_next: '⏸️ ĐÃ ĐÓNG THÙNG — Nhấn Space hoặc bấm \'Thùng Tiếp Theo\' để mở thùng mới...',
-        scan_prompt_job: '⚠️ VUI LÒNG NHẬP CÔNG LỆNH TRƯỚC...',
-        next_carton: 'Thùng Tiếp Theo',
-        next_carton_title: 'Bắt đầu thùng mới',
-        carton_complete_hint: '📦 Thùng đã hoàn tất! Vui lòng bấm "Thùng Tiếp Theo" hoặc nhấn phím Space để mở thùng mới.',
-        invalid_scans_title: 'Mã Quét Lỗi',
-        waiting_scanner: 'Đang chờ máy quét...',
-        clear: 'Xóa',
-      },
-    },
-  },
-});
 
 describe('ScanBuffer.vue', () => {
   const defaultProps = {

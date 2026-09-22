@@ -10,8 +10,8 @@
             <i class="fas fa-clipboard-check text-base"></i>
           </div>
           <div>
-            <h2 class="font-black text-base md:text-lg text-slate-900 leading-tight">Xác Nhận Công Lệnh Đóng Hàng</h2>
-            <p class="text-[11px] text-slate-500 leading-none">Đối chiếu dữ liệu ERP và thông số tem Erro</p>
+            <h2 class="font-black text-base md:text-lg text-slate-900 leading-tight">{{ t('erro.confirm_job_order_title') }}</h2>
+            <p class="text-[11px] text-slate-500 leading-none">{{ t('erro.reconcile_erp_desc') }}</p>
           </div>
         </div>
         <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg cursor-pointer">
@@ -22,7 +22,7 @@
       <!-- Overview Info Cards -->
       <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 grid grid-cols-2 gap-3 text-xs">
         <div>
-          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Công Lệnh:</span>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">{{ t('erro.job_order_label') }}:</span>
           <span class="font-mono font-black text-sm text-indigo-900">{{ resolution.job_order }}</span>
         </div>
         <div>
@@ -30,11 +30,11 @@
           <span class="font-mono font-bold text-sm text-slate-800">{{ resolution.factory_part_number }}</span>
         </div>
         <div>
-          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Tên Hàng ERP (wadl01):</span>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">{{ t('erro.erp_item_name') }}:</span>
           <span class="font-bold text-slate-800 break-words">{{ resolution.customer_ref }}</span>
         </div>
         <div>
-          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Product Hệ Thống:</span>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">{{ t('erro.system_product') }}:</span>
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-bold text-slate-900">{{ resolution.product.item_name }}</span>
             <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-indigo-100 text-indigo-700 uppercase">
@@ -44,12 +44,12 @@
         </div>
         <div class="col-span-2 pt-2 border-t border-slate-200/60 flex items-center justify-between">
           <div>
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Sản Lượng:</span>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">{{ t('erro.production_quantity') }}:</span>
             <span class="font-bold text-slate-800">{{ resolution.total_qty.toLocaleString() }} PCS</span>
           </div>
           <div class="text-right">
-            <span class="text-[10px] uppercase font-bold text-slate-400 block">Kế Hoạch Đóng:</span>
-            <span class="font-black text-indigo-700">{{ resolution.planned_cartons }} Thùng ({{ resolution.product.packed_qty }} PCS/thùng)</span>
+            <span class="text-[10px] uppercase font-bold text-slate-400 block">{{ t('erro.planned_packing') }}:</span>
+            <span class="font-black text-indigo-700">{{ resolution.planned_cartons }} {{ t('packing.carton') }} ({{ resolution.product.packed_qty }} {{ t('packing.pcs_per_carton') }})</span>
           </div>
         </div>
       </div>
@@ -61,9 +61,9 @@
       >
         <i class="fas fa-triangle-exclamation text-amber-600 mt-0.5 shrink-0 text-sm"></i>
         <div>
-          <strong class="block font-bold">Lưu ý đối chiếu tên hàng!</strong>
+          <strong class="block font-bold">{{ t('erro.name_mismatch_warning_title') }}</strong>
           <span class="text-[11px] text-amber-700 block mt-0.5">
-            Tên hàng trên ERP (<code>{{ resolution.customer_ref }}</code>) khác với tên Product trong hệ thống (<code>{{ resolution.product.item_name }}</code>). Mẫu tem được chọn theo Factory P/N chuẩn.
+            {{ t('erro.name_mismatch_warning_desc', { ref: resolution.customer_ref }) }}
           </span>
         </div>
       </div>
@@ -73,32 +73,32 @@
         <template v-if="resolution.product.template_type !== 'erro_02'">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Mã Đơn Hàng (PO Number) {{ isPoRequired ? '*' : '(Tùy chọn)' }}
+              {{ t('erro.po_number') }} {{ isPoRequired ? '*' : `(${t('common.optional')})` }}
             </label>
             <input
               v-model="formPo"
               type="text"
               :required="isPoRequired"
-              :placeholder="isPoRequired ? 'Ví dụ: B432-22156381 (bắt buộc)' : 'Có thể để trống'"
+              :placeholder="isPoRequired ? t('erro.po_required_placeholder') : t('erro.po_optional_placeholder')"
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
             />
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Mã Số Lô (Lot Number) {{ isLotRequired ? '*' : '(Tự động)' }}
+              {{ t('erro.lot_number') }} {{ isLotRequired ? '*' : `(${t('erro.auto')})` }}
             </label>
             <input
               v-model="formLot"
               type="text"
               :required="isLotRequired"
-              :placeholder="isLotRequired ? 'Ví dụ: 92607933' : 'Mặc định theo ngày'"
+              :placeholder="isLotRequired ? t('erro.lot_required_placeholder') : t('erro.lot_auto_placeholder')"
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
             />
           </div>
         </template>
         <div v-else class="text-xs text-slate-500 italic bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-          Mẫu tem erro_02 (SSCC) không yêu cầu in PO và LOT.
+          {{ t('erro.not_applicable_template_2') }}
         </div>
 
         <div class="flex justify-end gap-2.5 pt-3">
@@ -107,13 +107,13 @@
             @click="$emit('close')"
             class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
           >
-            Hủy / Quét Lại
+            {{ t('erro.cancel_rescan') }}
           </button>
           <button
             type="submit"
             class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all cursor-pointer shadow-md shadow-indigo-600/20 flex items-center gap-1.5"
           >
-            <span>Bắt Đầu Cân</span>
+            <span>{{ t('erro.start_weighing') }}</span>
             <span class="text-[10px] font-barcode-mono font-black px-1.5 py-0.5 bg-black/20 rounded">ENTER ↵</span>
           </button>
         </div>
@@ -124,7 +124,10 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { ErroJobOrderResolution } from '../../../../types/api';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;

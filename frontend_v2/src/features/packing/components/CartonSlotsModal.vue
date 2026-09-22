@@ -12,14 +12,14 @@
               {{ t('packing.carton_slots_title', 'Sơ Đồ Vị Trí Thùng') }}
             </h2>
             <p class="m-0 text-xs text-slate-500">
-              Work Order: <strong class="font-mono text-slate-800">{{ jobOrder }}</strong> • Tổng số: <strong>{{ totalCartons }}</strong> thùng
+              {{ t('packing.slots_summary', { jobOrder, total: totalCartons }) }}
             </p>
           </div>
         </div>
         <button 
           @click="$emit('close')" 
           class="w-8 h-8 rounded-lg bg-white hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
-          title="Đóng (Esc)"
+          :title="t('packing.close_title')"
         >
           <i class="fas fa-times text-sm"></i>
         </button>
@@ -30,20 +30,20 @@
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rounded bg-emerald-600 border border-emerald-700 inline-block"></span>
-            <span class="font-semibold text-slate-700">Đã hoàn thành ({{ scannedCount }})</span>
+            <span class="font-semibold text-slate-700">{{ t('packing.completed', { count: scannedCount }) }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rounded bg-blue-50 border-2 border-blue-600 inline-block"></span>
-            <span class="font-semibold text-slate-700">Đang chọn</span>
+            <span class="font-semibold text-slate-700">{{ t('packing.selected') }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="w-3 h-3 rounded bg-white border border-slate-300 inline-block"></span>
-            <span class="font-semibold text-slate-700">Chờ quét ({{ (totalCartons || 0) - (scannedCount || 0) }})</span>
+            <span class="font-semibold text-slate-700">{{ t('packing.pending', { count: (totalCartons || 0) - (scannedCount || 0) }) }}</span>
           </div>
         </div>
 
         <div class="text-xs font-bold text-slate-700">
-          Tiến độ: <span class="text-emerald-700 font-mono font-black">{{ scannedCount }}</span> / <span class="font-mono">{{ totalCartons }}</span> thùng
+          {{ t('packing.progress', { current: scannedCount, total: totalCartons }) }}
         </div>
       </div>
 
@@ -62,12 +62,12 @@
                     ? 'bg-blue-50 border-2 border-blue-600 ring-2 ring-blue-500/20 text-blue-900 font-extrabold'
                     : 'bg-white border-slate-300 text-slate-800 hover:border-blue-400 hover:bg-blue-50/40')
             ]"
-            :title="slot.status === 'SCANNED' ? 'Thùng đã hoàn thành - Bấm để xem thông tin' : 'Bấm để chọn thùng này'"
+            :title="slot.status === 'SCANNED' ? t('packing.slot_scanned_title') : t('packing.slot_select_title')"
           >
             <!-- Top badge: Status or checkmark -->
             <div class="flex items-center justify-between w-full mb-1">
               <span class="text-[11px] font-extrabold px-1.5 py-0.2 rounded" :class="slot.status === 'SCANNED' ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-600'">
-                Thùng {{ slot.carton_number }}
+                {{ t('packing.carton_number', { number: slot.carton_number }) }}
               </span>
               <i v-if="slot.status === 'SCANNED'" class="fas fa-check-circle text-emerald-600 text-sm"></i>
               <span v-else-if="selectedSlotId === slot.id" class="text-[9px] uppercase font-bold text-blue-700 bg-blue-100 px-1 rounded">Active</span>
@@ -80,7 +80,7 @@
 
             <!-- Bottom subtext -->
             <span class="text-[10px] text-slate-500 font-medium block mt-1">
-              {{ slot.status === 'SCANNED' ? 'Đã in tem' : 'Sẵn sàng đóng' }}
+              {{ slot.status === 'SCANNED' ? t('packing.label_printed') : t('packing.ready_to_pack') }}
             </span>
           </div>
         </div>
@@ -88,12 +88,12 @@
 
       <!-- Footer -->
       <div class="px-5 py-3 bg-slate-100 border-t border-slate-200 flex justify-between items-center">
-        <span class="text-xs text-slate-500 font-medium">Bấm vào thùng bất kỳ để chuyển vị trí đóng gói</span>
+        <span class="text-xs text-slate-500 font-medium">{{ t('packing.slots_hint') }}</span>
         <button 
           @click="$emit('close')" 
           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-5 rounded-lg transition-colors cursor-pointer text-xs"
         >
-          {{ t('settings.close', 'Đóng') }}
+          {{ t('settings.close') }}
         </button>
       </div>
     </div>

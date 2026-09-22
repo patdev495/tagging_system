@@ -19,7 +19,7 @@
               UPC: {{ product.upc }}
             </span>
             <span class="inline-flex items-center px-2 py-0.5 border border-emerald-200 rounded bg-emerald-50 text-emerald-800 font-bold">
-              Quy cách: {{ product.packed_qty }} pcs/thùng
+              {{ t('packing.specification') }}: {{ product.packed_qty }} {{ t('packing.pcs_per_carton') }}
             </span>
           </div>
         </div>
@@ -72,10 +72,10 @@
       <div class="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[260px]">
         <div class="flex justify-between items-center pl-0.5">
           <label class="text-xs text-slate-700 font-bold uppercase tracking-wider">
-            STT Thùng ({{ cartonNumberRange || '...' }})
+            {{ t('packing.carton_seq') }} ({{ cartonNumberRange || '...' }})
           </label>
           <span v-if="snPreview" class="text-[11px] font-bold text-emerald-700">
-            Sẵn sàng
+            {{ t('packing.ready') }}
           </span>
         </div>
         <div class="relative flex items-center">
@@ -85,7 +85,7 @@
             @keydown.enter.prevent="onCartonNumberSubmit"
             type="text"
             inputmode="numeric"
-            placeholder="Ví dụ: 1" 
+            :placeholder="t('packing.carton_num_example')" 
             class="w-full h-10 px-3 bg-white border rounded-lg text-sm font-barcode-mono font-bold outline-none transition-all shadow-2xs"
             :class="hasCartonNumberError 
               ? 'border-rose-500 text-rose-700 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15 bg-rose-50/40' 
@@ -106,7 +106,7 @@
           v-else-if="snPreview"
           class="text-xs text-slate-700 mt-0.5 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 flex items-center justify-between"
         >
-          <span class="text-slate-500 text-[11px]">Sê-ri Thùng:</span>
+          <span class="text-slate-500 text-[11px]">{{ t('packing.carton_sn_label') }}</span>
           <strong class="font-barcode-mono text-emerald-700 font-extrabold text-[12px]">{{ snPreview }}</strong>
         </div>
       </div>
@@ -119,7 +119,7 @@
         <input 
           :value="snPattern"
           @input="onPatternInput"
-          placeholder="Mẫu..." 
+          :placeholder="t('packing.pattern_placeholder')" 
           class="w-full h-10 px-2.5 bg-white rounded-lg text-sm font-barcode-mono font-bold outline-none transition-colors border border-slate-300 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/10"
           @keyup.enter="$emit('focus-scan')"
         />

@@ -238,6 +238,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Search, RefreshCw, Eye, X } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import {
   fetchJobOrdersSummary,
   fetchJobOrderSlots,
@@ -246,6 +247,8 @@ import {
   type JobOrderSlotDetail,
   type POLotRunSummary,
 } from '../../features/production_run/api';
+
+const { t } = useI18n();
 
 const activeTab = ref<'job_orders' | 'po_runs'>('job_orders');
 const searchQuery = ref<string>('');

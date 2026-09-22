@@ -23,7 +23,7 @@
               <div v-if="result?.job_order" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('packing.job_order') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.job_order }}</span></div>
               <div v-if="result?.po_number" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">PO Number</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.po_number }}</span></div>
               <div v-if="result?.lot_number" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">Lot Number</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result?.lot_number }}</span></div>
-              <div v-if="result?.weight !== undefined && result?.weight !== null" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">Trọng Lượng</span><span class="text-emerald-700 font-bold text-[0.95rem]">{{ result.weight.toFixed(3) }} kg</span></div>
+              <div v-if="result?.weight !== undefined && result?.weight !== null" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.weight') }}</span><span class="text-emerald-700 font-bold text-[0.95rem]">{{ result.weight.toFixed(3) }} kg</span></div>
               <div v-if="result?.date_code" class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">Date Code</span><span class="text-slate-800 font-mono text-[0.95rem]">{{ result?.date_code }}</span></div>
               <div class="flex flex-col gap-1"><span class="text-[0.75rem] uppercase tracking-wider text-slate-500 font-semibold">{{ t('admin.date') }}</span><span class="text-slate-800 font-medium text-[0.95rem]">{{ result ? new Date(result.created_at).toLocaleString() : '-' }}</span></div>
             </div>
@@ -35,7 +35,7 @@
             <button v-if="canStationReprint" @click="$emit('reprint', result)" :disabled="loading || isReprinting" class="bg-slate-900 text-white border-none px-6 py-3 rounded-xl font-semibold cursor-pointer flex items-center gap-2.5 transition-all hover:bg-black hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed ml-auto">
               <i class="fas fa-spinner fa-spin" v-if="loading || isReprinting"></i><i class="fas fa-print" v-else></i><span>{{ t('print.print_label') }}</span>
             </button>
-            <p v-else class="ml-auto text-xs text-slate-500">Tem ERRO chỉ được in lại từ Lịch sử Carton bởi Admin.</p>
+            <p v-else class="ml-auto text-xs text-slate-500">{{ t('print.erro_reprint_admin_only') }}</p>
           </div>
         </div>
         <div v-else-if="searchSN && !loading && searched" class="text-center p-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 animate-in">
@@ -79,9 +79,9 @@ const handleSearch = async () => {
   try {
     const res = await printApi.searchCarton(searchSN.value.trim());
     if (res.data) result.value = res.data;
-    else system.showNotification('Carton not found.', 'warning');
+    else system.showNotification(t('print.no_carton_found'), 'warning');
   } catch (err: any) { 
-    system.showNotification('Search failed: ' + (err.response?.data?.detail || err.message), 'error'); 
+    system.showNotification(t('print.search_failed', { error: err.response?.data?.detail || err.message }), 'error'); 
   }
   finally { loading.value = false; searched.value = true; }
 };

@@ -7,9 +7,9 @@
     <div class="flex flex-col min-w-0 z-10">
       <div class="flex items-center gap-2 mb-0.5">
         <div class="w-5 h-5 rounded bg-indigo-500/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 text-[10px] font-black shrink-0">#</div>
-        <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300">Sê-ri Thùng Tiếp Theo</span>
+        <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300">{{ t('erro.next_carton_serial') }}</span>
         <span class="px-1.5 py-px rounded text-[9px] font-black uppercase shrink-0 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-          Tự Động Tăng
+          {{ t('erro.auto_increment') }}
         </span>
       </div>
       <!-- Big SN Text -->
@@ -21,12 +21,16 @@
     <!-- SOP Damaged Label Guidance Note -->
     <div class="z-10 flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-slate-300 text-[11px] font-medium shrink-0">
       <span class="text-amber-400">💡</span>
-      <span><strong>Lưu ý:</strong> Tem rách/hỏng &rarr; Nhấn <strong>F9</strong> để in số tiếp theo, không dán tem trùng</span>
+      <span><strong>{{ t('erro.note') }}</strong> {{ t('erro.damaged_label_guidance') }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 defineProps<{
   currentSNPreview: string;
 }>();

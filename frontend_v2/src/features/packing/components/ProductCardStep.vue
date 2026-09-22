@@ -21,7 +21,7 @@
       >
         <div class="flex justify-between items-start mb-4">
           <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider">
-            Xác nhận mã hàng
+            {{ t('packing.confirm_product') }}
           </span>
           <span class="text-xs font-mono text-slate-400">
             UPC: <strong class="text-white font-barcode-mono">{{ jobOrderDetails?.product.upc || 'N/A' }}</strong>
@@ -36,23 +36,23 @@
         <!-- Key Metrics 3-Column Grid -->
         <div class="grid grid-cols-3 gap-3 border-t border-slate-800 pt-5 text-center">
           <div class="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
-            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">Quy cách</span>
+            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.specification') }}</span>
             <span class="text-lg md:text-xl font-black text-white font-barcode-mono">
-              {{ jobOrderDetails?.product.packed_qty }} <span class="text-xs font-normal text-slate-400">pcs/thùng</span>
+              {{ jobOrderDetails?.product.packed_qty }} <span class="text-xs font-normal text-slate-400">{{ t('packing.pcs_per_carton') }}</span>
             </span>
           </div>
 
           <div class="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
-            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.total_qty', 'Tổng Số Lượng') }}</span>
+            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.total_qty') }}</span>
             <span class="text-lg md:text-xl font-black text-emerald-400 font-barcode-mono">
-              {{ jobOrderDetails?.total_qty }} <span class="text-xs font-normal text-slate-400">con</span>
+              {{ jobOrderDetails?.total_qty }} <span class="text-xs font-normal text-slate-400">{{ t('packing.items_unit') }}</span>
             </span>
           </div>
 
           <div class="bg-slate-800/60 rounded-lg p-3 border border-slate-700/60">
-            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.total_cartons', 'Tổng Số Thùng') }}</span>
+            <span class="text-slate-400 text-xs uppercase font-bold block mb-1">{{ t('packing.total_cartons') }}</span>
             <span class="text-lg md:text-xl font-black text-blue-400 font-barcode-mono">
-              {{ jobOrderDetails?.total_cartons }} <span class="text-xs font-normal text-slate-400">thùng</span>
+              {{ jobOrderDetails?.total_cartons }} <span class="text-xs font-normal text-slate-400">{{ t('packing.cartons_unit', 'thùng') }}</span>
             </span>
           </div>
         </div>
@@ -63,9 +63,9 @@
         <button
           @click="$emit('enterScanning')"
           class="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base rounded-xl transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer active:scale-98"
-          title="Bấm hoặc nhấn Enter để bắt đầu"
+          :title="t('packing.enter_scanning_hint')"
         >
-          <span>BẮT ĐẦU ĐÓNG HÀNG & QUÉT MÃ</span>
+          <span>{{ t('packing.start_packing_and_scan') }}</span>
           <span class="text-xs font-barcode-mono font-black px-2 py-0.5 bg-black/25 rounded tracking-wider">ENTER ↵</span>
         </button>
       </div>

@@ -286,12 +286,13 @@ async def process_print(req: PrintRequest):
                 "data": result.get("data")
             }
         else:
-            raise HTTPException(status_code=500, detail=result.get("message", "Print failure"))
+            logger.error("Print job failed: %s", result.get("message", "Print failure"))
+            raise HTTPException(status_code=500, detail={"code": "PRINT_FAILED"})
         
     except HTTPException: raise
     except Exception as e:
         logger.error(f"Print agent error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail={"code": "AGENT_UNEXPECTED"})
 
 if __name__ == "__main__":
     import uvicorn
@@ -330,4 +331,3 @@ if __name__ == "__main__":
     
     logger.info(f"Starting Print Agent on port {args.port}...")
     uvicorn.run(app, host="0.0.0.0", port=args.port)
-

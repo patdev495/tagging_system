@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n';
-import en from './locales/en.json';
-import vi from './locales/vi.json';
+import en from './locales/en';
+import vi from './locales/vi';
+import type { SupportedLocale } from './locale';
 
 // Define messages
 const messages = {
@@ -15,5 +16,9 @@ const i18n = createI18n({
   fallbackLocale: 'en', // Fallback locale
   messages,
 });
+
+export function setLocale(locale: SupportedLocale) {
+  i18n.global.locale.value = locale;
+}
 
 export default i18n;

@@ -170,8 +170,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Carton, Product } from '../../../../types/api';
 import historyApi from '../../../history/api';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;

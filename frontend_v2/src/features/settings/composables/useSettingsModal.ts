@@ -1,4 +1,5 @@
 import { ref, onMounted, watch, type Ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../core/stores/settings';
 import { useSystemStore } from '../../../core/stores/system';
 import printApi from '../../print/api';
@@ -101,6 +102,7 @@ export function useSettingsModal(
   props: { show: boolean } | Ref<{ show: boolean }>,
   emit: (e: 'close') => void
 ) {
+  const { t } = useI18n();
   const store = useSettingsStore();
   const system = useSystemStore();
 
@@ -157,7 +159,7 @@ export function useSettingsModal(
             templateCheckResults.value[tpl.filename] = {
               checking: false,
               exists: false,
-              error: 'Không kết nối được Print Agent máy trạm',
+              error: t('settings.agent_connection_failed'),
             };
           }
         }));
@@ -189,7 +191,7 @@ export function useSettingsModal(
               templateCheckResults.value[tpl.filename] = {
                 checking: false,
                 exists: false,
-                error: e.message || 'Lỗi kiểm tra server',
+                error: t('settings.server_check_failed'),
               };
             }
           }));
@@ -199,9 +201,9 @@ export function useSettingsModal(
       const total = CANONICAL_TEMPLATES.length;
       const found = Object.values(templateCheckResults.value).filter(r => r.exists).length;
       if (found === total) {
-        system.showNotification(`Tìm thấy đầy đủ ${found}/${total} mẫu tem trong thư mục!`, 'success');
+        system.showNotification(t('settings.templates_found_all', { found, total }), 'success');
       } else {
-        system.showNotification(`Tìm thấy ${found}/${total} mẫu tem. Có ${total - found} mẫu tem chưa có trong thư mục!`, 'warning');
+        system.showNotification(t('settings.templates_found_partial', { found, total, missing: total - found }), 'warning');
       }
     } finally {
       isCheckingTemplates.value = false;
@@ -226,7 +228,7 @@ export function useSettingsModal(
   };
 
   const handleRestartEngine = async () => {
-    if (!confirm('Bạn có chắc chắn muốn giải phóng tiến trình bartend.exe và khởi động lại BarTender COM Engine?')) {
+    if (!confirm(t('settings.restart_engine_confirm'))) {
       return;
     }
     isRestartingEngine.value = true;
@@ -234,13 +236,13 @@ export function useSettingsModal(
       const res = await printApi.restartEngine();
       if (res.data.success) {
         bartenderStatus.value = res.data.bartender_ready ? 'ready' : 'offline';
-        system.showNotification('Đã khởi động lại BarTender COM Engine thành công!', 'success');
+        system.showNotification(t('settings.restart_engine_success'), 'success');
         loadPrinters();
       } else {
-        system.showNotification('Khởi động lại thất bại: ' + (res.data.message || 'Lỗi không xác định'), 'error');
+        system.showNotification(t('settings.restart_engine_failed'), 'error');
       }
     } catch (err: any) {
-      system.showNotification('Lỗi khi gọi khởi động lại BarTender Engine: ' + (err.message || ''), 'error');
+      system.showNotification(t('settings.restart_engine_failed'), 'error');
     } finally {
       isRestartingEngine.value = false;
     }
@@ -269,7 +271,7 @@ export function useSettingsModal(
           .filter(d => d.kind === 'audiooutput')
           .map((d, index) => ({
             id: d.deviceId,
-            label: d.label || `Thiết bị phát ${index + 1}`
+            label: d.label || t('settings.audio_device', { number: index + 1 })
           }));
       }
     } catch (e) {
@@ -291,13 +293,13 @@ export function useSettingsModal(
         if (res.ok) {
           formData.value.agentUrl = url;
           found = true;
-          system.showNotification(`Đã tìm thấy Local Agent tại ${url}`, 'success');
+          system.showNotification(t('settings.agent_found', { url }), 'success');
           break;
         }
       } catch {}
     }
     if (!found) {
-      system.showNotification('Không tìm thấy Local Agent đang chạy (Cổng 8080, 8081, 8082)', 'warning');
+      system.showNotification(t('settings.agent_not_found'), 'warning');
     }
     detectingAgent.value = false;
     if (found) loadPrinters();
@@ -352,7 +354,7 @@ export function useSettingsModal(
 
     store.saveSettings();
     emit('close');
-    system.showNotification('Cài đặt đã được lưu thành công', 'success');
+    system.showNotification(t('settings.saved_success'), 'success');
   };
 
   watch(() => formData.value.printMode, async (newVal) => {

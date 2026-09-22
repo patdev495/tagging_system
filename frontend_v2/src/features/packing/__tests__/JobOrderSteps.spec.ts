@@ -1,28 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { createI18n } from 'vue-i18n';
+import i18n from '../../../i18n';
 import JobOrderInputStep from '../components/JobOrderInputStep.vue';
 import ProductCardStep from '../components/ProductCardStep.vue';
 import type { JobOrderDetails } from '../../../types/api';
-
-const i18n = createI18n({
-  legacy: false,
-  locale: 'vi',
-  messages: {
-    vi: {
-      packing: {
-        enter_job_order_title: 'Nhập Số Công Lệnh',
-        enter_job_order_desc: 'Vui lòng quét hoặc nhập mã công lệnh',
-        job_order_placeholder: 'Nhập số công lệnh...',
-        confirm: 'Xác Nhận',
-        job_order: 'Công lệnh',
-        change_job_order: 'Đổi công lệnh',
-        total_qty: 'Tổng Số Lượng',
-        total_cartons: 'Tổng Số Thùng',
-      },
-    },
-  },
-});
 
 describe('Job Order Packing Steps', () => {
   it('JobOrderInputStep emits update:modelValue on typing and submit on form submit', async () => {

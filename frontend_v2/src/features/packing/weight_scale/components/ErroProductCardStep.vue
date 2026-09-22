@@ -4,18 +4,21 @@
       <!-- Breadcrumb / Job Order Bar -->
       <div class="flex justify-between items-center px-1">
         <span class="text-xs text-slate-600 font-bold uppercase tracking-wider">
-          Công Lệnh: <strong class="font-barcode-mono text-indigo-900 text-sm">{{ jobOrder }}</strong>
+          {{ t('erro.job_order_label') }}: <strong class="font-barcode-mono text-indigo-900 text-sm">{{ jobOrder }}</strong>
           <span v-if="resolution?.factory_part_number" class="text-slate-500 font-normal ml-1">
             ({{ resolution.factory_part_number }})
           </span>
         </span>
-        <button 
-          type="button"
-          @click="$emit('changeJobOrder')" 
-          class="text-indigo-600 hover:text-indigo-800 border-none bg-transparent font-bold cursor-pointer text-xs flex items-center gap-1.5 hover:underline"
-        >
-          <i class="fas fa-arrow-rotate-left"></i> Đổi Công Lệnh khác
-        </button>
+        <div class="flex items-center gap-2">
+          <button 
+            type="button"
+            @click="$emit('changeJobOrder')" 
+            class="text-indigo-600 hover:text-indigo-800 border-none bg-transparent font-bold cursor-pointer text-xs flex items-center gap-1.5 hover:underline"
+          >
+            <i class="fas fa-arrow-rotate-left"></i> {{ t('erro.change_job_order') }}
+          </button>
+          <LanguageSwitch variant="header" />
+        </div>
       </div>
 
       <!-- 2-Column Grid on md+ screens -->
@@ -29,7 +32,7 @@
             <div class="flex justify-between items-start mb-2">
               <div class="flex items-center gap-2">
                 <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-md px-2 py-0.5 text-xs font-bold uppercase tracking-wider">
-                  Xác nhận mã hàng Erro
+                  {{ t('erro.confirm_erro_product') }}
                 </span>
                 <span class="bg-slate-800 text-slate-300 border border-slate-700 rounded-md px-2 py-0.5 text-[11px] font-mono font-bold uppercase">
                   {{ resolution.product.template_type }}
@@ -45,7 +48,7 @@
               {{ resolution.product.item_name }}
             </h3>
             <p class="text-xs text-slate-400 mb-2 font-mono">
-              ERP Reference: <span class="text-slate-300">{{ resolution.customer_ref }}</span>
+              {{ t('erro.erp_item_name') }}: <span class="text-slate-300">{{ resolution.customer_ref }}</span>
             </p>
 
             <!-- Warning if name mismatch -->
@@ -55,9 +58,9 @@
             >
               <i class="fas fa-triangle-exclamation text-amber-400 mt-0.5 shrink-0 text-sm"></i>
               <div>
-                <strong class="block font-bold">Lưu ý đối chiếu tên hàng!</strong>
+                <strong class="block font-bold">{{ t('erro.name_mismatch_warning_title') }}</strong>
                 <span class="text-[11px] text-amber-200/80 block mt-0.5">
-                  Tên trên ERP (<code>{{ resolution.customer_ref }}</code>) khác tên Product trong hệ thống. Tem được gán theo Factory P/N chuẩn.
+                  {{ t('erro.name_mismatch_warning_desc', { ref: resolution.customer_ref }) }}
                 </span>
               </div>
             </div>
@@ -66,23 +69,23 @@
           <!-- Key Metrics 3-Column Grid -->
           <div class="grid grid-cols-3 gap-2 border-t border-slate-800/80 pt-3 text-center mt-auto">
             <div class="bg-slate-800/60 rounded-lg p-2 border border-slate-700/60">
-              <span class="text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Quy cách</span>
+              <span class="text-slate-400 text-[10px] uppercase font-bold block mb-0.5">{{ t('packing.specification') }}</span>
               <span class="text-base font-black text-white font-barcode-mono">
-                {{ resolution.product.packed_qty }} <span class="text-[10px] font-normal text-slate-400">pcs/thùng</span>
+                {{ resolution.product.packed_qty }} <span class="text-[10px] font-normal text-slate-400">{{ t('packing.pcs_per_carton') }}</span>
               </span>
             </div>
 
             <div class="bg-slate-800/60 rounded-lg p-2 border border-slate-700/60">
-              <span class="text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Sản lượng</span>
+              <span class="text-slate-400 text-[10px] uppercase font-bold block mb-0.5">{{ t('erro.production_quantity') }}</span>
               <span class="text-base font-black text-emerald-400 font-barcode-mono">
                 {{ resolution.total_qty.toLocaleString() }} <span class="text-[10px] font-normal text-slate-400">PCS</span>
               </span>
             </div>
 
             <div class="bg-slate-800/60 rounded-lg p-2 border border-slate-700/60">
-              <span class="text-slate-400 text-[10px] uppercase font-bold block mb-0.5">Kế hoạch đóng</span>
+              <span class="text-slate-400 text-[10px] uppercase font-bold block mb-0.5">{{ t('erro.planned_packing') }}</span>
               <span class="text-base font-black text-indigo-400 font-barcode-mono">
-                {{ resolution.planned_cartons }} <span class="text-[10px] font-normal text-slate-400">thùng</span>
+                {{ resolution.planned_cartons }} <span class="text-[10px] font-normal text-slate-400">{{ t('packing.cartons_unit') }}</span>
               </span>
             </div>
           </div>
@@ -94,14 +97,14 @@
             <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs space-y-2.5 flex-1 flex flex-col justify-center">
               <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100 text-xs font-bold text-slate-700 uppercase tracking-wider">
                 <i class="fas fa-tags text-indigo-600"></i>
-                <span>Thông Số Nhãn In (PO / LOT)</span>
+                <span>{{ t('erro.po_lot_config_title') }}</span>
               </div>
 
               <template v-if="resolution?.product.template_type !== 'erro_02'">
                 <div class="space-y-2">
                   <div>
                     <label for="batch-po" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Mã Đơn Hàng (PO) {{ isPoRequired ? '*' : '(Tùy chọn)' }}
+                      {{ t('erro.po_number') }} {{ isPoRequired ? '*' : `(${t('common.optional')})` }}
                     </label>
                     <input
                       id="batch-po"
@@ -109,28 +112,28 @@
                       v-model="formPo"
                       type="text"
                       :required="isPoRequired"
-                      :placeholder="isPoRequired ? 'Ví dụ: B432-22156381' : 'Có thể để trống'"
+                      :placeholder="isPoRequired ? t('erro.po_required_placeholder') : t('erro.po_optional_placeholder')"
                       class="w-full px-3 py-1.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
                     />
                   </div>
 
                   <div>
                     <label for="batch-lot" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Mã Số Lô (LOT) {{ isLotRequired ? '*' : '(Tự động)' }}
+                      {{ t('erro.lot_number') }} {{ isLotRequired ? '*' : `(${t('erro.auto')})` }}
                     </label>
                     <input
                       id="batch-lot"
                       v-model="formLot"
                       type="text"
                       :required="isLotRequired"
-                      :placeholder="isLotRequired ? 'Ví dụ: 92607933' : 'Mặc định theo ngày'"
+                      :placeholder="isLotRequired ? t('erro.lot_required_placeholder') : t('erro.lot_auto_placeholder')"
                       class="w-full px-3 py-1.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
                     />
                   </div>
                 </div>
               </template>
               <div v-else class="text-xs text-slate-500 italic bg-slate-50 p-3 rounded-lg border border-slate-200 text-center my-auto">
-                Mẫu tem erro_02 (SSCC) không yêu cầu in PO và LOT.
+                {{ t('erro.not_applicable_template_2') }}
               </div>
             </div>
 
@@ -138,10 +141,10 @@
             <button
               type="submit"
               class="w-full h-13 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base rounded-xl transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer active:scale-98 shrink-0"
-              title="Bấm hoặc nhấn Enter để bắt đầu cân"
+              :title="t('erro.start_weighing')"
             >
               <i class="fas fa-play text-sm"></i>
-              <span>BẮT ĐẦU CÂN & ĐÓNG HÀNG</span>
+              <span>{{ t('erro.start_weighing') }}</span>
               <span class="text-xs font-barcode-mono font-black px-2 py-0.5 bg-black/25 rounded tracking-wider">ENTER ↵</span>
             </button>
           </form>
@@ -153,7 +156,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { ErroJobOrderResolution } from '../../../../types/api';
+import LanguageSwitch from '../../../../core/components/LanguageSwitch.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   jobOrder: string;

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
-import i18n from '../../i18n';
+import { setLocale } from '../../i18n';
+import { normalizeLocale, type SupportedLocale } from '../../i18n/locale';
 
 export const useSettingsStore = defineStore('settings', () => {
   const stationId = ref<string>('');
@@ -10,7 +11,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const printMode = ref<'centralized' | 'local'>('centralized');
   const agentUrl = ref<string>('http://localhost:8080');
   const localTemplateDir = ref<string>('D:\\PAT\\Templates');
-  const language = ref<'vi' | 'en'>('vi');
+  const language = ref<SupportedLocale>('vi');
 
   function loadSettings() {
     const saved = localStorage.getItem('ny_packing_settings');
@@ -28,13 +29,13 @@ export const useSettingsStore = defineStore('settings', () => {
             ? 'D:\\PAT\\Templates'
             : parsed.localTemplateDir;
         }
-        if (parsed.language !== undefined) language.value = parsed.language;
+        language.value = normalizeLocale(parsed.language);
       } catch (e) {
         console.error('Failed to parse settings', e);
       }
     }
     // Sync i18n on load
-    i18n.global.locale.value = language.value;
+    setLocale(language.value);
   }
 
   function saveSettings() {
@@ -51,9 +52,14 @@ export const useSettingsStore = defineStore('settings', () => {
     localStorage.setItem('ny_packing_settings', JSON.stringify(data));
   }
 
+  function toggleLanguage() {
+    language.value = language.value === 'vi' ? 'en' : 'vi';
+    saveSettings();
+  }
+
   // Sync i18n when language changes
   watch(language, (newLang) => {
-    i18n.global.locale.value = newLang;
+    setLocale(newLang);
   });
 
   // Auto-load settings on store initialization to prevent race conditions
@@ -68,6 +74,7 @@ export const useSettingsStore = defineStore('settings', () => {
     agentUrl,
     localTemplateDir,
     language,
+    toggleLanguage,
     loadSettings,
     saveSettings
   };

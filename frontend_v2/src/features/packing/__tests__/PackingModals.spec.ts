@@ -1,41 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { createI18n } from 'vue-i18n';
+import i18n from '../../../i18n';
 import CartonSlotsModal from '../components/CartonSlotsModal.vue';
 import CartonVerificationModal from '../components/CartonVerificationModal.vue';
 import type { JobOrderSlot, Carton, Product } from '../../../types/api';
-
-const i18n = createI18n({
-  legacy: false,
-  locale: 'vi',
-  messages: {
-    vi: {
-      packing: {
-        carton_slots_title: 'Chi Tiết Vị Trí Thùng',
-        cartons_unit: 'thùng',
-        job_order: 'Công lệnh',
-        scanned: 'Đã quét',
-        carton: 'Thùng',
-        verification_title: 'Quét Xác Thực Mã Thùng',
-        verification_desc: 'Vui lòng quét mã trên tem vừa in',
-        expected_sn: 'Sê-ri Thùng Cần Khớp',
-        verification_placeholder: 'Quét barcode mã thùng...',
-        verification_error: 'Mã quét không khớp!',
-        back_home: 'Về Trang Chủ',
-        waiting_scanner: 'Đang đợi máy quét...',
-      },
-      settings: {
-        close: 'Đóng',
-      },
-      admin: {
-        product: 'Sản phẩm',
-      },
-      print: {
-        items: 'Số con',
-      },
-    },
-  },
-});
 
 describe('Packing Modals', () => {
   it('CartonSlotsModal renders slots and emits select-slot', async () => {

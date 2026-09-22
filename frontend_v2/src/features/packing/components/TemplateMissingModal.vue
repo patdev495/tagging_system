@@ -14,10 +14,10 @@
         </div>
         <div class="flex-1 min-w-0">
           <h3 class="text-base font-black text-slate-900 tracking-tight">
-            {{ t('packing.template_not_found_title', 'Không Tìm Thấy Mẫu Tem') }}
+            {{ t('packing.template_not_found_title') }}
           </h3>
           <p class="text-xs text-amber-800 font-medium mt-0.5">
-            {{ t('packing.template_not_found_desc', 'Tệp mẫu BarTender (.btw) chưa được lưu trên máy tính trạm này.') }}
+            {{ t('packing.template_not_found_desc') }}
           </p>
         </div>
         <button
@@ -33,7 +33,7 @@
         <!-- Target Filename Box -->
         <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-1">
           <span class="text-[11px] uppercase tracking-wider font-bold text-slate-500">
-            {{ t('packing.target_file', 'Tệp cần tìm:') }}
+            {{ t('packing.target_file') }}
           </span>
           <div class="flex items-center gap-2">
             <i class="fas fa-file-lines text-amber-600 text-sm"></i>
@@ -46,7 +46,7 @@
         <!-- Target Directory Box -->
         <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-1">
           <span class="text-[11px] uppercase tracking-wider font-bold text-slate-500">
-            {{ t('packing.target_folder', 'Thư mục tem trên máy trạm:') }}
+            {{ t('packing.target_folder') }}
           </span>
           <div class="flex items-center gap-2">
             <i class="fas fa-folder-tree text-blue-600 text-sm"></i>
@@ -60,7 +60,7 @@
         <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 flex items-start gap-2">
           <i class="fas fa-circle-info text-blue-600 mt-0.5 text-xs"></i>
           <span class="leading-relaxed">
-            {{ t('packing.template_instruction', 'Vui lòng sao chép tệp mẫu tem vào đúng thư mục trên máy tính này, sau đó nhấn nút "Thử Lại".') }}
+            {{ t('packing.template_instruction') }}
           </span>
         </div>
 
@@ -78,11 +78,11 @@
           @click="$emit('openFolder')"
           :disabled="isOpeningFolder"
           class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer hover:border-slate-400 disabled:opacity-50"
-          title="Mở thư mục tem trong Windows File Explorer để sao chép file"
+          :title="t('packing.open_template_folder_title')"
         >
           <i v-if="isOpeningFolder" class="fas fa-spinner fa-spin text-blue-600"></i>
           <i v-else class="fas fa-folder-open text-amber-500"></i>
-          <span>{{ t('packing.open_folder_btn', 'Mở Thư Mục Tem') }}</span>
+          <span>{{ t('packing.open_folder_btn') }}</span>
         </button>
 
         <div class="flex items-center gap-2">
@@ -91,7 +91,7 @@
             @click="$emit('close')"
             class="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
           >
-            {{ t('common.close', 'Đóng') }}
+            {{ t('common.close') }}
           </button>
           <button
             type="button"
@@ -101,7 +101,7 @@
           >
             <i v-if="isRetrying" class="fas fa-spinner fa-spin"></i>
             <i v-else class="fas fa-rotate-right"></i>
-            <span>{{ t('common.retry', 'Thử Lại') }}</span>
+            <span>{{ t('common.retry') }}</span>
           </button>
         </div>
       </div>

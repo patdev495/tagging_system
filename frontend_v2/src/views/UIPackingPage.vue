@@ -12,25 +12,25 @@
       <!-- Slim Workflow Stepper Bar -->
       <nav aria-label="Workflow Steps" class="flex items-center justify-between px-3.5 py-2 my-2 bg-slate-50 border border-slate-200 rounded-lg text-xs shrink-0">
         <div class="flex items-center gap-2">
-          <span class="font-bold text-slate-500 uppercase tracking-wider text-[11px]">Tiến trình:</span>
+          <span class="font-bold text-slate-500 uppercase tracking-wider text-[11px]">{{ t('packing.workflow_progress') }}</span>
           <div class="flex items-center gap-1.5 font-bold">
             <span :class="currentStep === 1 ? 'px-2.5 py-1 rounded bg-blue-600 text-white shadow-xs' : 'px-2 py-0.5 rounded bg-slate-200 text-slate-600'">
-              1. Nhập Work Order
+              {{ t('packing.step_1_job_order') }}
             </span>
             <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
             <span :class="currentStep === 2 ? 'px-2.5 py-1 rounded bg-blue-600 text-white shadow-xs' : (currentStep > 2 ? 'px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200' : 'px-2 py-0.5 rounded bg-slate-100 text-slate-400')">
-              2. Xác Nhận Đơn Hàng
+              {{ t('packing.step_2_confirm_order') }}
             </span>
             <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
             <span :class="currentStep === 3 ? 'px-2.5 py-1 rounded bg-emerald-600 text-white shadow-xs' : 'px-2 py-0.5 rounded bg-slate-100 text-slate-400'">
-              3. Quét & Đóng Thùng
+              {{ t('packing.step_3_scan_pack') }}
             </span>
           </div>
         </div>
 
         <div v-if="jobOrder" class="flex items-center gap-3 font-mono text-xs">
-          <span class="text-slate-600">Lệnh: <strong class="text-slate-900 font-barcode-mono font-bold">{{ jobOrder }}</strong></span>
-          <span v-if="currentProduct" class="text-slate-600 hidden sm:inline">| SP: <strong class="text-slate-900">{{ currentProduct.item_name }}</strong></span>
+          <span class="text-slate-600">{{ t('packing.job_order_abbr') }} <strong class="text-slate-900 font-barcode-mono font-bold">{{ jobOrder }}</strong></span>
+          <span v-if="currentProduct" class="text-slate-600 hidden sm:inline">| {{ t('packing.product_abbr') }} <strong class="text-slate-900">{{ currentProduct.item_name }}</strong></span>
         </div>
       </nav>
 
@@ -150,7 +150,7 @@
 
               <div class="flex justify-between items-end mb-1.5">
                 <span class="text-sm font-bold text-slate-700">
-                  Số lượng con: <strong class="text-slate-900 font-barcode-mono text-xl">{{ scannedItems.length }}</strong> / {{ currentProduct?.packed_qty || 0 }} pcs
+                  {{ t('packing.item_quantity') }}: <strong class="text-slate-900 font-barcode-mono text-xl">{{ scannedItems.length }}</strong> / {{ currentProduct?.packed_qty || 0 }} pcs
                 </span>
                 <span class="text-xs text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-mono">{{ progressPercent }}%</span>
               </div>
@@ -169,7 +169,7 @@
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
               :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing)) || (!selectedSlotId && !isRescanMode)"
-              :placeholder="(!selectedSlotId && !isRescanMode) ? 'Vui lòng chọn hoặc nhập số thùng cần quét trước...' : ((settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder')))"
+              :placeholder="(!selectedSlotId && !isRescanMode) ? t('packing.select_slot_first_placeholder') : ((settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder')))"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
               :invalidScans="invalidScans"

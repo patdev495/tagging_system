@@ -22,7 +22,7 @@ describe('ErroFactoryPartNumberLookup', () => {
         template_type: 'erro_02',
         allow_partial: 0,
       },
-    });
+    } as any);
     const wrapper = mount(ErroFactoryPartNumberLookup);
 
     await wrapper.get('input').setValue('1lae0009d2u004maar');
@@ -46,6 +46,6 @@ describe('ErroFactoryPartNumberLookup', () => {
     await wrapper.get('form').trigger('submit');
 
     expect(wrapper.emitted('resolved')).toBeUndefined();
-    expect(wrapper.text()).toContain('Factory P/N chưa được cấu hình cho khách hàng Erro.');
+    expect(wrapper.text()).toContain('Đã có lỗi xảy ra. Vui lòng thử lại.');
   });
 });

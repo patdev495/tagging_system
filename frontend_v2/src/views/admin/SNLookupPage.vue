@@ -150,9 +150,12 @@ import {
 } from 'lucide-vue-next';
 import historyApi from '../../features/history/api';
 import { useSystemStore } from '../../core/stores/system';
+import { useSettingsStore } from '../../core/stores/settings';
+import { displayLocale } from '../../i18n/locale';
 import type { Carton, Product } from '../../types/api';
 
 const { t } = useI18n();
+const settings = useSettingsStore();
 const system = useSystemStore();
 const searchQuery = ref<string>('');
 const isSearching = ref<boolean>(false);
@@ -188,7 +191,7 @@ const handleSearch = async () => {
 
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
-  return d.toLocaleString('vi-VN');
+  return d.toLocaleString(displayLocale(settings.language));
 };
 
 onMounted(() => {

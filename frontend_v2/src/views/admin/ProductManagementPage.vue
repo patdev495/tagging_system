@@ -227,6 +227,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import catalogApi from '../../features/catalog/api';
 import ProductFormModal, { type ProductFormData } from '../../features/catalog/components/ProductFormModal.vue';
 import AdminCartonModal from '../../features/catalog/components/AdminCartonModal.vue';
@@ -235,6 +236,8 @@ import { useSettingsStore } from '../../core/stores/settings';
 import { useSystemStore } from '../../core/stores/system';
 import { useAuthStore } from '../../core/stores/auth';
 import type { Product, Customer } from '../../types/api';
+
+const { t } = useI18n();
 
 const system = useSystemStore();
 const authStore = useAuthStore();
@@ -391,10 +394,10 @@ const handleSaveProduct = async (formData: ProductFormData) => {
   try {
     if (isEdit.value && currentId.value !== null) {
       await catalogApi.updateProduct(currentId.value, formData as any);
-      system.showNotification('Đã cập nhật sản phẩm thành công', 'success');
+      system.showNotification(t('products.update_success'), 'success');
     } else {
       await catalogApi.createProduct(formData as any);
-      system.showNotification('Đã thêm sản phẩm mới thành công', 'success');
+      system.showNotification(t('products.create_success'), 'success');
     }
     showModal.value = false;
     await fetchData();
@@ -410,7 +413,7 @@ const confirmDelete = async (product: Product) => {
   if (confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${product.item_name}"?`)) {
     try {
       await catalogApi.deleteProduct(product.id);
-      system.showNotification('Đã xóa sản phẩm thành công', 'success');
+      system.showNotification(t('products.delete_success'), 'success');
       await fetchData();
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Không thể xóa sản phẩm này (có thể đã có lịch sử đóng thùng)';

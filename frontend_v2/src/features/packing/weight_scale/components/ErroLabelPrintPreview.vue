@@ -3,7 +3,7 @@
     <header class="px-3.5 py-2.5 border-b border-slate-100 flex items-center justify-between shrink-0">
       <div class="flex items-center gap-1.5">
         <i class="fas fa-tags text-indigo-500"></i>
-        <span class="font-bold text-xs text-slate-900">Xem Trước Tem Sắp In</span>
+        <span class="font-bold text-xs text-slate-900">{{ t('erro.label_preview') }}</span>
       </div>
       <span class="text-[10px] font-black uppercase rounded bg-indigo-50 text-indigo-700 px-1.5 py-0.5">
         {{ product?.template_type || '-' }}
@@ -11,7 +11,7 @@
     </header>
 
     <div v-if="errors.length" data-testid="preview-errors" class="mx-3.5 mt-3 rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-800">
-      <p class="font-bold">Không thể in — thiếu: {{ errors.join(', ') }}</p>
+      <p class="font-bold">{{ t('erro.cannot_print_missing', { fields: errors.join(', ') }) }}</p>
     </div>
 
     <div v-if="product?.template_type === 'erro_02'" class="p-3.5 space-y-2 text-xs overflow-y-auto">
@@ -25,7 +25,7 @@
       <PreviewField label="SSCC (00)" :value="ssccText" />
       <PreviewField label="Check Digit" :value="ssccCheckDigit" />
       <div class="h-10 rounded border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Barcode minh hoạ
+        {{ t('erro.barcode_preview') }}
       </div>
     </div>
 
@@ -42,7 +42,7 @@
       </div>
       <PreviewField label="SKU Description" :value="product.product_desc" />
       <div class="h-10 rounded border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Barcode minh hoạ
+        {{ t('erro.barcode_preview') }}
       </div>
     </div>
 
@@ -51,19 +51,22 @@
         <PreviewField v-for="field in fields" :key="field.label" :label="field.label" :value="field.value" />
       </div>
       <div class="h-10 rounded border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Barcode / QR minh hoạ
+        {{ t('erro.barcode_qr_preview') }}
       </div>
     </div>
 
     <div v-else class="p-4 text-center text-xs text-slate-400">
-      Chọn mã hàng Erro để xem trước tem.
+      {{ t('erro.choose_product_for_preview') }}
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, defineComponent, h, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Product } from '../../../../types/api';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   product: Product | null;

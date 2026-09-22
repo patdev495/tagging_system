@@ -62,15 +62,15 @@
               <i class="fas fa-exclamation-triangle text-xs"></i>
             </div>
             <div>
-              <span class="font-black text-rose-900">Chưa kết nối phần mềm Print Agent!</span>
+              <span class="font-black text-rose-900">{{ t('erro.agent_not_connected') }}</span>
               <span class="text-rose-700 ml-1.5 text-[11px]">
-                Vui lòng bật phần mềm <strong>NY Print Agent</strong> trên máy tính hoặc kiểm tra cổng <code>{{ settings.agentUrl || 'http://127.0.0.1:8080' }}</code> trong Cài Đặt.
+                {{ t('erro.agent_not_connected_hint', { url: settings.agentUrl || 'http://127.0.0.1:8080' }) }}
               </span>
             </div>
           </div>
           <button @click="pollScaleStatus" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
             <i class="fas fa-rotate-right text-[10px]"></i>
-            <span>Thử Lại</span>
+            <span>{{ t('erro.retry') }}</span>
           </button>
         </div>
 
@@ -81,7 +81,7 @@
               <i class="fas fa-file-circle-exclamation text-xs"></i>
             </div>
             <div>
-              <span class="font-black text-amber-900">Chưa có file mẫu tem trên máy trạm: <code>{{ templateFilename }}</code>!</span>
+              <span class="font-black text-amber-900">{{ t('erro.template_missing', { filename: templateFilename }) }}</span>
               <span class="text-amber-700 ml-1.5 text-[11px]">
                 Vui lòng sao chép file <strong>{{ templateFilename }}</strong> vào thư mục <code>{{ settings.localTemplateDir || 'D:\\PAT\\Templates' }}</code> trên máy tính này.
               </span>
@@ -93,15 +93,15 @@
               @click="openTemplateFolder()"
               :disabled="isOpeningFolder"
               class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs transition-all flex items-center gap-1 cursor-pointer"
-              title="Mở thư mục tem trong Windows Explorer"
+              :title="t('erro.open_template_folder_title')"
             >
               <i v-if="isOpeningFolder" class="fas fa-spinner fa-spin text-xs"></i>
               <i v-else class="fas fa-folder-open text-xs"></i>
-              <span>Mở Thư Mục</span>
+              <span>{{ t('erro.open_folder') }}</span>
             </button>
             <button @click="checkTemplateExists" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-xs flex items-center gap-1">
               <i class="fas fa-rotate-right text-[10px]"></i>
-              <span>Kiểm Tra Lại</span>
+              <span>{{ t('erro.check_again') }}</span>
             </button>
           </div>
         </div>
@@ -140,7 +140,7 @@
               <i v-else-if="settings.printMode !== 'centralized' && templateMissing" class="fas fa-file-circle-exclamation text-lg"></i>
               <i v-else-if="toleranceResult.canPrint" class="fas fa-print text-lg"></i>
               <i v-else class="fas fa-triangle-exclamation text-lg"></i>
-              <span>{{ isPrinting ? 'ĐANG GỬI LỆNH IN...' : ((settings.printMode !== 'centralized' && templateMissing) ? `THIẾU FILE TEM ${templateFilename} - KIỂM TRA LẠI` : (labelPreviewErrors.length ? `THIẾU DỮ LIỆU TEM - KIỂM TRA PREVIEW` : (toleranceResult.canPrint ? 'CÂN & IN TEM ERRO [F9]' : 'LỆCH DUNG SAI - BẤM ĐỂ XEM LỖI [F9]'))) }}</span>
+              <span>{{ printActionText }}</span>
             </button>
           </div>
 
@@ -181,6 +181,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../core/stores/settings';
 import { useSystemStore } from '../core/stores/system';
 import type { ErroJobOrderResolution, Product } from '../types/api';
@@ -206,6 +207,7 @@ import { useAgentHealth } from '../features/packing/composables/useAgentHealth';
 import { useTemplateViewer } from '../features/packing/composables/useTemplateViewer';
 
 const router = useRouter();
+const { t } = useI18n();
 const settings = useSettingsStore();
 const system = useSystemStore();
 
@@ -232,6 +234,15 @@ const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
 const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
 const labelPreviewErrors = ref<string[]>([]);
 const previewTime = ref(new Date());
+
+const printActionText = computed(() => {
+  if (isPrinting.value) return t('erro.sending_print');
+  if (settings.printMode !== 'centralized' && templateMissing.value) {
+    return t('erro.template_missing_action', { filename: templateFilename.value });
+  }
+  if (labelPreviewErrors.value.length) return t('erro.label_data_missing');
+  return toleranceResult.value.canPrint ? t('erro.weigh_and_print') : t('erro.tolerance_action');
+});
 
 // 1. Scale Stream Composable
 const {
@@ -275,7 +286,7 @@ const {
     stationId: settings.stationId,
     localTemplateDir: settings.localTemplateDir,
   }),
-  openProductModal: () => system.showNotification('Vui lòng quét hoặc nhập Công Lệnh trước khi in', 'warning'),
+  openProductModal: () => system.showNotification(t('erro.enter_job_order_first'), 'warning'),
   openBatchModal: () => { showBatchModal.value = true; },
 
 });
@@ -364,7 +375,7 @@ const clearPackingSession = () => {
 const activateProduct = (product: Product) => {
   selectedProduct.value = product;
   if (product.template_type === 'erro_03' && !activeLot.value) activeLot.value = '92607933';
-  system.showNotification(`Đã chọn sản phẩm ${product.item_name}`, 'success');
+  system.showNotification(t('erro.product_selected', { name: product.item_name }), 'success');
   fetchNextSN();
 };
 
@@ -374,7 +385,7 @@ const saveBatchConfig = (payload: { po: string; lot: string }) => {
   localStorage.setItem('erro_active_po', activePO.value);
   localStorage.setItem('erro_active_lot', activeLot.value);
   showBatchModal.value = false;
-  system.showNotification('Đã cập nhật PO & LOT thành công', 'success');
+  system.showNotification(t('erro.po_lot_saved'), 'success');
 };
 
 const cancelBatchConfig = () => { showBatchModal.value = false; };
@@ -425,7 +436,7 @@ const clearSelectedProduct = () => {
   pendingResolution.value = null;
   currentStep.value = 1;
   clearPackingSession();
-  system.showNotification('Hãy quét hoặc nhập Công Lệnh để bắt đầu ca đóng mới', 'info');
+  system.showNotification(t('erro.start_new_run'), 'info');
 };
 
 // Global Hotkeys Listener (F9, Enter, Esc)

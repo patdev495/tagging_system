@@ -8,12 +8,12 @@
           <span :class="['relative inline-flex rounded-full h-2 w-2', (!isInputDisabled && jobOrder) ? 'bg-emerald-500' : (awaitingNext ? 'bg-amber-500' : 'bg-slate-400')]"></span>
         </span>
         <span :class="(!isInputDisabled && jobOrder) ? 'text-emerald-700 font-bold uppercase tracking-wide' : (awaitingNext ? 'text-amber-700 font-bold uppercase tracking-wide' : 'text-slate-500')">
-          {{ (!disabled && jobOrder) ? (awaitingNext ? t('packing.waiting_next_carton_indicator') : 'SẴN SÀNG QUÉT MÃ') : 'TẠM KHÓA QUÉT' }}
+          {{ (!disabled && jobOrder) ? (awaitingNext ? t('packing.waiting_next_carton_indicator') : t('packing.ready_to_scan')) : t('packing.scan_locked') }}
         </span>
       </div>
 
       <div class="text-slate-400 text-[11px] font-mono">
-        <span v-if="!disabled && jobOrder">{{ awaitingNext ? 'Phím tắt: Space (Đổi thùng)' : 'Phím tắt: Enter (Quét) | Space (Đổi thùng)' }}</span>
+        <span v-if="!disabled && jobOrder">{{ awaitingNext ? t('packing.shortcut_space_next') : t('packing.shortcut_enter_scan_space_next') }}</span>
       </div>
     </div>
 
@@ -26,7 +26,7 @@
           @input="handleInput"
           @keydown.enter.prevent="!isInputDisabled && $emit('scan')"
           @keydown.space="handleSpace"
-          :placeholder="disabled ? placeholder : (awaitingNext ? t('packing.scan_prompt_awaiting_next') : (!jobOrder ? t('packing.scan_prompt_job') : 'Bắn mã sê-ri con (Item SN) vào đây...'))"
+          :placeholder="disabled ? placeholder : (awaitingNext ? t('packing.scan_prompt_awaiting_next') : (!jobOrder ? t('packing.scan_prompt_job') : t('packing.scan_item_placeholder')))"
           ref="scanInput"
           :disabled="isInputDisabled"
           autocomplete="off"
@@ -59,7 +59,7 @@
         class="px-5 h-12 md:h-14 bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700 rounded-xl font-bold flex items-center gap-2 whitespace-nowrap shadow-sm transition-all shrink-0 cursor-pointer"
         :class="hasErrors ? 'opacity-50 cursor-not-allowed grayscale-[40%]' : 'active:scale-95 animate-pulse-gentle'"
         :disabled="disabled || hasErrors"
-        :title="hasErrors ? 'Vui lòng xóa các lỗi quét trước khi chuyển thùng' : t('packing.next_carton_title')"
+        :title="hasErrors ? t('packing.clear_errors_before_next') : t('packing.next_carton_title')"
       >
         <i class="fas fa-plus-circle text-base"></i>
         <span>{{ t('packing.next_carton') }}</span>
@@ -82,7 +82,7 @@
     <!-- Status Hints -->
     <div class="mt-1.5 px-1 min-h-[20px] flex items-center justify-center">
       <p class="text-xs text-rose-600 font-bold flex items-center gap-1.5" v-if="awaitingNext && hasErrors && !disabled">
-        <i class="fas fa-exclamation-triangle"></i> Vui lòng xóa các lỗi quét bên dưới trước khi mở thùng mới
+        <i class="fas fa-exclamation-triangle"></i> {{ t('packing.clear_errors_before_next') }}
       </p>
       <p class="text-xs text-amber-700 font-bold flex items-center gap-1.5" v-else-if="awaitingNext && !disabled">
         <i class="fas fa-check-circle text-emerald-600"></i> {{ t('packing.carton_complete_hint') }}

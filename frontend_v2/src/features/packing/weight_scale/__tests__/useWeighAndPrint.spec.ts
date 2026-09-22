@@ -281,7 +281,7 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
 
     await triggerWeighAndPrint();
 
-    expect(notify).toHaveBeenCalledWith('Vui lòng nhập PO và LOT trước khi in', 'warning');
+    expect(notify).toHaveBeenCalledWith('Vui lòng nhập PO và LOT trước khi in.', 'warning');
     expect(openBatchModal).toHaveBeenCalled();
     expect(packingApi.weighPackCarton).not.toHaveBeenCalled();
   });

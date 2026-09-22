@@ -18,10 +18,10 @@
         </div>
         <div>
           <h2 class="font-black text-slate-900 text-lg leading-tight m-0">
-            {{ t('packing.verification_title', 'Xác Thực Mã Thùng') }}
+            {{ t('packing.verification_title') }}
           </h2>
           <p class="text-xs text-slate-500 m-0 leading-tight mt-0.5">
-            Quét barcode trên con tem vừa in để hoàn tất
+            {{ t('packing.verification_hint') }}
           </p>
         </div>
         <!-- Scan ready indicator -->
@@ -30,7 +30,7 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          SẴN SÀNG
+          {{ t('packing.ready') }}
         </div>
       </div>
 
@@ -40,7 +40,7 @@
         <!-- Target SN: Large display -->
         <div>
           <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-2">
-            {{ t('packing.expected_sn', 'Mã Thùng Cần Khớp') }}
+            {{ t('packing.expected_sn') }}
           </span>
           <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-center">
             <span class="font-barcode-mono font-black text-white text-2xl md:text-3xl tracking-widest select-all">
@@ -52,7 +52,7 @@
         <!-- Product info grid -->
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">Sản phẩm</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">{{ t('packing.product_label') }}</span>
             <span class="text-slate-800 font-semibold text-xs block truncate" :title="currentProduct?.item_name">
               {{ currentProduct?.item_name || 'N/A' }}
             </span>
@@ -62,7 +62,7 @@
             <span class="text-slate-800 font-barcode-mono font-bold text-xs block">{{ carton?.job_order || 'N/A' }}</span>
           </div>
           <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">Số con</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-none mb-1">{{ t('packing.items_label') }}</span>
             <span class="text-slate-800 font-barcode-mono font-bold text-sm block">{{ carton?.items?.length || scannedCount }} pcs</span>
           </div>
         </div>
@@ -83,7 +83,7 @@
               ref="verificationInputRef"
               v-model="verificationScanBuffer"
               @keydown.enter.prevent="handleScan"
-              :placeholder="t('packing.verification_placeholder', 'Quét barcode thùng vào đây...')"
+              :placeholder="t('packing.verification_placeholder')"
               class="flex-1 border-none outline-none bg-transparent text-base font-barcode-mono font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal"
               autocomplete="off"
               spellcheck="false"
@@ -92,7 +92,7 @@
               v-if="verificationScanBuffer"
               class="text-xs font-bold px-2 py-1 bg-blue-600 text-white rounded-md cursor-pointer"
               @click="handleScan"
-              title="Xác nhận (Enter)"
+              :title="t('packing.confirm_enter')"
             >Enter</span>
           </div>
 
@@ -102,7 +102,7 @@
             class="mt-2 flex items-center gap-2 text-rose-600 text-sm font-bold"
           >
             <i class="fas fa-exclamation-circle text-base"></i>
-            <span>{{ t('packing.verification_error', 'Mã quét không khớp! Vui lòng quét lại con tem.') }}</span>
+            <span>{{ t('packing.verification_error') }}</span>
           </div>
         </div>
       </div>
@@ -114,12 +114,12 @@
           class="px-4 py-2 bg-white border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-2 active:scale-95"
         >
           <i class="fas fa-home text-slate-500 text-xs"></i>
-          <span>{{ t('packing.back_home', 'Về Trang Chủ') }}</span>
+          <span>{{ t('packing.back_home') }}</span>
         </button>
 
         <div class="flex items-center gap-1.5 text-slate-400 text-xs">
           <i class="fas fa-keyboard animate-pulse"></i>
-          <span>{{ t('packing.waiting_scanner', 'Đợi máy quét barcode...') }}</span>
+          <span>{{ t('packing.waiting_scanner') }}</span>
         </div>
       </div>
     </div>

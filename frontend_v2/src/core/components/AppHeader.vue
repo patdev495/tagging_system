@@ -35,15 +35,7 @@
       </button>
 
       <div class="border-l border-slate-200 pl-3 ml-1">
-        <button 
-          @click="toggleLanguage" 
-          class="px-[10px] py-1 rounded-lg cursor-pointer flex items-center gap-[6px] font-bold text-[0.7rem] transition-all duration-200 border" 
-          :class="settings.language === 'en' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'"
-          :title="settings.language === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'"
-        >
-          <span class="font-sans">{{ settings.language === 'vi' ? 'VI' : 'EN' }}</span>
-          <i class="fas fa-language"></i>
-        </button>
+        <LanguageSwitch variant="header" />
       </div>
 
       <button 
@@ -57,10 +49,10 @@
       <button
         @click="switchCustomer"
         class="px-2.5 py-1.5 rounded-[10px] cursor-pointer flex items-center gap-1.5 text-[0.75rem] font-bold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition-all"
-        title="Đổi khách hàng đóng gói"
+        :title="t('header.switch_customer')"
       >
         <i class="fas fa-exchange-alt text-xs text-blue-600"></i>
-        <span class="hidden sm:inline">Đổi Khách Hàng</span>
+        <span class="hidden sm:inline">{{ t('header.switch_customer') }}</span>
       </button>
 
       <router-link 
@@ -79,6 +71,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useSystemStore } from '../stores/system';
 import { useSettingsStore } from '../stores/settings';
+import LanguageSwitch from './LanguageSwitch.vue';
 
 const router = useRouter();
 

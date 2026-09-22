@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 import packingApi from '../api';
 import printApi from '../../print/api';
 import { resolveCartonTemplatePath } from '../../print/utils/emergencyPrint';
+import { userErrorMessage } from '../../../i18n/errorMessage';
 import type { Product, Carton, JobOrderSlot } from '../../../types/api';
 
 export interface UseCartonPrintingOptions {
@@ -72,7 +73,7 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
           if (!skipStatusUpdate) await printApi.updateCartonStatus(cartonId, 'PRINTED');
           return 'Success';
         } else {
-          return result.message || 'Agent failed to print';
+          return userErrorMessage(result, t);
         }
       } else {
         const res = await printApi.serverPrint(cartonId, options.settings.printerName || undefined, templatePath || undefined);
@@ -85,13 +86,12 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
           }
           return 'Success';
         } else {
-          return (res.data as any)?.message || 'Server print failed';
+          return userErrorMessage(res.data, t);
         }
       }
     } catch (err: any) {
       console.error('Print Execution Error:', err);
-      const rawMsg = err.response?.data?.detail || err.message || 'Print connection error.';
-      return typeof rawMsg === 'object' ? JSON.stringify(rawMsg) : String(rawMsg);
+      return userErrorMessage(err, t);
     }
   };
 
@@ -115,18 +115,18 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
         options.lastCarton.value = { ...res.data, status: 'PRINTING' };
       } else {
         if (options.snExists.value) {
-          options.system.showNotification(t('packing.sn_exists', 'Mã sê-ri thùng đã tồn tại!'), 'error');
+          options.system.showNotification(t('packing.sn_exists'), 'error');
           isProcessing.value = false;
           return;
         }
         const items = [...options.scannedItems.value];
         if (items.length === 0) {
-          options.system.showNotification(t('packing.no_items', 'Chưa có sản phẩm nào được quét!'), 'error');
+          options.system.showNotification(t('packing.no_items'), 'error');
           isProcessing.value = false;
           return;
         }
         if (!options.jobOrder.value || !options.selectedSlotId.value) {
-          options.system.showNotification(t('packing.enter_job_order', 'Vui lòng chọn số thùng trước khi in!'), 'error');
+          options.system.showNotification(t('packing.enter_job_order'), 'error');
           isProcessing.value = false;
           return;
         }
@@ -164,9 +164,7 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
     } catch (err: any) {
       console.error(err);
       if (options.lastCarton.value && !isRetry) options.lastCarton.value.status = 'FAILED';
-      let msg = err.response?.data?.detail || err.message || t('packing.server_error');
-      if (msg === 'AGENT_CONNECTION_FAILED') msg = t('packing.agent_offline');
-      options.system.showNotification(msg, 'error');
+      options.system.showNotification(userErrorMessage(err, t), 'error');
     } finally {
       isProcessing.value = false;
     }
@@ -234,17 +232,17 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
         options.suggestedSNPreview.value = '';
         options.customYYMM.value = '';
         options.isSNManual.value = false;
-        options.system.showNotification('Đã quét xong toàn bộ số thùng của công lệnh!', 'success');
+        options.system.showNotification(t('packing.completed_all_cartons'), 'success');
       }
     } catch (err: any) {
       console.error(err);
-      options.system.showNotification(t('packing.update_status_failed', 'Cập nhật trạng thái thùng thất bại!'), 'error');
+      options.system.showNotification(t('packing.update_status_failed'), 'error');
     }
   };
 
   const handleEmergencyReprint = async (carton: Carton) => {
     if (!carton.id) {
-      options.system.showNotification('Invalid Carton ID', 'error');
+      options.system.showNotification(t('print.invalid_carton'), 'error');
       return;
     }
     try {
@@ -256,16 +254,18 @@ export function useCartonPrinting(options: UseCartonPrintingOptions) {
       const printResult = await handlePrintExecution(newCarton.id, newCarton.carton_sn, true, resolveCartonTemplatePath(carton));
       if (printResult === 'Success') { 
         await printApi.updateCartonStatus(newCarton.id, 'SUCCESS');
-        if (options.lastCarton.value?.id === newCarton.id) options.lastCarton.value.status = 'SUCCESS';
-        options.system.showNotification(`Reprint successful: ${carton.carton_sn}`, 'success'); 
+        const latestCarton = options.lastCarton.value;
+        if (latestCarton && latestCarton.id === newCarton.id) latestCarton.status = 'SUCCESS';
+        options.system.showNotification(t('print.reprint_success', { sn: carton.carton_sn }), 'success');
         return true;
       } else {
-        if (options.lastCarton.value?.id === newCarton.id) options.lastCarton.value.status = 'FAILED';
-        options.system.showNotification('Reprint failed: ' + printResult, 'error');
+        const latestCarton = options.lastCarton.value;
+        if (latestCarton && latestCarton.id === newCarton.id) latestCarton.status = 'FAILED';
+        options.system.showNotification(t('print.reprint_failed'), 'error');
         return false;
       }
     } catch (err: any) {
-      options.system.showNotification('Reprint error: ' + (err.response?.data?.detail || err.message), 'error');
+      options.system.showNotification(t('print.reprint_failed'), 'error');
       return false;
     }
   };

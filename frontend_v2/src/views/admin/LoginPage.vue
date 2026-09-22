@@ -1,25 +1,30 @@
 <template>
-  <div class="h-screen flex items-center justify-center bg-linear-to-br from-slate-950 to-indigo-950 text-white">
+  <div class="h-screen flex items-center justify-center bg-linear-to-br from-slate-950 to-indigo-950 text-white relative">
+    <!-- Top-right language switch -->
+    <div class="absolute top-6 right-6 z-10 flex items-center gap-2">
+      <LanguageSwitch variant="dark" />
+    </div>
+
     <div class="w-full max-w-[420px] p-10 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[24px] shadow-2xl animate-in">
       <div class="text-center mb-8">
         <div class="w-16 h-16 bg-linear-to-tr from-blue-500 to-violet-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-[0_0_20px_rgba(59,130,246,0.5)]">
           <i class="fas fa-user-shield"></i>
         </div>
         <h2 class="m-0 text-[1.5rem] font-bold tracking-tight">{{ t('admin.login_title') }}</h2>
-        <p class="text-slate-400 text-[0.85rem] mt-2">Hệ thống Quản trị & Giám sát NY Tagging</p>
+        <p class="text-slate-400 text-[0.85rem] mt-2">{{ t('admin.login_system_subtitle') }}</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="flex flex-col gap-5">
         <!-- Username Field -->
         <div class="flex flex-col gap-1.5">
-          <label for="username" class="text-[0.75rem] font-semibold uppercase tracking-wider text-slate-400">Tên đăng nhập</label>
+          <label for="username" class="text-[0.75rem] font-semibold uppercase tracking-wider text-slate-400">{{ t('admin.username') }}</label>
           <div class="relative flex items-center">
             <i class="fas fa-user absolute left-4 text-slate-500"></i>
             <input 
               id="username"
               v-model="username" 
               type="text" 
-              placeholder="admin hoặc qa" 
+              :placeholder="t('admin.username_placeholder')" 
               required
               ref="userInput"
               class="w-full pl-12 pr-4 py-3 bg-slate-900/60 border border-white/10 rounded-xl text-white text-[1rem] outline-none transition-all focus:border-blue-500 focus:bg-slate-900/80 focus:ring-4 focus:ring-blue-500/10"
@@ -45,7 +50,7 @@
         </div>
 
         <button type="submit" :disabled="loading" class="mt-2 p-3.5 bg-blue-500 text-white border-none rounded-xl font-bold text-[1rem] cursor-pointer transition-all flex items-center justify-center hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-10px_rgba(37,99,235,0.5)] active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed">
-          <span v-if="!loading">Đăng Nhập</span>
+          <span v-if="!loading">{{ t('admin.login') }}</span>
           <i v-else class="fas fa-spinner fa-spin"></i>
         </button>
         
@@ -62,6 +67,8 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../core/stores/auth';
+import { userErrorMessage } from '../../i18n/errorMessage';
+import LanguageSwitch from '../../core/components/LanguageSwitch.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -82,8 +89,8 @@ const handleLogin = async () => {
     await authStore.login(username.value, password.value);
     const redirectPath = (route.query.redirect as string) || '/admin';
     router.push(redirectPath);
-  } catch (err: any) {
-    error.value = err.response?.data?.detail || t('admin.incorrect_password');
+  } catch (err: unknown) {
+    error.value = userErrorMessage(err, t);
     password.value = '';
   } finally {
     loading.value = false;

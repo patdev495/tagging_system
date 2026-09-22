@@ -7,7 +7,7 @@
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div class="flex items-center gap-2.5">
           <i class="fas fa-tags text-indigo-600 text-lg"></i>
-          <h2 class="font-bold text-lg text-slate-900">Cấu Hình PO & LOT Đóng Hàng</h2>
+          <h2 class="font-bold text-lg text-slate-900">{{ t('erro.po_lot_config_title') }}</h2>
         </div>
         <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
           <i class="fas fa-times text-lg"></i>
@@ -17,26 +17,26 @@
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Mã Đơn Hàng (PO Number) {{ isTem3 ? '(Tùy chọn)' : '*' }}
+            {{ t('erro.po_number') }} {{ isTem3 ? `(${t('common.optional')})` : '*' }}
           </label>
           <input
             v-model="formPo"
             type="text"
             :required="!isTem3"
-            :placeholder="isTem3 ? 'Ví dụ: B432-22156381 (hoặc để trống)' : 'Ví dụ: B432-22156381'"
+            :placeholder="isTem3 ? t('erro.po_optional_placeholder') : t('erro.po_placeholder')"
             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
           />
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Mã Số Lô (Lot Number) *
+            {{ t('erro.lot_number') }} *
           </label>
           <input
             v-model="formLot"
             type="text"
             required
-            placeholder="Ví dụ: 92607933"
+            :placeholder="t('erro.lot_placeholder')"
             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
           />
         </div>
@@ -47,13 +47,13 @@
             @click="$emit('close')"
             class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
           >
-            Hủy
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
             class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all cursor-pointer shadow-md shadow-indigo-600/20"
           >
-            Lưu Thông Tin
+            {{ t('common.save') }}
           </button>
         </div>
       </form>
@@ -63,6 +63,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;

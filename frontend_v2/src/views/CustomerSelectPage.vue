@@ -3,22 +3,23 @@
     
     <!-- Top-right system controls -->
     <div class="absolute top-4 right-4 md:top-6 md:right-8 z-10 flex items-center gap-2">
+      <LanguageSwitch variant="header" />
       <button
         type="button"
         @click="showSettings = true"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-blue-700 hover:border-blue-400 font-bold text-xs shadow-xs transition-colors"
-        title="Mở cài đặt trạm đóng gói"
+        :title="t('home.settingsTitle')"
       >
         <i class="fas fa-cog text-blue-600 text-xs" aria-hidden="true"></i>
-        <span>Cài Đặt</span>
+        <span>{{ t('home.settings') }}</span>
       </button>
       <router-link
         to="/admin"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:text-blue-700 hover:border-blue-400 font-bold text-xs shadow-xs transition-colors"
-        title="Truy cập Trang Quản Trị Hệ Thống"
+        :title="t('home.adminTitle')"
       >
         <i class="fas fa-shield-halved text-blue-600 text-xs"></i>
-        <span>Quản Trị Hệ Thống</span>
+        <span>{{ t('home.admin') }}</span>
       </router-link>
     </div>
 
@@ -28,15 +29,15 @@
       <div class="text-center mb-8 md:mb-10 animate-in">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200 text-slate-800 font-bold text-xs mb-3 tracking-wider uppercase border border-slate-300">
           <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-          <span>NY Tagging System V2.0 • Trạm Đóng Gói</span>
+          <span>{{ t('home.station') }}</span>
         </div>
         
         <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 mb-2">
-          Chọn Trạm Làm Việc
+          {{ t('home.chooseStation') }}
         </h1>
         
         <p class="text-slate-600 font-medium text-xs md:text-sm max-w-md mx-auto">
-          Chọn quy trình đóng gói tương ứng với loại mã hàng sản xuất
+          {{ t('home.chooseWorkflow') }}
         </p>
       </div>
 
@@ -54,7 +55,7 @@
                 <i class="fas fa-barcode text-xl"></i>
               </div>
               <span class="px-2.5 py-1 text-xs font-black rounded-md bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wider">
-                Quét Sê-ri Con
+                {{ t('home.itemScan') }}
               </span>
             </div>
 
@@ -62,12 +63,12 @@
               {{ uiCustomerName }}
             </h2>
             <p class="text-slate-600 text-xs leading-relaxed mb-4">
-              Quy trình đóng gói quét từng mã sê-ri sản phẩm con vào thùng theo Work Order ERP. Mẫu tem Standard / Detailed.
+              {{ t('home.itemScanDescription') }}
             </p>
           </div>
 
           <div class="flex items-center justify-between text-blue-700 font-black text-xs pt-3 border-t border-slate-200">
-            <span>MỞ TRẠM ĐÓNG HÀNG</span>
+            <span>{{ t('home.openPacking') }}</span>
             <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
           </div>
         </div>
@@ -83,7 +84,7 @@
                 <i class="fas fa-weight-scale text-xl"></i>
               </div>
               <span class="px-2.5 py-1 text-xs font-black rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
-                Đóng Gói Theo Cân
+                {{ t('home.weightPacking') }}
               </span>
             </div>
 
@@ -91,12 +92,12 @@
               {{ erroCustomerName }}
             </h2>
             <p class="text-slate-600 text-xs leading-relaxed mb-4">
-              Quy trình đóng gói theo cân điện tử (RS-232), kiểm soát dung sai trọng lượng, nhập PO/LOT và in tem Erro.
+              {{ t('home.weightPackingDescription') }}
             </p>
           </div>
 
           <div class="flex items-center justify-between text-emerald-700 font-black text-xs pt-3 border-t border-slate-200">
-            <span>MỞ TRẠM CÂN ĐÓNG HÀNG</span>
+            <span>{{ t('home.openWeightPacking') }}</span>
             <i class="fas fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
           </div>
         </div>
@@ -111,11 +112,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import catalogApi from '../features/catalog/api';
 import SettingsModal from '../features/settings/components/SettingsModal.vue';
+import LanguageSwitch from '../core/components/LanguageSwitch.vue';
 import type { Customer } from '../types/api';
 
 const router = useRouter();
+const { t } = useI18n();
 const customers = ref<Customer[]>([]);
 const loading = ref(true);
 const showSettings = ref(false);
@@ -133,12 +137,12 @@ const fetchCustomers = async () => {
 
 const uiCustomerName = computed(() => {
   const c = customers.value.find(item => item.code.toUpperCase() === 'UI');
-  return c ? c.name : 'Khách Hàng Universal Instruments (UI)';
+  return c ? c.name : t('home.uiFallbackName');
 });
 
 const erroCustomerName = computed(() => {
   const c = customers.value.find(item => item.code.toUpperCase() === 'ERRO');
-  return c ? c.name : 'Khách Hàng Erro';
+  return c ? c.name : t('home.erroFallbackName');
 });
 
 const selectCustomer = (code: string) => {

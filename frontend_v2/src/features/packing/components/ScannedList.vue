@@ -12,7 +12,7 @@
         v-if="items.length > 0"
         @click="confirmClear" 
         class="px-2.5 py-1 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg cursor-pointer transition-all hover:bg-rose-100 hover:border-rose-300 active:scale-95"
-        title="Xóa toàn bộ sê-ri đã quét của thùng này"
+        :title="t('packing.clear_scanned_title')"
       >
         {{ t('packing.clear') }}
       </button>
@@ -24,8 +24,8 @@
         <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-2">
           <i class="fas fa-barcode text-xl"></i>
         </div>
-        <p class="font-semibold text-slate-600 m-0 mb-1">Chưa có mã quét</p>
-        <p class="text-[11px] text-slate-400 m-0">Bắn mã vạch sản phẩm con để ghi nhận vào thùng</p>
+        <p class="font-semibold text-slate-600 m-0 mb-1">{{ t('packing.no_scans') }}</p>
+        <p class="text-[11px] text-slate-400 m-0">{{ t('packing.scan_item_hint') }}</p>
       </div>
 
       <div v-else class="space-y-1.5">
@@ -46,14 +46,14 @@
           <div class="flex items-center gap-1.5 shrink-0 ml-2">
             <!-- Latest item badge -->
             <span v-if="item.actualIndex === items.length - 1" class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
-              Mới nhất
+              {{ t('packing.latest') }}
             </span>
 
             <!-- Remove single item button -->
             <button 
               @click="$emit('remove-item', item.actualIndex)"
               class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors border border-transparent hover:border-rose-200 cursor-pointer"
-              title="Xóa mã này khỏi thùng"
+              :title="t('packing.remove_scanned_title')"
             >
               <i class="fas fa-times text-xs"></i>
             </button>
@@ -64,7 +64,7 @@
 
     <!-- Footer Summary -->
     <div v-if="items.length > 0" class="px-4 py-2 border-t border-slate-200 bg-slate-50/60 text-[11px] text-slate-500 flex justify-between items-center shrink-0">
-      <span>Mã vừa quét: <strong class="font-mono text-slate-700">{{ items[items.length - 1] }}</strong></span>
+      <span>{{ t('packing.last_scanned', { sn: items[items.length - 1] }) }}</span>
       <span class="font-bold text-emerald-700">{{ items.length }} pcs</span>
     </div>
   </div>
@@ -92,7 +92,7 @@ const displayedItems = computed(() => {
 });
 
 const confirmClear = () => {
-  if (window.confirm('Bạn có chắc muốn xóa TOÀN BỘ các mã sê-ri con đã quét trong thùng này?')) {
+  if (window.confirm(t('packing.clear_scanned_confirm'))) {
     emit('clear');
   }
 };

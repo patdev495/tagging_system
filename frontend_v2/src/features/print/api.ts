@@ -40,8 +40,10 @@ export default {
       });
       const data = await response.json();
       if (!response.ok) {
-        const detail = typeof data.detail === 'object' ? JSON.stringify(data.detail) : (data.detail || 'Agent print failed');
-        throw new Error(detail);
+        const detail = data.detail && typeof data.detail === 'object' ? data.detail : {};
+        const error = new Error('Agent print failed') as Error & { code?: string };
+        error.code = typeof detail.code === 'string' ? detail.code : 'PRINT_FAILED';
+        throw error;
       }
       return data;
     } catch (err: any) {

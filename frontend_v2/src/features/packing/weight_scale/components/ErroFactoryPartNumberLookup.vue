@@ -6,7 +6,7 @@
         v-model="value"
         type="text"
         autocomplete="off"
-        placeholder="Quét / nhập mã 1LA..."
+        :placeholder="t('erro.factory_part_number_lookup_placeholder')"
         class="w-56 px-3 py-2 rounded-lg border border-slate-300 bg-white font-mono text-sm font-bold uppercase outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         :disabled="isResolving"
       />
@@ -16,7 +16,7 @@
       class="h-9 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-xs font-bold transition-colors"
       :disabled="isResolving || !value.trim()"
     >
-      {{ isResolving ? 'Đang tra...' : 'Chọn hàng' }}
+      {{ isResolving ? t('common.loading') : t('erro.choose_product_action') }}
     </button>
     <p v-if="error" class="max-w-60 text-xs font-semibold text-rose-700">{{ error }}</p>
     <p v-else-if="resolvedProduct" class="text-xs font-semibold text-emerald-700">
@@ -27,8 +27,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import catalogApi from '../../../catalog/api';
 import type { Product } from '../../../../types/api';
+import { userErrorMessage } from '../../../../i18n/errorMessage';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   (e: 'resolved', product: Product): void;
@@ -50,9 +54,9 @@ const resolve = async () => {
     resolvedProduct.value = response.data;
     value.value = response.data.internal_factory_part_number || factoryPartNumber.toUpperCase();
     emit('resolved', response.data);
-  } catch (err: any) {
+  } catch (err: unknown) {
     resolvedProduct.value = null;
-    error.value = err.response?.data?.error || 'Không thể tra Factory P/N.';
+    error.value = userErrorMessage(err, t);
   } finally {
     isResolving.value = false;
   }

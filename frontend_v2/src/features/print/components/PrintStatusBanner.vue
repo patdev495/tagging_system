@@ -10,7 +10,7 @@
         {{ t('print.printing_carton') }}:
         <span class="font-barcode-mono font-black text-blue-800 ml-1 tracking-wider">{{ lastCarton.carton_sn }}</span>
       </span>
-      <span class="text-[11px] text-blue-500 font-normal font-mono animate-pulse">Đang gửi lệnh in...</span>
+      <span class="text-[11px] text-blue-500 font-normal font-mono animate-pulse">{{ t('print.sending_command') }}</span>
     </div>
 
     <!-- SUCCESS state: compact green banner -->
@@ -34,7 +34,7 @@
           :href="downloadUrl"
           class="px-3 py-1.5 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold flex items-center gap-1.5 no-underline transition-colors cursor-pointer"
           download
-          title="Tải file BTXML"
+          :title="t('print.download_btxml_title')"
         >
           <i class="fas fa-file-download text-[10px]"></i>
           {{ t('print.manual_download') }}
@@ -42,7 +42,7 @@
         <button
           @click="$emit('retry')"
           class="px-3 py-1.5 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
-          title="In lại thùng này"
+          :title="t('print.reprint_this_title')"
         >
           <i class="fas fa-redo text-[10px]"></i>
           {{ t('print.reprint') }}

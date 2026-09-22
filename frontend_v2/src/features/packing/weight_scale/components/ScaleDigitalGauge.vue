@@ -21,7 +21,7 @@
           ]"
         ></i>
         <span class="text-slate-400">
-          {{ (isAgentOnline && scaleStatus.connected) ? 'Tín Hiệu Cân Thời Gian Thực' : (!isAgentOnline ? 'Mất Kết Nối Print Agent' : 'Mất Kết Nối Cổng Cân') }}
+          {{ (isAgentOnline && scaleStatus.connected) ? t('erro.live_scale_signal') : (!isAgentOnline ? t('erro.agent_disconnected') : t('erro.scale_port_disconnected')) }}
         </span>
       </div>
     </div>
@@ -69,16 +69,16 @@
           <span>
             {{ 
               !isAgentOnline 
-                ? 'AGENT OFFLINE' 
+                ? t('erro.agent_offline') 
                 : (!scaleStatus.connected 
-                  ? 'CHƯA KẾT NỐI CÂN' 
-                  : (scaleReading.is_stable ? 'ỔN ĐỊNH' : 'ĐANG DAO ĐỘNG')) 
+                  ? t('erro.scale_not_connected') 
+                  : (scaleReading.is_stable ? t('erro.stable') : t('erro.unstable'))) 
             }}
           </span>
         </span>
 
         <span v-if="isAgentOnline && scaleStatus.connected && scaleReading.is_tare" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-          TARE (ĐÃ TRỪ BÌ)
+          {{ t('erro.tare_applied') }}
         </span>
       </div>
     </div>
@@ -91,7 +91,7 @@
         <div class="px-3 py-2 rounded-xl bg-slate-800/90 border border-amber-500/30 flex items-center justify-between shadow-xs">
           <div class="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
             <i class="fas fa-arrow-down-short-wide text-[10px]"></i>
-            <span>Tối Thiểu (Min)</span>
+            <span>{{ t('erro.minimum_label') }}</span>
           </div>
           <span class="font-mono font-black text-sm md:text-base text-slate-100">
             {{ selectedProduct?.min_weight?.toFixed(3) || '0.150' }} <span class="text-[11px] font-normal text-slate-400">kg</span>
@@ -102,7 +102,7 @@
         <div class="px-3 py-2 rounded-xl bg-slate-800/90 border border-rose-500/30 flex items-center justify-between shadow-xs">
           <div class="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-rose-400">
             <i class="fas fa-arrow-up-wide-short text-[10px]"></i>
-            <span>Tối Đa (Max)</span>
+            <span>{{ t('erro.maximum_label') }}</span>
           </div>
           <span class="font-mono font-black text-sm md:text-base text-slate-100">
             {{ selectedProduct?.max_weight?.toFixed(3) || '0.200' }} <span class="text-[11px] font-normal text-slate-400">kg</span>
@@ -136,8 +136,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Product, ScaleReading, ScaleStatus } from '../../../../types/api';
 import type { ScaleToleranceResult } from '../../utils/scaleTolerance';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   scaleReading: ScaleReading;

@@ -22,7 +22,7 @@ describe('ErroFactoryPartNumberStep', () => {
         template_type: 'erro_02',
         allow_partial: 0,
       },
-    });
+    } as any);
     const wrapper = mount(ErroFactoryPartNumberStep);
 
     expect(wrapper.emitted('resolved')).toBeUndefined();
@@ -46,6 +46,6 @@ describe('ErroFactoryPartNumberStep', () => {
     await wrapper.get('form').trigger('submit');
 
     expect(wrapper.emitted('resolved')).toBeUndefined();
-    expect(wrapper.text()).toContain('Factory P/N chưa được cấu hình cho khách hàng Erro.');
+    expect(wrapper.text()).toContain('Đã có lỗi xảy ra. Vui lòng thử lại.');
   });
 });

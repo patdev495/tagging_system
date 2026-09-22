@@ -56,6 +56,6 @@ describe('ErroJobOrderStep', () => {
     await wrapper.get('form').trigger('submit');
 
     expect(wrapper.emitted('resolved')).toBeUndefined();
-    expect(wrapper.text()).toContain('Không thể kết nối cơ sở dữ liệu ShopFloor hoặc công lệnh không hợp lệ.');
+    expect(wrapper.text()).toContain('Đã có lỗi xảy ra. Vui lòng thử lại.');
   });
 });

@@ -1,4 +1,5 @@
 import { ref, computed, type Ref } from 'vue';
+import i18n from '../../../../i18n';
 import packingApi from '../../api';
 import printApi from '../../../print/api';
 import { evaluateScaleTolerance, type ScaleToleranceResult } from '../../utils/scaleTolerance';
@@ -28,6 +29,7 @@ export interface UseWeighAndPrintOptions {
 }
 
 export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
+  const t = i18n.global.t;
   const {
     selectedProduct,
     activeJobOrder,
@@ -70,14 +72,19 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
 
   const getToleranceTitle = (status: string) => {
     switch (status) {
-      case 'UNDERWEIGHT': return 'Trọng Lượng Thiếu (Underweight)';
-      case 'OVERWEIGHT': return 'Trọng Lượng Thừa (Overweight)';
-      case 'SCALE_UNSTABLE': return 'Cân Chưa Ổn Định (Unstable)';
-      case 'NO_PRODUCT': return 'Chưa Chọn Sản Phẩm Đóng Gói';
-      case 'AGENT_OFFLINE': return 'Print Agent Chưa Khởi Động';
-      case 'SCALE_DISCONNECTED': return 'Đầu Cân Mất Kết Nối';
-      default: return 'Lỗi Dung Sai Trọng Lượng';
+      case 'UNDERWEIGHT': return t('erro.underweight_title');
+      case 'OVERWEIGHT': return t('erro.overweight_title');
+      case 'UNSTABLE': return t('erro.unstable_title');
+      case 'NO_PRODUCT': return t('erro.no_product_title');
+      case 'AGENT_OFFLINE': return t('erro.agent_offline_title');
+      case 'DISCONNECTED': return t('erro.scale_disconnected_title');
+      default: return t('erro.tolerance_title');
     }
+  };
+
+  const getToleranceMessage = (status: string) => {
+    const key = ({ DISCONNECTED: 'disconnected_message', UNSTABLE: 'unstable_message', UNDERWEIGHT: 'underweight_message', OVERWEIGHT: 'overweight_message', READY: 'ready_message' } as Record<string, string>)[status];
+    return t(`erro.${key || 'tolerance_title'}`);
   };
 
   const calculateGaugePercent = (weight: number, target: number) => {
@@ -88,7 +95,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
 
   const triggerWeighAndPrint = async () => {
     if (!selectedProduct.value) {
-      notify?.('Vui lòng chọn sản phẩm trước khi in', 'warning');
+      notify?.(t('erro.choose_product'), 'warning');
       openProductModal?.();
       return;
     }
@@ -97,7 +104,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     const isTem3 = selectedProduct.value.template_type === 'erro_03';
     const isTem5 = selectedProduct.value.template_type === 'erro_05';
     if (!isTem2 && !isTem3 && !isTem5 && (!activePO.value?.trim() || !activeLot.value?.trim())) {
-      notify?.('Vui lòng nhập PO và LOT trước khi in', 'warning');
+      notify?.(t('erro.enter_po_lot'), 'warning');
       openBatchModal?.();
       return;
     }
@@ -106,7 +113,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       toleranceErrorDetails.value = {
         status: toleranceResult.value.status,
         title: getToleranceTitle(toleranceResult.value.status),
-        message: toleranceResult.value.message,
+        message: getToleranceMessage(toleranceResult.value.status),
         currentWeight: scaleReading.value.weight,
         minWeight: selectedProduct.value?.min_weight ?? 0.150,
         maxWeight: selectedProduct.value?.max_weight ?? 0.200,
@@ -174,17 +181,17 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
       // 5. Advance serial number counter
       advanceSequence();
 
-      notify?.(`Đã in thành công tem thùng: ${newCarton.carton_sn}`, 'success');
+      notify?.(t('erro.print_success', { sn: newCarton.carton_sn }), 'success');
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || err.response?.data?.error || err.message || 'Lỗi không xác định khi in';
-      notify?.(`In thất bại: ${errorMsg}`, 'error');
+      console.error('Erro print failed:', err);
+      notify?.(t('erro.print_failed'), 'error');
     } finally {
       isPrinting.value = false;
     }
   };
 
   const resetSessionCount = () => {
-    if (confirm('Bạn có chắc muốn đặt lại bộ đếm số thùng trong ca về 0?')) {
+    if (confirm(t('erro.confirm_reset_counter'))) {
       sessionPackedCount.value = 0;
       sessionStorage.setItem('erro_session_count', '0');
     }

@@ -36,7 +36,7 @@
             <p class="font-bold text-indigo-600 text-sm">{{ carton.lot_number }}</p>
           </div>
           <div v-if="carton.weight !== undefined && carton.weight !== null" class="space-y-1">
-            <p class="text-[10px] font-bold text-slate-400 uppercase">Trọng Lượng</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">{{ t('admin.weight') }}</p>
             <p class="font-bold text-emerald-700 text-sm">{{ carton.weight.toFixed(3) }} kg</p>
           </div>
           <div v-if="carton.date_code" class="space-y-1">
@@ -66,7 +66,7 @@
               <CheckCircle2 class="w-4 h-4 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div v-if="cartonItems.length === 0 && !isLoadingItems" class="p-8 text-center text-slate-400 text-xs italic">
-              Thùng hàng này đóng gói theo trọng lượng cân (không chứa danh sách sê-ri con).
+              {{ t('admin.weight_packed_no_serial') }}
             </div>
             <div v-if="isLoadingItems" class="p-12 text-center">
               <div class="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
@@ -80,7 +80,7 @@
       <div class="p-6 border-t border-slate-100 flex justify-between shrink-0 bg-white">
         <button v-if="isAdmin" @click="$emit('delete', carton)" class="px-5 py-2.5 rounded-xl bg-rose-50 font-bold text-rose-600 hover:bg-rose-100 transition-colors flex items-center gap-2 cursor-pointer">
           <Trash2 class="w-4 h-4" />
-          <span>Xóa Thùng Hàng</span>
+          <span>{{ t('admin.delete_carton') }}</span>
         </button>
         <div v-else></div>
         <button @click="$emit('close')" class="px-6 py-2.5 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer">

@@ -19,7 +19,7 @@
         >
           <div v-if="isExporting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <FileSpreadsheet v-else class="w-4 h-4" />
-          <span>{{ isExporting ? 'Đang xuất Excel...' : 'Xuất Báo Cáo Excel' }}</span>
+          <span>{{ isExporting ? t('admin.exporting_excel') : t('admin.export_excel_btn') }}</span>
           <ChevronDown class="w-4 h-4 opacity-70" />
         </button>
 
@@ -27,12 +27,12 @@
         <div v-if="showExportMenu && !isExporting" class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in duration-150">
           <button @click="handleExport('summary')" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent">
             <div class="p-2 rounded-lg bg-emerald-50 text-emerald-600 mt-0.5"><FileSpreadsheet class="w-4 h-4" /></div>
-            <div><p class="font-bold text-slate-800 text-sm m-0">1. Xuất Tổng Hợp (Summary)</p><span class="text-xs text-slate-400 block mt-0.5">Báo cáo cấp thùng: STT, Mã thùng, Khách hàng, Cân nặng, Lô</span></div>
+            <div><p class="font-bold text-slate-800 text-sm m-0">{{ t('admin.export_summary') }}</p><span class="text-xs text-slate-400 block mt-0.5">{{ t('admin.export_summary_desc') }}</span></div>
           </button>
           <div class="border-t border-slate-100 my-1"></div>
           <button @click="handleExport('detailed')" class="w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer border-none bg-transparent">
             <div class="p-2 rounded-lg bg-indigo-50 text-indigo-600 mt-0.5"><Download class="w-4 h-4" /></div>
-            <div><p class="font-bold text-slate-800 text-sm m-0">2. Bảng Kê Chi Tiết (Traceability)</p><span class="text-xs text-slate-400 block mt-0.5">File 2 Sheet: Tổng hợp & Toàn bộ sê-ri con đối soát giao hàng</span></div>
+            <div><p class="font-bold text-slate-800 text-sm m-0">{{ t('admin.export_detailed') }}</p><span class="text-xs text-slate-400 block mt-0.5">{{ t('admin.export_detailed_desc') }}</span></div>
           </button>
         </div>
       </div>
@@ -40,7 +40,6 @@
 
     <!-- Advanced Multi-dimensional Filter Bar -->
     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs mb-6 space-y-4">
-      <!-- Top row filters -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Search Carton SN -->
         <div class="space-y-1.5">
@@ -59,7 +58,7 @@
 
         <!-- Date Range: From Date -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Từ Ngày (Start Date)</label>
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ t('admin.start_date') }}</label>
           <div class="relative">
             <Calendar class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
             <input 
@@ -75,7 +74,7 @@
 
         <!-- Date Range: To Date -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Đến Ngày (End Date)</label>
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ t('admin.end_date') }}</label>
           <div class="relative">
             <Calendar class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
             <input 
@@ -90,13 +89,13 @@
 
         <!-- Customer Dropdown -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Khách Hàng (Customer)</label>
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ t('admin.customer') }}</label>
           <select 
             v-model="filters.customer_id" 
             @change="onCustomerChange"
             class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white font-medium"
           >
-            <option :value="null">Tất cả Khách hàng</option>
+            <option :value="null">{{ t('admin.all_customers') }}</option>
             <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.code }})</option>
           </select>
         </div>
@@ -104,7 +103,6 @@
 
       <!-- Bottom row filters -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-        <!-- Product Dropdown (Filtered by Customer) -->
         <div class="space-y-1.5">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ t('admin.product') }}</label>
           <select 
@@ -116,19 +114,17 @@
           </select>
         </div>
 
-        <!-- Job Order / PO Number -->
         <div class="space-y-1.5">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Work Order / PO#</label>
           <input 
             v-model="filters.job_order" 
             type="text" 
-            placeholder="VD: JO-5544 hoặc PO-4500..." 
+            placeholder="JO-5544 / PO-4500..." 
             class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
             @keyup.enter="fetchHistory(0)"
           >
         </div>
 
-        <!-- Status -->
         <div class="space-y-1.5">
           <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ t('admin.status') }}</label>
           <select 
@@ -155,7 +151,7 @@
           <button 
             @click="resetFilters" 
             class="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer" 
-            title="Đặt lại bộ lọc"
+            :title="t('common.reset')"
           >
             <RotateCcw class="w-4 h-4" />
           </button>
@@ -174,14 +170,13 @@
             <th class="p-4">{{ t('packing.job_order') }}</th>
             <th class="p-4">PO#</th>
             <th class="p-4">Lot</th>
-            <th class="p-4">Trọng Lượng</th>
+            <th class="p-4">{{ t('admin.weight') }}</th>
             <th class="p-4">{{ t('admin.status') }}</th>
             <th class="p-4">{{ t('admin.station_id') }}</th>
             <th class="p-4 text-right">{{ t('admin.details') }}</th>
           </tr>
         </thead>
         <tbody class="text-sm divide-y divide-slate-100">
-          <!-- Skeleton Loading State -->
           <template v-if="isLoading">
             <tr v-for="i in 6" :key="`sk-${i}`" class="animate-pulse">
               <td class="p-4"><div class="h-3.5 bg-slate-200 rounded w-24"></div></td>
@@ -197,7 +192,6 @@
             </tr>
           </template>
 
-          <!-- Actual Records -->
           <template v-else>
             <tr v-for="carton in history" :key="carton.id" class="hover:bg-slate-50 transition-colors">
               <td class="p-4 text-slate-500 font-mono text-xs">{{ formatDate(carton.created_at) }}</td>
@@ -215,34 +209,18 @@
               <td class="p-4 text-slate-600 font-mono text-xs">{{ carton.po_number || '-' }}</td>
               <td class="p-4 text-slate-600 font-mono text-xs">{{ carton.lot_number || '-' }}</td>
               <td class="p-4 text-slate-600 font-mono text-xs">
-                <span v-if="carton.weight !== null && carton.weight !== undefined" class="font-bold text-emerald-700">
-                  {{ carton.weight.toFixed(3) }} kg
-                </span>
+                <span v-if="carton.weight !== null && carton.weight !== undefined" class="font-bold text-emerald-700">{{ carton.weight.toFixed(3) }} kg</span>
                 <span v-else class="text-slate-300">-</span>
               </td>
               <td class="p-4">
-                <span :class="['px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider', carton.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
-                  {{ carton.status }}
-                </span>
+                <span :class="['px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider', carton.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">{{ carton.status }}</span>
               </td>
               <td class="p-4 text-[11px] font-mono text-slate-400">{{ carton.station_id || '-' }}</td>
               <td class="p-4 text-right">
                 <div class="flex justify-end gap-1.5">
-                  <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" title="Xem chi tiết">
-                    <ExternalLink class="w-4 h-4" />
-                  </button>
-                  <button
-                    v-if="authStore.isAdmin"
-                    @click="handleReprint(carton)"
-                    :disabled="reprintingCartonId === carton.id"
-                    class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="In lại tem"
-                  >
-                    <RotateCcw class="w-4 h-4" :class="{ 'animate-spin': reprintingCartonId === carton.id }" />
-                  </button>
-                  <button v-if="authStore.isAdmin" @click="handleDelete(carton)" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" title="Xóa thùng (Chỉ Admin)">
-                    <Trash2 class="w-4 h-4" />
-                  </button>
+                  <button @click="viewDetail(carton)" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" :title="t('admin.details')"><ExternalLink class="w-4 h-4" /></button>
+                  <button v-if="authStore.isAdmin" @click="handleReprint(carton)" :disabled="reprintingCartonId === carton.id" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50" :title="t('print.reprint')"><RotateCcw class="w-4 h-4" :class="{ 'animate-spin': reprintingCartonId === carton.id }" /></button>
+                  <button v-if="authStore.isAdmin" @click="handleDelete(carton)" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer" :title="t('admin.delete_carton')"><Trash2 class="w-4 h-4" /></button>
                 </div>
               </td>
             </tr>
@@ -279,24 +257,21 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { 
-  Search, 
-  Filter, 
-  ExternalLink, 
-  Trash2, 
-  FileSpreadsheet, 
-  Download, 
-  ChevronDown, 
-  Calendar, 
-  RotateCcw 
+  Search, Filter, ExternalLink, Trash2, FileSpreadsheet, 
+  Download, ChevronDown, Calendar, RotateCcw 
 } from 'lucide-vue-next';
 import CartonDetailModal from '../../features/history/components/CartonDetailModal.vue';
 import historyApi from '../../features/history/api';
 import catalogApi from '../../features/catalog/api';
 import { useSystemStore } from '../../core/stores/system';
+import { useSettingsStore } from '../../core/stores/settings';
+import { displayLocale } from '../../i18n/locale';
 import { useAuthStore } from '../../core/stores/auth';
 import { useAdminReprint } from '../../features/print/composables/useAdminReprint';
 import type { Carton, Product, Customer } from '../../types/api';
+
 const { t } = useI18n();
+const settings = useSettingsStore();
 const system = useSystemStore();
 const authStore = useAuthStore();
 const history = ref<Carton[]>([]);
@@ -308,11 +283,11 @@ const selectedCarton = ref<Carton | null>(null);
 const cartonItems = ref<{ id: number, item_sn: string }[]>([]);
 const isLoadingItems = ref<boolean>(false);
 const isLoading = ref<boolean>(false);
-
 const isExporting = ref<boolean>(false);
 const showExportMenu = ref<boolean>(false);
 const startDateInputRef = ref<HTMLInputElement | null>(null);
 const dateError = ref<boolean>(false);
+
 interface HistoryFilters {
   search: string; customer_id: number | null; product_id: number | null;
   status: string | null; start_date: string; end_date: string; job_order: string;
@@ -358,7 +333,7 @@ const fetchHistory = async (page: number = 0) => {
     history.value = res.data.items;
     totalCount.value = res.data.total;
   } catch (err) {
-    system.showNotification('Không thể tải lịch sử đóng gói', 'error');
+    system.showNotification(t('admin.history_load_failed'), 'error');
   } finally {
     isLoading.value = false;
   }
@@ -383,13 +358,13 @@ const validateDateRangeForExport = (): boolean => {
   if (!filters.value.start_date || !filters.value.end_date) {
     dateError.value = true;
     startDateInputRef.value?.focus();
-    system.showNotification('Vui lòng chọn khoảng thời gian (Từ ngày - Đến ngày) trước khi xuất báo cáo!', 'warning');
+    system.showNotification(t('admin.export_dates_required'), 'warning');
     return false;
   }
   if (filters.value.start_date > filters.value.end_date) {
     dateError.value = true;
     startDateInputRef.value?.focus();
-    system.showNotification('Khoảng ngày không hợp lệ: Từ ngày không được lớn hơn Đến ngày!', 'warning');
+    system.showNotification(t('admin.export_dates_invalid'), 'warning');
     return false;
   }
   return true;
@@ -406,7 +381,7 @@ const handleExport = async (mode: 'summary' | 'detailed') => {
 
   try {
     isExporting.value = true;
-    system.showNotification('Đang khởi tạo file báo cáo Excel...', 'info');
+    system.showNotification(t('admin.export_initializing'), 'info');
 
     const params: Record<string, any> = {
       search: filters.value.search || undefined,
@@ -433,9 +408,9 @@ const handleExport = async (mode: 'summary' | 'detailed') => {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
 
-    system.showNotification('Xuất file Excel thành công!', 'success');
+    system.showNotification(t('admin.export_success'), 'success');
   } catch (err) {
-    system.showNotification('Xuất file Excel thất bại. Vui lòng thử lại.', 'error');
+    system.showNotification(t('admin.export_failed'), 'error');
   } finally {
     isExporting.value = false;
   }
@@ -449,26 +424,26 @@ const viewDetail = async (carton: Carton) => {
     const res = await historyApi.getCartonDetail(carton.id);
     cartonItems.value = res.data.items || [];
   } catch (err) {
-    system.showNotification('Không thể tải chi tiết sản phẩm con', 'error');
+    system.showNotification(t('admin.items_load_failed'), 'error');
   } finally {
     isLoadingItems.value = false;
   }
 };
 
 const handleDelete = async (carton: Carton) => {
-  if (!confirm(`Bạn có chắc chắn muốn xóa thùng hàng ${carton.carton_sn}? Thao tác này sẽ xóa vĩnh viễn cả sê-ri con bên trong.`)) {
+  if (!confirm(t('admin.delete_carton_confirm', { sn: carton.carton_sn }))) {
     return;
   }
   
   try {
     await historyApi.deleteCarton(carton.id);
-    system.showNotification('Xóa thùng hàng thành công', 'success');
+    system.showNotification(t('admin.delete_carton_success'), 'success');
     if (selectedCarton.value?.id === carton.id) {
       selectedCarton.value = null;
     }
     fetchHistory(currentPage.value);
   } catch (err) {
-    system.showNotification('Xóa thùng hàng thất bại', 'error');
+    system.showNotification(t('admin.delete_carton_failed'), 'error');
   }
 };
 
@@ -484,7 +459,7 @@ const getCustomerName = (product?: Product) => {
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
-  return d.toLocaleString('vi-VN');
+  return d.toLocaleString(displayLocale(settings.language));
 };
 
 onMounted(() => {
@@ -492,7 +467,6 @@ onMounted(() => {
   fetchCatalogData();
 });
 
-// Auto fetch when dropdowns change
 watch([() => filters.value.product_id, () => filters.value.status, () => filters.value.start_date, () => filters.value.end_date], () => {
   fetchHistory(0);
 });
