@@ -79,7 +79,7 @@ class BTXMLDocument:
         qr_content = "&#xA;".join(items)
 
         actual_qty = len(items)
-        qty_text = f"{actual_qty}PCS"
+        qty_text = f"{actual_qty} PCS"
 
         substrings = {
             "ItemName": product.item_name,

@@ -118,4 +118,4 @@ class TestPartialPacking:
                 # We call the actual print_service.generate_btxml
                 xml = print_service.generate_btxml(carton, product, items, "dummy.btw")
                 
-                assert "<QTY>3PCS</QTY>" in xml # Should show 3PCS, not 10PCS
+                assert "<QTY>3 PCS</QTY>" in xml # Should show 3 PCS, not 10 PCS
