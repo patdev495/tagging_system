@@ -212,7 +212,7 @@ def search_carton_by_sn(carton_sn: str, db: Session):
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     
-    return get_carton_detail(db, typing_cast(int, carton.id))
+    return get_carton_detail(db, carton.id)
 
 def search_by_item_sn(item_sn: str, db: Session):
     # Find the item first
@@ -229,7 +229,7 @@ def delete_carton(db: Session, carton_id: int):
         raise HTTPException(status_code=404, detail="Carton not found")
 
     carton_attempts = print_attempts.get_carton_attempts(db, carton)
-    carton_attempt_ids = [typing_cast(int, attempt.id) for attempt in carton_attempts]
+    carton_attempt_ids = [attempt.id for attempt in carton_attempts]
     
     slots = slot_lifecycle.slots_for_carton_attempt_group(db, carton, carton_attempt_ids)
     slot_lifecycle.ensure_slots_not_shipped(slots)
