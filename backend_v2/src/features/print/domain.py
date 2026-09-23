@@ -75,7 +75,7 @@ class BTXMLDocument:
         and template-specific rules (like the detailed SN grid).
         """
         raw_origin = getattr(carton, 'carton_origin', 'VN') or 'VN'
-        origin_text = "MADE IN CHINA" if raw_origin == "CN" else "MADE IN VIETNAM"
+        origin_text = "Made in China" if raw_origin == "CN" else "Made in Vietnam"
         qr_content = "&#xA;".join(items)
 
         actual_qty = len(items)

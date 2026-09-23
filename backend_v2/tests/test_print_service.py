@@ -83,14 +83,14 @@ def test_origin_text_logic():
     with patch("builtins.open", MagicMock(return_value=MagicMock(__enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value="{origin_text}")))))):
         with patch("os.path.exists", return_value=True):
             res_vn = service.generate_btxml(carton_vn, product, ["I"], "D")
-            assert "MADE IN VIETNAM" in res_vn
+            assert "Made in Vietnam" in res_vn
             
     # CN Origin
     carton_cn = models.Carton(carton_origin="CN", carton_sn="S")
     with patch("builtins.open", MagicMock(return_value=MagicMock(__enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value="{origin_text}")))))):
         with patch("os.path.exists", return_value=True):
             res_cn = service.generate_btxml(carton_cn, product, ["I"], "D")
-            assert "MADE IN CHINA" in res_cn
+            assert "Made in China" in res_cn
 
 def test_reprint_carton_inherits_success_status():
     db = MagicMock()

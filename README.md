@@ -23,7 +23,7 @@
 *   **Job Order (Lệnh đóng gói)**: Mã lệnh sản xuất hoặc lệnh đóng gói dùng để nhóm nhiều *Carton* lại với nhau trong cùng một đợt chạy máy/sản xuất. *(Không gọi là: Lệnh sản xuất, mã lô, Work order)*.
 *   **Print Agent (Ứng dụng in cục bộ)**: Ứng dụng client chạy ngầm trực tiếp trên máy tính Windows kết nối vật lý với máy in, giao tiếp với BarTender thông qua COM Automation để thực hiện lệnh in hoặc xuất PDF siêu tốc. *(Không gọi là: Client app, ứng dụng máy in, máy in dịch vụ)*.
 *   **Printer (Thiết bị in)**: Thiết bị in nhãn vật lý (hoặc thiết bị ảo xuất PDF) nhận lệnh in trực tiếp từ *Print Agent*. *(Không gọi là: Máy in, print device)*.
-*   **Origin Country (Xuất xứ sản xuất)**: Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt Nam hoặc `CN` - Trung Quốc), quyết định xuất xứ in trên nhãn hiển thị là "MADE IN VIETNAM" hay "MADE IN CHINA". *(Không gọi là: Quốc gia sê-ri)*.
+*   **Origin Country (Xuất xứ sản xuất)**: Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt Nam hoặc `CN` - Trung Quốc), quyết định xuất xứ in trên nhãn hiển thị là "Made in Vietnam" hay "Made in China". *(Không gọi là: Quốc gia sê-ri)*.
 *   **Reprint (In lại nhãn)**: Hành động in lại nhãn của một *Carton* đã được đóng gói trước đó. Hệ thống sẽ nhân bản bản ghi cũ với cờ `is_reprint=1` và giữ nguyên mã *Carton SN* ban đầu nhằm tránh làm tăng số thứ tự tự động của lô hàng. *(Không gọi là: In bù, in mới, in đè)*.
 *   **Station ID (Trạm đóng gói)**: Mã định danh duy nhất của máy tính client hoặc máy trạm thực hiện lệnh in (thường được lưu dưới dạng địa chỉ MAC hoặc địa chỉ IP). *(Không gọi là: MAC ID, Terminal ID)*.
 *   **Template Type (Loại nhãn)**: Cấu hình kiểu nhãn in cho từng dòng sản phẩm. Hỗ trợ 2 loại chính:

@@ -123,7 +123,7 @@ Thiết bị in nhãn vật lý (hoặc thiết bị ảo xuất PDF) nhận l�
 _Avoid_: Máy in, print device
 
 **Origin Country**:
-Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt Nam hoặc `CN` - Trung Quốc), quyết định xuất xứ in trên nhãn là "MADE IN VIETNAM" hay "MADE IN CHINA".
+Quốc gia sản xuất thực tế của thùng hàng (ví dụ: `VN` - Việt Nam hoặc `CN` - Trung Quốc), quyết định xuất xứ in trên nhãn là "Made in Vietnam" hay "Made in China".
 _Avoid_: Quốc gia sê-ri
 
 **Reprint**:

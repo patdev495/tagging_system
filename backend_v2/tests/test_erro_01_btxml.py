@@ -39,7 +39,7 @@ def test_erro_01_btxml_document_from_carton_data():
     assert doc.substrings["PONo"] == "B432-22156381"
     assert doc.substrings["CartonSN"] == "VHK00102372608000081"
     assert doc.substrings["Rev"] == "B"
-    assert doc.substrings["Origin"] == "MADE IN VIETNAM"
+    assert doc.substrings["Origin"] == "Made in Vietnam"
     
     # 2D QR Code formatted with P, Q, M, D, L, K, S prefixes comma separated
     expected_qr = "P840-00083,Q190,MNYS5998,D2634,L92608521,KB432-22156381,SVHK00102372608000081"
