@@ -6,6 +6,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useJobOrderWorkflow } from './useJobOrderWorkflow';
 import jobOrderApi from '../../job_order/api';
 
+vi.mock('../api', () => ({
+  default: {
+    getLastCarton: vi.fn(),
+  },
+}));
+
 vi.mock('../../job_order/api', () => ({
   default: {
     getJobOrderDetails: vi.fn(),
@@ -45,6 +51,38 @@ describe('useJobOrderWorkflow', () => {
     }), { global: { plugins: [i18n] } });
 
     expect(workflowRef.value!.snPattern.value).toBe('AS');
+  });
+
+  it('resets a restored scan pattern to AS after loading a job order', async () => {
+    const currentProduct = ref(null);
+    const workflowRef = shallowRef<ReturnType<typeof useJobOrderWorkflow> | null>(null);
+    vi.mocked(jobOrderApi.getJobOrderDetails).mockResolvedValue({
+      data: { job_order: 'JO-DEFAULT-AS', product: null, slots: [] },
+    } as any);
+
+    mount(defineComponent({
+      setup() {
+        workflowRef.value = useJobOrderWorkflow({
+          system: { showNotification: vi.fn() },
+          currentProduct,
+          focusScan: vi.fn(),
+          checkTemplateExists: vi.fn(),
+          startPolling: vi.fn(),
+          stopPolling: vi.fn(),
+          playScanAlert: vi.fn(),
+        });
+        return {};
+      },
+      template: '<div />',
+    }), { global: { plugins: [i18n] } });
+
+    const workflow = workflowRef.value!;
+    workflow.snPattern.value = '';
+    workflow.inputJobOrder.value = 'JO-DEFAULT-AS';
+
+    await workflow.submitJobOrder();
+
+    expect(workflow.snPattern.value).toBe('AS');
   });
 
   it('keeps a resumed, verified carton waiting for the next-carton action without switching slots', async () => {

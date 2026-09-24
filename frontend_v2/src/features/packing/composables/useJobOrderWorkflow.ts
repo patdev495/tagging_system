@@ -105,6 +105,9 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
       jobOrder.value = res.data.job_order;
       jobOrderSlots.value = res.data.slots;
       options.currentProduct.value = res.data.product;
+      // A saved browser session may contain a prior operator's custom pattern.
+      // Every newly loaded UI Job Order must begin with the standard AS prefix.
+      snPattern.value = 'AS';
       currentStep.value = 2;
       options.system.showNotification('Đã tải thông tin công lệnh thành công!', 'success');
       
