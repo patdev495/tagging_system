@@ -51,7 +51,7 @@
         <i class="fas fa-exchange-alt"></i><span>{{ t('header.switch_customer') }}</span>
       </button>
       <router-link to="/admin" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs" :title="t('erro.admin_title')">
-        <i class="fas fa-user-shield text-indigo-600"></i><span>{{ t('header.admin') }}</span>
+        <i class="fas fa-user-shield text-indigo-600"></i><span>{{ t('header.admin_dashboard') }}</span>
       </router-link>
     </div>
   </header>
