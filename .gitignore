@@ -46,6 +46,7 @@ print_agent_v2/pdf_output/
 .uv-cache/
 tmp/
 temp_pdf/
+pdf_output/
 *.zip
 *.db
 templates/
