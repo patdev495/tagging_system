@@ -95,11 +95,11 @@ def test_export_summary_excel(test_setup):
     assert "Trạng Thái" in headers
     assert "In Lại" in headers
 
-    # Verify rows (2 data rows)
+    # Only original Cartons are reportable; Reprints remain audit history only.
     sn_col_idx = headers.index("Mã Carton SN") + 1
     sns = [sheet.cell(row=r, column=sn_col_idx).value for r in range(2, sheet.max_row + 1)]
     assert "CN26090100001" in sns
-    assert "CN26090100002" in sns
+    assert "CN26090100002" not in sns
 
 
 def test_export_detailed_traceability_excel(test_setup):

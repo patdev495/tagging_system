@@ -163,6 +163,8 @@ def export_cartons_to_excel(
         customer_id=customer_id,
         job_order=job_order,
         po_number=po_number,
+    ).filter(
+        models.Carton.is_reprint == 0
     ).options(defer(models.Carton.btxml))
 
     if mode == "detailed":
