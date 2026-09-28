@@ -48,4 +48,16 @@ describe('EmergencyReprintModal', () => {
     expect(wrapper.text()).toContain('Admin');
     expect(wrapper.emitted('reprint')).toBeUndefined();
   });
+
+  it('shows every reprint in the returned print history', async () => {
+    const wrapper = await mountWithCustomer('UI');
+    (wrapper.vm as any).result.print_history = [
+      { carton_sn: 'CN260900001', created_at: '2026-09-15T01:00:00Z', status: 'SUCCESS', is_reprint: 1 },
+      { carton_sn: 'CN260900001', created_at: '2026-09-15T02:00:00Z', status: 'SUCCESS', is_reprint: 1 },
+    ];
+    await nextTick();
+
+    expect(wrapper.get('[aria-label="Lịch sử in lại"]').text()).toContain('In lại');
+    expect(wrapper.get('[aria-label="Lịch sử in lại"]').findAll('li')).toHaveLength(2);
+  });
 });

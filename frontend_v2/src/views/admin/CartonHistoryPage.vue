@@ -199,6 +199,7 @@
                 <div class="flex items-center gap-2">
                   <span>{{ carton.carton_sn }}</span>
                   <span v-if="carton.is_reprint" class="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">{{ t('print.reprint') }}</span>
+                  <span v-else class="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">Bản gốc</span>
                 </div>
               </td>
               <td class="p-4">

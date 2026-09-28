@@ -312,6 +312,39 @@ class TestDeleteCarton:
 class TestGetCartons:
     """Test carton listing with filters."""
 
+    def test_returns_the_original_and_each_reprint_as_separate_history_rows(self):
+        """Admin history must retain the complete print-attempt audit trail."""
+        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        testing_session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = testing_session()
+
+        try:
+            product = models.Product(id=1, item_name="Product", packed_qty=40)
+            original = models.Carton(
+                product=product,
+                carton_sn="CN26096800141",
+                status="SUCCESS",
+                is_reprint=0,
+            )
+            reprint = models.Carton(
+                product=product,
+                carton_sn="CN26096800141",
+                status="SUCCESS",
+                is_reprint=1,
+            )
+            db.add_all([original, reprint])
+            db.commit()
+
+            result = service.get_cartons(db, search="CN26096800141")
+
+            assert result["total"] == 2
+            assert {carton.id for carton in result["items"]} == {original.id, reprint.id}
+            assert [carton.is_reprint for carton in result["items"]] == [1, 0]
+        finally:
+            db.close()
+            Base.metadata.drop_all(bind=engine)
+
     def test_returns_total_and_items(self):
         """Should return dict with total count and items list."""
         mock_carton = models.Carton(id=1, carton_sn="VN26051100001")

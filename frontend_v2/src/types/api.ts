@@ -65,6 +65,17 @@ export interface Carton {
   lot_number?: string;
   date_code?: string;
   btxml?: string;
+  items_count?: number;
+  reprint_count?: number;
+  print_history?: CartonPrintAttempt[];
+}
+
+export interface CartonPrintAttempt {
+  carton_sn: string;
+  created_at: string;
+  status: string;
+  is_reprint?: boolean | number;
+  items_count?: number;
 }
 
 export interface ScaleReading {

@@ -20,21 +20,15 @@ def build_carton_query(
     job_order: str | None = None,
     po_number: str | None = None,
 ):
-    # Subquery to get the latest (max) ID for each unique carton_sn
-    max_id_sub = db.query(
-        func.max(models.Carton.id).label("max_id")
-    ).group_by(models.Carton.carton_sn).subquery()
-
     # Subquery to count the total print attempts for each unique carton_sn
     count_sub = db.query(
         models.Carton.carton_sn.label("carton_sn"),
         func.count(models.Carton.id).label("print_count")
     ).group_by(models.Carton.carton_sn).subquery()
 
-    # Base query joining the latest carton record with its count
-    base_query = db.query(models.Carton, count_sub.c.print_count).join(
-        max_id_sub, models.Carton.id == max_id_sub.c.max_id
-    ).outerjoin(
+    # Keep every print attempt so Admin History preserves the original Carton
+    # alongside all Reprints for the same Carton SN.
+    base_query = db.query(models.Carton, count_sub.c.print_count).outerjoin(
         count_sub, models.Carton.carton_sn == count_sub.c.carton_sn
     ).options(joinedload(models.Carton.product).joinedload(models.Product.customer))
 
@@ -208,7 +202,10 @@ def get_carton_detail(db: Session, carton_id: int):
     return carton
 
 def search_carton_by_sn(carton_sn: str, db: Session):
-    carton = db.query(models.Carton).filter(models.Carton.carton_sn == carton_sn).order_by(models.Carton.id.desc()).first()
+    carton = db.query(models.Carton).filter(
+        models.Carton.carton_sn == carton_sn,
+        models.Carton.is_reprint == 0,
+    ).order_by(models.Carton.id.desc()).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
     
