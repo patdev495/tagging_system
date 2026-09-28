@@ -215,7 +215,10 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e!s}")
 
 def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
-    carton = db.query(models.Carton).filter(models.Carton.carton_sn == rescan_in.carton_sn).order_by(models.Carton.id.desc()).first()
+    carton = db.query(models.Carton).filter(
+        models.Carton.carton_sn == rescan_in.carton_sn,
+        models.Carton.is_reprint == 0,
+    ).order_by(models.Carton.id.desc()).first()
     if not carton:
         raise HTTPException(status_code=404, detail="Carton not found")
         
