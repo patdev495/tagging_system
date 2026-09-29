@@ -85,6 +85,16 @@ def search_by_item(item_sn: str, db: Session = Depends(get_db)):
     """Tìm kiếm thùng theo Serial Number của sản phẩm bên trong"""
     return service.search_by_item_sn(item_sn, db)
 
+
+@router.get("/item-sn-conflicts", response_model=schemas.ItemSNConflictResponse)
+def get_item_sn_conflicts(
+    item_sn: str,
+    exclude_carton_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    """Look up existing UI Carton ownership for one scanned Item SN."""
+    return service.get_ui_item_sn_conflicts(item_sn, db, exclude_carton_id)
+
 @router.get("/statistics", response_model=schemas.PackagingStatisticsResponse)
 def get_statistics(
     start_date: str,
@@ -108,4 +118,3 @@ def get_carton_detail(carton_id: int, db: Session = Depends(get_db)):
 def delete_carton(carton_id: int, db: Session = Depends(get_db)):
     """Xóa một thùng hàng và toàn bộ S/N bên trong nó (Chỉ dành cho Admin)"""
     return service.delete_carton(db, carton_id)
-

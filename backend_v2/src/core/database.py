@@ -77,6 +77,23 @@ def init_db():
         is_sqlite = "sqlite" in str(engine.url).lower()
 
         with engine.connect() as conn:
+            # Exact Item SN lookup is on the packing-station hot path.  Existing
+            # deployments need this index because create_all only creates it for
+            # fresh databases.
+            if inspector.has_table("carton_items"):
+                if is_sqlite:
+                    conn.execute(text(
+                        "CREATE INDEX IF NOT EXISTS ix_carton_items_item_sn_carton_id "
+                        "ON carton_items (item_sn, carton_id)"
+                    ))
+                else:
+                    conn.execute(text(
+                        "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = "
+                        "'ix_carton_items_item_sn_carton_id' AND object_id = OBJECT_ID('carton_items')) "
+                        "CREATE INDEX ix_carton_items_item_sn_carton_id ON carton_items (item_sn, carton_id)"
+                    ))
+                conn.commit()
+
             # 1. Migrate job_order_carton_slots
             if inspector.has_table('job_order_carton_slots'):
                 slot_cols = [c['name'] for c in inspector.get_columns('job_order_carton_slots')]

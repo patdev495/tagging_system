@@ -21,6 +21,8 @@
     "enter_job_order": "Please enter Work Order!",
     "station_locked": "STATION LOCKED!",
     "duplicate_sn": "Duplicate S/N",
+    "item_sn_conflict": "This Item S/N already belongs to another carton.",
+    "item_sn_check_unavailable": "Cannot check duplicate Item S/Ns. Check the server connection.",
     "carton_printed": "Carton {sn} Printed!",
     "label_downloaded": "PDF label downloaded!",
     "rescan_active": "RESCAN MODE ACTIVE for {sn}",

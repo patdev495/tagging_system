@@ -21,6 +21,8 @@
     "enter_job_order": "Vui lòng nhập Work Order!",
     "station_locked": "TRẠM ĐANG KHÓA!",
     "duplicate_sn": "Trùng mã S/N",
+    "item_sn_conflict": "Mã sê-ri con đã thuộc thùng khác.",
+    "item_sn_check_unavailable": "Không thể kiểm tra mã trùng. Vui lòng kiểm tra kết nối máy chủ.",
     "carton_printed": "Đã in tem thùng {sn}!",
     "label_downloaded": "Đã tải file PDF tem!",
     "rescan_active": "CHẾ ĐỘ QUÉT LẠI ĐANG BẬT cho thùng {sn}",

@@ -6,6 +6,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    Index,
     String,
     UnicodeText,
     UniqueConstraint,
@@ -119,12 +120,21 @@ class Carton(Base):
 
 class CartonItem(Base):
     __tablename__ = "carton_items"
+    __table_args__ = (Index("ix_carton_items_item_sn_carton_id", "item_sn", "carton_id"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     carton_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("cartons.id"), index=True, nullable=True)
     item_sn: Mapped[str | None] = mapped_column(String(100), index=True, nullable=True)
 
     carton: Mapped[Optional["Carton"]] = relationship("Carton", back_populates="items")
+
+
+class UIItemSNClaim(Base):
+    """Database-level ownership reservation for a UI Item SN."""
+    __tablename__ = "ui_item_sn_claims"
+
+    item_sn: Mapped[str] = mapped_column(String(100), primary_key=True)
+    carton_id: Mapped[int] = mapped_column(Integer, ForeignKey("cartons.id"), nullable=False, index=True)
 
 
 class JobOrderCartonSlot(Base):

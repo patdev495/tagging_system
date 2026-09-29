@@ -78,6 +78,22 @@ export interface CartonPrintAttempt {
   items_count?: number;
 }
 
+export interface ItemSNConflictCarton {
+  id: number;
+  carton_sn: string;
+  product_name?: string | null;
+  job_order?: string | null;
+  status?: string | null;
+  station_id?: string | null;
+  created_at?: string | null;
+  items_count: number;
+}
+
+export interface ItemSNConflictResponse {
+  item_sn: string;
+  conflicts: ItemSNConflictCarton[];
+}
+
 export interface ScaleReading {
   weight: number;
   weight_str?: string;

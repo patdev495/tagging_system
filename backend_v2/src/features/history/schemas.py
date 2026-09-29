@@ -66,6 +66,23 @@ class CartonDetail(Carton):
     items: list[CartonItem] = []
     print_history: list[CartonBase] = []
 
+
+class ItemSNConflictCarton(BaseModel):
+    id: int
+    carton_sn: str
+    product_name: str | None = None
+    job_order: str | None = None
+    status: str | None = None
+    station_id: str | None = None
+    created_at: datetime | None = None
+    items_count: int
+
+
+class ItemSNConflictResponse(BaseModel):
+    item_sn: str
+    conflicts: list[ItemSNConflictCarton]
+
+
 class CartonListResponse(BaseModel):
     total: int
     items: list[CartonListItem]

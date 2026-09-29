@@ -168,7 +168,7 @@
             <ScanBuffer
               ref="scanRef"
               v-model:scanBuffer="scanBuffer"
-              :disabled="(settings.printMode === 'local' && (!agentConnected || templateMissing)) || (!selectedSlotId && !isRescanMode)"
+              :disabled="isCheckingItemSN || (settings.printMode === 'local' && (!agentConnected || templateMissing)) || (!selectedSlotId && !isRescanMode)"
               :placeholder="(!selectedSlotId && !isRescanMode) ? t('packing.select_slot_first_placeholder') : ((settings.printMode === 'local' && !agentConnected) ? t('packing.scan_placeholder_offline') : (templateMissing ? t('packing.scan_placeholder_missing') : t('packing.scan_placeholder')))"
               :jobOrder="jobOrder"
               :awaitingNext="awaitingNext"
@@ -218,6 +218,12 @@
       @scanAlert="playScanAlert"
     />
 
+    <ItemSNConflictModal
+      :show="showItemSNConflictModal"
+      :conflict="itemSNConflict"
+      @close="showItemSNConflictModal = false; focusScan()"
+    />
+
     <SettingsModal :show="showSettings" @close="showSettings = false" />
     <EmergencyReprintModal 
       :show="showEmergencyModal" 
@@ -261,6 +267,7 @@ import ProductCardStep from '../features/packing/components/ProductCardStep.vue'
 import CartonSlotsModal from '../features/packing/components/CartonSlotsModal.vue';
 import CartonVerificationModal from '../features/packing/components/CartonVerificationModal.vue';
 import TemplateMissingModal from '../features/packing/components/TemplateMissingModal.vue';
+import ItemSNConflictModal from '../features/packing/components/ItemSNConflictModal.vue';
 
 import { useAgentHealth } from '../features/packing/composables/useAgentHealth';
 import { useTemplateViewer } from '../features/packing/composables/useTemplateViewer';
@@ -338,7 +345,8 @@ const {
   selectedSlotId, jobOrder, cartonOrigin, customSN, snPattern, customYYMM, awaitingNext,
   suggestedSNValue, suggestedSNPreview, backupScannedItems, scannedItems, scanBuffer, invalidScans,
   overflowScans, lastCarton, hadJobOrder, savedSessionState, isRescanMode, rescanCartonSN,
-  isSNManual, snExists, showSettings, showEmergencyModal, showCartonSlotsModal, showVerificationModal,
+  isSNManual, snExists, isCheckingItemSN, showItemSNConflictModal, itemSNConflict,
+  showSettings, showEmergencyModal, showCartonSlotsModal, showVerificationModal,
   cartonToVerify, hasCartonNumberError, cartonNumberErrorText, hasJobOrderError, jobOrderErrorText,
   scannedCartonsCount, progressPercent, snPreview, cartonNumberRange, submitJobOrder, changeJobOrder,
   refreshJobOrderDetails, enterScanning, selectSlot, handleSlotClickInModal, handleCartonNumberSubmit,

@@ -1,10 +1,16 @@
 from datetime import datetime
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.core import models, utils
 from src.features.carton import schemas, slot_lifecycle
+from src.features.carton.item_sn_conflicts import (
+    find_ui_item_sn_conflicts,
+    reject_ui_item_sn_conflicts,
+    replace_ui_item_sn_claims,
+)
 from src.features.carton.erro_01_sn_allocator import plan_next_erro_01_carton_sn
 from src.features.carton.sn_allocator import plan_next_carton_sn
 from src.features.print.service import generate_btxml
@@ -128,6 +134,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(carton_in.items)}."
         )
 
+    if product.customer and product.customer.code == "UI":
+        reject_ui_item_sn_conflicts(db, carton_in.items)
+
     slot = slot_lifecycle.get_pending_slot_for_carton_creation(
         db,
         slot_id=carton_in.slot_id,
@@ -155,6 +164,8 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
                 
                 existing_id = getattr(existing, "id", None)
                 db.query(models.CartonItem).filter(models.CartonItem.carton_id == existing_id).delete()
+                if product.customer and product.customer.code == "UI":
+                    replace_ui_item_sn_claims(db, existing_id, carton_in.items)
                 for item_sn in carton_in.items:
                     db.add(models.CartonItem(carton_id=existing_id, item_sn=item_sn))
                 
@@ -186,6 +197,9 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         )
         db.add(new_carton)
         db.flush()
+
+        if product.customer and product.customer.code == "UI":
+            replace_ui_item_sn_claims(db, new_carton.id, carton_in.items)
         
         for item_sn in carton_in.items:
             db.add(models.CartonItem(carton_id=new_carton.id, item_sn=item_sn))
@@ -209,6 +223,12 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
         
         return new_carton, btxml_content
         
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "ITEM_SN_CONFLICT", "conflicts": find_ui_item_sn_conflicts(db, carton_in.items)},
+        ) from e
     except Exception as e:
         db.rollback()
         # You could use logger here
@@ -243,9 +263,14 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
             detail=f"Partial packing is not allowed for this product. Expected {product.packed_qty} items, but got {len(rescan_in.items)}."
         )
 
+    if product.customer and product.customer.code == "UI":
+        reject_ui_item_sn_conflicts(db, rescan_in.items, exclude_carton_id=carton.id)
+
     try:
         # Delete old items
         db.query(models.CartonItem).filter(models.CartonItem.carton_id == carton.id).delete()
+        if product.customer and product.customer.code == "UI":
+            replace_ui_item_sn_claims(db, carton.id, rescan_in.items)
         
         # Insert new items
         for item_sn in rescan_in.items:
@@ -275,6 +300,15 @@ def rescan_carton(rescan_in: schemas.CartonRescan, db: Session):
         db.refresh(carton)
         return carton, btxml_content
         
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "ITEM_SN_CONFLICT",
+                "conflicts": find_ui_item_sn_conflicts(db, rescan_in.items, exclude_carton_id=carton.id),
+            },
+        ) from e
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {e!s}")

@@ -4,7 +4,7 @@ import packingApi from '../api';
 import jobOrderApi from '../../job_order/api';
 import printApi from '../../print/api';
 import { useJobOrderSlots } from './useJobOrderSlots';
-import type { Product, Carton, JobOrderSlot, JobOrderDetails } from '../../../types/api';
+import type { Product, Carton, JobOrderSlot, JobOrderDetails, ItemSNConflictResponse } from '../../../types/api';
 
 export interface UseJobOrderWorkflowOptions {
   system: any;
@@ -43,6 +43,10 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
   const savedSessionState = ref<any>(null);
   const isRescanMode = ref<boolean>(false);
   const rescanCartonSN = ref<string>('');
+  const rescanCartonId = ref<number | null>(null);
+  const isCheckingItemSN = ref<boolean>(false);
+  const showItemSNConflictModal = ref<boolean>(false);
+  const itemSNConflict = ref<ItemSNConflictResponse | null>(null);
   const isSNManual = ref<boolean>(false);
   const snExists = ref<boolean>(false);
   const showSettings = ref<boolean>(false);
@@ -204,7 +208,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     } catch (err) { console.warn('Sync SN failed:', err); }
   };
 
-  const processSingleScan = (sn: string) => {
+  const processSingleScan = async (sn: string) => {
     if (!sn || !options.currentProduct.value) return;
 
     if (awaitingNext.value) {
@@ -250,18 +254,40 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
       return;
     }
 
+    isCheckingItemSN.value = true;
+    try {
+      const response = await packingApi.getItemSNConflicts(sn, rescanCartonId.value ?? undefined);
+      if (response.data.conflicts.length > 0) {
+        options.playScanAlert();
+        itemSNConflict.value = response.data;
+        showItemSNConflictModal.value = true;
+        options.system.showNotification(t('packing.item_sn_conflict'), 'warning');
+        return;
+      }
+    } catch {
+      options.playScanAlert();
+      invalidScans.value.push({ sn, time: new Date().toLocaleTimeString(), reason: 'Không thể kiểm tra mã trùng', type: 'lockdown' });
+      options.system.showNotification(t('packing.item_sn_check_unavailable'), 'error');
+      return;
+    } finally {
+      isCheckingItemSN.value = false;
+    }
+
     scannedItems.value.push(sn);
     if (scannedItems.value.length === options.currentProduct.value.packed_qty && onFinalizeCartonCallback) {
       onFinalizeCartonCallback(); 
     }
   };
 
-  const handleScan = () => {
+  const handleScan = async () => {
     const rawInput = scanBuffer.value.trim();
     if (!rawInput) return;
     const sns = rawInput.split(/\s*[\n\r\t,]+\s*/).map(s => s.trim()).filter(s => s.length > 0);
     if (sns.length === 0) return;
-    sns.forEach(sn => processSingleScan(sn));
+    for (const sn of sns) {
+      await processSingleScan(sn);
+      if (showItemSNConflictModal.value || isCheckingItemSN.value) break;
+    }
     scanBuffer.value = '';
   };
 
@@ -290,6 +316,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     cartonOrigin.value = carton.carton_origin || 'VN';
     isRescanMode.value = true;
     rescanCartonSN.value = carton.carton_sn;
+    rescanCartonId.value = carton.id;
     showEmergencyModal.value = false;
     currentStep.value = 3;
     options.system.showNotification(`RESCAN MODE ACTIVE for ${carton.carton_sn}`, 'warning');
@@ -300,6 +327,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
   const cancelRescan = () => {
     isRescanMode.value = false;
     rescanCartonSN.value = '';
+    rescanCartonId.value = null;
     options.stopPolling();
     if (!hadJobOrder.value) resetSession();
     else {
@@ -337,6 +365,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     suggestedSNPreview.value = '';
     isRescanMode.value = false;
     rescanCartonSN.value = '';
+    rescanCartonId.value = null;
 
     const nextPending = jobOrderSlots.value.find(s => s.status === 'PENDING');
     if (nextPending) {
@@ -364,6 +393,7 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     awaitingNext.value = false; 
     isRescanMode.value = false;
     rescanCartonSN.value = '';
+    rescanCartonId.value = null;
     snPattern.value = 'AS';
     scanBuffer.value = ''; 
     showVerificationModal.value = false;
@@ -402,7 +432,8 @@ export function useJobOrderWorkflow(options: UseJobOrderWorkflowOptions) {
     cartonNumberStr, selectedSlotId, jobOrder, cartonOrigin, customSN, snPattern,
     customYYMM, awaitingNext, suggestedSNValue, suggestedSNPreview, backupScannedItems,
     scannedItems, scanBuffer, invalidScans, overflowScans, lastCarton, hadJobOrder,
-    savedSessionState, isRescanMode, rescanCartonSN, isSNManual, snExists, showSettings,
+    savedSessionState, isRescanMode, rescanCartonSN, rescanCartonId, isCheckingItemSN,
+    showItemSNConflictModal, itemSNConflict, isSNManual, snExists, showSettings,
     showEmergencyModal, showCartonSlotsModal, showVerificationModal, cartonToVerify,
     hasCartonNumberError, cartonNumberErrorText, hasJobOrderError, jobOrderErrorText,
     scannedCartonsCount, progressPercent, snPreview, cartonNumberRange, submitJobOrder,

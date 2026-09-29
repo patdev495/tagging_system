@@ -1,5 +1,5 @@
 import api from '../../core/api';
-import type { Carton } from '../../types/api';
+import type { Carton, ItemSNConflictResponse } from '../../types/api';
 
 export default {
   createCarton(data: { 
@@ -20,6 +20,11 @@ export default {
   },
   getNextSN(productId: number, yymm?: string) {
     return api.get<{ next_seq: number; next_sn?: string | null; prefix?: string }>(`/products/${productId}/next-sn`, { params: { yymm } });
+  },
+  getItemSNConflicts(itemSN: string, excludeCartonId?: number) {
+    return api.get<ItemSNConflictResponse>('/cartons/item-sn-conflicts', {
+      params: { item_sn: itemSN, exclude_carton_id: excludeCartonId },
+    });
   },
   rescanCarton(data: { carton_sn: string; items: string[] }) {
     return api.put<Carton>('/cartons/rescan', data);

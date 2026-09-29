@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, joinedload, defer
 
 from src.core import models
 from src.features.carton import print_attempts, slot_lifecycle
+from src.features.carton.item_sn_conflicts import find_ui_item_sn_conflicts
 
 
 def build_carton_query(
@@ -222,6 +223,14 @@ def search_by_item_sn(item_sn: str, db: Session):
     # Return the associated carton with details
     return get_carton_detail(db, typing_cast(int, item.carton_id))
 
+
+def get_ui_item_sn_conflicts(item_sn: str, db: Session, exclude_carton_id: int | None = None):
+    """Return a small, index-friendly summary of UI Cartons owning an Item SN."""
+    return {
+        "item_sn": item_sn,
+        "conflicts": find_ui_item_sn_conflicts(db, [item_sn], exclude_carton_id).get(item_sn, []),
+    }
+
 def delete_carton(db: Session, carton_id: int):
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()
     if not carton:
@@ -235,6 +244,9 @@ def delete_carton(db: Session, carton_id: int):
     slot_lifecycle.release_slots(slots)
 
     if carton_attempt_ids:
+        db.query(models.UIItemSNClaim).filter(models.UIItemSNClaim.carton_id.in_(carton_attempt_ids)).delete(
+            synchronize_session=False
+        )
         db.query(models.CartonItem).filter(models.CartonItem.carton_id.in_(carton_attempt_ids)).delete(synchronize_session=False)
     
     for attempt in carton_attempts:
