@@ -110,6 +110,10 @@ _Avoid_: Lệnh sản xuất, mã lô, Work order
 Một vị trí thùng được cấp phát trước cho một Job Order, tương ứng với số thứ tự thùng từ 1 đến N (trong đó N là tổng số thùng tính toán được từ tổng số lượng sản phẩm của Job Order chia cho số lượng đóng gói tối đa của Product). Mỗi vị trí thùng có trạng thái là chờ quét hoặc đã quét.
 _Avoid_: Số thùng thứ tự, slot thùng, vị trí hộp
 
+**Job Order Slot Allocation Cancellation**:
+Việc xoá vật lý toàn bộ Job Order Carton Slot đã cấp phát cho một Job Order UI nhưng chưa bắt đầu đóng gói, để Carton SN được cấp lại liên tiếp cho Job Order sau. Chỉ hợp lệ khi không có Carton nào của Job Order đã được quét và chỉ Role Admin được thực hiện; thao tác này không lưu lịch sử huỷ.
+_Avoid_: Huỷ Carton, xoá công lệnh ERP, huỷ một phần slot
+
 **Print Agent**:
 Ứng dụng chạy cục bộ trên máy tính client kết nối trực tiếp với động cơ BarTender COM để thực hiện lệnh in nhãn vật lý hoặc xuất PDF.
 _Avoid_: Client app, ứng dụng máy in, máy in dịch vụ

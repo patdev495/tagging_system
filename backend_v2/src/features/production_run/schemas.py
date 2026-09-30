@@ -28,6 +28,19 @@ class JobOrderSlotDetail(BaseModel):
     carton_id: int | None = None
     shipped: int = 0
 
+
+class JobOrderSlotCancellationCheck(BaseModel):
+    job_order: str
+    total_slots: int
+    scanned_slots: int
+    can_cancel: bool
+
+
+class JobOrderSlotCancellationResult(BaseModel):
+    job_order: str
+    deleted_slots: int
+
+
 class POLotRunSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

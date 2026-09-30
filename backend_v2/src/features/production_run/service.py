@@ -1,11 +1,18 @@
 import logging
 
+from fastapi import HTTPException
 from sqlalchemy import case, desc, func
 from sqlalchemy.orm import Session
 
 from src.core import models
 
-from .schemas import JobOrderSlotDetail, JobOrderSummary, POLotRunSummary
+from .schemas import (
+    JobOrderSlotCancellationCheck,
+    JobOrderSlotCancellationResult,
+    JobOrderSlotDetail,
+    JobOrderSummary,
+    POLotRunSummary,
+)
 
 logger = logging.getLogger("ProductionRunService")
 
@@ -64,6 +71,66 @@ def get_job_order_slots(db: Session, job_order: str) -> list[JobOrderSlotDetail]
     ).order_by(models.JobOrderCartonSlot.carton_number.asc()).all()
 
     return [JobOrderSlotDetail.model_validate(s) for s in slots]
+
+
+def check_job_order_slot_cancellation(
+    db: Session, job_order: str
+) -> JobOrderSlotCancellationCheck:
+    slots = db.query(models.JobOrderCartonSlot).filter(
+        models.JobOrderCartonSlot.job_order == job_order
+    ).all()
+    slot_completion_count = sum(
+        slot.status != "PENDING" or slot.carton_id is not None or slot.shipped == 1
+        for slot in slots
+    )
+    carton_count = db.query(func.count(models.Carton.id)).filter(
+        models.Carton.job_order == job_order
+    ).scalar() or 0
+    scanned_slots = max(slot_completion_count, carton_count)
+    return JobOrderSlotCancellationCheck(
+        job_order=job_order,
+        total_slots=len(slots),
+        scanned_slots=scanned_slots,
+        can_cancel=bool(slots) and scanned_slots == 0,
+    )
+
+
+def cancel_job_order_slot_allocation(
+    db: Session, job_order: str
+) -> JobOrderSlotCancellationResult:
+    slots = db.query(models.JobOrderCartonSlot).filter(
+        models.JobOrderCartonSlot.job_order == job_order
+    ).with_for_update().all()
+    if not slots:
+        raise HTTPException(status_code=404, detail="Công lệnh chưa được cấp slot.")
+
+    has_completed_carton = any(
+        slot.status != "PENDING" or slot.carton_id is not None or slot.shipped == 1
+        for slot in slots
+    )
+    has_carton_record = db.query(models.Carton.id).filter(
+        models.Carton.job_order == job_order
+    ).first() is not None
+    if has_completed_carton or has_carton_record:
+        raise HTTPException(
+            status_code=409,
+            detail="Không thể xoá cấp phát vì công lệnh đã có thùng được quét hoặc xuất kho.",
+        )
+
+    deleted_slots = len(slots)
+    try:
+        for slot in slots:
+            db.delete(slot)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return JobOrderSlotCancellationResult(
+        job_order=job_order,
+        deleted_slots=deleted_slots,
+    )
+
 
 def get_po_lot_runs(db: Session) -> list[POLotRunSummary]:
     results = db.query(

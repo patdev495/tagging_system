@@ -34,6 +34,71 @@
           <RefreshCw :class="['w-4 h-4 text-slate-500', isLoading ? 'animate-spin text-indigo-600' : '']" />
           <span>{{ isLoading ? 'Đang tải...' : 'Làm mới' }}</span>
         </button>
+        <button
+          v-if="authStore.isAdmin"
+          data-testid="open-slot-cancellation"
+          @click="openCancellationModal"
+          class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-rose-600 border border-rose-700 rounded-xl text-xs font-semibold text-white hover:bg-rose-700 transition-all shadow-sm active:scale-95"
+        >
+          <Trash2 class="w-4 h-4" />
+          <span>Xoá cấp phát công lệnh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Slot Allocation Cancellation Modal -->
+    <div v-if="showCancellationModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-start justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-slate-900">Kiểm tra huỷ cấp phát</h3>
+            <p class="text-xs text-slate-500 mt-1">Chỉ xoá được công lệnh chưa có thùng nào được quét.</p>
+          </div>
+          <button @click="closeCancellationModal" class="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide" for="cancellation-job-order">Mã công lệnh</label>
+          <div class="flex gap-2">
+            <input
+              id="cancellation-job-order"
+              data-testid="cancellation-job-order-input"
+              v-model.trim="cancellationJobOrder"
+              @keyup.enter="checkCancellation"
+              placeholder="Ví dụ: 1257157"
+              class="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono font-semibold outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            />
+            <button
+              data-testid="check-slot-cancellation"
+              @click="checkCancellation"
+              :disabled="isCheckingCancellation || !cancellationJobOrder"
+              class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 disabled:opacity-50"
+            >{{ isCheckingCancellation ? 'Đang kiểm tra...' : 'Kiểm tra' }}</button>
+          </div>
+
+          <p v-if="cancellationError" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{{ cancellationError }}</p>
+
+          <div v-if="cancellationCheck" class="rounded-xl border p-4 space-y-3" :class="cancellationCheck.can_cancel ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'">
+            <div class="flex justify-between text-sm"><span class="text-slate-600">Slot đã cấp</span><strong class="font-mono text-slate-900">{{ cancellationCheck.total_slots }}</strong></div>
+            <div class="flex justify-between text-sm"><span class="text-slate-600">Thùng đã quét</span><strong class="font-mono" :class="cancellationCheck.scanned_slots > 0 ? 'text-rose-700' : 'text-emerald-700'">{{ cancellationCheck.scanned_slots }}</strong></div>
+            <p v-if="cancellationCheck.total_slots === 0" class="text-xs font-medium text-slate-600">Công lệnh này chưa được cấp slot.</p>
+            <p v-else-if="!cancellationCheck.can_cancel" class="text-xs font-medium text-rose-700">Không thể xoá vì công lệnh đã có thùng được quét hoặc xuất kho.</p>
+            <p v-else class="text-xs font-medium text-amber-800">Toàn bộ {{ cancellationCheck.total_slots }} slot chưa được quét và sẽ bị xoá vĩnh viễn.</p>
+          </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2">
+          <button @click="closeCancellationModal" :disabled="isCancelling" class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50">Đóng</button>
+          <button
+            v-if="cancellationCheck?.can_cancel"
+            data-testid="confirm-slot-cancellation"
+            @click="cancelSlotAllocation"
+            :disabled="isCancelling"
+            class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 disabled:opacity-50"
+          >{{ isCancelling ? 'Đang xoá...' : `Xác nhận xoá ${cancellationCheck.total_slots} slot` }}</button>
+        </div>
       </div>
     </div>
 
@@ -237,18 +302,23 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Search, RefreshCw, Eye, X } from 'lucide-vue-next';
+import { Search, RefreshCw, Eye, Trash2, X } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '../../core/stores/auth';
 import {
+  cancelJobOrderSlotAllocation,
+  checkJobOrderSlotCancellation,
   fetchJobOrdersSummary,
   fetchJobOrderSlots,
   fetchPOLotRuns,
   type JobOrderSummary,
   type JobOrderSlotDetail,
+  type JobOrderSlotCancellationCheck,
   type POLotRunSummary,
 } from '../../features/production_run/api';
 
 const { t } = useI18n();
+const authStore = useAuthStore();
 
 const activeTab = ref<'job_orders' | 'po_runs'>('job_orders');
 const searchQuery = ref<string>('');
@@ -262,6 +332,12 @@ const showSlotsModal = ref<boolean>(false);
 const selectedJO = ref<JobOrderSummary | null>(null);
 const slotsList = ref<JobOrderSlotDetail[]>([]);
 const isLoadingSlots = ref<boolean>(false);
+const showCancellationModal = ref(false);
+const cancellationJobOrder = ref('');
+const cancellationCheck = ref<JobOrderSlotCancellationCheck | null>(null);
+const cancellationError = ref('');
+const isCheckingCancellation = ref(false);
+const isCancelling = ref(false);
 
 const filteredJobOrders = computed(() => {
   if (!searchQuery.value.trim()) return jobOrders.value;
@@ -324,6 +400,47 @@ function closeSlotsModal() {
   showSlotsModal.value = false;
   selectedJO.value = null;
   slotsList.value = [];
+}
+
+function openCancellationModal() {
+  showCancellationModal.value = true;
+  cancellationJobOrder.value = '';
+  cancellationCheck.value = null;
+  cancellationError.value = '';
+}
+
+function closeCancellationModal(force = false) {
+  if (isCancelling.value && !force) return;
+  showCancellationModal.value = false;
+}
+
+async function checkCancellation() {
+  if (!cancellationJobOrder.value || isCheckingCancellation.value) return;
+  isCheckingCancellation.value = true;
+  cancellationCheck.value = null;
+  cancellationError.value = '';
+  try {
+    cancellationCheck.value = await checkJobOrderSlotCancellation(cancellationJobOrder.value);
+  } catch (error: any) {
+    cancellationError.value = error?.response?.data?.detail || 'Không thể kiểm tra cấp phát công lệnh.';
+  } finally {
+    isCheckingCancellation.value = false;
+  }
+}
+
+async function cancelSlotAllocation() {
+  if (!cancellationCheck.value?.can_cancel || isCancelling.value) return;
+  isCancelling.value = true;
+  cancellationError.value = '';
+  try {
+    await cancelJobOrderSlotAllocation(cancellationCheck.value.job_order);
+    closeCancellationModal(true);
+    await loadData();
+  } catch (error: any) {
+    cancellationError.value = error?.response?.data?.detail || 'Không thể xoá cấp phát công lệnh.';
+  } finally {
+    isCancelling.value = false;
+  }
 }
 
 onMounted(() => {
