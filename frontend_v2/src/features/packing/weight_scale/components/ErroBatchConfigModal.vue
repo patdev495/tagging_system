@@ -30,15 +30,11 @@
 
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            {{ t('erro.lot_number') }} *
+            {{ t('erro.lot_number') }} ({{ t('erro.auto') }})
           </label>
-          <input
-            v-model="formLot"
-            type="text"
-            required
-            :placeholder="t('erro.lot_placeholder')"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
-          />
+          <p class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-mono">
+            {{ t('erro.lot_auto_placeholder') }}
+          </p>
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
@@ -87,13 +83,12 @@ watch(
   (isShown) => {
     if (isShown) {
       formPo.value = props.po;
-      formLot.value = props.lot;
+      formLot.value = '';
     }
   }
 );
 
 const handleSubmit = () => {
-  if (!formLot.value.trim()) return;
   if (!props.isTem3 && !formPo.value.trim()) return;
   emit('save', {
     po: formPo.value.trim(),

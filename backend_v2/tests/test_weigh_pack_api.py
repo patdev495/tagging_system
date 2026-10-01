@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -72,7 +74,7 @@ def test_weigh_pack_api_success(client):
     assert data["carton_sn"].startswith("VHK0010237")
     assert data["weight"] == 12.520
     assert data["po_number"] == "PO-API-123"
-    assert data["lot_number"] == "LOT-API-456"
+    assert data["lot_number"] == datetime.now().strftime("%Y%m%d")
     assert data["btxml"] is not None
     assert "<NamedSubString Name=\"CPN\"><Value>840-00091</Value></NamedSubString>" in data["btxml"]
 
@@ -88,12 +90,13 @@ def test_weigh_pack_api_out_of_tolerance(client):
     assert "below minimum tolerance" in res.json()["error"]
 
 
-def test_weigh_pack_api_rejects_erro_01_without_lot_number(client):
+def test_weigh_pack_api_assigns_generation_date_when_erro_01_lot_is_blank(client):
     res = client.post("/api/v1/cartons/weigh-pack", json={
         "product_id": 1,
         "weight": 12.520,
         "po_number": "PO-API-123",
         "lot_number": " ",
     })
-    assert res.status_code == 400
-    assert "Lot Number is required for Erro 01 cartons" in res.json()["error"]
+    assert res.status_code == 200
+    assert res.json()["lot_number"].isdigit()
+    assert len(res.json()["lot_number"]) == 8

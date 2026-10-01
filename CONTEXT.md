@@ -75,8 +75,8 @@ Ngày sản xuất của Carton, lấy theo Local Server Time tại thời đi�
 _Avoid_: Date Code, ngày nhập tay, ngày đơn hàng
 
 **Lot Number**:
-Mã số lô sản xuất (Lot# / 批號) áp dụng cho đợt đóng hàng của Job Order, được nhập hoặc xác nhận một lần khi bắt đầu phiên đóng gói và áp dụng cho toàn bộ các Carton trong cùng lô. Với `erro_01` và `erro_05`, Lot Number mặc định tự động sinh theo ngày sản xuất `YYYYMMDD` theo **Local Server Time**; người vận hành được phép chỉnh sửa nhưng không được để trống khi in `erro_01`. API phải từ chối yêu cầu in `erro_01` có Lot Number trống. Khi bắt đầu một Job Order mới, `erro_01` phải bỏ Lot Number của Job Order trước và gợi ý lại giá trị ngày máy chủ hiện tại. Khi người vận hành đổi Lot Number trong cùng Job Order, chỉ Carton được in sau thay đổi; Carton đã in giữ snapshot Lot Number tại lúc in. Với `erro_04`, Lot Number là bắt buộc cho Production Run để phục vụ truy xuất nguồn gốc, nhưng không được in trên tem. Với `erro_05`, Lot Number được in tại trường `Lot Code`.
-_Avoid_: Mã mẻ, mã batch, số lô con
+Mã số lô sản xuất (Lot# / 批號) của từng Carton Erro. Với cả năm Erro Label Template Code `erro_01`–`erro_05`, hệ thống backend tự gán `YYYYMMDD` theo **Local Server Time** ngay khi cấp Carton SN; không dùng giá trị LOT giữ từ Job Order hoặc giá trị gửi từ giao diện. Vì vậy, hai Carton cùng Job Order nhưng được cấp mã ở hai ngày khác nhau phải có Lot Number khác nhau. Carton giữ snapshot Lot Number tại lúc cấp mã. Với `erro_04`, Lot Number chỉ phục vụ truy xuất Production Run và không in trên tem; với `erro_05`, Lot Number in tại trường `Lot Code`.
+_Avoid_: Mã mẻ, mã batch, số lô con, LOT theo Job Order
 
 **PO Number**:
 Mã đơn đặt hàng của khách hàng (Purchase Order / 訂單號) tương ứng với đợt sản xuất, được cấu hình hoặc nhập khi mở ca đóng hàng. Với Erro Label Template Code `erro_04`, đây là trường bắt buộc, được nhập một lần khi mở Production Run và áp dụng cho toàn bộ Carton của đợt đó.

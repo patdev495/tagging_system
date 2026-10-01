@@ -131,7 +131,7 @@
                 'w-full py-3 md:py-3.5 rounded-xl font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0',
                 (settings.printMode !== 'centralized' && templateMissing)
                   ? 'bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white shadow-amber-600/20'
-                : (toleranceResult.canPrint && labelPreviewErrors.length === 0 && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || (activePO?.trim() && activeLot?.trim()))
+                : (toleranceResult.canPrint && labelPreviewErrors.length === 0 && (selectedProduct?.template_type === 'erro_02' || selectedProduct?.template_type === 'erro_03' || selectedProduct?.template_type === 'erro_05' || activePO?.trim())
                     ? 'bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white shadow-emerald-600/30'
                     : 'bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white shadow-rose-600/20')
               ]"
@@ -374,7 +374,6 @@ const clearPackingSession = () => {
 
 const activateProduct = (product: Product) => {
   selectedProduct.value = product;
-  if (product.template_type === 'erro_03' && !activeLot.value) activeLot.value = '92607933';
   system.showNotification(t('erro.product_selected', { name: product.item_name }), 'success');
   fetchNextSN();
 };

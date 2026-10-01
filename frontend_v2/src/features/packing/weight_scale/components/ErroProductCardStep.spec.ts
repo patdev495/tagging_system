@@ -88,7 +88,7 @@ describe('ErroProductCardStep', () => {
     expect(wrapper.find('input#batch-po').exists()).toBe(false);
   });
 
-  it('sets LOT default to 92607933 for template erro_03', () => {
+  it('shows LOT as backend-generated for template erro_03', () => {
     const tem3Resolution: ErroJobOrderResolution = {
       ...sampleResolution,
       product: {
@@ -108,10 +108,11 @@ describe('ErroProductCardStep', () => {
 
     const lotInput = wrapper.find<HTMLInputElement>('input#batch-lot');
     expect(lotInput.exists()).toBe(true);
-    expect(lotInput.element.value).toBe('92607933');
+    expect(lotInput.attributes('disabled')).toBeDefined();
+    expect(lotInput.attributes('placeholder')).toContain('YYYYMMDD');
   });
 
-  it('uses the server-supplied LOT default for template erro_01', () => {
+  it('does not retain a Job Order LOT for template erro_01', () => {
     const wrapper = mount(ErroProductCardStep, {
       props: {
         jobOrder: '1259487',
@@ -121,7 +122,7 @@ describe('ErroProductCardStep', () => {
       },
     });
 
-    expect(wrapper.find<HTMLInputElement>('input#batch-lot').element.value).toBe('20260921');
+    expect(wrapper.find<HTMLInputElement>('input#batch-lot').element.value).toBe('');
   });
 
   it('emits confirm when form submitted with valid inputs', async () => {
@@ -137,7 +138,7 @@ describe('ErroProductCardStep', () => {
     await wrapper.find('form').trigger('submit');
 
     expect(wrapper.emitted('confirm')).toBeTruthy();
-    expect(wrapper.emitted('confirm')?.[0]).toEqual([{ po: 'PO-TEST-1', lot: 'LOT-TEST-1' }]);
+    expect(wrapper.emitted('confirm')?.[0]).toEqual([{ po: 'PO-TEST-1', lot: '' }]);
   });
 
   it('emits changeJobOrder when back button is clicked', async () => {

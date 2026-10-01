@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -75,7 +77,9 @@ def test_admin_can_create_erro_carton_with_requested_sequence_and_audit():
 
         assert response.status_code == 200, response.text
         carton = response.json()
-        assert carton["carton_sn"] == "VHK00102372609000725"
+        assert carton["carton_sn"].startswith("VHK0010237")
+        assert carton["carton_sn"].endswith("000725")
+        assert carton["lot_number"] == datetime.now().strftime("%Y%m%d")
         assert carton["station_id"] == "ADMIN"
         assert carton["packed_by"] == "admin"
         assert carton["admin_creation_reason"] == "Bổ sung lịch sử tem"
@@ -158,5 +162,3 @@ def test_admin_carton_erro_04_requires_po_not_lot():
         assert data["po_number"] == "PO-999"
     finally:
         app.dependency_overrides.clear()
-
-

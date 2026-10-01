@@ -51,7 +51,7 @@ def tem3_product(db_session):
     return product
 
 
-def test_weigh_pack_tem3_allows_empty_po_and_default_lot(db_session, tem3_product):
+def test_weigh_pack_tem3_assigns_the_generation_date_as_lot(db_session, tem3_product):
     payload = carton_schemas.CartonWeighPackCreate(
         product_id=cast(int, tem3_product.id),
         weight=6.050,
@@ -62,7 +62,7 @@ def test_weigh_pack_tem3_allows_empty_po_and_default_lot(db_session, tem3_produc
 
     assert carton.id is not None
     assert carton.po_number is None
-    assert carton.lot_number is None
+    assert carton.lot_number == datetime.now().strftime("%Y%m%d")
 
     today_yymmdd = datetime.now().strftime("%y%m%d")
     expected_sn = f"1012665{today_yymmdd}0001"
@@ -82,6 +82,31 @@ def test_weigh_pack_tem3_allows_empty_po_and_default_lot(db_session, tem3_produc
     assert "<NamedSubString Name=\"PartDesc\">" in btxml
     assert "<Value>CAT5E ETHERNET CABLE</Value>" in btxml
     assert "<NamedSubString Name=\"QRCode_Content\">" in btxml
+
+
+def test_weigh_pack_tem3_uses_a_new_lot_date_for_the_same_job_order_on_a_new_day(
+    db_session, tem3_product, monkeypatch
+):
+    class FrozenDatetime:
+        current = datetime(2026, 10, 1, 8, 0, 0)
+
+        @classmethod
+        def now(cls):
+            return cls.current
+
+    monkeypatch.setattr(carton_service, "datetime", FrozenDatetime)
+    payload = carton_schemas.CartonWeighPackCreate(
+        product_id=cast(int, tem3_product.id), weight=6.050, job_order="JO-100"
+    )
+
+    first_carton, _ = carton_service.weigh_pack_carton(payload, db_session)
+    FrozenDatetime.current = datetime(2026, 10, 2, 8, 0, 0)
+    second_carton, _ = carton_service.weigh_pack_carton(payload, db_session)
+
+    assert first_carton.lot_number == "20261001"
+    assert second_carton.lot_number == "20261002"
+    assert first_carton.carton_sn[7:13] == "261001"
+    assert second_carton.carton_sn[7:13] == "261002"
 
 
 def test_weigh_pack_tem3_increments_sequence_monotonically(db_session, tem3_product):

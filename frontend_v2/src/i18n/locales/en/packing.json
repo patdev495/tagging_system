@@ -297,7 +297,7 @@
     "po_required_placeholder": "e.g. B432-22156381 (required)",
     "po_optional_placeholder": "May be left blank",
     "lot_required_placeholder": "e.g. 92607933 (required)",
-    "lot_auto_placeholder": "Default by date",
+    "lot_auto_placeholder": "Automatically generated as YYYYMMDD when the carton code is allocated",
     "start_weighing": "Start Weighing",
     "cancel_rescan": "Cancel / Rescan",
     "packed_cartons_list": "Packed Cartons List",

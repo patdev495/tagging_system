@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import cast
 
 import pytest
@@ -48,7 +49,7 @@ def tem2_product(db_session):
     return product
 
 
-def test_weigh_pack_tem2_allows_empty_po_and_lot(db_session, tem2_product):
+def test_weigh_pack_tem2_assigns_the_generation_date_as_lot(db_session, tem2_product):
     payload = carton_schemas.CartonWeighPackCreate(
         product_id=cast(int, tem2_product.id),
         weight=6.050,
@@ -59,7 +60,7 @@ def test_weigh_pack_tem2_allows_empty_po_and_lot(db_session, tem2_product):
 
     assert carton.id is not None
     assert carton.po_number is None
-    assert carton.lot_number is None
+    assert carton.lot_number == datetime.now().strftime("%Y%m%d")
     assert carton.carton_sn == "03703390700000013"
     assert len(carton.carton_sn) == 17  # 1 (0) + 8 (prefix) + 7 (seq) + 1 (cd)
 

@@ -297,7 +297,7 @@
     "po_required_placeholder": "Ví dụ: B432-22156381 (bắt buộc)",
     "po_optional_placeholder": "Có thể để trống",
     "lot_required_placeholder": "Ví dụ: 92607933 (bắt buộc)",
-    "lot_auto_placeholder": "Mặc định theo ngày",
+    "lot_auto_placeholder": "Tự sinh YYYYMMDD khi cấp mã thùng",
     "start_weighing": "Bắt Đầu Cân",
     "cancel_rescan": "Hủy / Quét Lại",
     "packed_cartons_list": "Danh Sách Thùng Đã Đóng",

@@ -119,15 +119,14 @@
 
                   <div>
                     <label for="batch-lot" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      {{ t('erro.lot_number') }} {{ isLotRequired ? '*' : `(${t('erro.auto')})` }}
+                      {{ t('erro.lot_number') }} ({{ t('erro.auto') }})
                     </label>
                     <input
                       id="batch-lot"
-                      v-model="formLot"
                       type="text"
-                      :required="isLotRequired"
-                      :placeholder="isLotRequired ? t('erro.lot_required_placeholder') : t('erro.lot_auto_placeholder')"
-                      class="w-full px-3 py-1.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm font-mono"
+                      disabled
+                      :placeholder="t('erro.lot_auto_placeholder')"
+                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 outline-none text-sm font-mono cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -184,29 +183,11 @@ const isPoRequired = computed(() => {
   return templateType.value === 'erro_01' || templateType.value === 'erro_04';
 });
 
-const isLotRequired = computed(() => {
-  return templateType.value === 'erro_01' || templateType.value === 'erro_04';
-});
-
 const initDefaults = () => {
   if (!props.resolution) return;
   formPo.value = props.initialPo || '';
 
-  if (props.initialLot) {
-    formLot.value = props.initialLot;
-  } else if (templateType.value === 'erro_01') {
-    formLot.value = props.resolution.lot_number_default || '';
-  } else if (templateType.value === 'erro_03') {
-    formLot.value = '92607933';
-  } else if (templateType.value === 'erro_05') {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    formLot.value = `${y}${m}${d}`;
-  } else {
-    formLot.value = '';
-  }
+  formLot.value = '';
 };
 
 watch(() => props.resolution, initDefaults, { immediate: true });
@@ -216,8 +197,6 @@ const handleSubmit = () => {
     poInputRef.value?.focus();
     return;
   }
-  if (isLotRequired.value && !formLot.value.trim()) return;
-
   emit('confirm', {
     po: formPo.value.trim(),
     lot: formLot.value.trim(),

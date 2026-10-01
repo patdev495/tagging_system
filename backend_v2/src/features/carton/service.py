@@ -16,7 +16,13 @@ from src.features.carton.sn_allocator import plan_next_carton_sn
 from src.features.print.service import generate_btxml
 
 
-def _plan_admin_erro_carton_sn(db: Session, product: models.Product, sequence: int):
+def _lot_number_for(allocated_at: datetime) -> str:
+    return allocated_at.strftime("%Y%m%d")
+
+
+def _plan_admin_erro_carton_sn(
+    db: Session, product: models.Product, sequence: int, allocated_at: datetime
+):
     if sequence < 1:
         raise HTTPException(status_code=400, detail="Số thứ tự phải lớn hơn 0.")
     if product.template_type == "erro_02":
@@ -24,34 +30,44 @@ def _plan_admin_erro_carton_sn(db: Session, product: models.Product, sequence: i
         return plan_next_sscc_carton_sn(db, product, custom_sequence=sequence, lock=True), None
     if product.template_type == "erro_03":
         from src.features.carton.erro_03_sn_allocator import plan_next_erro_03_carton_sn
-        plan = plan_next_erro_03_carton_sn(db, product, custom_sequence=sequence, lock=True)
+        plan = plan_next_erro_03_carton_sn(
+            db,
+            product,
+            custom_yymmdd=allocated_at.strftime("%y%m%d"),
+            custom_sequence=sequence,
+            lock=True,
+        )
         return plan, plan.yymmdd
     if product.template_type == "erro_04":
         from src.features.carton.erro_04_sn_allocator import Erro04CartonSNPlan, format_erro_04_sequence, pd027032_date_code
-        now = datetime.now()
         prefix = (product.carton_id_prefix or "").strip().upper()
         if prefix not in {"H", "K"}:
             raise HTTPException(status_code=400, detail="Erro 04 Product requires carton_id_prefix H or K.")
         return Erro04CartonSNPlan(
-            carton_sn=f"{prefix}{pd027032_date_code(now)}{format_erro_04_sequence(sequence)}",
+            carton_sn=f"{prefix}{pd027032_date_code(allocated_at)}{format_erro_04_sequence(sequence)}",
             sequence=sequence,
-            date_code=now.strftime("%y%m%d"),
+            date_code=allocated_at.strftime("%y%m%d"),
             carton_id_prefix=prefix,
-        ), now.strftime("%y%m%d")
+        ), allocated_at.strftime("%y%m%d")
     if product.template_type == "erro_05":
         from src.features.carton.erro_05_sn_allocator import ERRO_05_DEFAULT_PREFIX, ERRO_05_MAX_SEQUENCE, ERRO_05_MIN_SEQUENCE, Erro05CartonSNPlan
         if not ERRO_05_MIN_SEQUENCE <= sequence <= ERRO_05_MAX_SEQUENCE:
             raise HTTPException(status_code=400, detail="Erro 05 sequence must be between 50001 and 99999.")
-        now = datetime.now()
         prefix = (product.pkg_prefix or ERRO_05_DEFAULT_PREFIX).strip()
-        date_code = f"{now.strftime('%y')}{now.isocalendar()[1]:02d}"
+        date_code = f"{allocated_at.strftime('%y')}{allocated_at.isocalendar()[1]:02d}"
         return Erro05CartonSNPlan(
             carton_sn=f"{prefix}2{date_code}{sequence:05d}",
             sequence=sequence,
             date_code=date_code,
             pkg_prefix=prefix,
         ), date_code
-    plan = plan_next_erro_01_carton_sn(db, product, custom_sequence=sequence, lock=True)
+    plan = plan_next_erro_01_carton_sn(
+        db,
+        product,
+        custom_yymm=allocated_at.strftime("%y%m"),
+        custom_sequence=sequence,
+        lock=True,
+    )
     return plan, plan.date_code
 
 
@@ -70,7 +86,8 @@ def create_admin_erro_carton(carton_in: schemas.AdminCartonCreate, admin_usernam
     if product.template_type == "erro_04" and not (carton_in.po_number and carton_in.po_number.strip()):
         raise HTTPException(status_code=400, detail="PO Number is required for Erro 04 cartons.")
 
-    plan, date_code = _plan_admin_erro_carton_sn(db, product, carton_in.sequence)
+    allocated_at = datetime.now()
+    plan, date_code = _plan_admin_erro_carton_sn(db, product, carton_in.sequence, allocated_at)
     duplicate_filters = [models.Carton.carton_sn == plan.carton_sn, models.Carton.is_reprint == 0]
     if product.template_type == "erro_01":
         duplicate_filters.append(models.Carton.product_id == product.id)
@@ -82,7 +99,7 @@ def create_admin_erro_carton(carton_in: schemas.AdminCartonCreate, admin_usernam
             product_id=product.id, carton_sn=plan.carton_sn, packed_by=admin_username,
             status="FAILED", job_order=carton_in.job_order, carton_origin=carton_in.carton_origin,
             station_id="ADMIN", weight=carton_in.weight, po_number=carton_in.po_number,
-            lot_number=(carton_in.lot_number.strip() if carton_in.lot_number else None) or ("92607933" if product.template_type == "erro_03" else (datetime.now().strftime("%Y%m%d") if product.template_type == "erro_05" else None)),
+            lot_number=_lot_number_for(allocated_at),
             date_code=date_code, admin_creation_reason=carton_in.reason.strip(), is_reprint=0,
         )
         db.add(carton)
@@ -162,7 +179,7 @@ def create_carton(carton_in: schemas.CartonCreate, db: Session):
                 existing.carton_origin = carton_in.carton_origin
                 existing.station_id = carton_in.station_id
                 
-                existing_id = getattr(existing, "id", None)
+                existing_id = existing.id
                 db.query(models.CartonItem).filter(models.CartonItem.carton_id == existing_id).delete()
                 if product.customer and product.customer.code == "UI":
                     replace_ui_item_sn_claims(db, existing_id, carton_in.items)
@@ -338,6 +355,10 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             detail=f"Weight {weigh_in.weight}kg is above maximum tolerance {product.max_weight}kg."
         )
 
+    # LOT is a server-generated snapshot of the timestamp used to allocate the Carton SN.
+    # Do not reuse the value retained for a Job Order across calendar days.
+    allocated_at = datetime.now()
+
     # Allocate carton SN according to template type
     if product.template_type == "erro_02":
         from src.features.carton.sscc_allocator import plan_next_sscc_carton_sn
@@ -353,7 +374,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
         plan = plan_next_erro_03_carton_sn(
             db,
             product,
-            custom_yymmdd=weigh_in.custom_yymm,
+            custom_yymmdd=allocated_at.strftime("%y%m%d"),
             custom_sequence=weigh_in.custom_sn,
             lock=True,
         )
@@ -361,28 +382,24 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
     elif product.template_type == "erro_04":
         if not (weigh_in.po_number and weigh_in.po_number.strip()):
             raise HTTPException(status_code=400, detail="PO Number is required for Erro 04 cartons.")
-        if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
-            raise HTTPException(status_code=400, detail="Lot Number is required for Erro 04 cartons.")
         from src.features.carton.erro_04_sn_allocator import plan_next_erro_04_carton_sn
-        plan = plan_next_erro_04_carton_sn(db, product, lock=True)
+        plan = plan_next_erro_04_carton_sn(db, product, printed_at=allocated_at, lock=True)
         date_code = plan.date_code
     elif product.template_type == "erro_05":
         from src.features.carton.erro_05_sn_allocator import plan_next_erro_05_carton_sn
-        plan = plan_next_erro_05_carton_sn(db, product, lock=True)
+        plan = plan_next_erro_05_carton_sn(db, product, printed_at=allocated_at, lock=True)
         date_code = plan.date_code
-        if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
-            weigh_in.lot_number = datetime.now().strftime("%Y%m%d")
-    else:
-        if not (weigh_in.lot_number and weigh_in.lot_number.strip()):
-            raise HTTPException(status_code=400, detail="Lot Number is required for Erro 01 cartons.")
+    elif product.template_type == "erro_01":
         plan = plan_next_erro_01_carton_sn(
             db,
             product,
-            custom_yymm=weigh_in.custom_yymm,
+            custom_yymm=allocated_at.strftime("%y%m"),
             custom_sequence=weigh_in.custom_sn,
             lock=True,
         )
         date_code = plan.date_code
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported Erro template: {product.template_type}")
 
     if weigh_in.custom_sn:
         existing = db.query(models.Carton).filter(
@@ -406,7 +423,7 @@ def weigh_pack_carton(weigh_in: schemas.CartonWeighPackCreate, db: Session):
             station_id=weigh_in.station_id,
             weight=weigh_in.weight,
             po_number=weigh_in.po_number,
-            lot_number=weigh_in.lot_number,
+            lot_number=_lot_number_for(allocated_at),
             date_code=date_code,
             is_reprint=0,
         )
