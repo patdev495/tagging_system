@@ -231,7 +231,11 @@ const jobOrderPlannedCartons = ref<number>(Number(localStorage.getItem('erro_job
 const jobOrderPackedCartonsCount = ref<number>(Number(localStorage.getItem('erro_job_order_packed_count') || '0'));
 
 const activePO = ref<string>(localStorage.getItem('erro_active_po') || '');
-const activeLot = ref<string>(localStorage.getItem('erro_active_lot') || '');
+const automaticLot = () => {
+  const now = new Date();
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+};
+const activeLot = ref<string>(automaticLot());
 const labelPreviewErrors = ref<string[]>([]);
 const previewTime = ref(new Date());
 
@@ -380,7 +384,7 @@ const activateProduct = (product: Product) => {
 
 const saveBatchConfig = (payload: { po: string; lot: string }) => {
   activePO.value = payload.po;
-  activeLot.value = payload.lot;
+  activeLot.value = automaticLot();
   localStorage.setItem('erro_active_po', activePO.value);
   localStorage.setItem('erro_active_lot', activeLot.value);
   showBatchModal.value = false;
@@ -390,10 +394,7 @@ const saveBatchConfig = (payload: { po: string; lot: string }) => {
 const cancelBatchConfig = () => { showBatchModal.value = false; };
 
 const handleJobOrderResolved = (resolution: ErroJobOrderResolution) => {
-  if (resolution.product.template_type === 'erro_01' && resolution.job_order !== activeJobOrder.value) {
-    activeLot.value = '';
-    localStorage.removeItem('erro_active_lot');
-  }
+  activeLot.value = automaticLot();
   pendingResolution.value = resolution;
   currentStep.value = 2;
 };
@@ -416,7 +417,7 @@ const confirmJobOrderResolution = (payload: { po: string; lot: string }) => {
   jobOrderPlannedCartons.value = resolution.planned_cartons;
   jobOrderPackedCartonsCount.value = resolution.packed_cartons_count;
   activePO.value = payload.po;
-  activeLot.value = payload.lot;
+  activeLot.value = automaticLot();
 
   const stateMap: Record<string, string> = {
     erro_active_job_order: activeJobOrder.value, erro_active_factory_pn: activeFactoryPartNumber.value,
@@ -454,6 +455,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 onMounted(() => {
   localStorage.removeItem('erro_selected_product_id');
+  activeLot.value = automaticLot();
   startPolling();
   window.addEventListener('keydown', handleKeyDown, true);
 });

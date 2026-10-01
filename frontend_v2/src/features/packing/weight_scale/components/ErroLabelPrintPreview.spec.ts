@@ -127,4 +127,20 @@ describe('ErroLabelPrintPreview', () => {
     expect(wrapper.text()).toContain('VHK00102372609000001');
     expect(wrapper.text()).toContain('MADE IN VIETNAM');
   });
+
+  it('uses the preview date as the automatic LOT when no session LOT is present', () => {
+    const product: Product = {
+      id: 1, customer_id: 1, item_name: '840-00092', packed_qty: 190,
+      template_type: 'erro_01', allow_partial: 0, mfr_pn: 'NYS5998', revision: 'B',
+    };
+    const wrapper = mount(ErroLabelPrintPreview, {
+      props: {
+        product, cartonSN: 'VHK00102372610000014', po: 'PO-1', lot: '',
+        now: new Date('2026-10-01T10:00:00'),
+      },
+    });
+
+    expect(wrapper.text()).toContain('20261001');
+    expect(wrapper.find('[data-testid="preview-errors"]').exists()).toBe(false);
+  });
 });

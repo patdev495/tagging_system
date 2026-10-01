@@ -119,6 +119,13 @@ const dateYYMMDD = computed(() => {
   return `${year}${month}${day}`;
 });
 
+const lotNumber = computed(() => {
+  const year = props.now.getFullYear();
+  const month = String(props.now.getMonth() + 1).padStart(2, '0');
+  const day = String(props.now.getDate()).padStart(2, '0');
+  return props.lot || `${year}${month}${day}`;
+});
+
 const errors = computed(() => {
   if (!props.product) return [];
   const missing: string[] = [];
@@ -127,7 +134,7 @@ const errors = computed(() => {
     if (!value?.trim()) missing.push(label);
   };
   if (product.template_type === 'erro_01') {
-    need(product.item_name, 'CPN'); need(product.mfr_pn, 'Mfr P/N'); need(props.po, 'PO Number'); need(props.lot, 'Lot Number');
+    need(product.item_name, 'CPN'); need(product.mfr_pn, 'Mfr P/N'); need(props.po, 'PO Number'); need(lotNumber.value, 'Lot Number');
   } else if (product.template_type === 'erro_02') {
     need(product.product_desc, 'Product Name'); need(product.mfr_pn, 'P/N'); need(product.asin, 'ASIN'); need(product.upc, 'Unit UPC');
   } else if (product.template_type === 'erro_03') {
@@ -152,13 +159,13 @@ const fields = computed(() => {
   const product = props.product;
   if (!product) return [];
   if (product.template_type === 'erro_01') return [
-    { label: 'CPN', value: product.item_name }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Mfr P/N', value: product.mfr_pn || '' }, { label: 'Date Code', value: dateCode.value }, { label: 'Lot No.', value: props.lot }, { label: 'PO No.', value: props.po }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Rev', value: product.revision || '' }, { label: 'Origin', value: 'MADE IN VIETNAM' },
+    { label: 'CPN', value: product.item_name }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Mfr P/N', value: product.mfr_pn || '' }, { label: 'Date Code', value: dateCode.value }, { label: 'Lot No.', value: lotNumber.value }, { label: 'PO No.', value: props.po }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Rev', value: product.revision || '' }, { label: 'Origin', value: 'MADE IN VIETNAM' },
   ];
   if (product.template_type === 'erro_03') return [
-    { label: 'Project / Stage', value: `项目: ${product.customer_project || ''} | 生产阶段：${product.production_stage || ''}` }, { label: 'Luxshare Part No.', value: product.luxshare_part_number || '' }, { label: 'APN Rev', value: product.revision || '/' }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Date', value: dateYYYYMMDD.value }, { label: 'Lot No.', value: props.lot || '92607933' }, { label: 'Part Description', value: product.product_desc || product.item_name }, { label: 'Supplier Code', value: product.pkg_prefix || '1012665' }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Supplier Name', value: 'NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED' }, { label: 'Origin', value: 'VIETNAM' },
+    { label: 'Project / Stage', value: `项目: ${product.customer_project || ''} | 生产阶段：${product.production_stage || ''}` }, { label: 'Luxshare Part No.', value: product.luxshare_part_number || '' }, { label: 'APN Rev', value: product.revision || '/' }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'Date', value: dateYYYYMMDD.value }, { label: 'Lot No.', value: lotNumber.value }, { label: 'Part Description', value: product.product_desc || product.item_name }, { label: 'Supplier Code', value: product.pkg_prefix || '1012665' }, { label: 'Carton SN', value: props.cartonSN }, { label: 'Supplier Name', value: 'NIENYI VIETNAM INDUSTRIAL COMPANY LIMITED' }, { label: 'Origin', value: 'VIETNAM' },
   ];
   if (product.template_type === 'erro_05') return [
-    { label: 'Carton No.', value: props.cartonSN }, { label: 'Item', value: product.item_name }, { label: 'Description', value: product.product_desc || '' }, { label: 'Date Code', value: dateCode.value }, { label: 'Lot Code', value: props.lot || dateYYYYMMDD.value }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'MPN', value: '' }, { label: 'Rev', value: product.revision || '' }, { label: 'Config', value: '' }, { label: 'Batch', value: props.po }, { label: 'Stage', value: '' },
+    { label: 'Carton No.', value: props.cartonSN }, { label: 'Item', value: product.item_name }, { label: 'Description', value: product.product_desc || '' }, { label: 'Date Code', value: dateCode.value }, { label: 'Lot Code', value: lotNumber.value }, { label: 'QTY', value: String(product.packed_qty) }, { label: 'MPN', value: '' }, { label: 'Rev', value: product.revision || '' }, { label: 'Config', value: '' }, { label: 'Batch', value: props.po }, { label: 'Stage', value: '' },
   ];
   return [];
 });

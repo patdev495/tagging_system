@@ -33,7 +33,7 @@
             {{ t('erro.lot_number') }} ({{ t('erro.auto') }})
           </label>
           <p class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm font-mono">
-            {{ t('erro.lot_auto_placeholder') }}
+            {{ formLot }}
           </p>
         </div>
 
@@ -78,12 +78,17 @@ const emit = defineEmits<{
 const formPo = ref(props.po);
 const formLot = ref(props.lot);
 
+const automaticLot = () => {
+  const now = new Date();
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+};
+
 watch(
   () => props.show,
   (isShown) => {
     if (isShown) {
       formPo.value = props.po;
-      formLot.value = '';
+      formLot.value = props.lot || automaticLot();
     }
   }
 );

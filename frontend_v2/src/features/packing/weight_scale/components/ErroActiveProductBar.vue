@@ -46,7 +46,7 @@
         <span v-else class="font-bold text-sm text-indigo-900">
           PO: {{ activePO || (['erro_03', 'erro_05'].includes(selectedProduct?.template_type || '') ? `(${t('common.optional')})` : t('erro.not_entered')) }}
           <span class="text-slate-300 mx-1">|</span>
-          LOT: {{ activeLot || (selectedProduct?.template_type === 'erro_05' ? t('erro.auto') : selectedProduct?.template_type === 'erro_03' ? '92607933' : t('erro.not_entered')) }}
+          LOT: {{ activeLot || automaticLot() }}
         </span>
       </div>
     </div>
@@ -84,6 +84,11 @@ import { useI18n } from 'vue-i18n';
 import type { Product } from '../../../../types/api';
 
 const { t } = useI18n();
+
+const automaticLot = () => {
+  const now = new Date();
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+};
 
 defineProps<{
   activeJobOrder: string;

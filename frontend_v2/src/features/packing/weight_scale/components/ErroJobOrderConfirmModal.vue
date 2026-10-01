@@ -91,6 +91,7 @@
             <input
               type="text"
               disabled
+              :value="formLot"
               :placeholder="t('erro.lot_auto_placeholder')"
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 outline-none text-sm font-mono cursor-not-allowed"
             />
@@ -143,6 +144,11 @@ const emit = defineEmits<{
 const formPo = ref(props.initialPo || '');
 const formLot = ref(props.initialLot || '');
 
+const automaticLot = () => {
+  const now = new Date();
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+};
+
 const templateType = computed(() => props.resolution?.product.template_type);
 
 const isPoRequired = computed(() => {
@@ -155,7 +161,7 @@ watch(
     if (isShown && props.resolution) {
       formPo.value = props.initialPo || '';
       
-      formLot.value = '';
+      formLot.value = props.initialLot || automaticLot();
     }
   }
 );

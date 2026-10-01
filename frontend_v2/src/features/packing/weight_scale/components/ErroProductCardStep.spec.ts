@@ -112,17 +112,17 @@ describe('ErroProductCardStep', () => {
     expect(lotInput.attributes('placeholder')).toContain('YYYYMMDD');
   });
 
-  it('does not retain a Job Order LOT for template erro_01', () => {
+  it('shows the generated LOT date beneath the confirmed product', () => {
     const wrapper = mount(ErroProductCardStep, {
       props: {
         jobOrder: '1259487',
         resolution: { ...sampleResolution, lot_number_default: '20260921' },
         initialPo: '',
-        initialLot: '',
+        initialLot: '20261001',
       },
     });
 
-    expect(wrapper.find<HTMLInputElement>('input#batch-lot').element.value).toBe('');
+    expect(wrapper.find<HTMLInputElement>('input#batch-lot').element.value).toBe('20261001');
   });
 
   it('emits confirm when form submitted with valid inputs', async () => {
@@ -138,7 +138,7 @@ describe('ErroProductCardStep', () => {
     await wrapper.find('form').trigger('submit');
 
     expect(wrapper.emitted('confirm')).toBeTruthy();
-    expect(wrapper.emitted('confirm')?.[0]).toEqual([{ po: 'PO-TEST-1', lot: '' }]);
+    expect(wrapper.emitted('confirm')?.[0]).toEqual([{ po: 'PO-TEST-1', lot: 'LOT-TEST-1' }]);
   });
 
   it('emits changeJobOrder when back button is clicked', async () => {

@@ -134,8 +134,9 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
       product_id: 10,
       weight: 12.505,
+      job_order: undefined,
       po_number: 'PO-2026-001',
-      lot_number: 'LOT-9988',
+      lot_number: undefined,
       printer_name: undefined,
       template_path: undefined,
       station_id: undefined,
@@ -238,8 +239,9 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
       product_id: 30,
       weight: 6.05,
+      job_order: undefined,
       po_number: undefined,
-      lot_number: '92607933',
+      lot_number: undefined,
       printer_name: undefined,
       template_path: undefined,
       station_id: undefined,
@@ -247,7 +249,7 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     expect(printApi.agentPrint).toHaveBeenCalled();
   });
 
-  it('blocks erro_04 weigh and print if PO or Lot is missing and opens batch modal', async () => {
+  it('blocks erro_04 weigh and print if PO is missing and opens batch modal', async () => {
     selectedProduct.value = {
       id: 40,
       item_name: 'G111A1A',
@@ -281,12 +283,12 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
 
     await triggerWeighAndPrint();
 
-    expect(notify).toHaveBeenCalledWith('Vui lòng nhập PO và LOT trước khi in.', 'warning');
+    expect(notify).toHaveBeenCalledWith('Ví dụ: B432-22156381 (bắt buộc)', 'warning');
     expect(openBatchModal).toHaveBeenCalled();
     expect(packingApi.weighPackCarton).not.toHaveBeenCalled();
   });
 
-  it('executes erro_04 weigh and print with required PO and Lot and supports mutable session values', async () => {
+  it('executes erro_04 weigh and print with required PO while backend generates LOT', async () => {
     selectedProduct.value = {
       id: 40,
       item_name: 'G111A1A',
@@ -333,15 +335,16 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     expect(packingApi.weighPackCarton).toHaveBeenCalledWith({
       product_id: 40,
       weight: 5.01,
+      job_order: undefined,
       po_number: 'PO-ERRO-1',
-      lot_number: 'LOT-ERRO-1',
+      lot_number: undefined,
       printer_name: undefined,
       template_path: undefined,
       station_id: undefined,
     });
     expect(lastPackedCarton.value?.carton_sn).toBe('H69C0001');
 
-    // Operator mutates session values to PO-ERRO-2 and LOT-ERRO-2
+    // Operator mutates the PO value; the backend continues to generate LOT.
     activePO.value = 'PO-ERRO-2';
     activeLot.value = 'LOT-ERRO-2';
     vi.mocked(packingApi.weighPackCarton).mockResolvedValueOnce({
@@ -359,8 +362,9 @@ describe('useWeighAndPrint Composable (Strict Monotonic - ADR 0006)', () => {
     expect(packingApi.weighPackCarton).toHaveBeenLastCalledWith({
       product_id: 40,
       weight: 5.01,
+      job_order: undefined,
       po_number: 'PO-ERRO-2',
-      lot_number: 'LOT-ERRO-2',
+      lot_number: undefined,
       printer_name: undefined,
       template_path: undefined,
       station_id: undefined,

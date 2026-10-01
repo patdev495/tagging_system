@@ -103,8 +103,8 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
     const isTem2 = selectedProduct.value.template_type === 'erro_02';
     const isTem3 = selectedProduct.value.template_type === 'erro_03';
     const isTem5 = selectedProduct.value.template_type === 'erro_05';
-    if (!isTem2 && !isTem3 && !isTem5 && (!activePO.value?.trim() || !activeLot.value?.trim())) {
-      notify?.(t('erro.enter_po_lot'), 'warning');
+    if (!isTem2 && !isTem3 && !isTem5 && !activePO.value?.trim()) {
+      notify?.(t('erro.po_required_placeholder'), 'warning');
       openBatchModal?.();
       return;
     }
@@ -135,7 +135,7 @@ export function useWeighAndPrint(options: UseWeighAndPrintOptions) {
         weight: currentWeight,
         job_order: activeJobOrder?.value?.trim() || undefined,
         po_number: isTem2 ? undefined : (activePO.value?.trim() || undefined),
-        lot_number: isTem2 ? undefined : (activeLot.value?.trim() || undefined),
+        lot_number: undefined,
         printer_name: settings.printerName || undefined,
         template_path: settings.templatePath || undefined,
         station_id: settings.stationId || undefined,

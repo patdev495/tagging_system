@@ -125,6 +125,7 @@
                       id="batch-lot"
                       type="text"
                       disabled
+                      :value="formLot"
                       :placeholder="t('erro.lot_auto_placeholder')"
                       class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 outline-none text-sm font-mono cursor-not-allowed"
                     />
@@ -177,6 +178,11 @@ const poInputRef = ref<HTMLInputElement | null>(null);
 const formPo = ref(props.initialPo || '');
 const formLot = ref(props.initialLot || '');
 
+const automaticLot = () => {
+  const now = new Date();
+  return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+};
+
 const templateType = computed(() => props.resolution?.product.template_type);
 
 const isPoRequired = computed(() => {
@@ -187,7 +193,7 @@ const initDefaults = () => {
   if (!props.resolution) return;
   formPo.value = props.initialPo || '';
 
-  formLot.value = '';
+  formLot.value = props.initialLot || automaticLot();
 };
 
 watch(() => props.resolution, initDefaults, { immediate: true });
