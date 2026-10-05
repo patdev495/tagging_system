@@ -94,16 +94,59 @@ def test_get_job_orders_summary(db_session):
     assert jo2.shipped_slots == 0
     assert jo2.completion_rate == 100.0
 
+
+def test_get_job_orders_summary_excludes_erro_slot_records(db_session):
+    from src.features.production_run.service import get_job_orders_summary
+
+    ui_customer = models.Customer(code="UI", name="UI")
+    erro_customer = models.Customer(code="ERRO", name="Erro")
+    db_session.add_all([ui_customer, erro_customer])
+    db_session.flush()
+    ui_product = models.Product(customer_id=ui_customer.id, item_name="UI Product", packed_qty=10)
+    erro_product = models.Product(
+        customer_id=erro_customer.id,
+        item_name="840-00092",
+        packed_qty=190,
+        packing_mode="weight_scale",
+        template_type="erro_01",
+    )
+    db_session.add_all([ui_product, erro_product])
+    db_session.flush()
+    db_session.add_all([
+        models.JobOrderCartonSlot(
+            job_order="UI-WO-001", product_id=ui_product.id, carton_number=1,
+            carton_sn="UI-SLOT-001", status="PENDING",
+        ),
+        models.JobOrderCartonSlot(
+            job_order="ERRO-WO-001", product_id=erro_product.id, carton_number=1,
+            carton_sn="ERRO-SLOT-001", status="PENDING",
+        ),
+    ])
+    db_session.commit()
+
+    summaries = get_job_orders_summary(db_session)
+
+    assert [summary.job_order for summary in summaries] == ["UI-WO-001"]
+
 def test_get_job_order_slots_details(db_session):
     from src.features.production_run.service import get_job_order_slots
 
     customer = models.Customer(code="CUST_X", name="X Corp")
-    db_session.add(customer)
-    db_session.commit()
+    erro_customer = models.Customer(code="ERRO", name="Erro")
+    db_session.add_all([customer, erro_customer])
+    db_session.flush()
 
     product = models.Product(customer_id=customer.id, item_name="Phone Case", upc="112233", packed_qty=10)
-    db_session.add(product)
-    db_session.commit()
+    erro_product = models.Product(
+        customer_id=erro_customer.id,
+        item_name="840-00092",
+        upc="000000000001",
+        packed_qty=190,
+        packing_mode="weight_scale",
+        template_type="erro_01",
+    )
+    db_session.add_all([product, erro_product])
+    db_session.flush()
 
     now = datetime.datetime.now()
     # Add slots 1 to 3
@@ -118,6 +161,10 @@ def test_get_job_order_slots_details(db_session):
     db_session.add(models.JobOrderCartonSlot(
         job_order="JO-2000", product_id=product.id, carton_number=3,
         carton_sn="SN-JO2000-003", status="PENDING", scanned_at=None, shipped=0
+    ))
+    db_session.add(models.JobOrderCartonSlot(
+        job_order="JO-2000", product_id=erro_product.id, carton_number=4,
+        carton_sn="ERRO-SLOT-001", status="PENDING", scanned_at=None, shipped=0
     ))
     db_session.commit()
 
@@ -295,5 +342,3 @@ def test_production_runs_api_endpoints():
         assert resp_admin.status_code == 200
     finally:
         app.dependency_overrides.clear()
-
-

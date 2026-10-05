@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import HTTPException
-from sqlalchemy import case, desc, func
+from sqlalchemy import case, desc, func, or_
 from sqlalchemy.orm import Session
 
 from src.core import models
@@ -31,6 +31,11 @@ def get_job_orders_summary(db: Session) -> list[JobOrderSummary]:
         models.Product, models.JobOrderCartonSlot.product_id == models.Product.id
     ).outerjoin(
         models.Customer, models.Product.customer_id == models.Customer.id
+    ).filter(
+        or_(
+            models.Customer.code.is_(None),
+            func.upper(models.Customer.code) != "ERRO",
+        )
     ).group_by(
         models.JobOrderCartonSlot.job_order,
         models.JobOrderCartonSlot.product_id,
@@ -66,8 +71,16 @@ def get_job_orders_summary(db: Session) -> list[JobOrderSummary]:
     return summaries
 
 def get_job_order_slots(db: Session, job_order: str) -> list[JobOrderSlotDetail]:
-    slots = db.query(models.JobOrderCartonSlot).filter(
-        models.JobOrderCartonSlot.job_order == job_order
+    slots = db.query(models.JobOrderCartonSlot).join(
+        models.Product, models.JobOrderCartonSlot.product_id == models.Product.id
+    ).outerjoin(
+        models.Customer, models.Product.customer_id == models.Customer.id
+    ).filter(
+        models.JobOrderCartonSlot.job_order == job_order,
+        or_(
+            models.Customer.code.is_(None),
+            func.upper(models.Customer.code) != "ERRO",
+        ),
     ).order_by(models.JobOrderCartonSlot.carton_number.asc()).all()
 
     return [JobOrderSlotDetail.model_validate(s) for s in slots]

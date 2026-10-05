@@ -155,6 +155,12 @@ def get_or_create_job_order_slots(db: Session, job_order: str):
             status_code=400, 
             detail=f"Không tìm thấy con hàng '{ref_display}' tương ứng trong cơ sở dữ liệu."
         )
+
+    if product.customer and product.customer.code.upper() == "ERRO":
+        raise HTTPException(
+            status_code=400,
+            detail="Công lệnh ERRO không cấp slot thùng. Vui lòng dùng trạm cân ERRO.",
+        )
         
     # 3. Calculate total cartons
     packed_qty = cast(int, product.packed_qty)

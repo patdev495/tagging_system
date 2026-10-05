@@ -1,5 +1,6 @@
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -192,6 +193,30 @@ def test_get_or_create_job_order_slots(db_session):
     sn0 = slots_in_db[0].carton_sn
     sn1 = slots_in_db[1].carton_sn
     assert int(sn1[-5:]) == int(sn0[-5:]) + 1
+
+
+def test_get_job_order_details_rejects_erro_without_allocating_slots(db_session):
+    """Erro uses the weighing flow and must never receive Job Order Carton Slots."""
+    customer = models.Customer(code="ERRO", name="Erro")
+    db_session.add(customer)
+    db_session.flush()
+    product = models.Product(
+        customer_id=customer.id,
+        item_name="840-00092",
+        upc="000000000001",
+        packed_qty=190,
+        packing_mode="weight_scale",
+        template_type="erro_01",
+    )
+    db_session.add(product)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.get_or_create_job_order_slots(db_session, "ERRO-WO-001")
+
+    assert getattr(exc_info.value, "status_code", None) == 400
+    assert "ERRO" in str(exc_info.value.detail)
+    assert db_session.query(models.JobOrderCartonSlot).filter_by(job_order="ERRO-WO-001").count() == 0
 
 def test_sequence_generator_collision_avoidance(db_session):
     # Setup product
