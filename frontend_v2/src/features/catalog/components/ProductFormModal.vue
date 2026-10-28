@@ -142,7 +142,7 @@
               </optgroup>
               <optgroup label="Khách Hàng UI">
                 <option value="standard">Standard (Tem thùng cơ bản)</option>
-                <option value="detailed">Detailed (Lưới 40 mã sê-ri con)</option>
+                <option value="detailed">Detailed (Lưới tối đa 50 mã sê-ri con)</option>
               </optgroup>
             </select>
           </div>

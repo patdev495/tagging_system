@@ -35,6 +35,7 @@ class TemplateResolver:
         {"filename": "carton_detail_1M_W.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết Cáp 1M (Lưới 40 S/N)"},
         {"filename": "carton_detail_2_3M_W.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết Cáp 2M/3M (Lưới 40 S/N)"},
         {"filename": "carton_detail_UISP_Connector_SHD.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết UISP Connector"},
+        {"filename": "carton_UISP_Connector_GND.btw", "customer": "UI", "type": "detailed", "name": "UI Tem Chi Tiết UISP Connector GND (50 S/N)"},
     ]
 
     @classmethod

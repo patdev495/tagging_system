@@ -107,7 +107,7 @@ def test_get_canonical_templates(test_setup):
     assert resp.status_code == 200
     data = resp.json()
     assert "templates" in data
-    assert len(data["templates"]) == 10
+    assert len(data["templates"]) == 11
     filenames = [t["filename"] for t in data["templates"]]
     assert "erro_05.btw" in filenames
     assert "erro_04.btw" in filenames
@@ -119,3 +119,4 @@ def test_get_canonical_templates(test_setup):
     assert "carton_detail_1M_W.btw" in filenames
     assert "carton_detail_2_3M_W.btw" in filenames
     assert "carton_detail_UISP_Connector_SHD.btw" in filenames
+    assert "carton_UISP_Connector_GND.btw" in filenames

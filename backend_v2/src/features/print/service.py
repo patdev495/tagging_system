@@ -11,9 +11,6 @@ from src.features.print.domain import BTXMLDocument
 
 logger = logging.getLogger("PrintService")
 
-MAX_SN_GRID = 40  # Maximum SN slots on the detailed label
-
-
 def reprint_requires_admin(carton_id: int, db: Session) -> bool:
     """Only UI labels may be reprinted directly from a packing station."""
     carton = db.query(models.Carton).filter(models.Carton.id == carton_id).first()

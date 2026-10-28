@@ -89,6 +89,13 @@ export const CANONICAL_TEMPLATES: CanonicalTemplate[] = [
     name: 'UI Tem Chi Tiết UISP Connector', 
     desc: 'Đầu nối UISP-Connector-SHD — Lưới mã sê-ri con' 
   },
+  {
+    filename: 'carton_UISP_Connector_GND.btw',
+    customer: 'UI',
+    type: 'detailed',
+    name: 'UI Tem Chi Tiết UISP Connector GND',
+    desc: 'Đầu nối UISP-Connector-GND — Lưới 50 mã sê-ri con'
+  },
 ];
 
 export interface TemplateCheckItem {

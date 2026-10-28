@@ -44,6 +44,7 @@ export const UI_TEMPLATES = [
   { filename: 'carton_detail_1M_W.btw', label: 'carton_detail_1M_W.btw (Chi Tiết Cáp 1M - Lưới 40 S/N)' },
   { filename: 'carton_detail_2_3M_W.btw', label: 'carton_detail_2_3M_W.btw (Chi Tiết Cáp 2M & 3M - Lưới 40 S/N)' },
   { filename: 'carton_detail_UISP_Connector_SHD.btw', label: 'carton_detail_UISP_Connector_SHD.btw (Chi Tiết UISP Connector)' },
+  { filename: 'carton_UISP_Connector_GND.btw', label: 'carton_UISP_Connector_GND.btw (UISP Connector GND - 50 S/N)' },
 ];
 
 export function getCanonicalTemplateName(templateType?: string): string {

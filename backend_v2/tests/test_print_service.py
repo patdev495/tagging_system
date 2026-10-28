@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from src.core import models
 from src.core.database import Base
 from src.features.print import schemas, service
+from src.features.print.domain import BTXMLDocument
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ def test_generate_btxml_standard():
             result = service.generate_btxml(carton, product, items, "dummy.btw")
             
     assert "Test Product" in result
-    assert "2PCS" in result
+    assert "2 PCS" in result
     assert "VN-11-2605001" in result
 
 def test_generate_btxml_detailed_sn_grid():
@@ -74,6 +75,26 @@ def test_generate_btxml_detailed_sn_grid():
     assert '<NamedSubString Name="SN_3"><Value> </Value></NamedSubString>' in result
     # Check if SN_30 is present
     assert '<NamedSubString Name="SN_30"><Value> </Value></NamedSubString>' in result
+    assert '<NamedSubString Name="SN_50"><Value> </Value></NamedSubString>' in result
+
+
+def test_generate_btxml_detailed_preserves_all_50_item_sns():
+    product = models.Product(
+        item_name="UISP-Connector-GND",
+        upc="810010075802",
+        packed_qty=50,
+        template_type="detailed",
+    )
+    carton = models.Carton(carton_sn="CN26013500001", carton_origin="VN")
+    items = [f"AS 260100{i:05d}" for i in range(1, 51)]
+
+    xml = service.generate_btxml(carton, product, items, "carton_UISP_Connector_GND.btw")
+    doc = BTXMLDocument.from_xml(xml)
+
+    assert [doc.substrings[f"SN_{i}"] for i in range(1, 51)] == items
+    assert doc.substrings["QR_Content"].splitlines() == items
+    assert doc.substrings["QTY"] == "50 PCS"
+    assert "SN_51" not in doc.substrings
 
 def test_origin_text_logic():
     product = models.Product(item_name="P", packed_qty=1)
