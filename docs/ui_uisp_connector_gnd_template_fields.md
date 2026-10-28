@@ -8,7 +8,7 @@ Khi tạo Product, chọn `template_type=detailed`, `template_path=carton_UISP_C
 | --- | --- | --- |
 | `uvc` | `ItemName` | Tên Product ở dòng trên |
 | `udop` | `ItemName2` | Tên Product ở dòng dưới |
-| `name2` | `QTY` | Số lượng thực tế ở dạng `N PCS`, giống các tem UI detailed khác |
+| `name2` | `QTY` | Số lượng thực tế ở dạng `NPCS`, ví dụ `50PCS` (riêng mẫu GND không có dấu cách) |
 | `zxname` | `CartonSN` | Carton SN thuần cho barcode |
 | `zxname1` | Dùng chung `CartonSN` | Liên kết với nguồn `CartonSN`, thêm chữ `Carton S/N:` cố định trước giá trị |
 | `name1.2` | `MAC_ID` | `MAC ID (N)` với N là số lượng thực tế |
@@ -17,4 +17,4 @@ Khi tạo Product, chọn `template_type=detailed`, `template_path=carton_UISP_C
 
 Backend còn gửi `UPC` theo Product, `Origin` là `Made in Vietnam` hoặc `Made in China`, và `ItemName3` là tên Product. Trong mẫu được cung cấp, UPC `810010075802` và dòng `MADE IN VIETNAM` là nội dung cố định, chưa phải Named Data Source. Nếu muốn hai giá trị này thay đổi theo Product/Carton, hãy sửa chúng thành trường động `UPC` và `Origin`.
 
-Giữ chữ `QTY:` nhưng bỏ chữ `PCS` cố định trong mẫu GND, vì giá trị `QTY` đã chứa ` PCS`. Carton SN mẫu `CN25033500010` gợi ý `start_part=CN`, `middle_part=35`; cần xác nhận quy tắc số thùng trước khi tạo Carton thật. Sau khi đổi tên, hãy xuất một tem thử và quét đối chiếu đủ 50 barcode cùng QR.
+Giữ chữ `QTY:` nhưng bỏ chữ `PCS` cố định trong mẫu GND, vì giá trị `QTY` đã chứa `PCS`. Carton SN mẫu `CN25033500010` gợi ý `start_part=CN`, `middle_part=35`; cần xác nhận quy tắc số thùng trước khi tạo Carton thật. Sau khi đổi tên, hãy xuất một tem thử và quét đối chiếu đủ 50 barcode cùng QR.

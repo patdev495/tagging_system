@@ -93,8 +93,20 @@ def test_generate_btxml_detailed_preserves_all_50_item_sns():
 
     assert [doc.substrings[f"SN_{i}"] for i in range(1, 51)] == items
     assert doc.substrings["QR_Content"].splitlines() == items
-    assert doc.substrings["QTY"] == "50 PCS"
+    assert doc.substrings["QTY"] == "50PCS"
     assert "SN_51" not in doc.substrings
+
+
+def test_other_ui_detailed_template_keeps_space_before_pcs():
+    product = models.Product(item_name="Other UI Product", template_type="detailed")
+    carton = models.Carton(carton_sn="CN26013500002")
+
+    doc = BTXMLDocument.from_carton_data(
+        carton, product, ["SN_A", "SN_B"], "carton_detail_1M_W.btw"
+    )
+
+    assert doc.substrings["QTY"] == "2 PCS"
+
 
 def test_origin_text_logic():
     product = models.Product(item_name="P", packed_qty=1)

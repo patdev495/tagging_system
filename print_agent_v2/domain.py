@@ -79,7 +79,12 @@ class BTXMLDocument:
         qr_content = "&#xA;".join(items)
 
         actual_qty = len(items)
-        qty_text = f"{actual_qty} PCS"
+        template_filename = os.path.basename((template_path or "").replace("\\", "/")).casefold()
+        qty_text = (
+            f"{actual_qty}PCS"
+            if template_filename == "carton_uisp_connector_gnd.btw"
+            else f"{actual_qty} PCS"
+        )
 
         substrings = {
             "ItemName": product.item_name,
