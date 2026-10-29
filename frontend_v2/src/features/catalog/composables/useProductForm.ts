@@ -38,15 +38,6 @@ export interface UseProductFormProps {
   initialData?: Product | null;
 }
 
-export const UI_TEMPLATES = [
-  { filename: 'carton_base.btw', label: 'carton_base.btw (Thùng Tiêu Chuẩn Patch Cords)' },
-  { filename: 'Carton_45.btw', label: 'Carton_45.btw (Thùng Cáp Dài 4.5M/5M/8M Đen)' },
-  { filename: 'carton_detail_1M_W.btw', label: 'carton_detail_1M_W.btw (Chi Tiết Cáp 1M - Lưới 40 S/N)' },
-  { filename: 'carton_detail_2_3M_W.btw', label: 'carton_detail_2_3M_W.btw (Chi Tiết Cáp 2M & 3M - Lưới 40 S/N)' },
-  { filename: 'carton_detail_UISP_Connector_SHD.btw', label: 'carton_detail_UISP_Connector_SHD.btw (Chi Tiết UISP Connector)' },
-  { filename: 'carton_UISP_Connector_GND.btw', label: 'carton_UISP_Connector_GND.btw (UISP Connector GND - 50 S/N)' },
-];
-
 export function getCanonicalTemplateName(templateType?: string): string {
   switch (templateType) {
     case 'erro_05': return 'erro_05.btw';
@@ -81,15 +72,6 @@ export function useProductForm(
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-  };
-
-  const loadTemplates = async () => {
-    try {
-      const res = await printApi.getTemplates();
-      availableTemplates.value = res.data.templates || [];
-    } catch (err) {
-      console.warn('Could not load BarTender templates:', err);
-    }
   };
 
   const formData = ref<ProductFormData>({
@@ -168,7 +150,7 @@ export function useProductForm(
     } else if (code === 'UI') {
       formData.value.packing_mode = 'item_scan';
       formData.value.template_type = 'standard';
-      formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
+      formData.value.template_path = '';
       formData.value.start_part = formData.value.start_part || 'VN';
       formData.value.packed_qty = formData.value.packed_qty === 190 ? 10 : formData.value.packed_qty;
     }
@@ -221,14 +203,6 @@ export function useProductForm(
       formData.value.packed_qty = formData.value.packed_qty === 1 ? 190 : formData.value.packed_qty;
       formData.value.min_weight = formData.value.min_weight ?? 12.300;
       formData.value.max_weight = formData.value.max_weight ?? 12.700;
-    } else if (formData.value.template_type === 'detailed') {
-      if (!formData.value.template_path || !formData.value.template_path.includes('detail')) {
-        formData.value.template_path = 'carton_detail_1M_W.btw';
-      }
-    } else if (formData.value.template_type === 'standard') {
-      if (!formData.value.template_path || formData.value.template_path.includes('detail')) {
-        formData.value.template_path = 'carton_base.btw';
-      }
     }
   };
 
@@ -240,7 +214,6 @@ export function useProductForm(
     ([isOpen]) => {
       if (!isOpen) return;
       const currentProps = 'value' in props ? props.value : props;
-      loadTemplates();
       validationStatus.value = null;
       if (currentProps.isEdit && currentProps.initialData) {
         const p = currentProps.initialData;
@@ -280,7 +253,7 @@ export function useProductForm(
           start_part: 'VN',
           middle_part: '',
           template_type: 'standard',
-          template_path: 'carton_base.btw',
+          template_path: '',
           allow_partial: 0,
           customer_id: defaultCustomerId,
           packing_mode: 'item_scan',
@@ -316,7 +289,7 @@ export function useProductForm(
       formData.value.template_path = 'erro_01.btw';
     } else if (mode === 'item_scan' && isErro) {
       formData.value.template_type = 'standard';
-      formData.value.template_path = 'carton_base.btw';
+      formData.value.template_path = '';
     }
   };
 
@@ -335,7 +308,11 @@ export function useProductForm(
     if (isErroProduct.value) {
       formData.value.template_path = getCanonicalTemplateName(formData.value.template_type);
     } else {
-      formData.value.template_path = formData.value.template_path || (formData.value.template_type === 'detailed' ? 'carton_detail_1M_W.btw' : 'carton_base.btw');
+      formData.value.template_path = getBaseName(formData.value.template_path.trim());
+      if (!formData.value.template_path || !formData.value.template_path.toLowerCase().endsWith('.btw')) {
+        system.showNotification('Vui lòng chọn file mẫu tem .btw', 'warning');
+        return;
+      }
     }
     emit('submit', { ...formData.value });
   };
@@ -343,7 +320,6 @@ export function useProductForm(
   return {
     formData,
     availableTemplates,
-    UI_TEMPLATES,
     isErroProduct,
     isValidating,
     validationStatus,

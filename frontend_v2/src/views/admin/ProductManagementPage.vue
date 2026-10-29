@@ -216,6 +216,7 @@
       :is-edit="isEdit"
       :is-submitting="isSubmitting"
       :customers="customers"
+      :products="products"
       :initial-data="selectedProduct"
       @close="showModal = false"
       @submit="handleSaveProduct"

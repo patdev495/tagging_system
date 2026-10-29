@@ -43,22 +43,20 @@
               <label class="text-xs font-bold text-slate-700 uppercase">{{ t('products.packed_qty_label') }}</label>
               <input v-model.number="formData.packed_qty" type="number" required min="1" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm font-bold">
             </div>
-            <div class="space-y-1.5">
+            <div v-if="!isErroProduct" class="space-y-1.5">
               <label class="text-xs font-bold text-slate-700 uppercase">{{ t('products.template_label') }}</label>
-              <!-- Erro: fixed canonical template -->
-              <div v-if="isErroProduct" class="w-full flex items-center gap-2 p-3 rounded-xl border border-purple-200 bg-purple-50/60 text-xs font-mono text-purple-900">
-                <span class="px-2 py-0.5 rounded bg-purple-200 text-purple-800 font-bold uppercase text-[10px] shrink-0">{{ t('products.fixed_erro_template') }}</span>
-                <span class="font-bold flex-1 truncate">📄 {{ erroTemplateName }}</span>
-                <span class="text-[11px] text-purple-600 font-sans hidden sm:inline shrink-0">({{ erroTemplateLabel }})</span>
-              </div>
-              <!-- UI products: select template -->
-              <div v-else class="space-y-1">
-                <select v-model="formData.template_path" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-mono text-xs font-bold text-slate-800">
-                  <option v-if="formData.template_path && !UI_TEMPLATES.some(t => t.filename === formData.template_path)" :value="formData.template_path">
-                    📄 {{ formData.template_path }} ({{ t('products.current_in_db') }})
+              <div class="space-y-1">
+                <select v-model="formData.template_path" required class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-mono text-xs font-bold text-slate-800">
+                  <option value="" disabled>{{ t('products.choose_existing_template') }}</option>
+                  <option v-if="formData.template_path && !existingUiTemplates.some(name => name.toLowerCase() === formData.template_path.toLowerCase())" :value="formData.template_path">
+                    📄 {{ formData.template_path }}
                   </option>
-                  <option v-for="tmpl in UI_TEMPLATES" :key="tmpl.filename" :value="tmpl.filename">📄 {{ tmpl.label }}</option>
+                  <option v-for="name in existingUiTemplates" :key="name" :value="name">📄 {{ name }}</option>
                 </select>
+                <label class="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 cursor-pointer">
+                  {{ t('products.choose_new_template') }}
+                  <input type="file" accept=".btw" class="sr-only" @change="onTemplateFileSelected" />
+                </label>
                 <p class="text-[10px] text-slate-400">{{ t('products.template_ui_hint') }}</p>
               </div>
             </div>
@@ -133,18 +131,21 @@
           <div class="space-y-1.5">
             <label class="text-xs font-bold text-slate-700 uppercase">{{ t('products.template_type_label') }}</label>
             <select v-model="formData.template_type" @change="onTemplateTypeChange" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium text-sm">
-              <optgroup label="Khách Hàng Erro">
+              <optgroup v-if="isErroProduct" label="Khách Hàng Erro">
                 <option value="erro_05">Erro 05 (Pegatron NN9 PD016906 — erro_05.btw)</option>
                 <option value="erro_04">Erro 04 (eero PD027032 — erro_04.btw)</option>
                 <option value="erro_03">Erro 03 (Luxshare NME PD024364 — erro_03.btw)</option>
                 <option value="erro_02">Erro 02 (PD027504 Pallet SSCC + ASIN — erro_02.btw)</option>
                 <option value="erro_01">Erro 01 (PD014736 Carton SN + Rev — erro_01.btw)</option>
               </optgroup>
-              <optgroup label="Khách Hàng UI">
+              <optgroup v-else label="Khách Hàng UI">
                 <option value="standard">Standard (Tem thùng cơ bản)</option>
                 <option value="detailed">Detailed (Lưới tối đa 50 mã sê-ri con)</option>
               </optgroup>
             </select>
+            <p v-if="isErroProduct" class="text-xs text-purple-800">
+              {{ t('products.erro_template_file') }}: <span class="font-mono font-bold">{{ erroTemplateName }}</span>
+            </p>
           </div>
 
           <!-- Factory P/N Mapping for Erro templates -->
@@ -235,6 +236,7 @@ const props = defineProps<{
   isEdit: boolean;
   isSubmitting: boolean;
   customers: Customer[];
+  products?: Product[];
   initialData?: Product | null;
 }>();
 
@@ -247,13 +249,30 @@ const { t } = useI18n();
 
 const {
   formData,
-  UI_TEMPLATES,
   isErroProduct,
   setPackingMode,
   onCustomerChange,
   onTemplateTypeChange,
   handleSubmit,
 } = useProductForm(props, (_event, data) => emit('submit', data));
+
+const existingUiTemplates = computed(() => {
+  const uiIds = new Set(props.customers.filter(customer => customer.code?.toUpperCase() === 'UI').map(customer => customer.id));
+  const names = new Map<string, string>();
+  for (const product of props.products || []) {
+    if (!uiIds.has(product.customer_id)) continue;
+    const name = (product.template_path || '').split(/[/\\]/).pop()?.trim() || '';
+    if (name.toLowerCase().endsWith('.btw')) names.set(name.toLowerCase(), name);
+  }
+  return [...names.values()].sort((a, b) => a.localeCompare(b));
+});
+
+const onTemplateFileSelected = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const name = input.files?.[0]?.name || '';
+  if (name.toLowerCase().endsWith('.btw')) formData.value.template_path = name;
+  input.value = '';
+};
 
 const mappings = ref<ProductInternalFactoryPartNumber[]>([]);
 const isLoadingMappings = ref(false);
@@ -265,17 +284,6 @@ const newDrawingCode = ref('PD014736');
 const erroTemplateName = computed(() => {
   const map: Record<string, string> = { erro_01: 'erro_01.btw', erro_02: 'erro_02.btw', erro_03: 'erro_03.btw', erro_04: 'erro_04.btw', erro_05: 'erro_05.btw' };
   return map[formData.value.template_type] || 'erro_01.btw';
-});
-
-const erroTemplateLabel = computed(() => {
-  const map: Record<string, string> = {
-    erro_01: 'Erro 01 Thùng Carton SN',
-    erro_02: 'Erro 02 Pallet SSCC & ASIN',
-    erro_03: 'Erro 03 Luxshare NME',
-    erro_04: 'Erro 04 PD027032',
-    erro_05: 'Erro 05 Pegatron NN9',
-  };
-  return map[formData.value.template_type] || 'Erro 01';
 });
 
 const defaultDrawingForTemplate = (tmpl?: string) => {
